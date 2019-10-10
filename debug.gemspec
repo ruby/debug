@@ -10,6 +10,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{Debugging functionality for Ruby}
   spec.homepage      = "https://github.com/ruby/debug"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
+  spec.license       = "BSD-2-Clause"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
