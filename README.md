@@ -1,8 +1,6 @@
 # Debug
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/debug`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+This library provides debugging functionality to Ruby.
 
 ## Installation
 
@@ -22,7 +20,25 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+To add a debugger to your code, start by requiring +debug+ in your
+program:
+
+```ruby
+def say(word)
+  require 'debug'
+  puts word
+end
+```
+
+This will cause Ruby to interrupt execution and show a prompt when the +say+
+method is run.
+
+Once you're inside the prompt, you can start debugging your program.
+
+```
+(rdb:1) p word
+"hello"
+```
 
 ## Development
 
