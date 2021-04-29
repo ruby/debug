@@ -55,6 +55,10 @@ end
 
 module DEBUGGER__
   class Session
+    class << self
+      attr_accessor :ui_console
+    end
+
     def initialize ui
       @ui = ui
       @sr = SourceRepository.new
@@ -191,6 +195,9 @@ module DEBUGGER__
       else
         line = @initial_commands.shift.strip
         @ui.puts "(rdbg:init) #{line}"
+      end
+      if line.nil?
+        return
       end
 
       if line.empty?
@@ -934,8 +941,12 @@ module DEBUGGER__
     nil
   end
 
+  def self.call_console
+    Session.ui_console || UI_Console.new
+  end
+
   def self.console
-    initialize_session UI_Console.new
+    initialize_session call_console
 
     @prev_handler = trap(:SIGINT){
       ThreadClient.current.on_trap :SIGINT
