@@ -74,7 +74,7 @@ $ ruby target.rb
 ```
 
 When you run the program with the debug console, you will see the debug console prompt `(rdbg)`.
-The debuggee program (`target.rb`) is suspended at the beggining of `target.rb`.
+The debuggee program (`target.rb`) is suspended at the beginning of `target.rb`.
 
 You can type any debugger's command described bellow. "c" or "continue" resume the debuggee program.
 You can suspend the debuggee program and show the debug console with `Ctrl-C`.
@@ -173,7 +173,7 @@ Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debu
 ```
 
 It runs target.rb and accept debugger connection within UNIX domain socket.
-The debuggee process waits for debugger connection at the beggining of `target.rb` like that:
+The debuggee process waits for debugger connection at the beginning of `target.rb` like that:
 
 ```
 $ rdbg -O ~/src/rb/target.rb
@@ -204,7 +204,7 @@ and you can input any debug commands. `c` (or `continue`) continues the debuggee
 You can detach the debugger from the debugger process with `quit` command.
 You can re-connect to the debuggee process by `rdbg -A` command again, and the debuggee process suspends the execution (and debugger can input any debug commands).
 
-If you don't want to stop the debuggee process at the beggining of debuggee process (`target.rb`), you can use the followings to specify "non-stop" option.
+If you don't want to stop the debuggee process at the beginning of debuggee process (`target.rb`), you can use the following to specify "non-stop" option.
 
 * Use `rdbg -n` option
 * Set the environment variable `RUBY_DEBUG_NONSTOP=1`
@@ -282,7 +282,7 @@ $ rdbg --attach hostname 12345
 
 If there are `.rdbgrc` files are there at the current directory and the home directory, files are loaded as initial scripts which contains debugger commands. `RUBY_DEBUG_INIT_SCRIPT` environment variable can specify the initial script file.
 
-Initial scripts are evaluated at the first suspend timing (generally, it is the beggining of the target script). For example, you can set break points with `break file:123`.
+Initial scripts are evaluated at the first suspend timing (generally, it is the beginning of the target script). For example, you can set break points with `break file:123`.
 
 If there are `.rdbgrc.rb` files at the current directory and the home directory, files are loaded as a ruby script at the initializing timing.
 
@@ -290,7 +290,7 @@ If there are `.rdbgrc.rb` files at the current directory and the home directory,
 
 You can control debuggee's behavior with environment variables:
 
-* `RUBY_DEBUG_NONSTOP`: 1 for nonstop at the beggining of program.
+* `RUBY_DEBUG_NONSTOP`: 1 for nonstop at the beginning of program.
 * `RUBY_DEBUG_INIT_SCRIPT`: Initial script path loaded at the first stop.
 * `RUBY_DEBUG_COMMANDS`: Debug commands invoked at the first stop. Commands should be separated by ';;'.
 * `RUBY_DEBUG_SHOW_SRC_LINES`: Show n lines source code on breakpoint (default: 10 lines).
@@ -428,8 +428,8 @@ The `<...>` notation means the argument.
 exe/rdbg [options] -- [debuggee options]
 
 Debug console mode:
-    -n, --nonstop                    Do not stop at the beggining of the script.
-    -e [COMMAND]                     execute debug command at the beggining of the script.
+    -n, --nonstop                    Do not stop at the beginning of the script.
+    -e [COMMAND]                     execute debug command at the beginning of the script.
     -O, --open                       Start debuggee with opening the debugger port.
                                      If TCP/IP options are not given,
                                      a UNIX domain socket will be used.
@@ -461,4 +461,3 @@ Attach mode:
 # Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/ruby/debug.
-

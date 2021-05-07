@@ -65,11 +65,11 @@ module DEBUGGER__
       o.separator ''
 
       o.separator 'Debug console mode:'
-      o.on('-n', '--nonstop', 'Do not stop at the beggining of the script.') do
+      o.on('-n', '--nonstop', 'Do not stop at the beginning of the script.') do
         config[:nonstop] = '1'
       end
 
-      o.on('-e [COMMAND]', 'execute debug command at the beggining of the script.') do |cmd|
+      o.on('-e [COMMAND]', 'execute debug command at the beginning of the script.') do |cmd|
         config[:commands] ||= ''
         config[:commands] << cmd + ';;'
       end
