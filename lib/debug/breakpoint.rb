@@ -123,7 +123,7 @@ module DEBUGGER__
     def activate_exact iseq, events, line
       case
       when events.include?(:RUBY_EVENT_CALL)
-        # "def foo" line set bp on the beggining of method foo
+        # "def foo" line set bp on the beginning of method foo
         activate(iseq, :call, line)
       when events.include?(:RUBY_EVENT_LINE)
         activate(iseq, :line, line)

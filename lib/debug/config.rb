@@ -65,16 +65,16 @@ module DEBUGGER__
       o.separator ''
 
       o.separator 'Debug console mode:'
-      o.on('-n', '--nonstop', 'Do not stop at the beggining of the script.') do
+      o.on('-n', '--nonstop', 'Do not stop at the beginning of the script.') do
         config[:nonstop] = '1'
       end
 
-      o.on('-e [COMMAND]', 'execute debug command at the beggining of the script.') do |cmd|
+      o.on('-e [COMMAND]', 'execute debug command at the beginning of the script.') do |cmd|
         config[:commands] ||= ''
         config[:commands] << cmd + ';;'
       end
 
-      o.on('-O', '--open', 'Start debuggee with opning the debagger port.',
+      o.on('-O', '--open', 'Start debuggee with opening the debugger port.',
                            'If TCP/IP options are not given,',
                            'a UNIX domain socket will be used.') do
         config[:remote] = true
@@ -109,7 +109,7 @@ module DEBUGGER__
       o.separator "  #{' ' * $0.size}            debugger connection, list possible debuggee names."
       o.separator "  '#{$0} -A path' tries to connect via UNIX domain socket with given path name."
       o.separator "  '#{$0} -A port' tries to connect localhost:port via TCP/IP."
-      o.separator "  '#{$0} -A host port' tris to connect host:port via TCP/IP."
+      o.separator "  '#{$0} -A host port' tries to connect host:port via TCP/IP."
     end
 
     opt.parse!(argv)
