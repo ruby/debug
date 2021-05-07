@@ -137,7 +137,7 @@ $ rdbg  ~/src/rb/target.rb
  b => 2
  c => 3
 
-(rdbg) c                                                # Contineu the program ("c" is a short name of "continue")
+(rdbg) c                                                # Continue the program ("c" is a short name of "continue")
 [6]
 ```
 
@@ -178,7 +178,7 @@ The debuggee process waits for debugger connection at the beggining of `target.r
 ```
 $ rdbg -O ~/src/rb/target.rb
 DEBUGGER: Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-29828)
-DEBUGGER: wait for debuger connection...
+DEBUGGER: wait for debugger connection...
 ```
 
 You can attach the program with the following command:
@@ -204,7 +204,7 @@ and you can input any debug commands. `c` (or `continue`) continues the debuggee
 You can detach the debugger from the debugger process with `quit` command.
 You can re-connect to the debuggee process by `rdbg -A` command again, and the debuggee process suspends the execution (and debugger can input any debug commands).
 
-If you don't want to stop the debuggee process at the beggining of debuggee process (`target.rb`), you can use the fowllowings to specify "non-stop" option.
+If you don't want to stop the debuggee process at the beggining of debuggee process (`target.rb`), you can use the followings to specify "non-stop" option.
 
 * Use `rdbg -n` option
 * Set the environment variable `RUBY_DEBUG_NONSTOP=1`
@@ -282,7 +282,7 @@ $ rdbg --attach hostname 12345
 
 If there are `.rdbgrc` files are there at the current directory and the home directory, files are loaded as initial scripts which contains debugger commands. `RUBY_DEBUG_INIT_SCRIPT` environment variable can specify the initial script file.
 
-Initial scripts are evaluted at the first suspend timing (generally, it is the beggining of the target script). For example, you can set break points with `break file:123`.
+Initial scripts are evaluated at the first suspend timing (generally, it is the beggining of the target script). For example, you can set break points with `break file:123`.
 
 If there are `.rdbgrc.rb` files at the current directory and the home directory, files are loaded as a ruby script at the initializing timing.
 
@@ -308,7 +308,7 @@ You can control debuggee's behavior with environment variables:
 * [debug command compare sheet - Google Sheets](https://docs.google.com/spreadsheets/d/1TlmmUDsvwK4sSIyoMv-io52BUUz__R5wpu-ComXlsw0/edit?usp=sharing)
 
 You can use the following debug commands. Each command should be written in 1 line.
-The `[...]` notation means this part can be elimiante. For example, `s[tep]` means `s` or `step` are valid command. `ste` is not valid.
+The `[...]` notation means this part can be eliminate. For example, `s[tep]` means `s` or `step` are valid command. `ste` is not valid.
 The `<...>` notation means the argument.
 
 ### Control flow
@@ -366,7 +366,7 @@ The `<...>` notation means the argument.
   * Show current frame's source code from the line <start> to <end> if given.
 * `edit`
   * Open the current file on the editor (use `EDITOR` environment variable).
-  * Note that editted file will not be reloaded.
+  * Note that edited file will not be reloaded.
 * `edit <file>`
   * Open <file> on the editor.
 * `i[nfo]`
@@ -390,7 +390,7 @@ The `<...>` notation means the argument.
 * `f[rame]`
   * Show current frame.
 * `f[rame] <framenum>`
-  * Specify frame. Evaluation are run on this frame environement.
+  * Specify frame. Evaluation are run on this frame environment.
 * `up`
   * Specify upper frame.
 * `down`
@@ -430,7 +430,7 @@ exe/rdbg [options] -- [debuggee options]
 Debug console mode:
     -n, --nonstop                    Do not stop at the beggining of the script.
     -e [COMMAND]                     execute debug command at the beggining of the script.
-    -O, --open                       Start debuggee with opning the debagger port.
+    -O, --open                       Start debuggee with opening the debugger port.
                                      If TCP/IP options are not given,
                                      a UNIX domain socket will be used.
         --port=[PORT]                Listening TCP/IP port
@@ -454,7 +454,7 @@ Attach mode:
                       debugger connection, list possible debuggee names.
   'exe/rdbg -A path' tries to connect via UNIX domain socket with given path name.
   'exe/rdbg -A port' tries to connect localhost:port via TCP/IP.
-  'exe/rdbg -A host port' tris to connect host:port via TCP/IP.
+  'exe/rdbg -A host port' tries to connect host:port via TCP/IP.
 
 ```
 

@@ -373,7 +373,7 @@ module DEBUGGER__
 
       # * `edit`
       #   * Open the current file on the editor (use `EDITOR` environment variable).
-      #   * Note that editted file will not be reloaded.
+      #   * Note that edited file will not be reloaded.
       # * `edit <file>`
       #   * Open <file> on the editor.
       when 'edit'
@@ -461,7 +461,7 @@ module DEBUGGER__
       # * `f[rame]`
       #   * Show current frame.
       # * `f[rame] <framenum>`
-      #   * Specify frame. Evaluation are run on this frame environement.
+      #   * Specify frame. Evaluation are run on this frame environment.
       when 'frame', 'f'
         @tc << [:frame, :set, arg]
 
