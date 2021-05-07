@@ -1,8 +1,7 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-# Specify your gem's dependencies in debug.gemspec
 gemspec
 
-group :development do
-  gem "rake"
-end
+gem "rake", "~> 12.0"
+gem "rake-compiler"
+gem "minitest", "~> 5.0"
