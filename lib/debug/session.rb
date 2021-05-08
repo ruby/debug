@@ -4,7 +4,7 @@
                          :has_return_value, :return_value, :show_line)
 end
 
-require_relative 'debug.so'
+require "debug/debug"
 
 require_relative 'source_repository'
 require_relative 'breakpoint'
