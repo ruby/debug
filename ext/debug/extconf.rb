@@ -1,2 +1,2 @@
 require 'mkmf'
-create_makefile 'debug'
+create_makefile 'debug/debug'
