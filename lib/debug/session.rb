@@ -4,7 +4,11 @@
                          :has_return_value, :return_value, :show_line)
 end
 
-require "debug/debug"
+if File.exist? File.join(__dir__, 'debug.so')
+  require_relative 'debug.so'
+else
+  require "debug/debug"
+end
 
 require_relative 'source_repository'
 require_relative 'breakpoint'
