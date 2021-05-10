@@ -321,6 +321,12 @@ module DEBUGGER__
 
     def pretty_path path
       case
+      when path.start_with?(dir = RbConfig::CONFIG["rubylibdir"] + '/')
+        path.sub(dir, '$(rubylibdir)/')
+      when Gem.path.any? do |gp|
+          path.start_with?(dir = gp + '/gems/')
+        end
+        path.sub(dir, '$(Gem)/')
       when HOME && path.start_with?(HOME)
         path.sub(HOME, '~/')
       else
