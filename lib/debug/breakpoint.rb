@@ -28,7 +28,7 @@ module DEBUGGER__
     end
 
     def disable
-      @tp.disable
+      @tp&.disable
     end
 
     def enabled?
