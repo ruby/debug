@@ -86,14 +86,16 @@ module DEBUGGER__
         config[:host] = host
       end
 
+      rdbg = 'rdbg'
+
       o.separator ''
       o.separator '  Debug console mode runs Ruby program with the debug console.'
       o.separator ''
-      o.separator "  #{$0} target.rb foo bar                 starts like 'ruby target.rb foo bar'."
-      o.separator "  #{$0} -- -r foo -e bar                  starts like 'ruby -r foo -e bar'."
-      o.separator "  #{$0} -O target.rb foo bar              starts and accepts attaching with UNIX domain socket."
-      o.separator "  #{$0} -O --port 1234 target.rb foo bar  starts accepts attaching with TCP/IP localhost:1234."
-      o.separator "  #{$0} -O --port 1234 -- -r foo -e bar   starts accepts attaching with TCP/IP localhost:1234."
+      o.separator "  #{rdbg} target.rb foo bar                 starts like 'ruby target.rb foo bar'."
+      o.separator "  #{rdbg} -- -r foo -e bar                  starts like 'ruby -r foo -e bar'."
+      o.separator "  #{rdbg} -O target.rb foo bar              starts and accepts attaching with UNIX domain socket."
+      o.separator "  #{rdbg} -O --port 1234 target.rb foo bar  starts accepts attaching with TCP/IP localhost:1234."
+      o.separator "  #{rdbg} -O --port 1234 -- -r foo -e bar   starts accepts attaching with TCP/IP localhost:1234."
 
       o.separator ''
       o.separator 'Attach mode:'
@@ -104,12 +106,12 @@ module DEBUGGER__
       o.separator ''
       o.separator '  Attach mode attaches the remote debug console to the debuggee process.'
       o.separator ''
-      o.separator "  '#{$0} -A' tries to connect via UNIX domain socket."
-      o.separator "  #{' ' * $0.size}            If there are multiple processes are waiting for the"
-      o.separator "  #{' ' * $0.size}            debugger connection, list possible debuggee names."
-      o.separator "  '#{$0} -A path' tries to connect via UNIX domain socket with given path name."
-      o.separator "  '#{$0} -A port' tries to connect localhost:port via TCP/IP."
-      o.separator "  '#{$0} -A host port' tries to connect host:port via TCP/IP."
+      o.separator "  '#{rdbg} -A' tries to connect via UNIX domain socket."
+      o.separator "  #{' ' * rdbg.size}      If there are multiple processes are waiting for the"
+      o.separator "  #{' ' * rdbg.size}      debugger connection, list possible debuggee names."
+      o.separator "  '#{rdbg} -A path' tries to connect via UNIX domain socket with given path name."
+      o.separator "  '#{rdbg} -A port' tries to connect to localhost:port via TCP/IP."
+      o.separator "  '#{rdbg} -A host port' tries to connect to host:port via TCP/IP."
     end
 
     opt.parse!(argv)
