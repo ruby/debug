@@ -197,8 +197,8 @@ module DEBUGGER__
             frame.show_line = end_line
           end
 
-          if start_line != end_line
-            puts "[#{start_line+1}, #{end_line}] in #{path}" unless update_line
+          if start_line != end_line && max_lines
+            puts "[#{start_line+1}, #{end_line}] in #{pretty_path(path)}" if !update_line && max_lines != 1
             puts lines[start_line ... end_line]
           end
         end
@@ -287,9 +287,15 @@ module DEBUGGER__
       }.compact.join(', ')
     end
 
+    def get_singleton_class obj
+      obj.singleton_class # TODO: don't use it
+    rescue TypeError
+      nil
+    end
+
     def klass_sig frame
       klass = frame.class
-      if klass == frame.self.singleton_class
+      if klass == get_singleton_class(frame.self)
         "#{frame.self}."
       else
         "#{frame.class}#"
@@ -307,40 +313,57 @@ module DEBUGGER__
       end
     end
 
+    HOME = ENV['HOME'] ? (ENV['HOME'] + '/') : nil
+
+    def pretty_path path
+      case
+      when HOME && path.start_with?(HOME)
+        path.sub(HOME, '~/')
+      else
+        path
+      end
+    end
+
+    def pretty_location loc
+      " at #{pretty_path(loc.path)}:#{loc.lineno}"
+    end
+
     def frame_str i
-      buff = ''.dup
       frame = @target_frames[i]
       b = frame.binding
 
-      buff << (@current_frame_index == i ? '--> ' : '    ')
-      if b
-        buff << "##{i}\t#{frame.location}"
-      else
-        buff << "##{i}\t[C] #{frame.location}"
-      end
+      cur_str = (@current_frame_index == i ? '=>' : '  ')
 
       if b && (iseq = frame.iseq)
         if iseq.type == :block
           if (argc = iseq.argc) > 0
             args = parameters_info b, iseq.locals[0...argc]
-            buff << " {|#{args}|}"
+            args_str = "{|#{args}|}"
           end
+
+          label_prefix = frame.location.label.sub('block'){ "block#{args_str}" }
+          ci_str = label_prefix
+        elsif (callee = b.eval('__callee__', __FILE__, __LINE__)) && (argc = iseq.argc) > 0
+          args = parameters_info b, iseq.locals[0...argc]
+          ksig = klass_sig frame
+          ci_str = "#{ksig}#{callee}(#{args})"
         else
-          if (callee = b.eval('__callee__', __FILE__, __LINE__)) && (argc = iseq.argc) > 0
-            args = parameters_info b, iseq.locals[0...argc]
-            ksig = klass_sig frame
-            buff << " #{ksig}#{callee}(#{args})"
-          end
+          ci_str = frame.location.label
         end
+
+        loc_str = "#{pretty_location(frame.location)}"
 
         if frame.has_return_value
-          buff << " #=> #{short_inspect(frame.return_value)}"
+          return_str = "\n  #=> #{short_inspect(frame.return_value)}"
         end
       else
-        # p frame.self
+        ksig = klass_sig frame
+        callee = frame.location.base_label
+        ci_str = "[C] #{ksig}#{callee}"
+        loc_str = "#{pretty_location(frame.location)}"
       end
 
-      buff
+      "#{cur_str}##{i}\t#{ci_str}#{loc_str}#{return_str}"
     end
 
     def show_frames max = (@target_frames || []).size
@@ -351,7 +374,7 @@ module DEBUGGER__
           break if i >= size
           puts frame_str(i)
         }
-        puts "    # and #{size - max} frames (use `bt' command for all frames)" if max < size
+        puts "  # and #{size - max} frames (use `bt' command for all frames)" if max < size
       end
     end
 
