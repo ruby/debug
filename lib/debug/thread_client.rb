@@ -24,6 +24,10 @@ module DEBUGGER__
       set_mode nil
     end
 
+    def close
+      @q_cmd.close
+    end
+
     def inspect
       "#<DBG:TC #{self.id}:#{self.mode}@#{@thread.backtrace[-1]}>"
     end
@@ -354,7 +358,7 @@ module DEBUGGER__
         loc_str = "#{pretty_location(frame.location)}"
 
         if frame.has_return_value
-          return_str = "\n  #=> #{short_inspect(frame.return_value)}"
+          return_str = " #=> #{short_inspect(frame.return_value)}"
         end
       else
         ksig = klass_sig frame

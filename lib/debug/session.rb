@@ -137,6 +137,9 @@ module DEBUGGER__
             wait_command_loop tc
           end
         end
+      ensure
+        @bps.each{|k, bp| bp.disable}
+        @th_clients.each{|th, thc| thc.close}
       end
 
       @management_threads = [@session_server]
