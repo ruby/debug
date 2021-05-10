@@ -144,7 +144,10 @@ module DEBUGGER__
       nearest = nil # NearestISeq
 
       ObjectSpace.each_iseq{|iseq|
-        if (iseq.absolute_path || iseq.path) == self.path && iseq.first_lineno <= self.line
+        if (iseq.absolute_path || iseq.path) == self.path &&
+            iseq.first_lineno <= self.line &&
+            iseq.type != :ensure # ensure iseq is copied (duplicated)
+
           iseq.traceable_lines_norec(line_events = {})
           lines = line_events.keys.sort
 
