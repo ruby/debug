@@ -30,12 +30,15 @@ module DEBUGGER__
   end
 
   CONFIG_MAP = {
-    # execution preferences
+    # boot setting
     nonstop:     'RUBY_DEBUG_NONSTOP',     # Nonstop mode ('1' is nonstop)
     init_script: 'RUBY_DEBUG_INIT_SCRIPT', # debug command script path loaded at first stop
     commands:    'RUBY_DEBUG_COMMANDS',    # debug commands invoked at first stop. commands should be separated by ';;'
+
+    # UI setting
     show_src_lines: 'RUBY_DEBUG_SHOW_SRC_LINES', # Show n lines source code on breakpoint (default: 10 lines).
     show_frames:    'RUBY_DEBUG_SHOW_FRAMES',    # Show n frames on breakpoint (default: 2 frames).
+    use_short_path: 'RUBY_DEBUG_USE_SHORT_PATH', # Show shoten PATH (like $(Gem)/foo.rb)
 
     # remote
     port:        'RUBY_DEBUG_PORT',        # TCP/IP remote debugging: port
