@@ -38,7 +38,8 @@ module DEBUGGER__
     # UI setting
     show_src_lines: 'RUBY_DEBUG_SHOW_SRC_LINES', # Show n lines source code on breakpoint (default: 10 lines).
     show_frames:    'RUBY_DEBUG_SHOW_FRAMES',    # Show n frames on breakpoint (default: 2 frames).
-    use_short_path: 'RUBY_DEBUG_USE_SHORT_PATH', # Show shoten PATH (like $(Gem)/foo.rb)
+    use_short_path: 'RUBY_DEBUG_USE_SHORT_PATH', # Show shoten PATH (like $(Gem)/foo.rb).
+    skip_nosrc:     'RUBY_DEBUG_SKIP_NOSRC',     # Skip on no source code lines (default: false).
 
     # remote
     port:        'RUBY_DEBUG_PORT',        # TCP/IP remote debugging: port
