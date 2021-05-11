@@ -209,6 +209,8 @@ module DEBUGGER__
             puts "[#{start_line+1}, #{end_line}] in #{pretty_path(path)}" if !update_line && max_lines != 1
             puts lines[start_line ... end_line]
           end
+        else # no file lines
+          puts "# No sourcefile available for #{path}"
         end
       end
     end
