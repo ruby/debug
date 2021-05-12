@@ -242,13 +242,13 @@ module DEBUGGER__
         end
 
       # * `q[uit]!`
-      #   * Finish debugger immediately (with the debuggee process on non-remote debugging).
+      #   * Same as q[uit] but without the confirmation prompt.
       when 'q!', 'quit!'
         @ui.quit arg.to_i
         @tc << :continue
 
       # * `kill`
-      #   * Stop the debuggee process.
+      #   * Stop the debuggee process with `Kernal#exit!`.
       when 'kill'
         if ask 'Really kill?'
           exit! (arg || 1).to_i
@@ -257,7 +257,7 @@ module DEBUGGER__
         end
 
       # * `kill!`
-      #   * Stop the debuggee process immediately.
+      #   * Same as kill but without the confirmation prompt.
       when 'kill!'
         exit! (arg || 1).to_i
 

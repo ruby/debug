@@ -324,9 +324,11 @@ The `<...>` notation means the argument.
 * `q[uit]` or `Ctrl-D`
   * Finish debugger (with the debuggee process on non-remote debugging).
 * `q[uit]!`
-  * Finish debugger immediately (with the debuggee process on non-remote debugging).
-* `kill(!)`
-  * Stop the debuggee process.
+  * Same as q[uit] but without the confirmation prompt.
+* `kill`
+  * Stop the debuggee process with `Kernal#exit!`.
+* `kill!`
+  * Same as kill but without the confirmation prompt.
 
 ### Breakpoint
 
