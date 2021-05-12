@@ -231,9 +231,9 @@ module DEBUGGER__
       when 'c', 'continue'
         @tc << :continue
 
-      # * `q[uit]` or exit or `Ctrl-D`
+      # * `q[uit]` or `Ctrl-D`
       #   * Finish debugger (with the debuggee process on non-remote debugging).
-      when 'q', 'quit', 'exit'
+      when 'q', 'quit'
         if ask 'Really quit?'
           @ui.quit arg.to_i
           @tc << :continue
@@ -241,14 +241,25 @@ module DEBUGGER__
           return :retry
         end
 
-      # * `kill` or `q[uit]!`
-      #   * Stop the debuggee process.
-      when 'kill', 'quit!', 'q!'
+      # * `q[uit]!`
+      #   * Same as q[uit] but without the confirmation prompt.
+      when 'q!', 'quit!'
+        @ui.quit arg.to_i
+        @tc << :continue
+
+      # * `kill`
+      #   * Stop the debuggee process with `Kernal#exit!`.
+      when 'kill'
         if ask 'Really kill?'
           exit! (arg || 1).to_i
         else
           return :retry
         end
+
+      # * `kill!`
+      #   * Same as kill but without the confirmation prompt.
+      when 'kill!'
+        exit! (arg || 1).to_i
 
       ### Breakpoint
 
@@ -417,7 +428,7 @@ module DEBUGGER__
       #   * Show the result of `<expr>` at every suspended timing.
       when 'display'
         if arg && !arg.empty?
-          @displays << arg 
+          @displays << arg
           @tc << [:eval, :try_display, @displays]
         else
           @tc << [:eval, :display, @displays]
@@ -808,7 +819,7 @@ module DEBUGGER__
       end
     end
 
-    ## event 
+    ## event
 
     def on_load iseq, src
       @sr.add iseq, src

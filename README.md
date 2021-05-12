@@ -321,10 +321,14 @@ The `<...>` notation means the argument.
   * Finish this frame. Resume the program until the current frame is finished.
 * `c[ontinue]`
   * Resume the program.
-* `q[uit]` or exit or `Ctrl-D`
+* `q[uit]` or `Ctrl-D`
   * Finish debugger (with the debuggee process on non-remote debugging).
-* `kill` or `q[uit]!`
-  * Stop the debuggee process.
+* `q[uit]!`
+  * Same as q[uit] but without the confirmation prompt.
+* `kill`
+  * Stop the debuggee process with `Kernal#exit!`.
+* `kill!`
+  * Same as kill but without the confirmation prompt.
 
 ### Breakpoint
 
