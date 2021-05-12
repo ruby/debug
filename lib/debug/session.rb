@@ -241,9 +241,15 @@ module DEBUGGER__
           return :retry
         end
 
-      # * `kill` or `q[uit]!`
+      # * `q[uit]!`
+      #   * Finish debugger immediately (with the debuggee process on non-remote debugging).
+      when 'q!', 'quit!'
+        @ui.quit arg.to_i
+        @tc << :continue
+
+      # * `kill`
       #   * Stop the debuggee process.
-      when 'kill', 'quit!', 'q!'
+      when 'kill'
         if ask 'Really kill?'
           exit! (arg || 1).to_i
         else
@@ -417,7 +423,7 @@ module DEBUGGER__
       #   * Show the result of `<expr>` at every suspended timing.
       when 'display'
         if arg && !arg.empty?
-          @displays << arg 
+          @displays << arg
           @tc << [:eval, :try_display, @displays]
         else
           @tc << [:eval, :display, @displays]
@@ -808,7 +814,7 @@ module DEBUGGER__
       end
     end
 
-    ## event 
+    ## event
 
     def on_load iseq, src
       @sr.add iseq, src
