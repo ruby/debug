@@ -231,9 +231,9 @@ module DEBUGGER__
       when 'c', 'continue'
         @tc << :continue
 
-      # * `q[uit]` or exit or `Ctrl-D`
+      # * `q[uit]` or `Ctrl-D`
       #   * Finish debugger (with the debuggee process on non-remote debugging).
-      when 'q', 'quit', 'exit'
+      when 'q', 'quit'
         if ask 'Really quit?'
           @ui.quit arg.to_i
           @tc << :continue
