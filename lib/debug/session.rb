@@ -256,6 +256,11 @@ module DEBUGGER__
           return :retry
         end
 
+      # * `kill!`
+      #   * Stop the debuggee process immediately.
+      when 'kill!'
+        exit! (arg || 1).to_i
+
       ### Breakpoint
 
       # * `b[reak]`
