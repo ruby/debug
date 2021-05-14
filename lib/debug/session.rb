@@ -552,9 +552,7 @@ module DEBUGGER__
 
       ### END
       else
-        @ui.puts "unknown command: #{line}"
-        @repl_prev_line = nil
-        return :retry
+        @tc << [:eval, :p, "#{cmd} #{arg}"]
       end
 
     rescue Interrupt
