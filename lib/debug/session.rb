@@ -59,6 +59,8 @@ module DEBUGGER__
       attr_accessor :ui_console
     end
 
+    attr_accessor :tp_load_script, :tp_thread_begin, :q_evt, :th_clients
+
     def initialize ui
       @ui = ui
       @sr = SourceRepository.new
@@ -77,7 +79,8 @@ module DEBUGGER__
 
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
         ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
-      }.enable
+      }
+      @tp_load_script.enable
 
       @session_server = Thread.new do
         Thread.current.abort_on_exception = true
@@ -153,7 +156,8 @@ module DEBUGGER__
 
       @tp_thread_begin = TracePoint.new(:thread_begin){|tp|
         ThreadClient.current.on_thread_begin Thread.current
-      }.enable
+      }
+      @tp_thread_begin.enable
     end
 
     def add_initial_commands cmds
@@ -196,9 +200,9 @@ module DEBUGGER__
         line = @initial_commands.shift.strip
         @ui.puts "(rdbg:init) #{line}"
       end
-      if line.nil?
-        return
-      end
+
+      # This code is for test
+      return :retry if line.nil?
 
       if line.empty?
         if @repl_prev_line
