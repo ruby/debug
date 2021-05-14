@@ -7,40 +7,38 @@ module DEBUGGER__
   # Custom interface for easier associations
   #
   class TestUI_Console < UI_Console
-    attr_accessor :input, :test_block
+    attr_accessor :queue, :test_block
 
-    def quit n
-      nil
+    def quit _n
+      SESSION.q_evt.close
+      SESSION.tp_load_script.disable
+      SESSION.tp_thread_begin.disable
     end
 
     def initialize
-      @input = []
-      super
+      @mutex = Mutex.new
+      @assertion_cv = ConditionVariable.new
+      @counter = 0
+      @queue = Queue.new
     end
 
-    def clear
-      @input = []
+    def ask _prompt
+      ''
     end
 
     def readline
-      line = super
-      return line unless line.nil? && test_block
-
-      test_block.call
-      self.test_block = nil
+      readline_body
     end
 
     def readline_body
-      cmd = input.shift
-      cmd.is_a?(Proc) ? cmd.call : cmd
+      test_block&.call
+      self.test_block = nil
+      cmd = queue.pop
+      if cmd.is_a?(Proc)
+        cmd.call
+        return nil
     end
-
-    private
-
-    def prepare(str)
-      return str.map(&:to_s) if str.respond_to?(:map)
-
-      str.to_s.split("\n")
+      cmd
     end
   end
 end
