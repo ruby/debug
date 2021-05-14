@@ -11,6 +11,7 @@ module DEBUGGER__
   # Extends Minitest's base test case and provides defaults for all tests.
   #
   class TestCase < Minitest::Test
+    make_my_diffs_pretty!
     include TestUtils
 
     def self.before_suite
@@ -21,7 +22,7 @@ module DEBUGGER__
     # Reset to default state before each test
     #
     def setup
-      ui_console.clear
+      Thread.current[:DEBUGGER__ThreadClient] = nil
     end
 
     #
