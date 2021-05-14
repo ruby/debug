@@ -10,7 +10,10 @@ module DEBUGGER__
 
       case
       when path = iseq.absolute_path
-        src = File.read(path)
+        src = begin
+          File.read(path)
+        rescue SystemCallError
+        end
       when iseq.path == '-e'
         path = '-e'
       else
