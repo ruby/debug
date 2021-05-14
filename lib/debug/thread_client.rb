@@ -10,7 +10,7 @@ module DEBUGGER__
       end
     end
 
-    attr_reader :location, :thread, :mode, :id
+    attr_reader :location, :thread, :mode, :id, :target_frames
 
     def initialize id, q_evt, q_cmd, thr = Thread.current
       @id = id
