@@ -18,8 +18,15 @@ module DEBUGGER__
     #   enter "b 12", "cont"
     #   enter "b 12", ->{ "disable #{breakpoint.id}" }, "cont"
     #
-    def enter(*messages)
-      ui_console.input.concat(messages)
+    def enter(messages)
+      ui_console.queue.push(messages)
+    end
+
+    def assertion(expected)
+      ui_console.queue.push Proc.new {
+        actual = DEBUGGER__::SESSION.th_clients[Thread.main].target_frames[0].location.lineno
+        assert_equal expected, actual
+      }
     end
 
     #
@@ -53,8 +60,6 @@ module DEBUGGER__
     def debug_code(program, &block)
       ui_console.test_block = block
       debug_in_temp_file(program)
-      ui_console.test_block&.call
-      ui_console.test_block = nil
     end
 
     #
