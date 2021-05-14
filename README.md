@@ -350,7 +350,7 @@ The `<...>` notation means the argument.
 * `catch <Error>`
   * Set breakpoint on raising `<Error>`.
 * `watch <expr>`
-  * Stop the execution when the result of <expr> is changed.
+  * Stop the execution when the result of `<expr>` is changed.
   * Note that this feature is super slow.
 * `del[ete]`
   * delete all breakpoints.
@@ -392,13 +392,13 @@ The `<...>` notation means the argument.
 ### Frame control
 
 * `f[rame]`
-  * Show current frame.
+  * Show the current frame.
 * `f[rame] <framenum>`
-  * Specify frame. Evaluation are run on this frame environment.
+  * Specify a current frame. Evaluation are run on specified frame.
 * `up`
-  * Specify upper frame.
+  * Specify the upper frame.
 * `down`
-  * Specify down frame.
+  * Specify the lower frame.
 
 ### Evaluate
 

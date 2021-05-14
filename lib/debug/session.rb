@@ -330,7 +330,7 @@ module DEBUGGER__
         return :retry
 
       # * `watch <expr>`
-      #   * Stop the execution when the result of <expr> is changed.
+      #   * Stop the execution when the result of `<expr>` is changed.
       #   * Note that this feature is super slow.
       when 'wat', 'watch'
         if arg
@@ -477,19 +477,19 @@ module DEBUGGER__
       ### Frame control
 
       # * `f[rame]`
-      #   * Show current frame.
+      #   * Show the current frame.
       # * `f[rame] <framenum>`
-      #   * Specify frame. Evaluation are run on this frame environment.
+      #   * Specify a current frame. Evaluation are run on specified frame.
       when 'frame', 'f'
         @tc << [:frame, :set, arg]
 
       # * `up`
-      #   * Specify upper frame.
+      #   * Specify the upper frame.
       when 'up'
         @tc << [:frame, :up]
 
       # * `down`
-      #   * Specify down frame.
+      #   * Specify the lower frame.
       when 'down'
         @tc << [:frame, :down]
 
