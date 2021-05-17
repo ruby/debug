@@ -9,8 +9,16 @@ module DEBUGGER__
       path = '-e' if iseq.path == '-e'
 
       case
+      when src
+        if  File.file?(path)
+          path = '(eval)' + path
+          src = nil
+        end
       when path = iseq.absolute_path
-        src = File.read(path)
+        begin
+          src = File.read(path)
+        rescue SystemCallError
+        end
       when iseq.path == '-e'
         path = '-e'
       else
