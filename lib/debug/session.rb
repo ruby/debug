@@ -1,7 +1,8 @@
 ﻿module DEBUGGER__
   # used in thread_client.c
+
   FrameInfo = Struct.new(:location, :self, :binding, :iseq, :class, :frame_depth,
-                         :has_return_value, :return_value, :show_line)
+                          :has_return_value, :return_value, :show_line)
 end
 
 if File.exist? File.join(__dir__, 'debug.so')
