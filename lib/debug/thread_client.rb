@@ -349,6 +349,7 @@ module DEBUGGER__
     def frame_str i
       frame = @target_frames[i]
       b = frame.binding
+      loc_str = pretty_location(frame.location)
 
       cur_str = (@current_frame_index == i ? '=>' : '  ')
 
@@ -369,8 +370,6 @@ module DEBUGGER__
           ci_str = frame.location.label
         end
 
-        loc_str = "#{pretty_location(frame.location)}"
-
         if frame.has_return_value
           return_str = " #=> #{short_inspect(frame.return_value)}"
         end
@@ -378,7 +377,6 @@ module DEBUGGER__
         ksig = klass_sig frame
         callee = frame.location.base_label
         ci_str = "[C] #{ksig}#{callee}"
-        loc_str = "#{pretty_location(frame.location)}"
       end
 
       "#{cur_str}##{i}\t#{ci_str}#{loc_str}#{return_str}"
@@ -533,7 +531,7 @@ module DEBUGGER__
           case type
           when :up
             if @current_frame_index + 1 < @target_frames.size
-              @current_frame_index += 1 
+              @current_frame_index += 1
               show_src max_lines: 1
               show_frame(@current_frame_index)
             end
