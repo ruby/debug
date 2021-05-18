@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require 'minitest'
+require 'test/unit'
+require "tmpdir"
 
 require_relative 'utils'
 require_relative '../../lib/debug/test_console'
@@ -10,8 +11,7 @@ module DEBUGGER__
   #
   # Extends Minitest's base test case and provides defaults for all tests.
   #
-  class TestCase < Minitest::Test
-    make_my_diffs_pretty!
+  class TestCase < Test::Unit::TestCase
     include TestUtils
 
     def self.before_suite
