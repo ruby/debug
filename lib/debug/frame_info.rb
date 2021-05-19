@@ -23,33 +23,11 @@ module DEBUGGER__
       end
     end
 
-    def pretty_location
-      " at #{pretty_path}:#{location.lineno}"
-    end
-
     def file_lines
       if (src_lines = SESSION.source(path))
         src_lines
       elsif File.exist?(path)
         File.readlines(path)
-      end
-    end
-
-    def parameters_info vars
-      vars.map{|var|
-        begin
-          "#{var}=#{short_inspect(binding.local_variable_get(var))}"
-        rescue NameError, TypeError
-          nil
-        end
-      }.compact.join(', ')
-    end
-
-    def klass_sig
-      if self.class == get_singleton_class(self.self)
-        "#{self.self}."
-      else
-        "#{self.class}#"
       end
     end
 
@@ -99,6 +77,28 @@ module DEBUGGER__
       obj.singleton_class # TODO: don't use it
     rescue TypeError
       nil
+    end
+
+    def parameters_info vars
+      vars.map{|var|
+        begin
+          "#{var}=#{short_inspect(binding.local_variable_get(var))}"
+        rescue NameError, TypeError
+          nil
+        end
+      }.compact.join(', ')
+    end
+
+    def klass_sig
+      if self.class == get_singleton_class(self.self)
+        "#{self.self}."
+      else
+        "#{self.class}#"
+      end
+    end
+
+    def pretty_location
+      " at #{pretty_path}:#{location.lineno}"
     end
   end
 end
