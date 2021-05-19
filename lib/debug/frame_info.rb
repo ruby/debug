@@ -45,23 +45,6 @@ module DEBUGGER__
       end
     end
 
-    SHORT_INSPECT_LENGTH = 40
-
-    def short_inspect obj
-      str = obj.inspect
-      if str.length > SHORT_INSPECT_LENGTH
-        str[0...SHORT_INSPECT_LENGTH] + '...'
-      else
-        str
-      end
-    end
-
-    def get_singleton_class obj
-      obj.singleton_class # TODO: don't use it
-    rescue TypeError
-      nil
-    end
-
     def to_client_output
       loc_str = pretty_location
 
@@ -89,6 +72,25 @@ module DEBUGGER__
       end
 
       "#{ci_str}#{loc_str}#{return_str}"
+    end
+
+    private
+
+    SHORT_INSPECT_LENGTH = 40
+
+    def short_inspect obj
+      str = obj.inspect
+      if str.length > SHORT_INSPECT_LENGTH
+        str[0...SHORT_INSPECT_LENGTH] + '...'
+      else
+        str
+      end
+    end
+
+    def get_singleton_class obj
+      obj.singleton_class # TODO: don't use it
+    rescue TypeError
+      nil
     end
   end
 end
