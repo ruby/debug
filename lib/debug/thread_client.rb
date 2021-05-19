@@ -158,14 +158,6 @@ module DEBUGGER__
       end
     end
 
-    def file_lines path
-      if (src_lines = SESSION.source(path))
-        src_lines
-      elsif File.exist?(path)
-        File.readlines(path)
-      end
-    end
-
     def show_src(frame_index: @current_frame_index,
                  update_line: false,
                  max_lines: 10,
@@ -174,7 +166,7 @@ module DEBUGGER__
                  dir: +1)
       #
       if @target_frames && frame = @target_frames[frame_index]
-        if file_lines = file_lines(frame.path)
+        if file_lines = frame.file_lines
           frame_line = frame.location.lineno - 1
 
           lines = file_lines.map.with_index do |e, i|

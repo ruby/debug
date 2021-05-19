@@ -27,6 +27,14 @@ module DEBUGGER__
       " at #{pretty_path}:#{location.lineno}"
     end
 
+    def file_lines
+      if (src_lines = SESSION.source(path))
+        src_lines
+      elsif File.exist?(path)
+        File.readlines(path)
+      end
+    end
+
     def parameters_info vars
       vars.map{|var|
         begin
