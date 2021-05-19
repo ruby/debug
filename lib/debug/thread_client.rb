@@ -291,7 +291,7 @@ module DEBUGGER__
     def frame_str(i)
       cur_str = (@current_frame_index == i ? '=>' : '  ')
       prefix = "#{cur_str}##{i}"
-      frame_string = @target_frames[i].to_string
+      frame_string = @target_frames[i].to_client_output
       "#{prefix}\t#{frame_string}"
     end
 

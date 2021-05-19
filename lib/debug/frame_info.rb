@@ -62,7 +62,7 @@ module DEBUGGER__
       nil
     end
 
-    def to_string
+    def to_client_output
       loc_str = pretty_location
 
       if binding && iseq
