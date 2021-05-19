@@ -1,5 +1,6 @@
 require 'objspace'
 require 'pp'
+require_relative 'frame_info'
 
 module DEBUGGER__
   class ThreadClient
@@ -173,7 +174,7 @@ module DEBUGGER__
                  dir: +1)
       #
       if @target_frames && frame = @target_frames[frame_index]
-        if file_lines = file_lines(path = frame.location.path)
+        if file_lines = file_lines(frame.path)
           frame_line = frame.location.lineno - 1
 
           lines = file_lines.map.with_index do |e, i|
@@ -206,11 +207,11 @@ module DEBUGGER__
           end
 
           if start_line != end_line && max_lines
-            puts "[#{start_line+1}, #{end_line}] in #{pretty_path(path)}" if !update_line && max_lines != 1
+            puts "[#{start_line+1}, #{end_line}] in #{frame.pretty_path}" if !update_line && max_lines != 1
             puts lines[start_line ... end_line]
           end
         else # no file lines
-          puts "# No sourcefile available for #{path}"
+          puts "# No sourcefile available for #{frame.path}"
         end
       end
     end
@@ -287,99 +288,11 @@ module DEBUGGER__
       end
     end
 
-    def parameters_info b, vars
-      vars.map{|var|
-        begin
-          "#{var}=#{short_inspect(b.local_variable_get(var))}"
-        rescue NameError, TypeError
-          nil
-        end
-      }.compact.join(', ')
-    end
-
-    def get_singleton_class obj
-      obj.singleton_class # TODO: don't use it
-    rescue TypeError
-      nil
-    end
-
-    def klass_sig frame
-      klass = frame.class
-      if klass == get_singleton_class(frame.self)
-        "#{frame.self}."
-      else
-        "#{frame.class}#"
-      end
-    end
-
-    SHORT_INSPECT_LENGTH = 40
-
-    def short_inspect obj
-      str = obj.inspect
-      if str.length > SHORT_INSPECT_LENGTH
-        str[0...SHORT_INSPECT_LENGTH] + '...'
-      else
-        str
-      end
-    end
-
-    HOME = ENV['HOME'] ? (ENV['HOME'] + '/') : nil
-
-    def pretty_path path
-      use_short_path = CONFIG[:use_short_path]
-
-      case
-      when use_short_path && path.start_with?(dir = RbConfig::CONFIG["rubylibdir"] + '/')
-        path.sub(dir, '$(rubylibdir)/')
-      when use_short_path && Gem.path.any? do |gp|
-          path.start_with?(dir = gp + '/gems/')
-        end
-        path.sub(dir, '$(Gem)/')
-      when HOME && path.start_with?(HOME)
-        path.sub(HOME, '~/')
-      else
-        path
-      end
-    end
-
-    def pretty_location loc
-      " at #{pretty_path(loc.path)}:#{loc.lineno}"
-    end
-
-    def frame_str i
-      frame = @target_frames[i]
-      b = frame.binding
-      loc_str = pretty_location(frame.location)
-
+    def frame_str(i)
       cur_str = (@current_frame_index == i ? '=>' : '  ')
-
-      if b && (iseq = frame.iseq)
-        if iseq.type == :block
-          if (argc = iseq.argc) > 0
-            args = parameters_info b, iseq.locals[0...argc]
-            args_str = "{|#{args}|}"
-          end
-
-          label_prefix = frame.location.label.sub('block'){ "block#{args_str}" }
-          ci_str = label_prefix
-        elsif (callee = b.eval('__callee__', __FILE__, __LINE__)) && (argc = iseq.argc) > 0
-          args = parameters_info b, iseq.locals[0...argc]
-          ksig = klass_sig frame
-          ci_str = "#{ksig}#{callee}(#{args})"
-        else
-          ci_str = frame.location.label
-        end
-
-        if frame.has_return_value
-          return_str = " #=> #{short_inspect(frame.return_value)}"
-        end
-      else
-        ksig = klass_sig frame
-        callee = frame.location.base_label
-        ci_str = "[C] #{ksig}#{callee}"
-      end
-
-      "#{cur_str}##{i}\t#{ci_str}#{loc_str}#{return_str}"
+      prefix = "#{cur_str}##{i}"
+      frame_string = @target_frames[i].to_client_output
+      "#{prefix}\t#{frame_string}"
     end
 
     def show_frames max = (@target_frames || []).size
