@@ -72,12 +72,10 @@ module DEBUGGER__
             args_str = "{|#{args}|}"
           end
 
-          label_prefix = location.label.sub('block'){ "block#{args_str}" }
-          ci_str = label_prefix
+          ci_str = location.label.sub('block'){ "block#{args_str}" }
         elsif (callee = binding.eval('__callee__', __FILE__, __LINE__)) && (argc = iseq.argc) > 0
           args = parameters_info iseq.locals[0...argc]
-          ksig = klass_sig
-          ci_str = "#{ksig}#{callee}(#{args})"
+          ci_str = "#{klass_sig}#{callee}(#{args})"
         else
           ci_str = location.label
         end
@@ -86,9 +84,8 @@ module DEBUGGER__
           return_str = " #=> #{short_inspect(return_value)}"
         end
       else
-        ksig = klass_sig
         callee = location.base_label
-        ci_str = "[C] #{ksig}#{callee}"
+        ci_str = "[C] #{klass_sig}#{callee}"
       end
 
       "#{ci_str}#{loc_str}#{return_str}"
