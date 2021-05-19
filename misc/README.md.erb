@@ -62,13 +62,14 @@ $ ruby -r debug/run target.rb
 
 $ cat target.rb
 require 'debug/run' # start the debug console
-...
+... rest of program ...
 
 # or
 
 $ cat target.rb
 require 'debug/session'  # introduce the functionality
 DEBUGGER__.console       # and start the debug console
+... rest of program ...
 
 $ ruby target.rb
 ```
