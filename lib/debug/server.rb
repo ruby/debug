@@ -194,7 +194,11 @@ module DEBUGGER__
     end
 
     def accept
-      @file = DEBUGGER__.create_unix_domain_socket_name(@sock_dir)
+      if f = DEBUGGER__::CONFIG[:sock_path]
+        @file = f
+      else
+        @file = DEBUGGER__.create_unix_domain_socket_name(@sock_dir)
+      end
 
       ::DEBUGGER__.message "Debugger can attach via UNIX domain socket (#{@file})"
       Socket.unix_server_loop @file do |sock, client|

@@ -1044,8 +1044,6 @@ module DEBUGGER__
     r.join("\n")
   end
 
-  CONFIG = ::DEBUGGER__.parse_argv(ENV['RUBY_DEBUG_OPT'])
-
   class ::Module
     def method_added mid; end
     def singleton_method_added mid; end
