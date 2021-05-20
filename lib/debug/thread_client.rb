@@ -20,8 +20,8 @@ module DEBUGGER__
       @q_cmd = q_cmd
       @step_tp = nil
       @output = []
-      @src_lines_on_stop = (DEBUGGER__::CONFIG[:show_src_lines]   || 10).to_i
-      @show_frames_on_stop = (DEBUGGER__::CONFIG[:show_frames] || 2).to_i
+      @src_lines_on_stop = (::DEBUGGER__::CONFIG[:show_src_lines]   || 10).to_i
+      @show_frames_on_stop = (::DEBUGGER__::CONFIG[:show_frames] || 2).to_i
       set_mode nil
     end
 
@@ -130,7 +130,7 @@ module DEBUGGER__
           next if SESSION.break? tp.path, tp.lineno
           next if !yield
           next if tp.path.start_with?(__dir__)
-          next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
+          next unless File.exist?(tp.path) if ::DEBUGGER__::CONFIG[:skip_nosrc]
 
           tp.disable
           on_suspend tp.event, tp
@@ -141,7 +141,7 @@ module DEBUGGER__
           next if thread != Thread.current
           next if SESSION.break? tp.path, tp.lineno
           next if !yield
-          next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
+          next unless File.exist?(tp.path) if ::DEBUGGER__::CONFIG[:skip_nosrc]
 
           tp.disable
           on_suspend tp.event, tp

@@ -194,7 +194,7 @@ module DEBUGGER__
     end
 
     def accept
-      if f = DEBUGGER__::CONFIG[:sock_path]
+      if f = ::DEBUGGER__::CONFIG[:sock_path]
         @file = f
       else
         @file = DEBUGGER__.create_unix_domain_socket_name(@sock_dir)

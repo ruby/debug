@@ -2,7 +2,7 @@
 module DEBUGGER__
   def self.unix_domain_socket_dir
     case
-    when path = DEBUGGER__::CONFIG[:sock_dir]
+    when path = ::DEBUGGER__::CONFIG[:sock_dir]
     when path = ENV['XDG_RUNTIME_DIR']
     when home = ENV['HOME']
       path = File.join(home, '.ruby-debug-sock')
