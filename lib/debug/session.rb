@@ -936,6 +936,7 @@ module DEBUGGER__
   end
 
   def self.console
+    require_relative 'console'
     initialize_session UI_Console.new
 
     @prev_handler = trap(:SIGINT){
