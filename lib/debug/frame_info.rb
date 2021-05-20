@@ -23,8 +23,60 @@ module DEBUGGER__
       end
     end
 
-    def pretty_location
-      " at #{pretty_path}:#{location.lineno}"
+    def file_lines
+      if (src_lines = SESSION.source(path))
+        src_lines
+      elsif File.exist?(path)
+        File.readlines(path)
+      end
+    end
+
+    def to_client_output
+      loc_str = pretty_location
+
+      if binding && iseq
+        if iseq.type == :block
+          if (argc = iseq.argc) > 0
+            args = parameters_info iseq.locals[0...argc]
+            args_str = "{|#{args}|}"
+          end
+
+          ci_str = location.label.sub('block'){ "block#{args_str}" }
+        elsif (callee = binding.eval('__callee__', __FILE__, __LINE__)) && (argc = iseq.argc) > 0
+          args = parameters_info iseq.locals[0...argc]
+          ci_str = "#{klass_sig}#{callee}(#{args})"
+        else
+          ci_str = location.label
+        end
+
+        if has_return_value
+          return_str = " #=> #{short_inspect(return_value)}"
+        end
+      else
+        callee = location.base_label
+        ci_str = "[C] #{klass_sig}#{callee}"
+      end
+
+      "#{ci_str}#{loc_str}#{return_str}"
+    end
+
+    private
+
+    SHORT_INSPECT_LENGTH = 40
+
+    def short_inspect obj
+      str = obj.inspect
+      if str.length > SHORT_INSPECT_LENGTH
+        str[0...SHORT_INSPECT_LENGTH] + '...'
+      else
+        str
+      end
+    end
+
+    def get_singleton_class obj
+      obj.singleton_class # TODO: don't use it
+    rescue TypeError
+      nil
     end
 
     def parameters_info vars
@@ -45,53 +97,8 @@ module DEBUGGER__
       end
     end
 
-    SHORT_INSPECT_LENGTH = 40
-
-    def short_inspect obj
-      str = obj.inspect
-      if str.length > SHORT_INSPECT_LENGTH
-        str[0...SHORT_INSPECT_LENGTH] + '...'
-      else
-        str
-      end
-    end
-
-    def get_singleton_class obj
-      obj.singleton_class # TODO: don't use it
-    rescue TypeError
-      nil
-    end
-
-    def to_client_output
-      loc_str = pretty_location
-
-      if binding && iseq
-        if iseq.type == :block
-          if (argc = iseq.argc) > 0
-            args = parameters_info iseq.locals[0...argc]
-            args_str = "{|#{args}|}"
-          end
-
-          label_prefix = location.label.sub('block'){ "block#{args_str}" }
-          ci_str = label_prefix
-        elsif (callee = binding.eval('__callee__', __FILE__, __LINE__)) && (argc = iseq.argc) > 0
-          args = parameters_info iseq.locals[0...argc]
-          ksig = klass_sig
-          ci_str = "#{ksig}#{callee}(#{args})"
-        else
-          ci_str = location.label
-        end
-
-        if has_return_value
-          return_str = " #=> #{short_inspect(return_value)}"
-        end
-      else
-        ksig = klass_sig
-        callee = location.base_label
-        ci_str = "[C] #{ksig}#{callee}"
-      end
-
-      "#{ci_str}#{loc_str}#{return_str}"
+    def pretty_location
+      " at #{pretty_path}:#{location.lineno}"
     end
   end
 end
