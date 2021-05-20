@@ -400,17 +400,23 @@ module DEBUGGER__
 
         @tc << [:show, :edit, arg]
 
-      # * `i[nfo]`
+      # * `i[nfo]`, `i[nfo] l[ocal[s]]`
       #   * Show information about the current frame (local variables)
       #   * It includes `self` as `%self` and a return value as `%return`.
-      # * `i[nfo] <expr>`
-      #   * Show information about the result of <expr>.
+      # * `i[nfo] th[read[s]]
+      #   * Show all threads (same as `th[read]`).
       when 'i', 'info'
         case arg
         when nil
           @tc << [:show, :local]
+        when 'l', /locals?/
+          @tc << [:show, :local]
+        when 'th', /threads?/
+          thread_list
+          return :retry
         else
-          @tc << [:show, :object_info, arg]
+          show_help 'info'
+          return :retry
         end
 
       # * `display`
