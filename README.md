@@ -438,27 +438,28 @@ Debug console mode:
     -O, --open                       Start debuggee with opening the debugger port.
                                      If TCP/IP options are not given,
                                      a UNIX domain socket will be used.
+        --sock-path=[SOCK_PATH]      UNIX Doman socket path
         --port=[PORT]                Listening TCP/IP port
         --host=[HOST]                Listening TCP/IP host
 
   Debug console mode runs Ruby program with the debug console.
 
-  rdbg target.rb foo bar                 starts like 'ruby target.rb foo bar'.
-  rdbg -- -r foo -e bar                  starts like 'ruby -r foo -e bar'.
-  rdbg -O target.rb foo bar              starts and accepts attaching with UNIX domain socket.
-  rdbg -O --port 1234 target.rb foo bar  starts accepts attaching with TCP/IP localhost:1234.
-  rdbg -O --port 1234 -- -r foo -e bar   starts accepts attaching with TCP/IP localhost:1234.
+  'rdbg target.rb foo bar'                starts like 'ruby target.rb foo bar'.
+  'rdbg -- -r foo -e bar'                 starts like 'ruby -r foo -e bar'.
+  'rdbg -O target.rb foo bar'             starts and accepts attaching with UNIX domain socket.
+  'rdbg -O --port 1234 target.rb foo bar' starts accepts attaching with TCP/IP localhost:1234.
+  'rdbg -O --port 1234 -- -r foo -e bar'  starts accepts attaching with TCP/IP localhost:1234.
 
 Attach mode:
     -A, --attach                     Attach to debuggee process.
 
   Attach mode attaches the remote debug console to the debuggee process.
 
-  'rdbg -A' tries to connect via UNIX domain socket.
-            If there are multiple processes are waiting for the
-            debugger connection, list possible debuggee names.
-  'rdbg -A path' tries to connect via UNIX domain socket with given path name.
-  'rdbg -A port' tries to connect to localhost:port via TCP/IP.
+  'rdbg -A'           tries to connect via UNIX domain socket.
+                      If there are multiple processes are waiting for the
+                      debugger connection, list possible debuggee names.
+  'rdbg -A path'      tries to connect via UNIX domain socket with given path name.
+  'rdbg -A port'      tries to connect to localhost:port via TCP/IP.
   'rdbg -A host port' tries to connect to host:port via TCP/IP.
 
 ```
