@@ -50,7 +50,7 @@ module DEBUGGER__
       @bps = {} # bp.key => bp
                 #   [file, line] => LineBreakpoint
                 #   "Error" => CatchBreakpoint
-                #   Method => MethodBreakpoint
+                #   "Foo#bar" => MethodBreakpoint
                 #   [:watch, expr] => WatchExprBreakpoint
                 #   [:check, expr] => CheckBreakpoint
       @th_clients = {} # {Thread => ThreadClient}
@@ -894,20 +894,21 @@ module DEBUGGER__
       b = tp.binding
       if var_name = b.local_variables.first
         mid = b.local_variable_get(var_name)
-        found = false
+        unresolved = false
 
         @bps.each{|k, bp|
           case bp
           when MethodBreakpoint
             if bp.method.nil?
-              found = true
               if bp.sig_method_name == mid.to_s
                 bp.try_enable(quiet: true)
               end
             end
+
+            unresolved = true unless bp.enabled?
           end
         }
-        unless found
+        unless unresolved
           METHOD_ADDED_TRACKER.disable
         end
       end
