@@ -1,19 +1,7 @@
-﻿module DEBUGGER__
-  # used in thread_client.c
-
-  FrameInfo = Struct.new(:location, :self, :binding, :iseq, :class, :frame_depth,
-                          :has_return_value, :return_value, :show_line)
-end
-
-if File.exist? File.join(__dir__, 'debug.so')
-  require_relative 'debug.so'
-else
-  require "debug/debug"
-end
-
+﻿
+require_relative 'thread_client'
 require_relative 'source_repository'
 require_relative 'breakpoint'
-require_relative 'thread_client'
 require_relative 'config'
 
 class RubyVM::InstructionSequence
