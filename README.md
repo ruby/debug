@@ -467,3 +467,5 @@ Attach mode:
 # Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/ruby/debug.
+
+Please also check the [contributing guideline](/CONTRIBUTING.md).
