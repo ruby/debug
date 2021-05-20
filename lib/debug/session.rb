@@ -896,7 +896,7 @@ module DEBUGGER__
             if bp.method.nil?
               found = true
               if bp.sig_method_name == mid.to_s
-                bp.enable(quiet: true)
+                bp.try_enable(quiet: true)
               end
             end
           end

@@ -90,7 +90,7 @@ method_added_tracker(VALUE tpval, void *ptr)
     VALUE mid = rb_tracearg_callee_id(arg);
 
     if (RB_UNLIKELY(mid == ID2SYM(rb_intern("method_added")) ||
-                    mid == ID2SYM(rb_intern("singleton_method_method_added")))) {
+                    mid == ID2SYM(rb_intern("singleton_method_added")))) {
         VALUE args[] = {
             tpval,
         };

@@ -333,7 +333,11 @@ module DEBUGGER__
       end
     end
 
-    def enable quiet: false
+    def enable
+      try_enable
+    end
+
+    def try_enable quiet: false
       eval_class_name
       search_method
 
