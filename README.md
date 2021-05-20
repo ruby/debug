@@ -374,11 +374,11 @@ The `<...>` notation means the argument.
   * Note that edited file will not be reloaded.
 * `edit <file>`
   * Open <file> on the editor.
-* `i[nfo]`
+* `i[nfo]`, `i[nfo] l[ocal[s]]`
   * Show information about the current frame (local variables)
   * It includes `self` as `%self` and a return value as `%return`.
-* `i[nfo] <expr>`
-  * Show information about the result of <expr>.
+* `i[nfo] th[read[s]]
+  * Show all threads (same as `th[read]`).
 * `display`
   * Show display setting.
 * `display <expr>`
