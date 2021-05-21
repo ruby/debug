@@ -4,4 +4,4 @@ gemspec
 
 gem "rake"
 gem "rake-compiler"
-gem "minitest", "~> 5.0"
+gem "test-unit", "~> 3.0"
