@@ -43,9 +43,7 @@ module DEBUGGER__
       end
     end
 
-    def to_client_output
-      loc_str = pretty_location
-
+    def call_identifier_str
       if binding && iseq
         if iseq.type == :block
           if (argc = iseq.argc) > 0
@@ -53,23 +51,32 @@ module DEBUGGER__
             args_str = "{|#{args}|}"
           end
 
-          ci_str = location.label.sub('block'){ "block#{args_str}" }
+          location.label.sub('block'){ "block#{args_str}" }
         elsif (callee = binding.eval('__callee__', __FILE__, __LINE__)) && (argc = iseq.argc) > 0
           args = parameters_info iseq.locals[0...argc]
-          ci_str = "#{klass_sig}#{callee}(#{args})"
+          "#{klass_sig}#{callee}(#{args})"
         else
-          ci_str = location.label
-        end
-
-        if has_return_value
-          return_str = " #=> #{short_inspect(return_value)}"
+          location.label
         end
       else
-        callee = location.base_label
-        ci_str = "[C] #{klass_sig}#{callee}"
+        "[C] #{klass_sig}#{location.base_label}"
       end
+    end
 
-      "#{ci_str}#{loc_str}#{return_str}"
+    def return_str
+      if binding && iseq && has_return_value
+        short_inspect(return_value)
+      end
+    end
+
+    def location_str
+      "#{pretty_path}:#{location.lineno}"
+    end
+
+    def to_client_output
+      result = "#{call_identifier_str} at #{location_str}"
+      result += " #=> #{return_str}" if return_str
+      result
     end
 
     private
@@ -107,10 +114,6 @@ module DEBUGGER__
       else
         "#{self.class}#"
       end
-    end
-
-    def pretty_location
-      " at #{pretty_path}:#{location.lineno}"
     end
   end
 end
