@@ -8,3 +8,4 @@
 /tmp/
 *.bundle
 /Gemfile.lock
+/lib/debug/debug.so
