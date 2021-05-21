@@ -187,41 +187,28 @@ module DEBUGGER__
   end
 
   class UI_UnixDomainServer < UI_ServerBase
-    def initialize sock_dir: nil
+    def initialize sock_dir: nil, sock_path: nil
+      @sock_path = sock_path
       @sock_dir = sock_dir || DEBUGGER__.unix_domain_socket_dir
 
       super()
     end
 
     def accept
-      if f = ::DEBUGGER__::CONFIG[:sock_path]
-        @file = f
+      case
+      when @sock_path
+      when sp = ::DEBUGGER__::CONFIG[:sock_path]
+        @sock_path = sp
       else
-        @file = DEBUGGER__.create_unix_domain_socket_name(@sock_dir)
+        @sock_path = DEBUGGER__.create_unix_domain_socket_name(@sock_dir)
       end
 
-      ::DEBUGGER__.message "Debugger can attach via UNIX domain socket (#{@file})"
-      Socket.unix_server_loop @file do |sock, client|
+      ::DEBUGGER__.message "Debugger can attach via UNIX domain socket (#{@sock_path})"
+      Socket.unix_server_loop @sock_path do |sock, client|
         @client_addr = client
         yield sock
       end
     end
-  end
-
-  def self.open host: nil, port: ::DEBUGGER__::CONFIG[:port], sock_dir: nil
-    if port
-      open_tcp host: host, port: port
-    else
-      open_unix sock_dir: sock_dir
-    end
-  end
-
-  def self.open_tcp(host: nil, port:)
-    initialize_session UI_TcpServer.new(host: host, port: port)
-  end
-
-  def self.open_unix sock_dir: nil
-    initialize_session UI_UnixDomainServer.new(sock_dir: sock_dir)
   end
 
   def self.message msg

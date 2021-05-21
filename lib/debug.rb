@@ -1,1 +1,1 @@
-require_relative 'debug/run'
+require_relative 'debug/session'

@@ -915,6 +915,16 @@ module DEBUGGER__
     end
   end
 
+  # manual configuration methods
+
+  def self.add_line_breakpoint file, line, **kw
+    ::DEBUGGER__::SESSION.add_line_breakpoint file, line, **kw
+  end
+
+  def self.add_catch_breakpoint pat
+    ::DEBUGGER__::SESSION.add_catch_breakpoint pat
+  end
+
   # String for requring location
   # nil for -r
   def self.require_location
@@ -932,25 +942,39 @@ module DEBUGGER__
     nil
   end
 
-  def self.console
+  # start methods
+
+  def self.console nonstop: false
     require_relative 'console'
-    initialize_session UI_Console.new
+    initialize_session UI_Console.new, nonstop
 
     @prev_handler = trap(:SIGINT){
       ThreadClient.current.on_trap :SIGINT
     }
   end
 
-  def self.add_line_breakpoint file, line, **kw
-    ::DEBUGGER__::SESSION.add_line_breakpoint file, line, **kw
+  def self.open host: nil, port: ::DEBUGGER__::CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false
+    if port
+      open_tcp host: host, port: port, nonstop: nonstop
+    else
+      open_unix sock_path: sock_path, sock_dir: sock_dir
+    end
   end
 
-  def self.add_catch_breakpoint pat
-    ::DEBUGGER__::SESSION.add_catch_breakpoint pat
+  def self.open_tcp host: nil, port:, nonstop: false
+    require_relative 'server'
+    initialize_session UI_TcpServer.new(host: host, port: port), nonstop
   end
+
+  def self.open_unix sock_path: nil, sock_dir: nil, nonstop: false
+    require_relative 'server'
+    initialize_session UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path), nonstop
+  end
+
+  # boot utilities
 
   class << self
-    define_method :initialize_session do |ui|
+    define_method :initialize_session do |ui, nonstop|
       ::DEBUGGER__.const_set(:SESSION, Session.new(ui))
 
       # default breakpoints
@@ -962,7 +986,7 @@ module DEBUGGER__
         def bp; nil; end
       end
 
-      if ::DEBUGGER__::CONFIG[:nonstop] != '1'
+      if nonstop == false && ::DEBUGGER__::CONFIG[:nonstop] != '1'
         if loc = ::DEBUGGER__.require_location
           # require 'debug/console' or 'debug'
           add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
