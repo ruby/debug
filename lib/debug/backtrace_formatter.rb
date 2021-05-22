@@ -20,7 +20,7 @@ module DEBUGGER__
     def formatted_trace(i)
       frame = @frames[i]
       result = "#{frame.call_identifier_str} at #{frame.location_str}"
-      result += " #=> #{frame.return_str}" if frame.return_str
+      result += " #=> #{frame.return_value_str}" if frame.return_value_str
       result
     end
   end

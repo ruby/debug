@@ -63,7 +63,7 @@ module DEBUGGER__
       end
     end
 
-    def return_str
+    def return_value_str
       if binding && iseq && has_return_value
         short_inspect(return_value)
       end
