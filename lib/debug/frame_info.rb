@@ -73,12 +73,6 @@ module DEBUGGER__
       "#{pretty_path}:#{location.lineno}"
     end
 
-    def to_client_output
-      result = "#{call_identifier_str} at #{location_str}"
-      result += " #=> #{return_str}" if return_str
-      result
-    end
-
     private
 
     SHORT_INSPECT_LENGTH = 40

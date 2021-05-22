@@ -1,6 +1,7 @@
 require 'objspace'
 require 'pp'
 require_relative 'frame_info'
+require_relative 'backtrace_formatter'
 
 module DEBUGGER__
   class ThreadClient
@@ -84,6 +85,7 @@ module DEBUGGER__
     def on_suspend event, tp = nil, bp: nil, sig: nil
       @current_frame_index = 0
       @target_frames = DEBUGGER__.capture_frames __dir__
+      @backtrace_formatter = BacktraceFormatter.new(@target_frames)
 
       cf = @target_frames.first
       if cf
@@ -280,27 +282,31 @@ module DEBUGGER__
       end
     end
 
-    def frame_str(i)
-      cur_str = (@current_frame_index == i ? '=>' : '  ')
-      prefix = "#{cur_str}##{i}"
-      frame_string = @target_frames[i].to_client_output
-      "#{prefix}\t#{frame_string}"
+    def trace_with_prefix(i, trace)
+      "#{prefix_str(i)}\t#{trace}"
     end
 
-    def show_frames max = (@target_frames || []).size
-      if max > 0 && frames = @target_frames
+    def prefix_str(i)
+      cur_str = (@current_frame_index == i ? '=>' : '  ')
+      "#{cur_str}##{i}"
+    end
+
+    def show_frames(max = nil)
+      max ||= (@target_frames || []).size
+
+      if max > 0 && @target_frames
+        traces = @backtrace_formatter.formatted_traces(max)
+        traces.each_with_index do |trace, i|
+          puts(trace_with_prefix(i, trace))
+        end
         size = @target_frames.size
-        max += 1 if size == max + 1
-        max.times{|i|
-          break if i >= size
-          puts frame_str(i)
-        }
         puts "  # and #{size - max} frames (use `bt' command for all frames)" if max < size
       end
     end
 
     def show_frame i=0
-      puts frame_str(i)
+      trace = @backtrace_formatter.formatted_trace(i)
+      puts(trace_with_prefix(i, trace))
     end
 
     def show_object_info expr
