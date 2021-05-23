@@ -1,5 +1,6 @@
 require 'objspace'
 require 'pp'
+require 'irb'
 require_relative 'frame_info'
 
 module DEBUGGER__
@@ -164,12 +165,15 @@ module DEBUGGER__
                  start_line: nil,
                  end_line: nil,
                  dir: +1)
-      #
+
       if @target_frames && frame = @target_frames[frame_index]
         if file_lines = frame.file_lines
+          source = file_lines.join
+          colored_source = IRB::Color.colorize_code(source)
+          colored_lines = colored_source.split("\n")
           frame_line = frame.location.lineno - 1
 
-          lines = file_lines.map.with_index do |e, i|
+          lines = colored_lines.map.with_index do |e, i|
             if i == frame_line
               "=> #{'%4d' % (i+1)}| #{e}"
             else
