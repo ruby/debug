@@ -209,7 +209,7 @@ module DEBUGGER__
       @tp = TracePoint.new(:raise){|tp|
         exc = tp.raised_exception
         exc.class.ancestors.each{|cls|
-          suspend if pat === cls.name
+          suspend if @pat === cls.name
         }
       }
     end

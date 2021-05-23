@@ -852,7 +852,7 @@ module DEBUGGER__
 
     def add_catch_breakpoint arg
       bp = CatchBreakpoint.new(arg)
-      add_braekpoint bp
+      add_breakpoint bp
     end
 
     def add_check_breakpoint expr
