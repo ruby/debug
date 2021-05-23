@@ -1,5 +1,6 @@
 require 'objspace'
 require 'pp'
+require 'irb/color'
 require_relative 'frame_info'
 
 module DEBUGGER__
@@ -14,8 +15,15 @@ module DEBUGGER__
     attr_reader :location, :thread, :mode, :id
 
     DEFAULT_FRAME_FORMATTER = lambda do |frame|
-      result = "#{frame.call_identifier_str} at #{frame.location_str}"
-      result += " #=> #{frame.return_str}" if frame.return_str
+      call_identifier_str = IRB::Color.colorize(frame.call_identifier_str, [:BLUE])
+      location_str = IRB::Color.colorize(frame.location_str, [:YELLOW])
+      result = "#{call_identifier_str} at #{location_str}"
+
+      if return_str = frame.return_str
+        return_str = IRB::Color.colorize(frame.return_str, [:MAGENTA])
+        result += " #=> #{return_str}"
+      end
+
       result
     end
 
