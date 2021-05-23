@@ -13,6 +13,12 @@ module DEBUGGER__
 
     attr_reader :location, :thread, :mode, :id
 
+    DEFAULT_FRAME_FORMATTER = lambda do |frame|
+      result = "#{frame.call_identifier_str} at #{frame.location_str}"
+      result += " #=> #{frame.return_str}" if frame.return_str
+      result
+    end
+
     def initialize id, q_evt, q_cmd, thr = Thread.current
       @id = id
       @thread = thr
@@ -22,6 +28,7 @@ module DEBUGGER__
       @output = []
       @src_lines_on_stop = (::DEBUGGER__::CONFIG[:show_src_lines]   || 10).to_i
       @show_frames_on_stop = (::DEBUGGER__::CONFIG[:show_frames] || 2).to_i
+      @frame_formatter = DEFAULT_FRAME_FORMATTER
       set_mode nil
     end
 
@@ -283,7 +290,8 @@ module DEBUGGER__
     def frame_str(i)
       cur_str = (@current_frame_index == i ? '=>' : '  ')
       prefix = "#{cur_str}##{i}"
-      frame_string = @target_frames[i].to_client_output
+      frame = @target_frames[i]
+      frame_string = @frame_formatter.call(frame)
       "#{prefix}\t#{frame_string}"
     end
 
