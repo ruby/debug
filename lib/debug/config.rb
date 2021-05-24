@@ -40,6 +40,7 @@ module DEBUGGER__
     show_frames:    'RUBY_DEBUG_SHOW_FRAMES',    # Show n frames on breakpoint (default: 2 frames).
     use_short_path: 'RUBY_DEBUG_USE_SHORT_PATH', # Show shoten PATH (like $(Gem)/foo.rb).
     skip_nosrc:     'RUBY_DEBUG_SKIP_NOSRC',     # Skip on no source code lines (default: false).
+    nocolorize:     'RUBY_DEBUG_NOCOLORIZE',     # Disable colorization.
 
     # remote
     port:        'RUBY_DEBUG_PORT',        # TCP/IP remote debugging: port
@@ -72,6 +73,10 @@ module DEBUGGER__
       o.separator 'Debug console mode:'
       o.on('-n', '--nonstop', 'Do not stop at the beginning of the script.') do
         config[:nonstop] = '1'
+      end
+
+      o.on('--nocolorize', 'Disable colorization') do
+        config[:nocolorize] = '1'
       end
 
       o.on('-e [COMMAND]', 'execute debug command at the beginning of the script.') do |cmd|

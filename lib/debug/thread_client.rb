@@ -167,10 +167,17 @@ module DEBUGGER__
                  dir: +1)
 
       if @target_frames && frame = @target_frames[frame_index]
-        if file_lines = frame.file_lines
+        if frame.file_lines
+          file_lines =
+            if ::DEBUGGER__::CONFIG[:nocolorize]
+              frame.file_lines
+            else
+              frame.colored_lines
+            end
+
           frame_line = frame.location.lineno - 1
 
-          lines = frame.colored_lines.map.with_index do |e, i|
+          lines = file_lines.map.with_index do |e, i|
             if i == frame_line
               "=> #{'%4d' % (i+1)}| #{e}"
             else
