@@ -36,11 +36,12 @@ module DEBUGGER__
     end
 
     def file_lines
-      if (src_lines = SESSION.source(path))
-        src_lines
-      elsif File.exist?(path)
-        File.readlines(path)
-      end
+      @file_lines ||=
+        if (src_lines = SESSION.source(path))
+          src_lines
+        elsif File.exist?(path)
+          File.readlines(path)
+        end
     end
 
     def call_identifier_str
