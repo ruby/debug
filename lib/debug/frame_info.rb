@@ -35,6 +35,15 @@ module DEBUGGER__
       end
     end
 
+    def colored_lines
+      @colored_lines ||=
+        begin
+          source = file_lines.join
+          colored_source = IRB::Color.colorize_code(source)
+          colored_source.split("\n")
+        end
+    end
+
     def file_lines
       @file_lines ||=
         if (src_lines = SESSION.source(path))
