@@ -151,7 +151,11 @@ module DEBUGGER__
     end
 
     def source path
-      @sr.get(path)
+      if CONFIG[:use_colorize]
+        @sr.get_colored(path)
+      else
+        @sr.get(path)
+      end
     end
 
     def inspect

@@ -40,11 +40,7 @@ module DEBUGGER__
     end
 
     def file_lines
-      if (src_lines = SESSION.source(realpath))
-        src_lines
-      elsif File.exist?(realpath)
-        File.readlines(realpath)
-      end
+      SESSION.source(realpath || path)
     end
 
     def call_identifier_str
