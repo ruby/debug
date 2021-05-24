@@ -948,37 +948,43 @@ module DEBUGGER__
 
   # start methods
 
-  def self.console nonstop: false
+  def self.console **kw
+    set_config(kw)
+
     require_relative 'console'
-    initialize_session UI_Console.new, nonstop
+    initialize_session UI_Console.new
 
     @prev_handler = trap(:SIGINT){
       ThreadClient.current.on_trap :SIGINT
     }
   end
 
-  def self.open host: nil, port: ::DEBUGGER__::CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false
+  def self.open host: nil, port: ::DEBUGGER__::CONFIG[:port], sock_path: nil, sock_dir: nil, **kw
+    set_config(kw)
+
     if port
-      open_tcp host: host, port: port, nonstop: nonstop
+      open_tcp host: host, port: port
     else
       open_unix sock_path: sock_path, sock_dir: sock_dir
     end
   end
 
-  def self.open_tcp host: nil, port:, nonstop: false
+  def self.open_tcp host: nil, port:, **kw
+    set_config(kw)
     require_relative 'server'
-    initialize_session UI_TcpServer.new(host: host, port: port), nonstop
+    initialize_session UI_TcpServer.new(host: host, port: port)
   end
 
-  def self.open_unix sock_path: nil, sock_dir: nil, nonstop: false
+  def self.open_unix sock_path: nil, sock_dir: nil, **kw
+    set_config(kw)
     require_relative 'server'
-    initialize_session UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path), nonstop
+    initialize_session UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
   end
 
   # boot utilities
 
   class << self
-    define_method :initialize_session do |ui, nonstop|
+    define_method :initialize_session do |ui|
       ::DEBUGGER__.const_set(:SESSION, Session.new(ui))
 
       # default breakpoints
@@ -990,7 +996,7 @@ module DEBUGGER__
         def bp; nil; end
       end
 
-      if nonstop == false && ::DEBUGGER__::CONFIG[:nonstop] != '1'
+      if !::DEBUGGER__::CONFIG[:nonstop]
         if loc = ::DEBUGGER__.require_location
           # require 'debug/console' or 'debug'
           add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false

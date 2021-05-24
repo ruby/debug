@@ -62,7 +62,7 @@ module DEBUGGER__
     }
     CONFIG_MAP.each{|key, evname|
       if val = ENV[evname]
-        if /_USE_/ =~ evname
+        if /_USE_/ =~ evname || /NONSTOP/ =~ evname
           case val
           when '1', 'true', 'TRUE', 'T'
             config[key] = true
@@ -141,4 +141,14 @@ module DEBUGGER__
   end
 
   CONFIG = ::DEBUGGER__.parse_argv(ENV['RUBY_DEBUG_OPT'])
+
+  def self.set_config kw
+    kw.each{|k, v|
+      if CONFIG_MAP[k]
+        CONFIG[k] = v # TODO: ractor support
+      else
+        raise "unknown option: #{k}"
+      end
+    }
+  end
 end
