@@ -18,6 +18,10 @@ module DEBUGGER__
       location.path
     end
 
+    def realpath
+      location.absolute_path
+    end
+
     def pretty_path
       use_short_path = ::DEBUGGER__::CONFIG[:use_short_path]
 
@@ -36,10 +40,10 @@ module DEBUGGER__
     end
 
     def file_lines
-      if (src_lines = SESSION.source(path))
+      if (src_lines = SESSION.source(realpath))
         src_lines
-      elsif File.exist?(path)
-        File.readlines(path)
+      elsif File.exist?(realpath)
+        File.readlines(realpath)
       end
     end
 

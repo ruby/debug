@@ -25,7 +25,7 @@ module DEBUGGER__
         src = nil
       end
 
-      @files[path] = src.lines if src
+      @files[path] = src.lines.map{|e| e.chomp + "\n"} if src
     end
 
     def get path
