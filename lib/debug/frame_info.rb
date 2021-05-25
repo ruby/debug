@@ -47,13 +47,13 @@ module DEBUGGER__
       if binding && iseq
         if iseq.type == :block
           if (argc = iseq.argc) > 0
-            args = parameters_info iseq.locals[0...argc]
+            args = parameters_info(argc)
             args_str = "{|#{args}|}"
           end
 
           location.label.sub('block'){ "block#{args_str}" }
         elsif (callee = binding.eval('__callee__', __FILE__, __LINE__)) && (argc = iseq.argc) > 0
-          args = parameters_info iseq.locals[0...argc]
+          args = parameters_info(argc)
           "#{klass_sig}#{callee}(#{args})"
         else
           location.label
@@ -92,7 +92,8 @@ module DEBUGGER__
       nil
     end
 
-    def parameters_info vars
+    def parameters_info(argc)
+      vars = iseq.locals[0...argc]
       vars.map{|var|
         begin
           "#{var}=#{short_inspect(binding.local_variable_get(var))}"
