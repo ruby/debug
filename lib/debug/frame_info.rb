@@ -52,9 +52,13 @@ module DEBUGGER__
           end
 
           location.label.sub('block'){ "block#{args_str}" }
-        elsif (callee = binding.eval('__callee__', __FILE__, __LINE__)) && (argc = iseq.argc) > 0
-          args = parameters_info(argc)
-          "#{klass_sig}#{callee}(#{args})"
+        elsif callee = binding.eval('__callee__', __FILE__, __LINE__)
+          if (argc = iseq.argc) > 0
+            args = parameters_info(argc)
+            args_str = "(#{args})"
+          end
+
+          "#{klass_sig}#{callee}#{args_str}"
         else
           location.label
         end
