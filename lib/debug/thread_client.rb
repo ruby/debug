@@ -14,7 +14,7 @@ module DEBUGGER__
 
     attr_reader :location, :thread, :mode, :id
 
-    DEFAULT_FRAME_FORMATTER = lambda do |frame|
+    def default_frame_formatter frame
       call_identifier_str = IRB::Color.colorize(frame.call_identifier_str, [:BLUE])
       location_str = IRB::Color.colorize(frame.location_str, [:YELLOW])
       result = "#{call_identifier_str} at #{location_str}"
@@ -36,7 +36,7 @@ module DEBUGGER__
       @output = []
       @src_lines_on_stop = (::DEBUGGER__::CONFIG[:show_src_lines]   || 10).to_i
       @show_frames_on_stop = (::DEBUGGER__::CONFIG[:show_frames] || 2).to_i
-      @frame_formatter = DEFAULT_FRAME_FORMATTER
+      @frame_formatter = method(:default_frame_formatter)
       set_mode nil
     end
 
