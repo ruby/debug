@@ -15,7 +15,7 @@ module DEBUGGER__
     attr_reader :location, :thread, :mode, :id
 
     def colorize str, color
-      if CONFIG[:use_colorize]
+      if @use_colorize
         IRB::Color.colorize str, color
       else
         str
@@ -44,6 +44,7 @@ module DEBUGGER__
       @output = []
       @src_lines_on_stop = (::DEBUGGER__::CONFIG[:show_src_lines]   || 10).to_i
       @show_frames_on_stop = (::DEBUGGER__::CONFIG[:show_frames] || 2).to_i
+      @use_colorize = ::DEBUGGER__::CONFIG[:use_colorize]
       @frame_formatter = method(:default_frame_formatter)
       set_mode nil
     end
