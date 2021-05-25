@@ -15,7 +15,7 @@ module DEBUGGER__
     attr_reader :location, :thread, :mode, :id
 
     def default_frame_formatter frame
-      call_identifier_str = IRB::Color.colorize(frame.call_identifier_str, [:BLUE])
+      call_identifier_str = IRB::Color.colorize(frame.call_identifier_str, [:BLUE, :BOLD])
       location_str = IRB::Color.colorize(frame.location_str, [:YELLOW])
       result = "#{call_identifier_str} at #{location_str}"
 
