@@ -14,13 +14,21 @@ module DEBUGGER__
 
     attr_reader :location, :thread, :mode, :id
 
+    def colorize str, color
+      if CONFIG[:use_colorize]
+        IRB::Color.colorize str, color
+      else
+        str
+      end
+    end
+
     def default_frame_formatter frame
-      call_identifier_str = IRB::Color.colorize(frame.call_identifier_str, [:BLUE, :BOLD])
-      location_str = IRB::Color.colorize(frame.location_str, [:YELLOW])
+      call_identifier_str = colorize(frame.call_identifier_str, [:BLUE, :BOLD])
+      location_str = colorize(frame.location_str, [:YELLOW])
       result = "#{call_identifier_str} at #{location_str}"
 
       if return_str = frame.return_str
-        return_str = IRB::Color.colorize(frame.return_str, [:MAGENTA])
+        return_str = colorize(frame.return_str, [:MAGENTA])
         result += " #=> #{return_str}"
       end
 
