@@ -48,14 +48,14 @@ module DEBUGGER__
         if iseq.type == :block
           if (argc = iseq.argc) > 0
             args = parameters_info(argc)
-            args_str = "{|#{args}|}"
+            args_str = "{|#{assemble_arguments(args)}|}"
           end
 
           location.label.sub('block'){ "block#{args_str}" }
         elsif callee = binding.eval('__callee__', __FILE__, __LINE__)
           if (argc = iseq.argc) > 0
             args = parameters_info(argc)
-            args_str = "(#{args})"
+            args_str = "(#{assemble_arguments(args)})"
           end
 
           "#{klass_sig}#{callee}#{args_str}"
@@ -100,11 +100,17 @@ module DEBUGGER__
       vars = iseq.locals[0...argc]
       vars.map{|var|
         begin
-          "#{var}=#{short_inspect(binding.local_variable_get(var))}"
+          { name: var, value: short_inspect(binding.local_variable_get(var)) }
         rescue NameError, TypeError
           nil
         end
-      }.compact.join(', ')
+      }
+    end
+
+    def assemble_arguments(args)
+      args.map do |arg|
+        "#{arg[:name]}=#{arg[:value]}"
+      end.join(", ")
     end
 
     def klass_sig
