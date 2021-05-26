@@ -22,8 +22,41 @@ module DEBUGGER__
       end
     end
 
+    def colorize_blue(str)
+      colorize(str, [:BLUE, :BOLD])
+    end
+
+    def assemble_arguments(args)
+      args.map do |arg|
+        "#{colorize(arg[:name], [:CYAN, :BOLD])}=#{arg[:value]}"
+      end.join(", ")
+    end
+
     def default_frame_formatter frame
-      call_identifier_str = colorize(frame.call_identifier_str, [:BLUE, :BOLD])
+      call_identifier_str =
+        case frame.frame_type
+        when :block
+          block_loc, args = frame.block_identifier
+
+          if !args.empty?
+            args_str = " {|#{assemble_arguments(args)}|}"
+          end
+
+          "#{colorize_blue("block")}#{args_str} in #{colorize_blue(block_loc)}"
+        when :method
+          ci, args = frame.method_identifier
+
+          if !args.empty?
+            args_str = "(#{assemble_arguments(args)})"
+          end
+
+          "#{colorize_blue(ci)}#{args_str}"
+        when :c
+          colorize_blue(frame.c_identifier)
+        when :other
+          colorize_blue(frame.other_identifier)
+        end
+
       location_str = colorize(frame.location_str, [:YELLOW, :BOLD])
       result = "#{call_identifier_str} at #{location_str}"
 
