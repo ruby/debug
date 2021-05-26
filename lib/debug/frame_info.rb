@@ -43,22 +43,37 @@ module DEBUGGER__
       SESSION.source(realpath || path)
     end
 
+    def colorize str, color
+      if CONFIG[:use_colorize]
+        IRB::Color.colorize str, color
+      else
+        str
+      end
+    end
+
+    def colorize_blue(str)
+      colorize(str, [:BLUE, :BOLD])
+    end
+
     def call_identifier_str
       if binding && iseq
         if iseq.type == :block
           if (argc = iseq.argc) > 0
             args = parameters_info(argc)
-            args_str = "{|#{assemble_arguments(args)}|}"
+            args_str = " {|" + assemble_arguments(args) + "|}"
           end
 
-          location.label.sub('block'){ "block#{args_str}" }
+          _, _, block_loc = location.label.split(" ")
+
+          "#{colorize_blue("block")}#{args_str} in #{colorize_blue(block_loc)}"
         elsif callee = binding.eval('__callee__', __FILE__, __LINE__)
           if (argc = iseq.argc) > 0
             args = parameters_info(argc)
-            args_str = "(#{assemble_arguments(args)})"
+            args_str = " (" + assemble_arguments(args) + ")"
           end
 
-          "#{klass_sig}#{callee}#{args_str}"
+          ci = colorize_blue("#{klass_sig}#{callee}")
+          "#{ci}#{args_str}"
         else
           location.label
         end
@@ -100,7 +115,7 @@ module DEBUGGER__
       vars = iseq.locals[0...argc]
       vars.map{|var|
         begin
-          { name: var, value: short_inspect(binding.local_variable_get(var)) }
+          { name: colorize(var, [:CYAN, :BOLD]), value: short_inspect(binding.local_variable_get(var)) }
         rescue NameError, TypeError
           nil
         end
