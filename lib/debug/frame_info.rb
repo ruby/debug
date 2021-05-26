@@ -43,43 +43,46 @@ module DEBUGGER__
       SESSION.source(realpath || path)
     end
 
-    def colorize str, color
-      if CONFIG[:use_colorize]
-        IRB::Color.colorize str, color
-      else
-        str
-      end
-    end
-
-    def colorize_blue(str)
-      colorize(str, [:BLUE, :BOLD])
-    end
-
-    def call_identifier_str
+    def frame_type
       if binding && iseq
         if iseq.type == :block
-          if (argc = iseq.argc) > 0
-            args = parameters_info(argc)
-            args_str = " {|" + assemble_arguments(args) + "|}"
-          end
-
-          _, _, block_loc = location.label.split(" ")
-
-          "#{colorize_blue("block")}#{args_str} in #{colorize_blue(block_loc)}"
-        elsif callee = binding.eval('__callee__', __FILE__, __LINE__)
-          if (argc = iseq.argc) > 0
-            args = parameters_info(argc)
-            args_str = " (" + assemble_arguments(args) + ")"
-          end
-
-          ci = colorize_blue("#{klass_sig}#{callee}")
-          "#{ci}#{args_str}"
+          :block
+        elsif callee
+          :method
         else
-          location.label
+          :other
         end
       else
-        "[C] #{klass_sig}#{location.base_label}"
+        :c
       end
+    end
+
+    def block_identifier
+      return unless frame_type == :block
+      args = parameters_info(iseq.argc)
+      _, _, block_loc = location.label.split(" ")
+      [block_loc, args]
+    end
+
+    def method_identifier
+      return unless frame_type == :method
+      args = parameters_info(iseq.argc)
+      ci = "#{klass_sig}#{callee}"
+      [ci, args]
+    end
+
+    def c_identifier
+      return unless frame_type == :c
+      "[C] #{klass_sig}#{location.base_label}"
+    end
+
+    def other_identifier
+      return unless frame_type == :other
+      location.label
+    end
+
+    def callee
+      @callee ||= binding&.eval('__callee__', __FILE__, __LINE__)
     end
 
     def return_str
@@ -115,17 +118,11 @@ module DEBUGGER__
       vars = iseq.locals[0...argc]
       vars.map{|var|
         begin
-          { name: colorize(var, [:CYAN, :BOLD]), value: short_inspect(binding.local_variable_get(var)) }
+          { name: var, value: short_inspect(binding.local_variable_get(var)) }
         rescue NameError, TypeError
           nil
         end
       }
-    end
-
-    def assemble_arguments(args)
-      args.map do |arg|
-        "#{arg[:name]}=#{arg[:value]}"
-      end.join(", ")
     end
 
     def klass_sig
