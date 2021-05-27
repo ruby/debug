@@ -88,26 +88,32 @@ module DEBUGGER__
         config[:nonstop] = '1'
       end
 
-      o.on('-e [COMMAND]', 'execute debug command at the beginning of the script.') do |cmd|
+      o.on('-e COMMAND', 'execute debug command at the beginning of the script.') do |cmd|
         config[:commands] ||= ''
         config[:commands] << cmd + ';;'
       end
 
-      o.on('-O', '--open', 'Start debuggee with opening the debugger port.',
+      o.on('-x FILE', '--init-script=FILE', 'execute debug command in the FILE.') do |file|
+        config[:init_script] = file
+      end
+
+      o.separator ''
+
+      o.on('-O', '--open', 'Start remote debugging with opening the network port.',
                            'If TCP/IP options are not given,',
                            'a UNIX domain socket will be used.') do
         config[:remote] = true
       end
-      o.on('--sock-path=[SOCK_PATH]', 'UNIX Doman socket path') do |path|
+      o.on('--sock-path=SOCK_PATH', 'UNIX Doman socket path') do |path|
         config[:sock_path] = path
       end
-      o.on('--port=[PORT]', 'Listening TCP/IP port') do |port|
+      o.on('--port=PORT', 'Listening TCP/IP port') do |port|
         config[:port] = port
       end
-      o.on('--host=[HOST]', 'Listening TCP/IP host') do |host|
+      o.on('--host=HOST', 'Listening TCP/IP host') do |host|
         config[:host] = host
       end
-      o.on('--cookie=[COOKIE]', 'Set a cookie for connection') do |c|
+      o.on('--cookie=COOKIE', 'Set a cookie for connection') do |c|
         config[:cookie] = c
       end
 

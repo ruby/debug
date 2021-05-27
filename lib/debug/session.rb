@@ -1022,13 +1022,15 @@ module DEBUGGER__
     }
 
     # debug commands file
-    [::DEBUGGER__::CONFIG[:init_script],
+    [init_script = ::DEBUGGER__::CONFIG[:init_script],
      './.rdbgrc',
      File.expand_path('~/.rdbgrc')].each{|path|
       next unless path
 
       if File.file? path
         ::DEBUGGER__::SESSION.add_initial_commands File.readlines(path)
+      elsif path == init_script
+        warn "Not found: #{path}"
       end
     }
 

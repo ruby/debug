@@ -434,13 +434,16 @@ exe/rdbg [options] -- [debuggee options]
 
 Debug console mode:
     -n, --nonstop                    Do not stop at the beginning of the script.
-    -e [COMMAND]                     execute debug command at the beginning of the script.
-    -O, --open                       Start debuggee with opening the debugger port.
+    -e COMMAND                       execute debug command at the beginning of the script.
+    -x, --init-script=FILE           execute debug command in the FILE.
+
+    -O, --open                       Start remote debugging with opening the network port.
                                      If TCP/IP options are not given,
                                      a UNIX domain socket will be used.
-        --sock-path=[SOCK_PATH]      UNIX Doman socket path
-        --port=[PORT]                Listening TCP/IP port
-        --host=[HOST]                Listening TCP/IP host
+        --sock-path=SOCK_PATH        UNIX Doman socket path
+        --port=PORT                  Listening TCP/IP port
+        --host=HOST                  Listening TCP/IP host
+        --cookie=COOKIE              Set a cookie for connection
 
   Debug console mode runs Ruby program with the debug console.
 
@@ -461,6 +464,10 @@ Attach mode:
   'rdbg -A path'      tries to connect via UNIX domain socket with given path name.
   'rdbg -A port'      tries to connect to localhost:port via TCP/IP.
   'rdbg -A host port' tries to connect to host:port via TCP/IP.
+
+NOTE
+  All messages communicated between a debugger and a debuggee are *NOT* encrypted.
+  Please use the remote debugging feature carefully.
 
 ```
 
