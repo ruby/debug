@@ -1,4 +1,5 @@
 require_relative 'session'
+require 'io/console/size'
 
 module DEBUGGER__
   class UI_Console
@@ -7,6 +8,10 @@ module DEBUGGER__
 
     def remote?
       false
+    end
+
+    def width
+      IO.console_size[1]
     end
 
     def quit n

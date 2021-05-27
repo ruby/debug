@@ -917,6 +917,10 @@ module DEBUGGER__
         end
       end
     end
+
+    def width
+      @ui.width
+    end
   end
 
   # manual configuration methods

@@ -459,7 +459,7 @@ module DEBUGGER__
             puts "=> " + result.inspect
           when :pp
             puts "=> "
-            PP.pp(result, out = ''.dup)
+            PP.pp(result, out = ''.dup, SESSION.width)
             puts out
           when :call
             result = frame_eval(eval_src)

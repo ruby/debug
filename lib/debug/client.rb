@@ -1,4 +1,5 @@
 require 'socket'
+require 'io/console/size'
 
 require_relative 'config'
 require_relative 'version'
@@ -39,7 +40,10 @@ module DEBUGGER__
         raise CommandLineOptionError
       end
 
-      @s.puts "version: #{VERSION} cookie: #{CONFIG[:cookie]}"
+      @width = IO.console_size[1]
+      @width_changed = false
+
+      @s.puts "version: #{VERSION} width: #{@width} cookie: #{CONFIG[:cookie]}"
     end
 
     def cleanup_unix_domain_sockets
@@ -88,6 +92,10 @@ module DEBUGGER__
       trap(:SIGINT){
         @s.puts "pause"
       }
+      trap(:SIGWINCH){
+        @width = IO.console_size[1]
+        @width_changed = true
+      }
 
       while line = @s.gets
         # p line: line
@@ -106,6 +114,12 @@ module DEBUGGER__
           end
 
           line = (line || 'quit').strip
+
+          if @width_changed
+            @width_changed = false
+            @s.puts "width #{@width}"
+          end
+
           @s.puts "command #{line}"
         when /^ask (.*)/
           print $1

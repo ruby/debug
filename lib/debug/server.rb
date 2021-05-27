@@ -14,6 +14,7 @@ module DEBUGGER__
       @q_ans = Queue.new
       @unsent_messages = []
       @cookie = 'hello'
+      @width = 80
 
       @reader_thread = Thread.new do
         accept do |server|
@@ -45,6 +46,8 @@ module DEBUGGER__
                 @q_msg << $1
               when /\Aanswer (.*)/
                 @q_ans << $1
+              when /\Awidth (.+)/
+                @width = $1.to_i
               else
                 STDERR.puts "unsupported: #{line}"
                 exit!
@@ -63,21 +66,31 @@ module DEBUGGER__
     end
 
     def greeting sock
-      if /^version:\s+(.+)\s+cookie:\s+(.*)$/ =~ sock.gets
+      g = sock.gets
+      if /^version:\s+(.+)\s+width: (\d+) cookie:\s+(.*)$/ =~ g
+        v, w, c = $1, $2, $3
         # TODO: protocol version
-        if $1 != VERSION
+        if v != VERSION
           raise "Incompatible version (#{VERSION} client:#{$1})"
         end
 
-        c = CONFIG[:cookie]
-        if c && c != $2
+        cookie = CONFIG[:cookie]
+        if cookie && cookie != c
           raise "Cookie mismatch (#{$2.inspect} was sent)"
         end
+
+        @width = w.to_i
+      else
+        raise "Greeting message error: #{g}"
       end
     end
 
     def remote?
       true
+    end
+
+    def width
+      @width
     end
 
     def setup_interrupt
