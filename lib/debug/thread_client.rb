@@ -26,9 +26,17 @@ module DEBUGGER__
       colorize(str, [:BLUE, :BOLD])
     end
 
+    def colorize_magenta(str)
+      colorize(str, [:MAGENTA, :BOLD])
+    end
+
+    def colorize_cyan(str)
+      colorize(str, [:CYAN, :BOLD])
+    end
+
     def assemble_arguments(args)
       args.map do |arg|
-        "#{colorize(arg[:name], [:CYAN, :BOLD])}=#{arg[:value]}"
+        "#{colorize_cyan(arg[:name])}=#{arg[:value]}"
       end.join(", ")
     end
 
@@ -61,7 +69,7 @@ module DEBUGGER__
       result = "#{call_identifier_str} at #{location_str}"
 
       if return_str = frame.return_str
-        return_str = colorize(frame.return_str, [:MAGENTA, :BOLD])
+        return_str = colorize_magenta(frame.return_str)
         result += " #=> #{return_str}"
       end
 
@@ -288,14 +296,15 @@ module DEBUGGER__
 
     def show_locals
       if s = current_frame&.self
-        puts " %self => #{s}"
+        puts " #{colorize_cyan("%self")} => #{colorize_magenta(s)}"
       end
       if current_frame&.has_return_value
-        puts " %return => #{current_frame.return_value}"
+        puts " #{colorize_cyan("%return")} => #{colorize_magenta(current_frame.return_value)}"
       end
       if b = current_frame&.binding
         b.local_variables.each{|loc|
-          puts " #{loc} => #{b.local_variable_get(loc).inspect}"
+          value = b.local_variable_get(loc).inspect
+          puts " #{colorize_cyan(loc)} => #{colorize_magenta(value)}"
         }
       end
     end
@@ -303,7 +312,8 @@ module DEBUGGER__
     def show_ivars
       if s = current_frame&.self
         s.instance_variables.each{|iv|
-          puts " #{iv} => #{s.instance_variable_get(iv)}"
+          value = s.instance_variable_get(iv)
+          puts " #{colorize_cyan(iv)} => #{colorize_magenta(value)}"
         }
       end
     end
