@@ -122,7 +122,7 @@ module DEBUGGER__
         rescue NameError, TypeError
           nil
         end
-      }
+      }.compact
     end
 
     def klass_sig
