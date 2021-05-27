@@ -28,7 +28,7 @@ module DEBUGGER__
     end
 
     def create_psuedo_terminal
-      PTY.spawn("ruby -r debug/run #{temp_file_path}") do |read, write, pid|
+      PTY.spawn("exe/rdbg #{temp_file_path}") do |read, write, pid|
         quit = false
         result = nil
 
