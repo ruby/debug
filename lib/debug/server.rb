@@ -1,6 +1,7 @@
 require 'socket'
 require_relative 'session'
 require_relative 'config'
+require_relative 'version'
 
 module DEBUGGER__
   class UI_ServerBase
@@ -12,12 +13,15 @@ module DEBUGGER__
       @q_msg = Queue.new
       @q_ans = Queue.new
       @unsent_messages = []
+      @cookie = 'hello'
 
       @reader_thread = Thread.new do
         accept do |server|
           DEBUGGER__.message "Connected."
 
           @accept_m.synchronize{
+            greeting server
+
             @sock = server
             @accept_cv.signal
 
@@ -47,11 +51,27 @@ module DEBUGGER__
               end
             end
           end
+        rescue => e
+          DEBUGGER__.message "Error: #{e}"
         ensure
           DEBUGGER__.message "Disconnected."
           @sock = nil
           @q_msg.close
           @q_ans.close
+        end
+      end
+    end
+
+    def greeting sock
+      if /^version:\s+(.+)\s+cookie:\s+(.*)$/ =~ sock.gets
+        # TODO: protocol version
+        if $1 != VERSION
+          raise "Incompatible version (#{VERSION} client:#{$1})"
+        end
+
+        c = CONFIG[:cookie]
+        if c && c != $2
+          raise "Cookie mismatch (#{$2.inspect} was sent)"
         end
       end
     end
@@ -207,6 +227,8 @@ module DEBUGGER__
       Socket.unix_server_loop @sock_path do |sock, client|
         @client_addr = client
         yield sock
+      ensure
+        sock.close
       end
     end
   end

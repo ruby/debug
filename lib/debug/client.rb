@@ -1,5 +1,7 @@
 require 'socket'
+
 require_relative 'config'
+require_relative 'version'
 
 module DEBUGGER__
   class CommandLineOptionError < Exception; end
@@ -36,6 +38,8 @@ module DEBUGGER__
       else
         raise CommandLineOptionError
       end
+
+      @s.puts "version: #{VERSION} cookie: #{CONFIG[:cookie]}"
     end
 
     def cleanup_unix_domain_sockets

@@ -20,6 +20,10 @@ when :start
 when :attach
   require_relative "../lib/debug/client"
 
+  config.each{|k, v|
+    DEBUGGER__::CONFIG[k] = v
+  }
+
   begin
     if ARGV.empty? && config[:port]
       connect [config[:host], config[:port]].compact

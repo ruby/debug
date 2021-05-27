@@ -47,6 +47,7 @@ module DEBUGGER__
     host:        'RUBY_DEBUG_HOST',        # TCP/IP remote debugging: host (localhost if not given)
     sock_path:   'RUBY_DEBUG_SOCK_PATH',   # UNIX Domain Socket remote debugging: socket path
     sock_dir:    'RUBY_DEBUG_SOCK_DIR',    # UNIX Domain Socket remote debugging: socket directory
+    cookie:      'RUBY_DEBUG_COOKIE',      # Cookie for negotiation
   }.freeze
 
   def self.config_to_env config
@@ -106,6 +107,9 @@ module DEBUGGER__
       o.on('--host=[HOST]', 'Listening TCP/IP host') do |host|
         config[:host] = host
       end
+      o.on('--cookie=[COOKIE]', 'Set a cookie for connection') do |c|
+        config[:cookie] = c
+      end
 
       rdbg = 'rdbg'
 
@@ -133,6 +137,11 @@ module DEBUGGER__
       o.separator "  '#{rdbg} -A path'      tries to connect via UNIX domain socket with given path name."
       o.separator "  '#{rdbg} -A port'      tries to connect to localhost:port via TCP/IP."
       o.separator "  '#{rdbg} -A host port' tries to connect to host:port via TCP/IP."
+
+      o.separator ''
+      o.separator 'NOTE'
+      o.separator '  All messages communicated between a debugger and a debuggee are *NOT* encrypted.'
+      o.separator '  Please use the remote debugging feature carefully.'
     end
 
     opt.parse!(argv)
