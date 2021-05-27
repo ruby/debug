@@ -57,7 +57,7 @@ module DEBUGGER__
           colorize_blue(frame.other_identifier)
         end
 
-      location_str = colorize(frame.location_str, [:YELLOW, :BOLD])
+      location_str = colorize(frame.location_str, [:GREEN])
       result = "#{call_identifier_str} at #{location_str}"
 
       if return_str = frame.return_str
