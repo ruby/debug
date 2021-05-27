@@ -158,7 +158,7 @@ module DEBUGGER__
 
   class UI_TcpServer < UI_ServerBase
     def initialize host: nil, port: nil
-      @host = host || ::DEBUGGER__::CONFIG[:host] || 'localhost'
+      @host = host || ::DEBUGGER__::CONFIG[:host] || '127.0.0.1'
       @port = port || begin
         port_str = ::DEBUGGER__::CONFIG[:port] || raise("Specify listening port by RUBY_DEBUG_PORT environment variable.")
         if /\A\d+\z/ !~ port_str
