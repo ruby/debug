@@ -35,6 +35,8 @@ module DEBUGGER__
 
     def create_psuedo_terminal
       ENV['RUBYOPT'] = '-I ./lib'
+      ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
+
       PTY.spawn("ruby -r debug/run #{temp_file_path}") do |read, write, pid|
         quit = false
         result = nil
