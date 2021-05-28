@@ -1,6 +1,7 @@
 require 'objspace'
 require 'pp'
-require 'irb/color'
+require "irb/color_printer"
+
 require_relative 'frame_info'
 
 module DEBUGGER__
@@ -20,6 +21,10 @@ module DEBUGGER__
       else
         str
       end
+    end
+
+    def colored_inspect(obj)
+      IRB::ColorPrinter.pp(obj, "")
     end
 
     def colorize_blue(str)
@@ -288,14 +293,15 @@ module DEBUGGER__
 
     def show_locals
       if s = current_frame&.self
-        puts " %self => #{s}"
+        puts " %self => #{colored_inspect(s)}"
       end
       if current_frame&.has_return_value
-        puts " %return => #{current_frame.return_value}"
+        puts " %return => #{colored_inspect(current_frame.return_value)}"
       end
       if b = current_frame&.binding
         b.local_variables.each{|loc|
-          puts " #{loc} => #{b.local_variable_get(loc).inspect}"
+          value = b.local_variable_get(loc)
+          puts " #{loc} => #{colored_inspect(value)}"
         }
       end
     end
@@ -303,7 +309,8 @@ module DEBUGGER__
     def show_ivars
       if s = current_frame&.self
         s.instance_variables.each{|iv|
-          puts " #{iv} => #{s.instance_variable_get(iv)}"
+          value = s.instance_variable_get(iv)
+          puts " #{iv} => #{colored_inspect(value)}"
         }
       end
     end
