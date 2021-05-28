@@ -27,13 +27,17 @@ module DEBUGGER__
       IRB::ColorPrinter.pp(obj, "")
     end
 
+    def colorize_cyan(str)
+      colorize(str, [:CYAN, :BOLD])
+    end
+
     def colorize_blue(str)
       colorize(str, [:BLUE, :BOLD])
     end
 
     def assemble_arguments(args)
       args.map do |arg|
-        "#{colorize(arg[:name], [:CYAN, :BOLD])}=#{arg[:value]}"
+        "#{colorize_cyan(arg[:name])}=#{arg[:value]}"
       end.join(", ")
     end
 
@@ -293,15 +297,15 @@ module DEBUGGER__
 
     def show_locals
       if s = current_frame&.self
-        puts " %self => #{colored_inspect(s)}"
+        puts " #{colorize_cyan("%self")} => #{colored_inspect(s)}"
       end
       if current_frame&.has_return_value
-        puts " %return => #{colored_inspect(current_frame.return_value)}"
+        puts " #{colorize_cyan("%return")} => #{colored_inspect(current_frame.return_value)}"
       end
       if b = current_frame&.binding
         b.local_variables.each{|loc|
           value = b.local_variable_get(loc)
-          puts " #{loc} => #{colored_inspect(value)}"
+          puts " #{colorize_cyan(loc)} => #{colored_inspect(value)}"
         }
       end
     end
@@ -310,7 +314,7 @@ module DEBUGGER__
       if s = current_frame&.self
         s.instance_variables.each{|iv|
           value = s.instance_variable_get(iv)
-          puts " #{iv} => #{colored_inspect(value)}"
+          puts " #{colorize_cyan(iv)} => #{colored_inspect(value)}"
         }
       end
     end
