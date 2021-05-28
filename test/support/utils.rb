@@ -20,7 +20,7 @@ module DEBUGGER__
       @queue = Queue.new
       block.call
       write_temp_file(program)
-      create_psuedo_terminal
+      create_pseudo_terminal
     end
 
     def take_number(sentence)
@@ -33,7 +33,7 @@ module DEBUGGER__
       print msg if DEBUG_MODE
     end
 
-    def create_psuedo_terminal
+    def create_pseudo_terminal
       ENV['RUBYOPT'] = '-I ./lib'
       ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
 
