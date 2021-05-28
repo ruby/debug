@@ -102,7 +102,7 @@ module DEBUGGER__
       RUBY
     end
 
-    def test_break_with_instance_method_stops_at_correct_place
+    def test_break_with_instance_method_stops_at_correct_place_b
       # instance method #b has extra empty line intentionally
       # to test lineno 8 is not displayed.
       debug_code(program) do
@@ -124,7 +124,7 @@ module DEBUGGER__
       end
     end
 
-    def test_break_with_instance_method_stops_at_correct_place
+    def test_break_with_instance_method_stops_at_correct_place_a
       debug_code(program) do
         type 'break Foo::Bar#a'
         type 'continue'
