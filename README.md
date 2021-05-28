@@ -1,3 +1,5 @@
+[![Ruby](https://github.com/ruby/debug/actions/workflows/ruby.yml/badge.svg)](https://github.com/ruby/debug/actions/workflows/ruby.yml)
+
 # debug.rb
 
 This library provides debugging functionality to Ruby.
