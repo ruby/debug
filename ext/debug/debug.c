@@ -49,6 +49,7 @@ di_body(const rb_debug_inspector_t *dc, void *ptr)
     long i;
 
     for (i=1; i<len; i++) {
+        VALUE loc, e;
         VALUE iseq = rb_debug_inspector_frame_iseq_get(dc, i);
 
         if (!NIL_P(iseq)) {
@@ -56,13 +57,13 @@ di_body(const rb_debug_inspector_t *dc, void *ptr)
             if (!NIL_P(path) && str_start_with(path, skip_path_prefix)) continue;
         }
 
-        VALUE loc = RARRAY_AREF(locs, i);
-        VALUE e = di_entry(loc,
-                           rb_debug_inspector_frame_self_get(dc, i),
-                           rb_debug_inspector_frame_binding_get(dc, i),
-                           iseq,
-                           rb_debug_inspector_frame_class_get(dc, i),
-                           INT2FIX(len - i));
+        loc = RARRAY_AREF(locs, i);
+        e = di_entry(loc,
+                     rb_debug_inspector_frame_self_get(dc, i),
+                     rb_debug_inspector_frame_binding_get(dc, i),
+                     iseq,
+                     rb_debug_inspector_frame_class_get(dc, i),
+                     INT2FIX(len - i));
         rb_ary_push(ary, e);
     }
 
