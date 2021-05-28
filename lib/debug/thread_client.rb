@@ -24,7 +24,11 @@ module DEBUGGER__
     end
 
     def colored_inspect(obj)
-      IRB::ColorPrinter.pp(obj, "")
+      if CONFIG[:use_colorize]
+        IRB::ColorPrinter.pp(obj, "")
+      else
+        obj.pretty_inspect
+      end
     end
 
     def colorize_cyan(str)
