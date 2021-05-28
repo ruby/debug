@@ -33,11 +33,14 @@ module DEBUGGER__
       print msg if DEBUG_MODE
     end
 
+    RUBY = RbConfig.ruby
+
     def create_pseudo_terminal
-      ENV['RUBYOPT'] = '-I ./lib'
+      lib = "#{__dir__}/../../lib"
+      ENV['RUBYOPT'] = "-I #{lib}"
       ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
 
-      PTY.spawn("ruby -r debug/run #{temp_file_path}") do |read, write, pid|
+      PTY.spawn("#{RUBY} -r debug/run #{temp_file_path}") do |read, write, pid|
         quit = false
         result = nil
 
