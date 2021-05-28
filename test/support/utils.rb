@@ -12,7 +12,7 @@ module DEBUGGER__
 
     def assert_line_num(expected)
       @queue.push(Proc.new { |result|
-        assert_equal(expected, result)
+        assert_equal(expected, take_number(result))
       })
     end
 
@@ -51,7 +51,7 @@ module DEBUGGER__
               write.puts(cmd)
               quit = true if cmd == 'quit'
             elsif sentence[0].include?('=>#0')
-              result = take_number(sentence[0])
+              result = sentence[0]
             end
           end
         end
