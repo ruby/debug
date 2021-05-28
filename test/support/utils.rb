@@ -27,14 +27,21 @@ module DEBUGGER__
       sentence.match(/(.*):(.*)\r/)[2].to_i
     end
 
+    DEBUG_MODE = false
+
+    def debug_print msg
+      print msg if DEBUG_MODE
+    end
+
     def create_psuedo_terminal
+      ENV['RUBYOPT'] = '-I ./lib'
       PTY.spawn("ruby -r debug/run #{temp_file_path}") do |read, write, pid|
         quit = false
         result = nil
 
         until quit
           read.expect(/(.*)\n|\(rdbg\)/) do |sentence|
-            print sentence[0]
+            debug_print sentence[0]
             if sentence[0] == '(rdbg)'
               cmd = @queue.pop
               if cmd.is_a?(Proc)
@@ -49,14 +56,14 @@ module DEBUGGER__
           end
         end
         read.expect(/.*\n/) do |sentence|
-          print sentence[0]
+          debug_print sentence[0]
         end
         read.expect(%r{(Really quit\? \[Y/n\])}) do |sentence|
-          print sentence[0]
+          debug_print sentence[0]
           write.puts('y')
         end
         read.expect(/.*\n/) do |sentence|
-          print sentence[0]
+          debug_print sentence[0]
         end
       end
     rescue NoMethodError
