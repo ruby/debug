@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   test:
-    name: test (${{ matrix.ruby }} / ${{ matrix.os }})
+    name: Test with (${{ matrix.ruby }}
     strategy:
       matrix:
         ruby: [ '3.0', 2.7, head ]
