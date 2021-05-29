@@ -79,7 +79,7 @@ module DEBUGGER__
     private
 
     def strip_line_num(str)
-      str.gsub(/ *\d+\| ?/, '')
+      str.gsub(/^\s*\d+\| ?/, '')
     end
   end
 end
