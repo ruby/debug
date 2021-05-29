@@ -25,7 +25,7 @@ module DEBUGGER__
     def debug_code(program, &block)
       @queue = Queue.new
       block.call
-      write_temp_file(program)
+      write_temp_file(strip_line_num(program))
       create_pseudo_terminal
     end
 
@@ -80,6 +80,12 @@ module DEBUGGER__
     rescue NoMethodError
       p "terminal finished without reading 'y'"
       raise
+    end
+
+    private
+
+    def strip_line_num(str)
+      str.gsub(/ *\d+\| ?/, '')
     end
   end
 end
