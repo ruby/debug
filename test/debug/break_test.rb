@@ -9,28 +9,28 @@ module DEBUGGER__
   class BreakAtMethodsTest < TestCase
     def program
       <<~RUBY
-        module Foo
-          class Bar
-            def self.a
-              "hello"
-            end
-
-            def b(n)
-              2.times do
-                n
-              end
-            end
-          end
-          module Baz
-            def self.c
-              1
-            end
-          end
-          Bar.a
-          bar = Bar.new
-          bar.b(1)
-          Baz.c
-        end
+         1| module Foo
+         2|   class Bar
+         3|     def self.a
+         4|       "hello"
+         5|     end
+         6|
+         7|     def b(n)
+         8|       2.times do
+         9|         n
+        10|       end
+        11|     end
+        12|   end
+        13|   module Baz
+        14|     def self.c
+        15|       1
+        16|     end
+        17|   end
+        18|   Bar.a
+        19|   bar = Bar.new
+        20|   bar.b(1)
+        21|   Baz.c
+        22| end
       RUBY
     end
 
@@ -84,21 +84,21 @@ module DEBUGGER__
   class BreakAtEmptyMethodsTest < TestCase
     def program
       <<~RUBY
-        module Foo
-          class Bar
-            def a
-            end
-
-            def b(n)
-
-            end
-            def self.c; end
-          end
-          bar = Bar.new
-          bar.a
-          bar.b(1)
-          Bar.c
-        end
+         1| module Foo
+         2|   class Bar
+         3|     def a
+         4|     end
+         5|
+         6|     def b(n)
+         7|
+         8|     end
+         9|     def self.c; end
+        10|   end
+        11|   bar = Bar.new
+        12|   bar.a
+        13|   bar.b(1)
+        14|   Bar.c
+        15| end
       RUBY
     end
 
@@ -141,9 +141,9 @@ module DEBUGGER__
   class BreakAtLinesTest < TestCase
     def program
       <<~RUBY
-        a = 1
-        b = 2
-        c = 3
+        1| a = 1
+        2| b = 2
+        3| c = 3
       RUBY
     end
 

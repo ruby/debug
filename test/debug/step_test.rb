@@ -9,9 +9,9 @@ module DEBUGGER__
   class BasicSteppingTest < TestCase
     def program
       <<~RUBY
-        a = 1
-        b = 2
-        c = 3
+        1| a = 1
+        2| b = 2
+        3| c = 3
       RUBY
     end
 
@@ -40,10 +40,10 @@ module DEBUGGER__
   class MoreThanOneStepTest < TestCase
     def program
       <<~RUBY
-        2.times do |n|
-          n
-        end
-        a += 1
+        1| 2.times do |n|
+        2|  n
+        3| end
+        4| a += 1
       RUBY
     end
 

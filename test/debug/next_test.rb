@@ -9,9 +9,9 @@ module DEBUGGER__
   class BasicNextTest < TestCase
     def program
       <<~RUBY
-        a = 1
-        b = 2
-        c = 3
+        1| a = 1
+        2| b = 2
+        3| c = 3
       RUBY
     end
 
@@ -40,16 +40,16 @@ module DEBUGGER__
   class NextRescueTest < TestCase
     def program
       <<~RUBY
-        module Foo
-          class Bar
-            def self.raise_error
-              raise
-            rescue
-              p $!
-            end
-          end
-          Bar.raise_error
-        end
+         1| module Foo
+         2|   class Bar
+         3|     def self.raise_error
+         4|       raise
+         5|     rescue
+         6|       p $!
+         7|     end
+         8|   end
+         9|   Bar.raise_error
+        10| end
       RUBY
     end
 
