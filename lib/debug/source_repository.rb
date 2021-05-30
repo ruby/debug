@@ -16,7 +16,7 @@ module DEBUGGER__
     def add_path path, src: nil
       case
       when src
-        if File.file?(path)
+        if path && File.file?(path)
           path = '(eval)' + path
           src = nil
         end
