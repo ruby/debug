@@ -16,6 +16,16 @@ module DEBUGGER__
       else
         obj.pretty_inspect
       end
+    rescue => ex
+      err_msg = "(rescued #{ex.inspect} during inspection)"
+      string_result = obj.to_s rescue nil
+
+      # don't colorize the string here because it's not from user's application
+      if string_result
+        "#{string_result} #{err_msg}"
+      else
+        err_msg
+      end
     end
 
     def colorize_cyan(str)
