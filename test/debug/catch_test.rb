@@ -17,9 +17,8 @@ module DEBUGGER__
       debug_code(program) do
         type 'catch ZeroDivisionError'
         type 'continue'
-        assert_line_text(/Integer#\//)
-        type 'quit'
-        type 'y'
+        assert_line_text('Integer#/')
+        type 'q!'
       end
     end
 
@@ -27,9 +26,8 @@ module DEBUGGER__
       debug_code(program) do
         type 'catch StandardError'
         type 'continue'
-        assert_line_text(/Integer#\//)
-        type 'quit'
-        type 'y'
+        assert_line_text('Integer#/')
+        type 'q!'
       end
     end
   end
@@ -55,11 +53,10 @@ module DEBUGGER__
       debug_code(program) do
         type 'catch ZeroDivisionError'
         type 'continue'
-        assert_line_text(/Integer#\//)
+        assert_line_text('Integer#/')
         type 's'
-        assert_line_text(/Object#bar/)
-        type 'quit'
-        type 'y'
+        assert_line_text('Object#bar')
+        type 'q!'
       end
     end
   end
