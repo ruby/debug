@@ -145,6 +145,14 @@ module DEBUGGER__
       o.separator "  '#{rdbg} -A host port' tries to connect to host:port via TCP/IP."
 
       o.separator ''
+      o.separator 'Other options:'
+
+      o.on("-h", "--help", "Print help") do
+        puts o
+        exit
+      end
+
+      o.separator ''
       o.separator 'NOTE'
       o.separator '  All messages communicated between a debugger and a debuggee are *NOT* encrypted.'
       o.separator '  Please use the remote debugging feature carefully.'
