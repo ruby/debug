@@ -39,8 +39,7 @@ module DEBUGGER__
         type 'break Foo::Bar#b'
         type 'continue'
         assert_line_num 8
-        type 'quit'
-        type 'y'
+        type 'quit!'
       end
     end
 
@@ -49,8 +48,7 @@ module DEBUGGER__
         type 'break Foo::Bar.a'
         type 'continue'
         assert_line_num 4
-        type 'quit'
-        type 'y'
+        type 'quit!'
       end
     end
 
@@ -59,8 +57,7 @@ module DEBUGGER__
         type 'break Foo::Baz.c'
         type 'continue'
         assert_line_num 15
-        type 'quit'
-        type 'y'
+        type 'quit!'
       end
     end
 
@@ -72,8 +69,7 @@ module DEBUGGER__
         type 'break 9'
         type 'continue'
         assert_line_num 9
-        type 'quit'
-        type 'y'
+        type 'quit!'
       end
     end
   end
@@ -136,8 +132,7 @@ module DEBUGGER__
         type 'break Foo::Bar#b'
         type 'continue'
         assert_line_num 6
-        type 'quit'
-        type 'y'
+        type 'quit!'
       end
     end
 
@@ -146,8 +141,7 @@ module DEBUGGER__
         type 'break Foo::Bar.c'
         type 'continue'
         assert_line_num 9
-        type 'quit'
-        type 'y'
+        type 'quit!'
       end
     end
 
@@ -156,8 +150,7 @@ module DEBUGGER__
         type 'break Foo::Bar#a'
         type 'continue'
         assert_line_num 3
-        type 'quit'
-        type 'y'
+        type 'quit!'
       end
     end
   end

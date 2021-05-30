@@ -19,8 +19,7 @@ module DEBUGGER__
     def test_breakpoint_fires_correctly
       debug_code(program) do
         type 'continue'
-        assert_line_text(/Foo#bar/)
-        type 'quit'
+        type 'q!'
       end
     end
   end
@@ -46,8 +45,7 @@ module DEBUGGER__
     def test_breakpoint_execute_command_argument_correctly
       debug_code(program) do
         type 'continue'
-        assert_line_text(/Foo#baz/)
-        type 'quit'
+        type 'q!'
       end
     end
   end
