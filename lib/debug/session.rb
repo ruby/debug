@@ -996,8 +996,13 @@ module DEBUGGER__
       # ::DEBUGGER__.add_catch_breakpoint 'RuntimeError'
 
       Binding.module_eval do
-        ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1
-        def bp; nil; end
+        def bp(commands: nil)
+          if commands
+            cmds = commands.split(";;")
+            ::DEBUGGER__::SESSION.add_initial_commands cmds
+          end
+          ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1
+        end
       end
 
       if !::DEBUGGER__::CONFIG[:nonstop]
