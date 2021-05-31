@@ -16,6 +16,12 @@ module DEBUGGER__
       })
     end
 
+    def assert_line_text(expected)
+      @queue.push(Proc.new { |result|
+        assert_match(expected, result)
+      })
+    end
+
     def debug_code(program, &block)
       @queue = Queue.new
       block.call
