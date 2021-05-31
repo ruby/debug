@@ -77,6 +77,17 @@ module DEBUGGER__
         end
         read.expect(/.*\n/) do |sentence|
           debug_print sentence[0]
+        rescue Errno::EIO => e
+          if @queue.empty?
+            # result of `gets` return this exception in some platform
+            # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
+          else
+            p e
+            pp lines
+          end
+        rescue Timeout::Error => e
+          p e
+          pp lines
         end
       end
     rescue NoMethodError
