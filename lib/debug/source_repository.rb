@@ -47,6 +47,8 @@ module DEBUGGER__
     end
 
     def get_si iseq
+      return unless iseq
+
       if iseq.instance_variable_defined?(:@debugger_si)
         iseq.instance_variable_get(:@debugger_si)
       elsif @files.has_key?(path = iseq.absolute_path)
