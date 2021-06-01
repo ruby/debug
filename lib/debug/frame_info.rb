@@ -40,7 +40,7 @@ module DEBUGGER__
     end
 
     def file_lines
-      SESSION.source(realpath || path)
+      SESSION.source(self.iseq)
     end
 
     def frame_type

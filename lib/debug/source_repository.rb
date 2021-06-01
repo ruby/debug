@@ -2,54 +2,70 @@ require 'irb/color' # IRB::Color.colorize_code
 
 module DEBUGGER__
   class SourceRepository
+    SrcInfo = Struct.new(:src, :colored)
+
     def initialize
-      @files = {} # filename => [src, iseq]
-      @color_files = {}
+      @files = {} # filename => SrcInfo
     end
 
     def add iseq, src
-      path = iseq.absolute_path
-      path = '-e' if iseq.path == '-e'
-      add_path path, src: src
-    end
-
-    def add_path path, src: nil
-      case
-      when src
-        if path && File.file?(path)
-          path = '(eval)' + path
-          src = nil
-        end
-      when path == '-e'
-      when path
-        begin
-          src = File.read(path)
-        rescue SystemCallError
-        end
+      if (path = iseq.absolute_path) && File.exist?(path)
+        add_path path
       else
-        src = nil
-      end
-
-      if src
-        src = src.gsub("\r\n", "\n") # CRLF -> LF
-        @files[path] = src.lines
+        add_iseq iseq, src
       end
     end
 
-    def get path
-      if @files.has_key? path
+    def all_iseq iseq, rs = []
+      rs << iseq
+      iseq.each_child{|ci|
+        all_iseq(ci, rs)
+      }
+      rs
+    end
+
+    def add_iseq iseq, src
+      line = iseq.first_line
+      if line > 1
+        src = ("\n" * (line - 1)) + src
+      end
+      si = SrcInfo.new(src.lines)
+
+      all_iseq(iseq).each{
+        iseq.instance_variable_set(:@debugger_si, si)
+        iseq.freeze
+      }
+    end
+
+    def add_path path
+      begin
+        src = File.read(path)
+        src = src.gsub("\r\n", "\n") # CRLF -> LF
+        @files[path] = SrcInfo.new(src.lines)
+      rescue SystemCallError
+      end
+    end
+
+    def get_si iseq
+      if iseq.instance_variable_defined?(:@debugger_si)
+        iseq.instance_variable_get(:@debugger_si)
+      elsif @files.has_key?(path = iseq.absolute_path)
         @files[path]
       else
-        add_path path
+        add_path(path)
       end
     end
 
-    def get_colored path
-      if src_lines = @color_files[path]
-        return src_lines
-      else
-        if src_lines = get(path)
-          @color_files[path] = IRB::Color.colorize_code(src_lines.join).lines
+    def get iseq
+      if si = get_si(iseq)
+        si.src
+      end
+    end
+
+    def get_colored iseq
+      if si = get_si(iseq)
+        si.colored || begin
+          si.colored = IRB::Color.colorize_code(si.src.join).lines
         end
       end
     end

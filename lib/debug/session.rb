@@ -40,6 +40,10 @@ class RubyVM::InstructionSequence
   def last_line
     self.to_a[4][:code_location][2]
   end
+
+  def first_line
+    self.to_a[4][:code_location][0]
+  end
 end
 
 module DEBUGGER__
@@ -150,11 +154,11 @@ module DEBUGGER__
       }
     end
 
-    def source path
+    def source iseq
       if CONFIG[:use_colorize]
-        @sr.get_colored(path)
+        @sr.get_colored(iseq)
       else
-        @sr.get(path)
+        @sr.get(iseq)
       end
     end
 
