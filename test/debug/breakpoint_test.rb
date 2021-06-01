@@ -6,9 +6,9 @@ module DEBUGGER__
   class MethodBreakpointTest < TestCase
     def program
       <<~RUBY
-      a = 1
-
-      a.abs
+      1| a = 1
+      2|
+      3| a.abs
       RUBY
     end
 
