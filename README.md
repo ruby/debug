@@ -467,6 +467,9 @@ Attach mode:
   'rdbg -A port'      tries to connect to localhost:port via TCP/IP.
   'rdbg -A host port' tries to connect to host:port via TCP/IP.
 
+Other options:
+    -h, --help                       Print help
+
 NOTE
   All messages communicated between a debugger and a debuggee are *NOT* encrypted.
   Please use the remote debugging feature carefully.
