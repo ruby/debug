@@ -24,4 +24,31 @@ module DEBUGGER__
       end
     end
   end
+
+  class BindingBPWithCommandTest < TestCase
+    def program
+      <<~RUBY
+      class Foo
+        def bar
+          binding.bp(command: "continue")
+          baz
+        end
+
+        def baz
+          binding.bp
+        end
+      end
+
+      Foo.new.bar
+      RUBY
+    end
+
+    def test_breakpoint_execute_command_argument_correctly
+      debug_code(program) do
+        type 'continue'
+        assert_line_text(/Foo#baz/)
+        type 'quit'
+      end
+    end
+  end
 end
