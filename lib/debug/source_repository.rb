@@ -31,9 +31,9 @@ module DEBUGGER__
       end
       si = SrcInfo.new(src.lines)
 
-      all_iseq(iseq).each{
-        iseq.instance_variable_set(:@debugger_si, si)
-        iseq.freeze
+      all_iseq(iseq).each{|e|
+        e.instance_variable_set(:@debugger_si, si)
+        e.freeze
       }
     end
 
