@@ -16,7 +16,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'b Integer#abs'
         type 'continue'
-        assert_line_text(/Integer#abs at <internal:integer>/)
+        assert_line_num(3)
         type 'quit'
         type 'y'
       end

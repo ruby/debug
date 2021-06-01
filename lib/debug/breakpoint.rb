@@ -353,15 +353,19 @@ module DEBUGGER__
       rescue ArgumentError => e
         raise if retried
         retried = true
+        sig_method_name = @sig_method_name
 
         # maybe C method
         @klass.module_eval do
-          orig_name = @sig_method_name + '__orig__'
-          alias_method orig_name, @sig_method_name
-          define_method(@sig_method_name) do |*args|
+          orig_name = sig_method_name + '__orig__'
+          alias_method orig_name, sig_method_name
+          define_method(sig_method_name) do |*args|
             send(orig_name, *args)
           end
         end
+
+        # re-collect the method object after the above patch
+        search_method
         retry
       end
     rescue Exception
