@@ -208,9 +208,14 @@ module DEBUGGER__
     def setup
       @tp = TracePoint.new(:raise){|tp|
         exc = tp.raised_exception
+        should_suspend = false
         exc.class.ancestors.each{|cls|
-          suspend if @pat === cls.name
+          if @pat === cls.name
+            should_suspend = true
+            break
+          end
         }
+        suspend if should_suspend
       }
     end
 
