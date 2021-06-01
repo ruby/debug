@@ -1002,7 +1002,7 @@ module DEBUGGER__
       Binding.module_eval do
         def bp command: nil
           if command
-            cmds = commands.split(";;")
+            cmds = command.split(";;")
             SESSION.add_initial_commands cmds
           end
 
