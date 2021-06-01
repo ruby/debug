@@ -53,7 +53,7 @@ module DEBUGGER__
         iseq.instance_variable_get(:@debugger_si)
       elsif @files.has_key?(path = iseq.absolute_path)
         @files[path]
-      else
+      elsif path
         add_path(path)
       end
     end
