@@ -1,4 +1,4 @@
-[![Ruby](https://github.com/ruby/debug/actions/workflows/ruby.yml/badge.svg)](https://github.com/ruby/debug/actions/workflows/ruby.yml)
+[![Ruby](https://github.com/ruby/debug/actions/workflows/ruby.yml/badge.svg?branch=master)](https://github.com/ruby/debug/actions/workflows/ruby.yml?query=branch%3Amaster)
 
 # debug.rb
 
