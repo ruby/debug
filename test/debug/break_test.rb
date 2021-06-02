@@ -89,10 +89,10 @@ module DEBUGGER__
         type 'continue'
 
         if RUBY_VERSION.to_f >= 3.0
-          assert_line_text(/Integer#abs at <internal:/)
+          assert_line_text('Integer#abs at <internal:')
         else
           # it doesn't show any source before Ruby 3.0
-          assert_line_text(/<main>/)
+          assert_line_text('<main>')
         end
 
         type 'quit'

@@ -11,14 +11,18 @@ module DEBUGGER__
     end
 
     def assert_line_num(expected)
-      @queue.push(Proc.new { |result|
-        assert_equal(expected, take_number(result))
+      @queue.push(Proc.new {
+        assert_equal(expected, @internal_info['line'])
       })
     end
 
     def assert_line_text(expected)
-      @queue.push(Proc.new { |result|
-        assert_match(expected, result)
+      @queue.push(Proc.new {
+        assert_block do
+          @internal_info['backlog'].each do |line|
+            line.include? expected
+          end
+        end
       })
     end
 
@@ -54,12 +58,12 @@ module DEBUGGER__
               debug_print line
               case line.chomp
               when '(rdbg)'
-              cmd = @queue.pop
-              if cmd.is_a?(Proc)
-                cmd.call
                 cmd = @queue.pop
-              end
-              write.puts(cmd)
+                if cmd.is_a?(Proc)
+                  cmd.call
+                  cmd = @queue.pop
+                end
+                write.puts(cmd)
               when /INTERNAL_INFO:\s(.*)/
                 @internal_info = JSON.parse(Regexp.last_match(1))
               when %r{Really quit\? \[Y/n\]}
