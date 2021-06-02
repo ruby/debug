@@ -265,6 +265,53 @@ module DEBUGGER__
     end
   end
 
+  class WatchIVarBreakpoint < Breakpoint
+    LABEL = generate_label("Watch")
+
+    def initialize ivar, object
+      @ivar = ivar.to_sym
+      @object = object
+      @key = [:watch, @ivar].freeze
+
+      @current = object.instance_variable_get(@ivar)
+      super()
+    end
+
+    def watch_eval
+      result = @object.instance_variable_get(@ivar)
+      if result != @current
+        begin
+          @prev = @current
+          @current = result
+          suspend
+        ensure
+          remove_instance_variable(:@prev)
+        end
+      end
+    rescue Exception => e
+      false
+    end
+
+    def setup
+      @tp = TracePoint.new(:line, :return, :b_return){|tp|
+        next if tp.path.start_with? __dir__
+        next if tp.path.start_with? '<internal:'
+
+        watch_eval
+      }
+    end
+
+    def to_s
+      value_str =
+        if defined?(@prev)
+          "#{@prev} -> #{@current}"
+        else
+          "#{@current}"
+        end
+      "#{LABEL} #{@object} #{@ivar} = #{value_str}"
+    end
+  end
+
   class WatchExprBreakpoint < Breakpoint
     LABEL = generate_label("Watch")
 

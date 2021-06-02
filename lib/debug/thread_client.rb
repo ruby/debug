@@ -476,8 +476,20 @@ module DEBUGGER__
             result = failed_results
           when :watch
             if @success_last_eval
-              puts "#{eval_src} = #{result}"
-              result = WatchExprBreakpoint.new(eval_src, result)
+              if eval_src.match?(/@\w+/)
+                object =
+                  if b = current_frame.binding
+                    b.receiver
+                  else
+                    current_frame.self
+                  end
+                puts "#{object} #{eval_src} = #{result}"
+                result = WatchIVarBreakpoint.new(eval_src, object)
+              else
+                puts "#{eval_src} = #{result}"
+                result = WatchExprBreakpoint.new(eval_src, result)
+              end
+
               result_type = :watch
             else
               result = nil
