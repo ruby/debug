@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'pty'
-require 'expect'
 require 'timeout'
+require 'json'
 
 module DEBUGGER__
   module TestUtils
@@ -30,10 +30,6 @@ module DEBUGGER__
       check_line_num!(program)
     end
 
-    def take_number(sentence)
-      sentence.match(/(.*):(.*)\r/)[2].to_i
-    end
-
     DEBUG_MODE = false
 
     def debug_print msg
@@ -47,36 +43,31 @@ module DEBUGGER__
 
       ENV['RUBYOPT'] = "-I #{lib}"
       ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
+      ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
 
       PTY.spawn("#{RUBY} #{boot_options} #{temp_file_path}") do |read, write, pid|
-        quit = false
-        result = nil
-
-        until quit
-          read.expect(/(.*)\n|\(rdbg\)/) do |sentence|
-            debug_print sentence[0]
-            if sentence[0] == '(rdbg)'
+        lines = []
+        begin
+          Timeout.timeout(10) do
+            while (line = read.gets)
+              lines.push(line)
+              debug_print line
+              case line.chomp
+              when '(rdbg)'
               cmd = @queue.pop
               if cmd.is_a?(Proc)
-                cmd.call(result)
+                cmd.call
                 cmd = @queue.pop
               end
               write.puts(cmd)
-              quit = true if cmd == 'quit'
-            elsif sentence[0].include?('=>#0')
-              result = sentence[0]
+              when /INTERNAL_INFO:\s(.*)/
+                @internal_info = JSON.parse(Regexp.last_match(1))
+              when %r{Really quit\? \[Y/n\]}
+                cmd = @queue.pop
+                write.puts(cmd)
+              end
             end
           end
-        end
-        read.expect(/.*\n/) do |sentence|
-          debug_print sentence[0]
-        end
-        read.expect(%r{(Really quit\? \[Y/n\])}) do |sentence|
-          debug_print sentence[0]
-          write.puts('y')
-        end
-        read.expect(/.*\n/) do |sentence|
-          debug_print sentence[0]
         rescue Errno::EIO => e
           if @queue.empty?
             # result of `gets` return this exception in some platform
@@ -90,9 +81,6 @@ module DEBUGGER__
           pp lines
         end
       end
-    rescue NoMethodError
-      p "terminal finished without reading 'y'"
-      raise
     end
 
     private
