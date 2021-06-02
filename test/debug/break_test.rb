@@ -81,9 +81,9 @@ module DEBUGGER__
   class BreakAtCMethodsTest < TestCase
     def program
       <<~RUBY
-      1| a = 1
-      2|
-      3| a.abs
+        1| a = 1
+        2|
+        3| a.abs
       RUBY
     end
 

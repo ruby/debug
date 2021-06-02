@@ -6,11 +6,11 @@ module DEBUGGER__
   class LocalVariableWatchingTest < TestCase
     def program
       <<~RUBY
-        a = 1
-        b = 2
-        c = 3
-        a = 2
-        foo = "foo" # stops here
+        1| a = 1
+        2| b = 2
+        3| c = 3
+        4| a = 2
+        5| foo = "foo" # stops here
       RUBY
     end
 
@@ -29,11 +29,11 @@ module DEBUGGER__
   class InstanceVariableWatchingTest < TestCase
     def program
       <<~RUBY
-        @a = 1
-        @b = 2
-        @c = 3
-        @a = 2
-        foo = "foo" # stops here
+        1| @a = 1
+        2| @b = 2
+        3| @c = 3
+        4| @a = 2
+        5| foo = "foo" # stops here
       RUBY
     end
 
@@ -52,21 +52,21 @@ module DEBUGGER__
   class MethodWatchingTest < TestCase
     def program
       <<~RUBY
-        class Student
-          attr_accessor :name
-
-          def initialize(name)
-            @name = name
-          end
-        end
-
-        s1 = Student.new("John")
-        s2 = Student.new("Jane")
-
-        s2.name = "Jenny"
-        s1.name = "Josh"
-
-        s2.name = "Penny" # stops here
+       1| class Student
+       2|   attr_accessor :name
+       3|
+       4|   def initialize(name)
+       5|     @name = name
+       6|   end
+       7| end
+       8|
+       9| s1 = Student.new("John")
+      10| s2 = Student.new("Jane")
+      11|
+      12| s2.name = "Jenny"
+      13| s1.name = "Josh"
+      14|
+      15| s2.name = "Penny" # stops here
       RUBY
     end
 
