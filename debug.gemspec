@@ -24,4 +24,6 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
   spec.extensions    = ['ext/debug/extconf.rb']
+
+  spec.add_dependency "irb" # for its color_printer class, which was added after 1.3
 end
