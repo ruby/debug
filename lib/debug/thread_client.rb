@@ -1,8 +1,8 @@
 require 'objspace'
 require 'pp'
-require "irb/color_printer"
 
 require_relative 'frame_info'
+require_relative 'color'
 
 module DEBUGGER__
   class ThreadClient
@@ -13,31 +13,9 @@ module DEBUGGER__
       end
     end
 
+    include Color
+
     attr_reader :location, :thread, :mode, :id
-
-    def colorize str, color
-      if CONFIG[:use_colorize]
-        IRB::Color.colorize str, color
-      else
-        str
-      end
-    end
-
-    def colored_inspect(obj)
-      if CONFIG[:use_colorize]
-        IRB::ColorPrinter.pp(obj, "")
-      else
-        obj.pretty_inspect
-      end
-    end
-
-    def colorize_cyan(str)
-      colorize(str, [:CYAN, :BOLD])
-    end
-
-    def colorize_blue(str)
-      colorize(str, [:BLUE, :BOLD])
-    end
 
     def assemble_arguments(args)
       args.map do |arg|

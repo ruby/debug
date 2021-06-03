@@ -1,4 +1,5 @@
-require "irb/color"
+require_relative 'color'
+
 module DEBUGGER__
   class Breakpoint
     attr_reader :key
@@ -57,15 +58,11 @@ module DEBUGGER__
       end
     end
 
-    def self.generate_label(name)
-      colorize(" BP - #{name} ", [:YELLOW, :BOLD, :REVERSE])
-    end
+    class << self
+      include Color
 
-    def self.colorize str, color
-      if CONFIG[:use_colorize]
-        IRB::Color.colorize str, color
-      else
-        str
+      def generate_label(name)
+        colorize(" BP - #{name} ", [:YELLOW, :BOLD, :REVERSE])
       end
     end
   end
