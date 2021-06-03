@@ -5,4 +5,3 @@ gemspec
 gem "rake"
 gem "rake-compiler"
 gem "test-unit", "~> 3.0"
-gem 'irb'
