@@ -72,7 +72,8 @@ module DEBUGGER__
         Thread.current.abort_on_exception = true
 
         while evt = @q_evt.pop
-          tc, output, ev, *ev_args = evt
+          # varible `@internal_info` is only used for test
+          tc, output, ev, @internal_info, *ev_args = evt
           output.each{|str| @ui.puts str}
 
           case ev
@@ -185,6 +186,7 @@ module DEBUGGER__
 
     def wait_command
       if @initial_commands.empty?
+        @ui.puts(@internal_info) if ENV['RUBY_DEBUG_TEST_MODE']
         line = @ui.readline
       else
         line = @initial_commands.shift.strip

@@ -95,8 +95,14 @@ module DEBUGGER__
       @q_cmd << req
     end
 
+    def generate_info
+      return unless current_frame
+
+      { location: current_frame.location_str, line: current_frame.location.lineno }
+    end
+
     def event! ev, *args
-      @q_evt << [self, @output, ev, *args]
+      @q_evt << [self, @output, ev, generate_info, *args]
       @output = []
     end
 
