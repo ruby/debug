@@ -1,3 +1,4 @@
+require "irb/color"
 module DEBUGGER__
   class Breakpoint
     attr_reader :key
@@ -55,9 +56,24 @@ module DEBUGGER__
         ""
       end
     end
+
+    def self.generate_label(name)
+      colorize(" BP - #{name} ", [:YELLOW, :BOLD, :REVERSE])
+    end
+
+    def self.colorize str, color
+      if CONFIG[:use_colorize]
+        IRB::Color.colorize str, color
+      else
+        str
+      end
+    end
   end
 
   class LineBreakpoint < Breakpoint
+    LABEL = generate_label("Line")
+    PENDING_LABEL = generate_label("Line (pending)")
+
     attr_reader :path, :line, :iseq
 
     def initialize path, line, cond: nil, oneshot: false, hook_call: true
@@ -186,9 +202,9 @@ module DEBUGGER__
       oneshot = @oneshot ? " (oneshot)" : ""
 
       if @iseq
-        "line bp #{@path}:#{@line} (#{@type})#{oneshot}" + super
+        "#{LABEL} #{@path}:#{@line} (#{@type})#{oneshot}" + super
       else
-        "line bp (pending) #{@path}:#{@line}#{oneshot}" + super
+        "#{PENDING_LABEL} #{@path}:#{@line}#{oneshot}" + super
       end
     end
 
@@ -198,6 +214,8 @@ module DEBUGGER__
   end
 
   class CatchBreakpoint < Breakpoint
+    LABEL = generate_label("Catch")
+
     def initialize pat
       @pat = pat.freeze
       @key = [:catch, @pat].freeze
@@ -220,11 +238,13 @@ module DEBUGGER__
     end
 
     def to_s
-      "catch bp #{@pat.inspect}"
+      "#{LABEL} #{@pat.inspect}"
     end
   end
 
   class CheckBreakpoint < Breakpoint
+    LABEL = generate_label("Check")
+
     def initialize expr
       @expr = expr.freeze
       @key = [:check, @expr].freeze
@@ -244,11 +264,13 @@ module DEBUGGER__
     end
 
     def to_s
-      "check bp: #{@expr}"
+      "#{LABEL} #{@expr}"
     end
   end
 
   class WatchExprBreakpoint < Breakpoint
+    LABEL = generate_label("Watch")
+
     def initialize expr, current
       @expr = expr.freeze
       @key = [:watch, @expr].freeze
@@ -283,14 +305,17 @@ module DEBUGGER__
 
     def to_s
       if defined? @prev
-        "watch bp: #{@expr} = #{@prev} -> #{@current}"
+        "#{LABEL} #{@expr} = #{@prev} -> #{@current}"
       else
-        "watch bp: #{@expr} = #{@current}"
+        "#{LABEL} #{@expr} = #{@current}"
       end
     end
   end
 
   class MethodBreakpoint < Breakpoint
+    LABEL = generate_label("Method")
+    PENDING_LABEL = generate_label("Method (pending)")
+
     attr_reader :sig_method_name, :method
 
     def initialize b, klass_name, op, method_name, cond
@@ -378,9 +403,9 @@ module DEBUGGER__
 
     def to_s
       if @method
-        "method bp: #{sig}"
+        "#{LABEL} #{sig}"
       else
-        "method bp (pending): #{sig}"
+        "#{PENDING_LABEL} #{sig}"
       end + super
     end
   end

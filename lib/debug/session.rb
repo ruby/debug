@@ -1,8 +1,8 @@
 ﻿
 require_relative 'thread_client'
 require_relative 'source_repository'
-require_relative 'breakpoint'
 require_relative 'config'
+require_relative 'breakpoint'
 
 class RubyVM::InstructionSequence
   def traceable_lines_norec lines
