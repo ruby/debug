@@ -959,6 +959,11 @@ module DEBUGGER__
     set_config(kw)
 
     require_relative 'console'
+
+    if ENV['RUBY_DEBUG_TEST_MODE']
+      require_relative 'test_console'
+      UI_Console.prepend(TestUI_Console)
+    end
     initialize_session UI_Console.new
 
     @prev_handler = trap(:SIGINT){
