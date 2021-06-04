@@ -352,8 +352,8 @@ The `<...>` notation means the argument.
   * Note that this feature is super slow.
 * `catch <Error>`
   * Set breakpoint on raising `<Error>`.
-* `watch <expr>`
-  * Stop the execution when the result of `<expr>` is changed.
+* `watch @ivar`
+  * Stop the execution when the result of current scope's `@ivar` is changed.
   * Note that this feature is super slow.
 * `del[ete]`
   * delete all breakpoints.
