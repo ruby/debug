@@ -22,11 +22,11 @@ module DEBUGGER__
       })
     end
 
-    def debug_code(program, &block)
+    def debug_code(program, **options, &block)
       @queue = Queue.new
       block.call
       write_temp_file(strip_line_num(program))
-      create_pseudo_terminal
+      create_pseudo_terminal(**options)
       check_line_num!(program)
     end
 
@@ -42,12 +42,13 @@ module DEBUGGER__
 
     RUBY = RbConfig.ruby
 
-    def create_pseudo_terminal
+    def create_pseudo_terminal(boot_options: "-r debug/run")
       lib = "#{__dir__}/../../lib"
+
       ENV['RUBYOPT'] = "-I #{lib}"
       ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
 
-      PTY.spawn("#{RUBY} -r debug/run #{temp_file_path}") do |read, write, pid|
+      PTY.spawn("#{RUBY} #{boot_options} #{temp_file_path}") do |read, write, pid|
         quit = false
         result = nil
 
