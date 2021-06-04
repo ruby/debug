@@ -329,8 +329,8 @@ module DEBUGGER__
         end
         return :retry
 
-      # * `watch <expr>`
-      #   * Stop the execution when the result of `<expr>` is changed.
+      # * `watch @ivar`
+      #   * Stop the execution when the result of current scope's `@ivar` is changed.
       #   * Note that this feature is super slow.
       when 'wat', 'watch'
         if arg
