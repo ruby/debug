@@ -25,6 +25,7 @@ module DEBUGGER__
     def debug_code(program, &block)
       @queue = Queue.new
       block.call
+      check_line_num!(program)
       write_temp_file(strip_line_num(program))
       create_pseudo_terminal
     end
@@ -84,8 +85,14 @@ module DEBUGGER__
 
     private
 
+    LINE_NUMBER_REGEX = /^\s*\d+\| ?/
+
     def strip_line_num(str)
-      str.gsub(/^\s*\d+\| ?/, '')
+      str.gsub(LINE_NUMBER_REGEX, '')
+    end
+
+    def check_line_num!(str)
+      raise "line numbers are required in test script" unless str.match?(LINE_NUMBER_REGEX)
     end
   end
 end
