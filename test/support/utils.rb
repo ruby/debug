@@ -25,9 +25,9 @@ module DEBUGGER__
     def debug_code(program, &block)
       @queue = Queue.new
       block.call
-      check_line_num!(program)
       write_temp_file(strip_line_num(program))
       create_pseudo_terminal
+      check_line_num!(program)
     end
 
     def take_number(sentence)
