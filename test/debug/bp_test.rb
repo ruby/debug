@@ -6,13 +6,13 @@ module DEBUGGER__
   class BindingBPTest < TestCase
     def program
       <<~RUBY
-      class Foo
-        def bar
-          binding.bp
-        end
-      end
-
-      Foo.new.bar
+     1| class Foo
+     2|   def bar
+     3|     binding.bp
+     4|   end
+     5| end
+     6|
+     7| Foo.new.bar
       RUBY
     end
 
@@ -28,18 +28,18 @@ module DEBUGGER__
   class BindingBPWithCommandTest < TestCase
     def program
       <<~RUBY
-      class Foo
-        def bar
-          binding.bp(command: "continue")
-          baz
-        end
-
-        def baz
-          binding.bp
-        end
-      end
-
-      Foo.new.bar
+     1| class Foo
+     2|   def bar
+     3|     binding.bp(command: "continue")
+     4|     baz
+     5|   end
+     6|
+     7|   def baz
+     8|     binding.bp
+     9|   end
+    10| end
+    11|
+    12| Foo.new.bar
       RUBY
     end
 
