@@ -101,7 +101,6 @@ module DEBUGGER__
 
     def program_with_line_numbers(program)
       lines = program.split("\n")
-      line_count = lines.count
       lines_with_number = lines.map.with_index do |line, i|
         "#{'%4d' % (i+1)}| #{line}"
       end
