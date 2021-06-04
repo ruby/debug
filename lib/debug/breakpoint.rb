@@ -312,50 +312,6 @@ module DEBUGGER__
     end
   end
 
-  class WatchExprBreakpoint < Breakpoint
-    LABEL = generate_label("Watch")
-
-    def initialize expr, current
-      @expr = expr.freeze
-      @key = [:watch, @expr].freeze
-
-      @current = current
-      super()
-    end
-
-    def watch_eval b
-      result = b.eval(@expr)
-      if result != @current
-        begin
-          @prev = @current
-          @current = result
-          suspend
-        ensure
-          remove_instance_variable(:@prev)
-        end
-      end
-    rescue Exception => e
-      false
-    end
-
-    def setup
-      @tp = TracePoint.new(:line, :return, :b_return){|tp|
-        next if tp.path.start_with? __dir__
-        next if tp.path.start_with? '<internal:'
-
-        watch_eval(tp.binding)
-      }
-    end
-
-    def to_s
-      if defined? @prev
-        "#{LABEL} #{@expr} = #{@prev} -> #{@current}"
-      else
-        "#{LABEL} #{@expr} = #{@current}"
-      end
-    end
-  end
-
   class MethodBreakpoint < Breakpoint
     LABEL = generate_label("Method")
     PENDING_LABEL = generate_label("Method (pending)")

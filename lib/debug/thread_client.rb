@@ -485,9 +485,6 @@ module DEBUGGER__
                   end
                 puts "#{object} #{eval_src} = #{result}"
                 result = WatchIVarBreakpoint.new(eval_src, object)
-              else
-                puts "#{eval_src} = #{result}"
-                result = WatchExprBreakpoint.new(eval_src, result)
               end
 
               result_type = :watch
