@@ -168,17 +168,66 @@ module DEBUGGER__
   class BreakAtLinesTest < TestCase
     def program
       <<~RUBY
-        1| a = 1
-        2| b = 2
-        3| c = 3
+         1| module Foo
+         2|   class Bar
+         3|     def self.a
+         4|       "hello"
+         5|     end
+         6|
+         7|     def b(n)
+         8|       2.times do
+         9|         n
+        10|       end
+        11|     end
+        12|   end
+        13|   module Baz
+        14|     def self.c
+        15|       d = 1
+        16|     end
+        17|   end
+        18|   Bar.a
+        19|   bar = Bar.new
+        20|   bar.b(1)
+        21|   Baz.c
+        22| end
       RUBY
     end
 
-    def test_setting_breakpoint_sets_correct_fields
+    def test_stops_at_correct_place_when_breakpoint_set_in_a_regular_line
       debug_code(program) do
-        type 'break 3'
+        type 'break 4'
         type 'continue'
-        assert_line_num 3
+        assert_line_num 4
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_stops_at_correct_place_when_breakpoint_set_in_empty_line
+      debug_code(program) do
+        type 'break 6'
+        type 'continue'
+        assert_line_num 7
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_conditional_breakpoint_stops_if_condition_is_true
+      debug_code(program) do
+        type 'break if n == 1'
+        type 'continue'
+        assert_line_num 8
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_conditional_breakpoint_stops_at_specified_location_if_condition_is_true
+      debug_code(program) do
+        type 'break 16 if d == 1'
+        type 'continue'
+        assert_line_num 16
         type 'quit'
         type 'y'
       end
