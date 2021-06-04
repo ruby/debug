@@ -54,7 +54,7 @@ module DEBUGGER__
                 #   [file, line] => LineBreakpoint
                 #   "Error" => CatchBreakpoint
                 #   "Foo#bar" => MethodBreakpoint
-                #   [:watch, expr] => WatchExprBreakpoint
+                #   [:watch, ivar] => WatchIVarBreakpoint
                 #   [:check, expr] => CheckBreakpoint
       @th_clients = {} # {Thread => ThreadClient}
       @q_evt = Queue.new
