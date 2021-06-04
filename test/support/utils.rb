@@ -91,8 +91,21 @@ module DEBUGGER__
       str.gsub(LINE_NUMBER_REGEX, '')
     end
 
-    def check_line_num!(str)
-      raise "line numbers are required in test script" unless str.match?(LINE_NUMBER_REGEX)
+    def check_line_num!(program)
+      unless program.match?(LINE_NUMBER_REGEX)
+        new_program = program_with_line_numbers(program)
+        raise "line numbers are required in test script. please update the script with:\n\n#{new_program}"
+      end
+    end
+
+    def program_with_line_numbers(program)
+      lines = program.split("\n")
+      line_count = lines.count
+      lines_with_number = lines.map.with_index do |line, i|
+        "#{'%4d' % (i+1)}| #{line}"
+      end
+
+      lines_with_number.join("\n")
     end
   end
 end
