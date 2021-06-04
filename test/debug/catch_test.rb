@@ -63,4 +63,47 @@ module DEBUGGER__
       end
     end
   end
+
+  class NamespacedExceptionCatchTest < TestCase
+    def program
+      <<~RUBY
+         1| class TestException < StandardError; end
+         2|
+         3| module Foo
+         4|   class TestException < StandardError; end
+         5|
+         6|   def self.raised_exception
+         7|     raise TestException
+         8|   end
+         9| end
+        10|
+        11| # we need this rescue + binding.bp workaround because the test framework can't handle exception exit yet
+        12| Foo.raised_exception rescue nil
+        13|
+        14| binding.bp
+      RUBY
+    end
+
+    def test_debugger_not_stopping_at_exception_without_namespace
+      debug_code(program) do
+        type 'catch TestException'
+        type 'continue'
+        assert_line_num(14)
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_debugger_stop_at_exception_with_namespace
+      debug_code(program) do
+        type 'catch Foo::TestException'
+        type 'continue'
+        assert_line_num(7)
+        type 'continue'
+        assert_line_num(14)
+        type 'quit'
+        type 'y'
+      end
+    end
+  end
 end
