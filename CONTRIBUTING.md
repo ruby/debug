@@ -1,3 +1,32 @@
+## Set Up a Development Environment
+
+1. `$ git clone git@github.com:ruby/debug.git`
+2. `$ bundle install`
+3. `$ rake` - this will
+  - Compile the C extension locally (which can also be done solely with `rake compile`).
+  - Run tests.
+  - Re-generate `README.md`.
+
+If you spot any problem, please open an issue.
+
+## Run Tests
+
+### Run all tests
+
+```bash
+$ rake test
+# or 
+$ ruby bin/test-unit.rb
+```
+
+### Run specific test(s)
+
+
+```bash
+$ ruby test/debug/bp_test.rb # run all tests in the specified file
+$ ruby test/debug/bp_test.rb -h # to see all the test options
+```
+
 ## Manually Test Your Changes
 
 You can manually test your changes with a simple Ruby script + a line of command. The following example will help you check:
