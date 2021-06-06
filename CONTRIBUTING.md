@@ -27,6 +27,25 @@ $ ruby test/debug/bp_test.rb # run all tests in the specified file
 $ ruby test/debug/bp_test.rb -h # to see all the test options
 ```
 
+## To Update README
+
+This project generates `README.md` from the template `misc/README.md.erb`
+
+So **do not** directly update `README.md`. Instead, you should update the template's source and run
+
+```bash
+$ rake
+```
+
+to reflect the change on `README.md`.
+
+
+### When to re-generate `README.md`
+
+- After updating `misc/README.md.erb`.
+- After updating `rdbg` executable's options.
+- After updating comments of debugger's commands.
+
 ## Manually Test Your Changes
 
 You can manually test your changes with a simple Ruby script + a line of command. The following example will help you check:
