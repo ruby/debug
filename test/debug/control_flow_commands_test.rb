@@ -60,6 +60,19 @@ module DEBUGGER__
         type 'y'
       end
     end
+
+    def test_continue_goes_to_the_next_breakpoint
+      debug_code(program) do
+        type 'b 11'
+        type 'c'
+        assert_line_num 11
+        type 'b 13'
+        type 'c'
+        assert_line_num 13
+        type 'quit'
+        type 'y'
+      end
+    end
   end
 
   #
@@ -129,6 +142,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'break Foo::Bar.raise_error'
         type 'continue'
+        assert_line_num 4
         type 'next'
         assert_line_num 6
         type 'quit'
