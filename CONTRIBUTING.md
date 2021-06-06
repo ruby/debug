@@ -3,9 +3,9 @@
 1. `$ git clone git@github.com:ruby/debug.git`
 2. `$ bundle install`
 3. `$ rake` - this will
-  - Compile the C extension locally (which can also be done solely with `rake compile`).
-  - Run tests.
-  - Re-generate `README.md`.
+    - Compile the C extension locally (which can also be done solely with `rake compile`).
+    - Run tests.
+    - Re-generate `README.md`.
 
 If you spot any problem, please open an issue.
 
@@ -15,7 +15,7 @@ If you spot any problem, please open an issue.
 
 ```bash
 $ rake test
-# or 
+# or
 $ ruby bin/test-unit.rb
 ```
 
@@ -37,7 +37,7 @@ So **do not** directly update `README.md`. Instead, you should update the templa
 $ rake
 ```
 
-to reflect the change on `README.md`.
+to reflect the changes on `README.md`.
 
 
 ### When to re-generate `README.md`
