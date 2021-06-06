@@ -4,9 +4,9 @@ require_relative '../support/test_case'
 
 module DEBUGGER__
   #
-  # Test basic stepping behaviour.
+  # Test basic control flow commands.
   #
-  class BasicSteppingTest < TestCase
+  class BasicControlFlowTest < TestCase
     def program
       <<~RUBY
          1| class Student
@@ -63,9 +63,9 @@ module DEBUGGER__
   end
 
   #
-  # Tests step/next with arguments higher than one.
+  # Tests control flow commands with block.
   #
-  class MoreThanOneStepTest < TestCase
+  class BlockControlFlowTest < TestCase
     def program
       <<~RUBY
         1| 2.times do |n|
@@ -107,9 +107,9 @@ module DEBUGGER__
   end
 
   #
-  # Tests next behaviour in rescue clause.
+  # Tests control flow commands with rescue.
   #
-  class NextRescueTest < TestCase
+  class RescueControlFlowTest < TestCase
     def program
       <<~RUBY
          1| module Foo
