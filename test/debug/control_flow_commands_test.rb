@@ -73,6 +73,24 @@ module DEBUGGER__
         type 'y'
       end
     end
+
+    def test_finish_leaves_the_current_frame
+      debug_code(program) do
+        type 'b 11'
+        type 'c'
+        assert_line_num 11
+        type 's'
+        assert_line_num 3
+        type 'fin'
+        assert_line_num 12
+        type 's'
+        assert_line_num 7
+        type 'fin'
+        assert_line_num 13
+        type 'quit'
+        type 'y'
+      end
+    end
   end
 
   #
@@ -112,6 +130,19 @@ module DEBUGGER__
         type 'next'
         assert_line_num 3
         type 'next'
+        assert_line_num 4
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_finish_leaves_blocks_right_away
+      debug_code(program) do
+        type 'step'
+        assert_line_num 2
+        type 'next'
+        assert_line_num 3
+        type 'finish'
         assert_line_num 4
         type 'quit'
         type 'y'
