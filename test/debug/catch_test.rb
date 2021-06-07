@@ -84,7 +84,7 @@ module DEBUGGER__
       RUBY
     end
 
-    def test_debugger_not_stopping_at_exception_without_namespace
+    def test_catch_without_namespace_does_not_stop_at_exception
       debug_code(program) do
         type 'catch TestException'
         type 'continue'
@@ -94,7 +94,7 @@ module DEBUGGER__
       end
     end
 
-    def test_debugger_stop_at_exception_with_namespace
+    def test_catch_with_namespace_stops_at_exception
       debug_code(program) do
         type 'catch Foo::TestException'
         type 'continue'
