@@ -85,7 +85,7 @@ module DEBUGGER__
             # result of `gets` return this exception in some platform
             # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
           else
-            # assert_fail_with_log e.message, lines
+            assert_fail_with_log e.message, lines
           end
         rescue Timeout::Error => e
           assert_fail_with_log "TIMEOUT ERROR (#{timeout_sec} sec)", lines
