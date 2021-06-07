@@ -47,7 +47,7 @@ module DEBUGGER__
         type 'y'
       end
     end
-  end
+  end if false # To be removed
 
   class MethodWatchingTest < TestCase
     def program

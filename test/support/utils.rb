@@ -26,6 +26,12 @@ module DEBUGGER__
       })
     end
 
+    def assert_fail_with_log msg, lines
+      assert false,  "#{msg}\n" +
+                     "[DEBUG SESSION LOG]\n" +
+                     lines.map{|l| "> #{l}"}.join
+    end
+
     def debug_code(program, **options, &block)
       @queue = Queue.new
       block.call
@@ -49,10 +55,12 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
 
+      timeout_sec = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
+
       PTY.spawn("#{RUBY} #{boot_options} #{temp_file_path}") do |read, write, pid|
         lines = []
         begin
-          Timeout.timeout(10) do
+          Timeout.timeout(timeout_sec) do
             while (line = read.gets)
               lines.push(line)
               debug_print line
@@ -77,12 +85,10 @@ module DEBUGGER__
             # result of `gets` return this exception in some platform
             # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
           else
-            p e
-            pp lines
+            # assert_fail_with_log e.message, lines
           end
         rescue Timeout::Error => e
-          p e
-          pp lines
+          assert_fail_with_log "TIMEOUT ERROR (#{timeout_sec} sec)", lines
         end
       end
     end
