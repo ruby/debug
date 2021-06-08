@@ -70,69 +70,7 @@ module DEBUGGER__
 
       @session_server = Thread.new do
         Thread.current.abort_on_exception = true
-
-        while evt = @q_evt.pop
-          # varible `@internal_info` is only used for test
-          tc, output, ev, @internal_info, *ev_args = evt
-          output.each{|str| @ui.puts str}
-
-          case ev
-          when :load
-            iseq, src = ev_args
-            on_load iseq, src
-            @ui.event :load
-            tc << :continue
-          when :thread_begin
-            th = ev_args.shift
-            on_thread_begin th
-            @ui.event :thread_begin, th
-            tc << :continue
-          when :suspend
-            case ev_args.first
-            when :breakpoint
-              bp, i = bp_index ev_args[1]
-              @ui.event :suspend_bp, i, bp
-            when :trap
-              @ui.event :suspend_trap, ev_args[1]
-            end
-
-            if @displays.empty?
-              wait_command_loop tc
-            else
-              tc << [:eval, :display, @displays]
-            end
-          when :result
-            case ev_args.first
-            when :watch
-              bp = ev_args[1]
-              @bps[bp.key] = bp
-              show_bps bp
-            when :try_display
-              failed_results = ev_args[1]
-              if failed_results.size > 0
-                i, msg = failed_results.last
-                if i+1 == @displays.size
-                  @ui.puts "canceled: #{@displays.pop}"
-                end
-              end
-            when :method_breakpoint
-              bp = ev_args[1]
-              if bp
-                @bps[bp.key] = bp
-                show_bps bp
-              else
-                # can't make a bp
-              end
-            else
-              # ignore
-            end
-
-            wait_command_loop tc
-          end
-        end
-      ensure
-        @bps.each{|k, bp| bp.disable}
-        @th_clients.each{|th, thc| thc.close}
+        session_server_main
       end
 
       @management_threads = [@session_server]
@@ -144,6 +82,71 @@ module DEBUGGER__
         ThreadClient.current.on_thread_begin Thread.current
       }
       @tp_thread_begin.enable
+    end
+
+    def session_server_main
+      while evt = @q_evt.pop
+        # varible `@internal_info` is only used for test
+        tc, output, ev, @internal_info, *ev_args = evt
+        output.each{|str| @ui.puts str}
+
+        case ev
+        when :load
+          iseq, src = ev_args
+          on_load iseq, src
+          @ui.event :load
+          tc << :continue
+        when :thread_begin
+          th = ev_args.shift
+          on_thread_begin th
+          @ui.event :thread_begin, th
+          tc << :continue
+        when :suspend
+          case ev_args.first
+          when :breakpoint
+            bp, i = bp_index ev_args[1]
+            @ui.event :suspend_bp, i, bp
+          when :trap
+            @ui.event :suspend_trap, ev_args[1]
+          end
+
+          if @displays.empty?
+            wait_command_loop tc
+          else
+            tc << [:eval, :display, @displays]
+          end
+        when :result
+          case ev_args.first
+          when :watch
+            bp = ev_args[1]
+            @bps[bp.key] = bp
+            show_bps bp
+          when :try_display
+            failed_results = ev_args[1]
+            if failed_results.size > 0
+              i, msg = failed_results.last
+              if i+1 == @displays.size
+                @ui.puts "canceled: #{@displays.pop}"
+              end
+            end
+          when :method_breakpoint
+            bp = ev_args[1]
+            if bp
+              @bps[bp.key] = bp
+              show_bps bp
+            else
+              # can't make a bp
+            end
+          else
+            # ignore
+          end
+
+          wait_command_loop tc
+        end
+      end
+    ensure
+      @bps.each{|k, bp| bp.disable}
+      @th_clients.each{|th, thc| thc.close}
     end
 
     def add_initial_commands cmds
