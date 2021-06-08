@@ -4,6 +4,8 @@ require 'io/console/size'
 require_relative 'config'
 require_relative 'version'
 
+# $VERBOSE = true
+
 module DEBUGGER__
   class CommandLineOptionError < Exception; end
 
@@ -43,7 +45,7 @@ module DEBUGGER__
       @width = IO.console_size[1]
       @width_changed = false
 
-      @s.puts "version: #{VERSION} width: #{@width} cookie: #{CONFIG[:cookie]}"
+      send "version: #{VERSION} width: #{@width} cookie: #{CONFIG[:cookie]}"
     end
 
     def cleanup_unix_domain_sockets
@@ -88,9 +90,14 @@ module DEBUGGER__
       @s = Socket.tcp(host, port)
     end
 
+    def send msg
+      p send: msg if $VERBOSE
+      @s.puts msg
+    end
+
     def connect
       trap(:SIGINT){
-        @s.puts "pause"
+        send "pause"
       }
       trap(:SIGWINCH){
         @width = IO.console_size[1]
@@ -98,7 +105,7 @@ module DEBUGGER__
       }
 
       while line = @s.gets
-        # p line: line
+        p recv: line if $VERBOSE
         case line
         when /^out (.*)/
           puts "#{$1}"
@@ -117,13 +124,13 @@ module DEBUGGER__
 
           if @width_changed
             @width_changed = false
-            @s.puts "width #{@width}"
+            send "width #{@width}"
           end
 
-          @s.puts "command #{line}"
+          send "command #{line}"
         when /^ask (.*)/
           print $1
-          @s.puts "answer #{gets || ''}"
+          send "answer #{gets || ''}"
         when /^quit/
           raise 'quit'
         else
