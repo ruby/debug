@@ -13,7 +13,6 @@ module DEBUGGER__
       @q_msg = Queue.new
       @q_ans = Queue.new
       @unsent_messages = []
-      @cookie = nil
       @width = 80
 
       @reader_thread = Thread.new do
@@ -24,9 +23,9 @@ module DEBUGGER__
           DEBUGGER__.message "Connected."
 
           @accept_m.synchronize{
-            greeting server
-
             @sock = server
+            greeting
+
             @accept_cv.signal
 
             # flush unsent messages
@@ -35,42 +34,15 @@ module DEBUGGER__
             }
             @unsent_messages.clear
           }
-          @q_msg = Queue.new
-          @q_ans = Queue.new
 
-          setup_interrupt do
-            pause
-
-            while line = @sock.gets
-              case line
-              when /\Apause/
-                pause
-              when /\Acommand ?(.+)/
-                @q_msg << $1
-              when /\Aanswer (.*)/
-                @q_ans << $1
-              when /\Awidth (.+)/
-                @width = $1.to_i
-              else
-                STDERR.puts "unsupported: #{line}"
-                exit!
-              end
-            end
-          end
-        rescue => e
-          DEBUGGER__.message "Error: #{e}"
-        ensure
-          DEBUGGER__.message "Disconnected."
-          @sock = nil
-          @q_msg.close
-          @q_ans.close
+          process
         end
       end
     end
 
-    def greeting sock
-      g = sock.gets
-      if /^version:\s+(.+)\s+width: (\d+) cookie:\s+(.*)$/ =~ g
+    def greeting
+      case g = @sock.gets
+      when /^version:\s+(.+)\s+width: (\d+) cookie:\s+(.*)$/
         v, w, c = $1, $2, $3
         # TODO: protocol version
         if v != VERSION
@@ -86,6 +58,38 @@ module DEBUGGER__
       else
         raise "Greeting message error: #{g}"
       end
+    end
+
+    def process
+      @q_msg = Queue.new
+      @q_ans = Queue.new
+
+      setup_interrupt do
+        pause
+
+        while line = @sock.gets
+          case line
+          when /\Apause/
+            pause
+          when /\Acommand ?(.+)/
+            @q_msg << $1
+          when /\Aanswer (.*)/
+            @q_ans << $1
+          when /\Awidth (.+)/
+            @width = $1.to_i
+          else
+            STDERR.puts "unsupported: #{line}"
+            exit!
+          end
+        end
+      end
+    rescue => e
+      DEBUGGER__.message "Error: #{e}"
+    ensure
+      DEBUGGER__.message "Disconnected."
+      @sock = nil
+      @q_msg.close
+      @q_ans.close
     end
 
     def remote?
