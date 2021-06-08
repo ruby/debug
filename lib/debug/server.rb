@@ -17,6 +17,9 @@ module DEBUGGER__
       @width = 80
 
       @reader_thread = Thread.new do
+        # An error on this thread should break the system.
+        Thread.current.abort_on_exception = true
+
         accept do |server|
           DEBUGGER__.message "Connected."
 
