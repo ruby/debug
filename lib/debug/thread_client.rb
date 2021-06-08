@@ -484,7 +484,7 @@ module DEBUGGER__
                     current_frame.self
                   end
                 puts "#{object} #{eval_src} = #{result}"
-                result = WatchIVarBreakpoint.new(eval_src, object)
+                result = WatchIVarBreakpoint.new(eval_src, object, result)
               end
 
               result_type = :watch
