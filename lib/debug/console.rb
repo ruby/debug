@@ -2,7 +2,7 @@ require_relative 'session'
 require 'io/console/size'
 
 module DEBUGGER__
-  class UI_Console
+  class UI_Console < UI_Base
     def initialize
     end
 

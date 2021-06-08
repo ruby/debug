@@ -4,7 +4,7 @@ require_relative 'config'
 require_relative 'version'
 
 module DEBUGGER__
-  class UI_ServerBase
+  class UI_ServerBase < UI_Base
     def initialize
       @sock = nil
       @accept_m = Mutex.new

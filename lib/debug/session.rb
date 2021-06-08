@@ -80,21 +80,20 @@ module DEBUGGER__
           when :load
             iseq, src = ev_args
             on_load iseq, src
+            @ui.event :load
             tc << :continue
           when :thread_begin
             th = ev_args.shift
             on_thread_begin th
+            @ui.event :thread_begin, th
             tc << :continue
           when :suspend
             case ev_args.first
             when :breakpoint
               bp, i = bp_index ev_args[1]
-              if bp
-                @ui.puts "\nStop by \##{i} #{bp}"
-              end
+              @ui.event :suspend_bp, i, bp
             when :trap
-              @ui.puts ''
-              @ui.puts "\nStop by #{ev_args[1]}"
+              @ui.event :suspend_trap, ev_args[1]
             end
 
             if @displays.empty?
@@ -925,6 +924,18 @@ module DEBUGGER__
 
     def width
       @ui.width
+    end
+  end
+
+  class UI_Base
+    def event type, *args
+      case type
+      when :suspend_bp
+        bp, i = *args
+        puts "\nStop by \##{i} #{bp}" if bp
+      when :suspend_trap
+        puts "\nStop by #{args.first}"
+      end
     end
   end
 
