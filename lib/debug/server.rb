@@ -13,7 +13,7 @@ module DEBUGGER__
       @q_msg = Queue.new
       @q_ans = Queue.new
       @unsent_messages = []
-      @cookie = 'hello'
+      @cookie = nil
       @width = 80
 
       @reader_thread = Thread.new do
