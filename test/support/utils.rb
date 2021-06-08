@@ -18,11 +18,7 @@ module DEBUGGER__
 
     def assert_line_text(expected)
       @queue.push(Proc.new {
-        assert_block do
-          @internal_info['backlog'].each do |line|
-            line.include? expected
-          end
-        end
+        assert_match(expected, @internal_info['backlog'].join)
       })
     end
 
