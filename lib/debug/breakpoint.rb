@@ -268,12 +268,12 @@ module DEBUGGER__
   class WatchIVarBreakpoint < Breakpoint
     LABEL = generate_label("Watch")
 
-    def initialize ivar, object
+    def initialize ivar, object, current
       @ivar = ivar.to_sym
       @object = object
       @key = [:watch, @ivar].freeze
 
-      @current = object.instance_variable_get(@ivar)
+      @current = current
       super()
     end
 
