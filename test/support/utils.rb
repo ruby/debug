@@ -43,9 +43,7 @@ module DEBUGGER__
     RUBY = RbConfig.ruby
 
     def create_pseudo_terminal(boot_options: "-r debug/run")
-      lib = "#{__dir__}/../../lib"
-
-      ENV['RUBYOPT'] = "-I #{lib}"
+      inject_lib_to_load_path
       ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
 
@@ -92,6 +90,23 @@ module DEBUGGER__
     end
 
     private
+
+    # use this to start a debug session with the test program
+    def manual_debug_code(program)
+      print("[Starting a Debug Session with @#{caller.first}]\n")
+      write_temp_file(strip_line_num(program))
+      inject_lib_to_load_path
+      pid = spawn("#{RUBY} -r debug/open #{temp_file_path}")
+      sleep(0.5) # wait for the debug server to start
+      require_relative "../../lib/debug/client"
+      connect
+    ensure
+      Process.kill('QUIT', pid)
+    end
+
+    def inject_lib_to_load_path
+      ENV['RUBYOPT'] = "-I #{__dir__}/../../lib"
+    end
 
     LINE_NUMBER_REGEX = /^\s*\d+\| ?/
 
