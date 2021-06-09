@@ -54,12 +54,11 @@ module DEBUGGER__
       timeout_sec = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
       PTY.spawn("#{RUBY} #{boot_options} #{temp_file_path}") do |read, write, pid|
-        lines = []
+        @backlog = []
         @last_backlog = []
         begin
           Timeout.timeout(timeout_sec) do
             while (line = read.gets)
-              lines.push(line)
               debug_print line
               case line.chomp
               when '(rdbg)'
@@ -72,11 +71,12 @@ module DEBUGGER__
                 @last_backlog = []
               when /INTERNAL_INFO:\s(.*)/
                 @internal_info = JSON.parse(Regexp.last_match(1))
-                next # INTERNAL_INFO shouldn't be pushed into @last_backlog
+                next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
               when %r{Really quit\? \[Y/n\]}
                 cmd = @queue.pop
                 write.puts(cmd)
               end
+              @backlog.push(line)
               @last_backlog.push(line)
             end
           end
