@@ -12,20 +12,18 @@ module DEBUGGER__
 
     def assert_line_num(expected)
       @queue.push(Proc.new {
-        assert_equal(expected, @internal_info['line'])
+        assert_equal(expected, @internal_info['line'], create_message("Expected line number to be #{expected}, but was #{@internal_info['line']}"))
       })
     end
 
     def assert_line_text(expected)
       @queue.push(Proc.new {
-        assert_match(expected, @internal_info['backlog'].join)
+        assert_match(expected, @last_backlog[2..].join, create_message("Expected to include #{expected}"))
       })
     end
 
-    def assert_fail_with_log msg, lines
-      assert false,  "#{msg}\n" +
-                     "[DEBUG SESSION LOG]\n" +
-                     lines.map{|l| "> #{l}"}.join
+    def create_message fail_msg
+      "#{fail_msg}\n[DEBUG SESSION LOG]\n" + @backlog.map { |l| "> #{l}" }.join
     end
 
     def debug_code(program, **options, &block)
@@ -85,10 +83,10 @@ module DEBUGGER__
             # result of `gets` return this exception in some platform
             # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
           else
-            assert_fail_with_log e.message, lines
+            assert false, create_message(e.message)
           end
         rescue Timeout::Error => e
-          assert_fail_with_log "TIMEOUT ERROR (#{timeout_sec} sec)", lines
+          assert false, create_message("TIMEOUT ERROR (#{timeout_sec} sec)")
         end
       end
     end
