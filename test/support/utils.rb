@@ -55,6 +55,7 @@ module DEBUGGER__
 
       PTY.spawn("#{RUBY} #{boot_options} #{temp_file_path}") do |read, write, pid|
         lines = []
+        @last_backlog = []
         begin
           Timeout.timeout(timeout_sec) do
             while (line = read.gets)
@@ -68,12 +69,15 @@ module DEBUGGER__
                   cmd = @queue.pop
                 end
                 write.puts(cmd)
+                @last_backlog = []
               when /INTERNAL_INFO:\s(.*)/
                 @internal_info = JSON.parse(Regexp.last_match(1))
+                next # INTERNAL_INFO shouldn't be pushed into @last_backlog
               when %r{Really quit\? \[Y/n\]}
                 cmd = @queue.pop
                 write.puts(cmd)
               end
+              @last_backlog.push(line)
             end
           end
         rescue Errno::EIO => e

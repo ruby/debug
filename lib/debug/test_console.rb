@@ -7,9 +7,6 @@ module DEBUGGER__
   # Custom UI_Console to make tests easier
   #
   module TestUI_Console
-    def initialize
-      @backlog = []
-    end
 
     def ask prompt
       setup_interrupt do
@@ -19,21 +16,12 @@ module DEBUGGER__
     end
 
     def puts str = nil
-      case str
-      when String
-        @backlog.push(str)
-      when Hash
-        @internal_info = str
-      end
+      @internal_info = str
       super(str)
     end
 
     def readline_body
-      unless @internal_info.empty?
-        @internal_info[:backlog] = @backlog
-        $stdout.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}"
-        @backlog = []
-      end
+      $stdout.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}" unless @internal_info.empty?
       readline_setup
       Readline.readline("\n(rdbg)\n", true)
     end
