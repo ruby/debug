@@ -379,7 +379,7 @@ The `<...>` notation means the argument.
 * `i[nfo]`, `i[nfo] l[ocal[s]]`
   * Show information about the current frame (local variables)
   * It includes `self` as `%self` and a return value as `%return`.
-* `i[nfo] th[read[s]]
+* `i[nfo] th[read[s]]`
   * Show all threads (same as `th[read]`).
 * `display`
   * Show display setting.
