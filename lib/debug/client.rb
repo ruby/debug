@@ -65,7 +65,7 @@ module DEBUGGER__
         if File.exist? name
           @s = Socket.unix(name)
         else
-          @s = Socket.unix(File.join(DEBUGGER__.unix_domain_socket_basedir, name))
+          @s = Socket.unix(File.join(DEBUGGER__.unix_domain_socket_dir, name))
         end
       else
         cleanup_unix_domain_sockets
