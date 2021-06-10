@@ -95,11 +95,19 @@ module DEBUGGER__
     def manual_debug_code(program)
       print("[Starting a Debug Session with @#{caller.first}]\n")
       write_temp_file(strip_line_num(program))
-      inject_lib_to_load_path
-      pid = spawn("#{RUBY} -r debug/open #{temp_file_path}")
-      sleep(0.5) # wait for the debug server to start
+
       require_relative "../../lib/debug/client"
-      connect
+
+      socket_path = DEBUGGER__.create_unix_domain_socket_name
+      inject_lib_to_load_path
+      ENV["RUBY_DEBUG_SOCK_PATH"] = socket_path
+      pid = spawn("#{RUBY} -r debug/open #{temp_file_path}")
+
+      while !File.exist?(socket_path)
+        sleep 0.1
+      end
+
+      DEBUGGER__::Client.new([socket_path]).connect
     ensure
       Process.kill('QUIT', pid)
     end
