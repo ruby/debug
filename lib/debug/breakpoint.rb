@@ -264,6 +264,8 @@ module DEBUGGER__
       @tp = TracePoint.new(:line){|tp|
         next if tp.path.start_with? __dir__
         next if tp.path.start_with? '<internal:'
+        # Skip when `JSON.generate` is called during tests
+        next if tp.defined_class.to_s == '#<Class:JSON>' and ENV['RUBY_DEBUG_TEST_MODE']
 
         if safe_eval tp.binding, @expr
           suspend

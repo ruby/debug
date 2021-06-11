@@ -15,13 +15,7 @@ module DEBUGGER__
       end
     end
 
-    def puts str = nil
-      @internal_info = str
-      super(str)
-    end
-
     def readline_body
-      $stdout.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}" unless @internal_info.empty?
       readline_setup
       Readline.readline("\n(rdbg)\n", true)
     end
