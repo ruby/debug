@@ -1,4 +1,4 @@
-﻿
+
 # skip to load debugger for bundle exec
 return if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
 
@@ -6,6 +6,8 @@ require_relative 'config'
 require_relative 'thread_client'
 require_relative 'source_repository'
 require_relative 'breakpoint'
+
+require 'json' if ENV['RUBY_DEBUG_TEST_MODE']
 
 class RubyVM::InstructionSequence
   def traceable_lines_norec lines
@@ -206,7 +208,7 @@ module DEBUGGER__
 
     def wait_command
       if @initial_commands.empty?
-        @ui.puts(@internal_info) if ENV['RUBY_DEBUG_TEST_MODE']
+        @ui.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}" if ENV['RUBY_DEBUG_TEST_MODE']
         line = @ui.readline
       else
         line = @initial_commands.shift.strip
