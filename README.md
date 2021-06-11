@@ -51,28 +51,33 @@ To use debugging feature, you can have 3 ways.
 
 ### Local debug console
 
+#### (1) Use `rdbg` command
+
 ```
-# (1) Use `rdbg` command
 $ rdbg target.rb
 $ rdbg -- -r foo -e expr # -- is required to make clear rdbg options and ruby's options
+```
 
-# (2) Use `-r debug/run` command line option
+#### (2) Use `-r debug/run` command line option
 
+```
 $ ruby -r debug/run target.rb
+```
 
-# (3) Write `require 'debug...' in .rb files
+#### (3) Write `require 'debug...' in .rb files
 
-$ cat target.rb
+```ruby
+# target.rb
 require 'debug/run' # start the debug console
-... rest of program ...
 
 # or
 
-$ cat target.rb
 require 'debug/session'  # introduce the functionality
 DEBUGGER__.console       # and start the debug console
-... rest of program ...
+# ... rest of program ...
+```
 
+```
 $ ruby target.rb
 ```
 
@@ -146,33 +151,36 @@ $ rdbg  ~/src/rb/target.rb
 
 ### Remote debug (1) UNIX domain socket
 
+#### (1) Use `rdbg` command
+
 ```
-# (1) Use `rdbg` command
 $ rdbg --open target.rb # or rdbg -O target.rb for shorthand
 Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-5042)
-...
+```
 
-# (2) Use `-r debug/open` command line option
+#### (2) Use `-r debug/open` command line option
 
+```
 $ ruby -r debug/open target.rb
 Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-5042)
-...
+```
 
-# (3) Write `require 'debug/open' in .rb files
-$ cat target.rb
+#### (3) Write `require 'debug/open' in .rb files
+
+```ruby
+# target.rb
 require 'debug/open' # open the debugger entry point by UNIX domain socket.
-...
 
 # or
 
-$ cat target.rb
 require 'debug/server' # introduce remote debugging feature
 DEBUGGER__.open        # open the debugger entry point by UNIX domain socket.
 # or DEBUGGER__.open_unix to specify UNIX domain socket.
+```
 
+```
 $ ruby target.rb
 Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-5042)
-...
 ```
 
 It runs target.rb and accept debugger connection within UNIX domain socket.
@@ -236,40 +244,49 @@ The socket file is located at
 
 You can open the TCP/IP port instead of using UNIX domain socket.
 
+#### (1) Use `rdbg` command
+
 ```
-# (1) Use `rdbg` command
 $ rdbg -O --port=12345 target.rb
 # or
 $ rdbg --open --port=12345 target.rb
 Debugger can attach via TCP/IP (localhost:12345)
-...
+```
 
-# (2) Use `-r debug/open` command line option
+#### (2) Use `-r debug/open` command line option
 
+
+```
 $ RUBY_DEBUG_PORT=12345 ruby -r debug/open target.rb
 Debugger can attach via TCP/IP (localhost:12345)
-...
+```
 
-# (3) Write `require 'debug/open' in .rb files
-$ cat target.rb
+#### (3) Write `require 'debug/open' in .rb files
+
+```ruby
+# target.rb
 require 'debug/open' # open the debugger entry point.
-...
+```
 
-# and run with environment variable RUBY_DEBUG_PORT
+and run with environment variable RUBY_DEBUG_PORT
+
+```
 $ RUBY_DEBUG_PORT=12345 ruby target.rb
 Debugger can attach via TCP/IP (localhost:12345)
-...
+```
 
-# or
+or
 
-$ cat target.rb
+```ruby
+# target.rb
 require 'debug/server' # introduce remote debugging feature
 DEBUGGER__.open(port: 12345)
 # or DEBUGGER__.open_tcp(port: 12345)
+```
 
+```
 $ ruby target.rb
 Debugger can attach via TCP/IP (localhost:12345)
-...
 ```
 
 You can also specify the host with the `RUBY_DEBUG_HOST` environment variable. And also `DEBUGGER__.open` method accepts a `host:` keyword parameter. If the host is not given, `localhost` will be used.
