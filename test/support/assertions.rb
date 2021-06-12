@@ -11,7 +11,7 @@ module DEBUGGER__
 
     def assert_line_text(expected)
       @queue.push(Proc.new {
-        result = @last_backlog[2..].join
+        result = @last_backlog[1..].join
         expected = Regexp.escape(expected) if expected.is_a?(String)
         msg = "Expected to include `#{expected}` in\n(\n#{result})\n"
         assert_block(MessageCreationController.new { create_message(msg) }) { result.match? expected }
