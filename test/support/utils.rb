@@ -41,30 +41,30 @@ module DEBUGGER__
       PTY.spawn("#{RUBY} #{boot_options} #{temp_file_path}") do |read, write, pid|
         @backlog = []
         @last_backlog = []
+        ask_cmd = ['quit', 'delete', 'kill']
         begin
           Timeout.timeout(timeout_sec) do
             while (line = read.gets)
               debug_print line
               case line.chomp
-              when REPL_RPOMPT
-                # check if the previous command breaks the debugger before continuing
-                if error_index = @last_backlog.index { |l| l.match?(/REPL ERROR/) }
-                  raise "Debugger terminated because of: #{@last_backlog[error_index..-1].join}"
-                end
-
+              when /INTERNAL_INFO:\s(.*)/
+                @internal_info = JSON.parse(Regexp.last_match(1))
                 cmd = @queue.pop
                 if cmd.is_a?(Proc)
                   cmd.call
                   cmd = @queue.pop
                 end
+                if ask_cmd.include?(cmd)
+                  write.puts(cmd)
+                  cmd = @queue.pop
+                end
                 write.puts(cmd)
-                @last_backlog = []
-              when /INTERNAL_INFO:\s(.*)/
-                @internal_info = JSON.parse(Regexp.last_match(1))
                 next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
-              when %r{\[(y|Y)/(n|N)\]}
-                cmd = @queue.pop
-                write.puts(cmd)
+              when REPL_RPOMPT
+                # check if the previous command breaks the debugger before continuing
+                if error_index = @last_backlog.index { |l| l.match?(/REPL ERROR/) }
+                  raise "Debugger terminated because of: #{@last_backlog[error_index..-1].join}"
+                end
               end
 
               @backlog.push(line)
