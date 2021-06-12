@@ -934,7 +934,7 @@ module DEBUGGER__
     def event type, *args
       case type
       when :suspend_bp
-        bp, i = *args
+        i, bp = *args
         puts "\nStop by \##{i} #{bp}" if bp
       when :suspend_trap
         puts "\nStop by #{args.first}"
