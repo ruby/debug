@@ -39,6 +39,17 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_debugger_rejects_duplicated_catch_bp
+      debug_code(program) do
+        type 'catch ZeroDivisionError'
+        type 'catch ZeroDivisionError'
+        assert_line_text(/duplicated breakpoint:/)
+        type 'continue'
+        assert_line_text('Integer#/')
+        type 'continue'
+      end
+    end
   end
 
   class ReraisedExceptionCatchTest < TestCase

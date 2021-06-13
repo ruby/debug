@@ -881,7 +881,10 @@ module DEBUGGER__
 
     def add_breakpoint bp
       if @bps.has_key? bp.key
-        @ui.puts "duplicated breakpoint: #{bp}"
+        unless bp.duplicable?
+          @ui.puts "duplicated breakpoint: #{bp}"
+          bp.disable
+        end
       else
         @bps[bp.key] = bp
       end
@@ -933,6 +936,7 @@ module DEBUGGER__
     def add_line_breakpoint file, line, **kw
       file = resolve_path(file)
       bp = LineBreakpoint.new(file, line, **kw)
+
       add_breakpoint bp
     rescue Errno::ENOENT => e
       @ui.puts e.message

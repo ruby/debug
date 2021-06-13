@@ -73,6 +73,17 @@ module DEBUGGER__
       end
     end
 
+    def test_debugger_rejects_duplicated_method_breakpoints
+      debug_code(program) do
+        type 'break Foo::Baz.c'
+        type 'break Foo::Baz.c'
+        assert_line_text(/duplicated breakpoint/)
+        type 'continue'
+        assert_line_num 15
+        type 'continue'
+      end
+    end
+
     def test_break_command_isnt_repeatable
       debug_code(program) do
         type 'break Foo::Baz.c'
@@ -215,6 +226,18 @@ module DEBUGGER__
       end
     end
 
+    def test_conditional_breakpoint_stops_for_repeated_iterations
+      debug_code(program) do
+        type 'break 9'
+        type 'continue'
+        assert_line_num 9
+        type 'continue'
+        assert_line_num 9
+        type 'quit'
+        type 'y'
+      end
+    end
+
     def test_conditional_breakpoint_stops_if_condition_is_true
       debug_code(program) do
         type 'break if n == 1'
@@ -232,6 +255,20 @@ module DEBUGGER__
         assert_line_num 16
         type 'quit'
         type 'y'
+      end
+    end
+
+    def test_debugger_rejects_duplicated_line_breakpoints
+      debug_code(program) do
+        type 'break 19'
+        type 'break 18'
+        type 'break 18'
+        assert_line_text(/duplicated breakpoint:/)
+        type 'continue'
+        assert_line_num 18
+        type 'continue'
+        assert_line_num 19
+        type 'quit!'
       end
     end
   end
