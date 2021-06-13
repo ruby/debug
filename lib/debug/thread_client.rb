@@ -405,7 +405,8 @@ module DEBUGGER__
           puts e.message
           ::DEBUGGER__::METHOD_ADDED_TRACKER.enable
         end
-        event! :result, :method_breakpoint, bp
+
+        bp
       else
         raise "unknown breakpoint: #{args}"
       end
@@ -578,11 +579,10 @@ module DEBUGGER__
           event! :result, nil
 
         when :breakpoint
-          add_breakpoint args
-
+          bp = add_breakpoint args
+          event! :result, :method_breakpoint, bp
         when :dap
           process_dap args
-
         else
           raise [cmd, *args].inspect
         end
