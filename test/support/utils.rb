@@ -41,6 +41,7 @@ module DEBUGGER__
     end
 
     RUBY = RbConfig.ruby
+    REPL_RPOMPT = '(rdbg)'
 
     def create_pseudo_terminal(boot_options: "-r debug/run")
       inject_lib_to_load_path
@@ -57,7 +58,7 @@ module DEBUGGER__
             while (line = read.gets)
               debug_print line
               case line.chomp
-              when '(rdbg)'
+              when REPL_RPOMPT
                 cmd = @queue.pop
                 if cmd.is_a?(Proc)
                   cmd.call
@@ -72,8 +73,13 @@ module DEBUGGER__
                 cmd = @queue.pop
                 write.puts(cmd)
               end
+
               @backlog.push(line)
               @last_backlog.push(line)
+
+              if @last_backlog.any? { |l| l.match?(/REPL ERROR/) }
+                raise "Debugger terminated because of: #{@last_backlog.join}"
+              end
             end
           end
         rescue Errno::EIO => e
