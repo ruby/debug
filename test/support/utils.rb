@@ -4,6 +4,12 @@ require 'pty'
 require 'timeout'
 require 'json'
 
+#
+# assert methods based on test-unit project
+#
+# The License is https://github.com/test-unit/test-unit/blob/master/BSDL
+#
+
 module DEBUGGER__
   module TestUtils
     def type(command)
