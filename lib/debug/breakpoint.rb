@@ -64,6 +64,10 @@ module DEBUGGER__
       to_s
     end
 
+    def duplicable?
+      false
+    end
+
     class << self
       include Color
 
@@ -155,6 +159,11 @@ module DEBUGGER__
       else
         # not actiavated
       end
+    end
+
+    def duplicable?
+      # only binding.bp or DEBUGGER__.console are duplicable
+      @oneshot
     end
 
     NearestISeq = Struct.new(:iseq, :line, :events)

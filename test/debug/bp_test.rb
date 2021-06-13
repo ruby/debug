@@ -50,5 +50,13 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_debugger_doesnt_complain_about_duplicated_breakpoint
+      debug_code(program) do
+        type 'continue'
+        assert_no_line_text(/duplicated breakpoint:/)
+        type 'q!'
+      end
+    end
   end
 end
