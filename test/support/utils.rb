@@ -10,6 +10,12 @@ module DEBUGGER__
       @queue.push(command)
     end
 
+    def assert_block(message)
+      _wrap_assertion do
+        raise Test::Unit::AssertionFailedError.new(create_message(message)) unless yield
+      end
+    end
+
     def assert_line_num(expected)
       @queue.push(Proc.new {
         assert_equal(expected, @internal_info['line'], create_message("Expected line number to be #{expected}, but was #{@internal_info['line']}"))
