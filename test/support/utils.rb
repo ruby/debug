@@ -18,13 +18,15 @@ module DEBUGGER__
 
     def assert_line_num(expected)
       @queue.push(Proc.new {
-        assert_equal(expected, @internal_info['line'], create_message("Expected line number to be #{expected}, but was #{@internal_info['line']}"))
+        assert_block("Expected line number to be #{expected}, but was #{@internal_info['line']}") { expected == @internal_info['line'] }
       })
     end
 
     def assert_line_text(expected)
       @queue.push(Proc.new {
-        assert_match(expected, @last_backlog[2..].join, create_message("Expected to include #{expected}"))
+        result = @last_backlog[2..].join
+        expected = Regexp.escape(expected) if expected.is_a?(String)
+        assert_block("Expected to include `#{expected}` in\n(\n#{result})\n") { result.match? expected }
       })
     end
 
