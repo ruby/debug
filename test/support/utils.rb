@@ -82,15 +82,12 @@ module DEBUGGER__
               end
             end
 
-            assert_empty @queue, "expect all commands/assertions to be executed. still have #{@queue.length} left."
+            assert_empty_queue
           end
         rescue Errno::EIO => e
-          if @queue.empty?
-            # result of `gets` return this exception in some platform
-            # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
-          else
-            assert false, create_message(e.message)
-          end
+          # result of `gets` return this exception in some platform
+          # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
+          assert_empty_queue
         rescue Timeout::Error => e
           assert false, create_message("TIMEOUT ERROR (#{timeout_sec} sec)")
         end
@@ -125,6 +122,10 @@ module DEBUGGER__
     end
 
     LINE_NUMBER_REGEX = /^\s*\d+\| ?/
+
+    def assert_empty_queue
+      assert_empty @queue, "expect all commands/assertions to be executed. still have #{@queue.length} left."
+    end
 
     def strip_line_num(str)
       str.gsub(LINE_NUMBER_REGEX, '')
