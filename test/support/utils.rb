@@ -81,6 +81,8 @@ module DEBUGGER__
                 raise "Debugger terminated because of: #{@last_backlog.join}"
               end
             end
+
+            assert_empty @queue, "expect all commands/assertions to be executed. still have #{@queue.length} left."
           end
         rescue Errno::EIO => e
           if @queue.empty?
