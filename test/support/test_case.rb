@@ -4,10 +4,12 @@ require 'test/unit'
 require 'tempfile'
 
 require_relative 'utils'
+require_relative 'assertions'
 
 module DEBUGGER__
   class TestCase < Test::Unit::TestCase
     include TestUtils
+    include AssertionHelpers
 
     def teardown
       remove_temp_file
