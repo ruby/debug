@@ -79,7 +79,9 @@ module DEBUGGER__
       setup_threads
 
       @tp_thread_begin = TracePoint.new(:thread_begin){|tp|
-        ThreadClient.current.on_thread_begin Thread.current
+        unless @management_threads.include?(th = Thread.current)
+          ThreadClient.current.on_thread_begin th
+        end
       }
       @tp_thread_begin.enable
     end
@@ -731,6 +733,8 @@ module DEBUGGER__
       list.each{|th|
         case
         when th == Thread.current
+          # ignore
+        when @management_threads.include?(th)
           # ignore
         when @th_clients.has_key?(th)
           thcs << @th_clients[th]
