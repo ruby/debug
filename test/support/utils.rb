@@ -10,22 +10,6 @@ module DEBUGGER__
       @queue.push(command)
     end
 
-    def assert_line_num(expected)
-      @queue.push(Proc.new {
-        msg = ["Expected line number to be #{expected}, but was #{@internal_info['line']}"] + @backlog
-        assert_block(msg) { expected == @internal_info['line'] }
-      })
-    end
-
-    def assert_line_text(expected)
-      @queue.push(Proc.new {
-        result = @last_backlog[2..].join
-        expected = Regexp.escape(expected) if expected.is_a?(String)
-        msg = ["Expected to include `#{expected}` in\n(\n#{result})\n"] + @backlog
-        assert_block(msg) { result.match? expected }
-      })
-    end
-
     def create_message fail_msg
       "#{fail_msg}\n[DEBUG SESSION LOG]\n> " + @backlog.join('> ')
     end
