@@ -429,9 +429,13 @@ module DEBUGGER__
               loc = caller_locations(2, 1).first
               loc_path = loc.absolute_path || "!eval:#{loc.path}"
 
+              # same stack depth
+              (DEBUGGER__.frame_depth - 3 <= depth) ||
+
+              # different frame
               (next_line && loc_path == path &&
-                (loc_lineno = loc.lineno) > line && loc_lineno <= next_line) ||
-              (DEBUGGER__.frame_depth - 3 < depth)
+               (loc_lineno = loc.lineno) > line &&
+               loc_lineno <= next_line)
             }
           when :finish
             depth = @target_frames.first.frame_depth

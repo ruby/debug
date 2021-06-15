@@ -130,6 +130,10 @@ module DEBUGGER__
         type 'next'
         assert_line_num 3
         type 'next'
+        assert_line_num 2
+        type 'next'
+        assert_line_num 3
+        type 'next'
         assert_line_num 4
         type 'quit'
         type 'y'
