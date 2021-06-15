@@ -469,6 +469,8 @@ Attach mode:
 
 Other options:
     -h, --help                       Print help
+    -c, --command                    Command mode (first argument is command name)
+        --util=NAME                  Utility mode (used by tools)
 
 NOTE
   All messages communicated between a debugger and a debuggee are *NOT* encrypted.
