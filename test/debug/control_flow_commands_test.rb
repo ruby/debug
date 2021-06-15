@@ -155,6 +155,40 @@ module DEBUGGER__
   end
 
   #
+  # Test for https://github.com/ruby/debug/issues/89
+  #
+  class IfBlockControlFlowTest < TestCase
+    def program
+      <<~RUBY
+        1| if foo = nil
+        2|   if foo
+        3|   end
+        4| end
+        5|
+        6| p 1
+      RUBY
+    end
+
+    def test_next_steps_out_of_if_blocks_when_done
+      debug_code(program) do
+        type 'next'
+        assert_line_num 6
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_step_steps_out_of_if_blocks_when_done
+      debug_code(program) do
+        type 'step'
+        assert_line_num 6
+        type 'quit'
+        type 'y'
+      end
+    end
+  end
+
+  #
   # Tests control flow commands with rescue.
   #
   class RescueControlFlowTest < TestCase
