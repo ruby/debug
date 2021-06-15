@@ -68,4 +68,38 @@ module DEBUGGER__
       end
     end
   end
+
+  class BlockTraceTest < TestCase
+    def program
+      <<~RUBY
+     1| tap do
+     2|   tap do
+     3|     p 1
+     4|   end
+     5| end
+     6|
+     7| __END__
+      RUBY
+    end
+
+    def test_backtrace_prints_block_label_correctly
+      debug_code(program) do
+        type 'b 2'
+        type 'c'
+        type 'bt'
+        assert_line_text(/block in <main> at/)
+        type 'q!'
+      end
+    end
+
+    def test_backtrace_prints_nested_block_label_correctly
+      debug_code(program) do
+        type 'b 3'
+        type 'c'
+        type 'bt'
+        assert_line_text(/block in <main> \(2 levels\) at/)
+        type 'q!'
+      end
+    end
+  end
 end

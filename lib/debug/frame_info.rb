@@ -57,11 +57,13 @@ module DEBUGGER__
       end
     end
 
+    BLOCK_LABL_REGEXP = /\Ablock( \(\d+ levels\))* in (.+)\z/
+
     def block_identifier
       return unless frame_type == :block
       args = parameters_info(iseq.argc)
-      _, _, block_loc = location.label.split(" ")
-      [block_loc, args]
+      _, level, block_loc = location.label.match(BLOCK_LABL_REGEXP).to_a
+      [level || "", block_loc, args]
     end
 
     def method_identifier
