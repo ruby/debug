@@ -17,12 +17,12 @@ module DEBUGGER__
         obj.pretty_inspect
       end
     rescue => ex
-      err_msg = "(rescued #{ex.inspect} during inspection)"
+      err_msg = "#{ex.inspect} rescued during inspection"
       string_result = obj.to_s rescue nil
 
       # don't colorize the string here because it's not from user's application
       if string_result
-        "#{string_result} #{err_msg}"
+        %Q{"#{string_result}" from #to_s because #{err_msg}}
       else
         err_msg
       end
