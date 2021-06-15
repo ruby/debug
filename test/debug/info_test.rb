@@ -24,7 +24,7 @@ module DEBUGGER__
           type 'c'
 
           type 'info'
-          assert_line_text('(rescued #<RuntimeError: Boom> during inspection)')
+          assert_line_text('#<RuntimeError: Boom> rescued during inspection')
           type 'q!'
         end
       end
