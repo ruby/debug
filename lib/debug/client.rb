@@ -23,6 +23,8 @@ module DEBUGGER__
     end
 
     def initialize argv
+      return util(argv) if String === argv
+
       case argv.size
       when 0
         connect_unix
@@ -48,6 +50,18 @@ module DEBUGGER__
       send "version: #{VERSION} width: #{@width} cookie: #{CONFIG[:cookie]}"
     end
 
+    def util name
+      case name
+      when 'gen-sockpath'
+        puts DEBUGGER__.create_unix_domain_socket_name
+      when 'list-socks'
+        cleanup_unix_domain_sockets
+        puts list_connections
+      else
+        raise "Unknown utility: #{name}"
+      end
+    end
+
     def cleanup_unix_domain_sockets
       Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*') do |file|
         if /(\d+)$/ =~ file
@@ -60,6 +74,10 @@ module DEBUGGER__
       end
     end
 
+    def list_connections
+      Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*')
+    end
+
     def connect_unix name = nil
       if name
         if File.exist? name
@@ -69,7 +87,7 @@ module DEBUGGER__
         end
       else
         cleanup_unix_domain_sockets
-        files = Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*')
+        files = list_connections
         case files.size
         when 0
           $stderr.puts "No debug session is available."

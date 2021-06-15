@@ -152,6 +152,15 @@ module DEBUGGER__
         exit
       end
 
+      o.on('-c', '--command', 'Command mode (first argument is command name)') do
+        config[:command] = true
+      end
+
+      o.on('--util=NAME', 'Utility mode (used by tools)') do |name|
+        Client.new(name)
+        exit
+      end
+
       o.separator ''
       o.separator 'NOTE'
       o.separator '  All messages communicated between a debugger and a debuggee are *NOT* encrypted.'
