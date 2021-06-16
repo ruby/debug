@@ -64,7 +64,7 @@ $ rdbg -- -r foo -e expr # -- is required to make clear rdbg options and ruby's 
 $ ruby -r debug/run target.rb
 ```
 
-#### (3) Write `require 'debug...' in .rb files
+#### (3) Write `require 'debug...'` in .rb files
 
 ```ruby
 # target.rb
@@ -165,7 +165,7 @@ $ ruby -r debug/open target.rb
 Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-5042)
 ```
 
-#### (3) Write `require 'debug/open' in .rb files
+#### (3) Write `require 'debug/open'` in .rb files
 
 ```ruby
 # target.rb
@@ -261,7 +261,7 @@ $ RUBY_DEBUG_PORT=12345 ruby -r debug/open target.rb
 Debugger can attach via TCP/IP (localhost:12345)
 ```
 
-#### (3) Write `require 'debug/open' in .rb files
+#### (3) Write `require 'debug/open'` in .rb files
 
 ```ruby
 # target.rb
