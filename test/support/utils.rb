@@ -59,6 +59,11 @@ module DEBUGGER__
               debug_print line
               case line.chomp
               when REPL_RPOMPT
+                # check if the previous command breaks the debugger before continuing
+                if error_index = @last_backlog.index { |l| l.match?(/REPL ERROR/) }
+                  raise "Debugger terminated because of: #{@last_backlog[error_index..-1].join}"
+                end
+
                 cmd = @queue.pop
                 if cmd.is_a?(Proc)
                   cmd.call
@@ -76,10 +81,6 @@ module DEBUGGER__
 
               @backlog.push(line)
               @last_backlog.push(line)
-
-              if @last_backlog.any? { |l| l.match?(/REPL ERROR/) }
-                raise "Debugger terminated because of: #{@last_backlog.join}"
-              end
             end
 
             assert_empty_queue
