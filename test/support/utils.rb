@@ -68,7 +68,7 @@ module DEBUGGER__
               when /INTERNAL_INFO:\s(.*)/
                 @internal_info = JSON.parse(Regexp.last_match(1))
                 next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
-              when %r{Really quit\? \[Y/n\]}
+              when %r{\[(y|Y)/(n|N)\]}
                 cmd = @queue.pop
                 write.puts(cmd)
               end
