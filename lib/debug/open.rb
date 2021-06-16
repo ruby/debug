@@ -7,4 +7,6 @@
 #
 
 require_relative 'server'
+return unless defined?(DEBUGGER__)
+
 DEBUGGER__.open

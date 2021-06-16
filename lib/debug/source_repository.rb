@@ -1,4 +1,4 @@
-require 'irb/color' # IRB::Color.colorize_code
+require_relative 'color'
 
 module DEBUGGER__
   class SourceRepository
@@ -64,10 +64,12 @@ module DEBUGGER__
       end
     end
 
+    include Color
+
     def get_colored iseq
       if si = get_si(iseq)
         si.colored || begin
-          si.colored = IRB::Color.colorize_code(si.src.join).lines
+          si.colored = colorize_code(si.src.join).lines
         end
       end
     end

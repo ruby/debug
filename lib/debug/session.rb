@@ -1,4 +1,8 @@
-﻿require_relative 'config'
+﻿
+# skip to load debugger for bundle exec
+return if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
+
+require_relative 'config'
 require_relative 'thread_client'
 require_relative 'source_repository'
 require_relative 'breakpoint'
@@ -969,7 +973,7 @@ module DEBUGGER__
       when dir_prefix
       when %r{rubygems/core_ext/kernel_require\.rb}
       else
-        return loc
+        return loc if loc.absolute_path
       end
     end
     nil

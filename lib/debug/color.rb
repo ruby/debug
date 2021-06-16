@@ -1,18 +1,39 @@
-require "irb/color_printer"
+begin
+  require 'irb/color'
+  require "irb/color_printer"
+rescue LoadError
+  warn "DEBUGGER: can not load newer irb for coloring. Write 'gem \"debug\" in your Gemfile."
+end
 
 module DEBUGGER__
   module Color
-    def colorize str, color
-      if CONFIG[:use_colorize]
-        IRB::Color.colorize str, color
-      else
+    if defined? IRB::Color.colorize
+      def colorize str, color
+        if CONFIG[:use_colorize]
+          IRB::Color.colorize str, color
+        else
+          str
+        end
+      end
+    else
+      def colorize str, color
         str
       end
     end
 
-    def colored_inspect(obj)
-      if CONFIG[:use_colorize]
+    if defined? IRB::ColorPrinter.pp
+      def color_pp obj
         IRB::ColorPrinter.pp(obj, "")
+      end
+    else
+      def color_pp obj
+        obj.pretty_inspect
+      end
+    end
+
+    def colored_inspect obj
+      if CONFIG[:use_colorize]
+        color_pp obj
       else
         obj.pretty_inspect
       end
@@ -25,6 +46,16 @@ module DEBUGGER__
         %Q{"#{string_result}" from #to_s because #{err_msg}}
       else
         err_msg
+      end
+    end
+
+    if defined? IRB::Color.colorize_code
+      def colorize_code code
+        IRB::Color.colorize_code(code)
+      end
+    else
+      def colorize_code code
+        code
       end
     end
 

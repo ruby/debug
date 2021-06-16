@@ -1,5 +1,8 @@
 require 'socket'
+
 require_relative 'session'
+return unless defined?(DEBUGGER__)
+
 require_relative 'config'
 require_relative 'version'
 
