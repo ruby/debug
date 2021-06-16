@@ -226,4 +226,46 @@ module DEBUGGER__
       end
     end
   end
+
+  class DeleteTest < TestCase
+    def program
+      <<~RUBY
+     1| a = 1
+     2| b = 2
+     3| c = 3
+     4| d = 4
+     5|
+     6| binding.bp
+     7| __END__
+      RUBY
+    end
+
+    def test_delete_deletes_all_breakpoints_by_default
+      debug_code(program) do
+        type "break 2"
+        type "break 3"
+
+        type "delete"
+        type "y" # confirm deletion
+
+        type "continue"
+
+        assert_line_num(6) # directly stops at bp
+        type "q!"
+      end
+    end
+
+    def test_delete_deletes_a_specific_breakpoint
+      debug_code(program) do
+        type "break 2"
+        type "break 3"
+
+        type "delete 0"
+
+        type "continue"
+        assert_line_num(3)
+        type "q!"
+      end
+    end
+  end
 end
