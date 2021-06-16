@@ -23,7 +23,7 @@ module DEBUGGER__
     end
 
     def create_message fail_msg
-      "#{fail_msg}\n[DEBUG SESSION LOG]\n" + @backlog.map { |l| "> #{l}" }.join
+      "#{fail_msg}\n[DEBUG SESSION LOG]\n> " + @backlog.join('> ')
     end
 
     def debug_code(program, **options, &block)
