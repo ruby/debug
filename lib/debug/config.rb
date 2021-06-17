@@ -78,10 +78,12 @@ module DEBUGGER__
     return config if !argv || argv.empty?
 
     require 'optparse'
+    require_relative 'version'
 
     opt = OptionParser.new do |o|
       o.banner = "#{$0} [options] -- [debuggee options]"
       o.separator ''
+      o.version = ::DEBUGGER__::VERSION
 
       o.separator 'Debug console mode:'
       o.on('-n', '--nonstop', 'Do not stop at the beginning of the script.') do
