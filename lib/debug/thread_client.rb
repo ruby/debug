@@ -227,7 +227,6 @@ module DEBUGGER__
                  start_line: nil,
                  end_line: nil,
                  dir: +1)
-
       if @target_frames && frame = @target_frames[frame_index]
         if file_lines = frame.file_lines
           frame_line = frame.location.lineno - 1

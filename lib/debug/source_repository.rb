@@ -11,7 +11,7 @@ module DEBUGGER__
     def add iseq, src
       if (path = iseq.absolute_path) && File.exist?(path)
         add_path path
-      else
+      elsif src
         add_iseq iseq, src
       end
     end
@@ -24,7 +24,7 @@ module DEBUGGER__
       rs
     end
 
-    def add_iseq iseq, src
+    private def add_iseq iseq, src
       line = iseq.first_line
       if line > 1
         src = ("\n" * (line - 1)) + src
@@ -37,7 +37,7 @@ module DEBUGGER__
       }
     end
 
-    def add_path path
+    private def add_path path
       begin
         src = File.read(path)
         src = src.gsub("\r\n", "\n") # CRLF -> LF
@@ -46,7 +46,7 @@ module DEBUGGER__
       end
     end
 
-    def get_si iseq
+    private def get_si iseq
       return unless iseq
 
       if iseq.instance_variable_defined?(:@debugger_si)

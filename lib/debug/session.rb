@@ -912,12 +912,16 @@ module DEBUGGER__
     def resolve_path file
       File.realpath(File.expand_path(file))
     rescue Errno::ENOENT
-      return file if file == '-e'
-      $LOAD_PATH.each do |lp|
-        libpath = File.join(lp, file)
-        return File.realpath(libpath)
-      rescue Errno::ENOENT
-        # next
+      case file
+      when '-e', '-'
+        return file
+      else
+        $LOAD_PATH.each do |lp|
+          libpath = File.join(lp, file)
+          return File.realpath(libpath)
+        rescue Errno::ENOENT
+          # next
+        end
       end
 
       raise
