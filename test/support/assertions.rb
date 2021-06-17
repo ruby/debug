@@ -5,7 +5,7 @@ module DEBUGGER__
     def assert_line_num(expected)
       @queue.push(Proc.new {
         msg = "Expected line number to be #{expected}, but was #{@internal_info['line']}\n"
-        assert_block(MessageCreationController.new { create_message(msg) }) { expected == @internal_info['line'] }
+        assert_block(FailureMessage.new { create_message(msg) }) { expected == @internal_info['line'] }
       })
     end
 
@@ -15,7 +15,7 @@ module DEBUGGER__
         expected = Regexp.escape(expected) if expected.is_a?(String)
         msg = "Expected to include `#{expected}` in\n(\n#{result})\n"
 
-        assert_block(MessageCreationController.new { create_message(msg) }) do
+        assert_block(FailureMessage.new { create_message(msg) }) do
           result.match? expected
         end
       })
@@ -27,7 +27,7 @@ module DEBUGGER__
         expected = Regexp.escape(expected) if expected.is_a?(String)
         msg = "Expected not to include `#{expected}` in\n(\n#{result})\n"
 
-        assert_block(MessageCreationController.new { create_message(msg) }) do
+        assert_block(FailureMessage.new { create_message(msg) }) do
           !result.match? expected
         end
       })
@@ -41,7 +41,7 @@ module DEBUGGER__
   end
 end
 
-class MessageCreationController
+class FailureMessage
   def initialize &block
     @msg = nil
     @create_msg = block
