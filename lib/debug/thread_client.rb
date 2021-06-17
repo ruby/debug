@@ -394,7 +394,7 @@ module DEBUGGER__
       end
     end
 
-    def add_breakpoint args
+    def make_breakpoint args
       case args.first
       when :method
         klass_name, op, method_name, cond = args[1..]
@@ -566,7 +566,7 @@ module DEBUGGER__
         when :breakpoint
           case args[0]
           when :method
-            bp = add_breakpoint args
+            bp = make_breakpoint args
             event! :result, :method_breakpoint, bp
           when :watch
             ivar = args[1]
@@ -580,7 +580,7 @@ module DEBUGGER__
                   current_frame.self
                 end
               puts "#{object} #{ivar} = #{result}"
-              bp = add_breakpoint [:watch, ivar, object, result]
+              bp = make_breakpoint [:watch, ivar, object, result]
               event! :result, :watch_breakpoint, bp
             else
               event! :result, nil
