@@ -499,7 +499,6 @@ module DEBUGGER__
         case arg
         when 'on'
           dir = __dir__
-          i = 0
           @tracer ||= TracePoint.new(:call, :return, :b_call, :b_return, :line, :class, :end){|tp|
             next if File.dirname(tp.path) == dir
             next if tp.path == '<internal:trace_point>'
