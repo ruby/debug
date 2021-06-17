@@ -212,10 +212,12 @@ module DEBUGGER__
 
   class CatchBreakpoint < Breakpoint
     LABEL = generate_label("Catch")
+    attr_reader :last_exc
 
     def initialize pat
       @pat = pat.freeze
       @key = [:catch, @pat].freeze
+      @last_exc = nil
 
       super()
     end
@@ -227,6 +229,7 @@ module DEBUGGER__
         exc.class.ancestors.each{|cls|
           if @pat === cls.name
             should_suspend = true
+            @last_exc = exc
             break
           end
         }

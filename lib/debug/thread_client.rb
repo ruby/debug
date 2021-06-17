@@ -146,6 +146,11 @@ module DEBUGGER__
           cf.has_return_value = true
           cf.return_value = tp.return_value
         end
+
+        if CatchBreakpoint === bp
+          cf.has_raised_exception = true
+          cf.raised_exception = bp.last_exc
+        end
       end
 
       if event != :pause
@@ -259,6 +264,10 @@ module DEBUGGER__
           puts "# No sourcefile available for #{frame.path}"
         end
       end
+    rescue Exception => e
+      p e
+      pp e.backtrace
+      exit!
     end
 
     def show_by_editor path = nil
@@ -289,6 +298,9 @@ module DEBUGGER__
       end
       if current_frame&.has_return_value
         puts " #{colorize_cyan("%return")} => #{colored_inspect(current_frame.return_value)}"
+      end
+      if current_frame&.has_raised_exception
+        puts " #{colorize_cyan("%raised")} => #{colored_inspect(current_frame.raised_exception)}"
       end
       if b = current_frame&.binding
         b.local_variables.each{|loc|
