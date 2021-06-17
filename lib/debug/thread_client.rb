@@ -579,7 +579,6 @@ module DEBUGGER__
                 else
                   current_frame.self
                 end
-              puts "#{object} #{ivar} = #{result}"
               bp = make_breakpoint [:watch, ivar, object, result]
               event! :result, :watch_breakpoint, bp
             else
