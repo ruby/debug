@@ -938,6 +938,13 @@ module DEBUGGER__
     def width
       @ui.width
     end
+
+    def check_forked
+      unless @session_server.status
+        # TODO: Support it
+        raise 'DEBUGGER: stop at forked process is not supported yet.'
+      end
+    end
   end
 
   class UI_Base

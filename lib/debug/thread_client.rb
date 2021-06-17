@@ -413,6 +413,8 @@ module DEBUGGER__
     def wait_next_action
       set_mode :wait_next_action
 
+      SESSION.check_forked
+
       while cmds = @q_cmd.pop
         # pp [self, cmds: cmds]
 
