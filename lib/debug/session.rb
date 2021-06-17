@@ -1,4 +1,4 @@
-
+﻿
 # skip to load debugger for bundle exec
 return if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
 
@@ -499,7 +499,8 @@ module DEBUGGER__
         case arg
         when 'on'
           dir = __dir__
-          @tracer ||= TracePoint.new(){|tp|
+          i = 0
+          @tracer ||= TracePoint.new(:call, :return, :b_call, :b_return, :line, :class, :end){|tp|
             next if File.dirname(tp.path) == dir
             next if tp.path == '<internal:trace_point>'
             # Skip when `JSON.generate` is called during tests
