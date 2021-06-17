@@ -133,10 +133,6 @@ module DEBUGGER__
           end
         when :result
           case ev_args.first
-          when :watch
-            bp = ev_args[1]
-            @bps[bp.key] = bp
-            show_bps bp
           when :try_display
             failed_results = ev_args[1]
             if failed_results.size > 0
@@ -145,7 +141,7 @@ module DEBUGGER__
                 @ui.puts "canceled: #{@displays.pop}"
               end
             end
-          when :method_breakpoint
+          when :method_breakpoint, :watch_breakpoint
             bp = ev_args[1]
             if bp
               @bps[bp.key] = bp
@@ -366,8 +362,8 @@ module DEBUGGER__
       #   * Stop the execution when the result of current scope's `@ivar` is changed.
       #   * Note that this feature is super slow.
       when 'wat', 'watch'
-        if arg
-          @tc << [:eval, :watch, arg]
+        if arg && arg.match?(/\A@\w+/)
+          @tc << [:breakpoint, :watch, arg]
         else
           show_bps
           return :retry

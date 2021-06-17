@@ -407,6 +407,9 @@ module DEBUGGER__
         end
 
         bp
+      when :watch
+        ivar, object, result = args[1..]
+        WatchIVarBreakpoint.new(ivar, object, result)
       else
         raise "unknown breakpoint: #{args}"
       end
@@ -498,23 +501,6 @@ module DEBUGGER__
 
             result_type = eval_type
             result = failed_results
-          when :watch
-            if @success_last_eval
-              if eval_src.match?(/@\w+/)
-                object =
-                  if b = current_frame.binding
-                    b.receiver
-                  else
-                    current_frame.self
-                  end
-                puts "#{object} #{eval_src} = #{result}"
-                result = WatchIVarBreakpoint.new(eval_src, object, result)
-              end
-
-              result_type = :watch
-            else
-              result = nil
-            end
           else
             raise "unknown error option: #{args.inspect}"
           end
@@ -577,10 +563,29 @@ module DEBUGGER__
           end
 
           event! :result, nil
-
         when :breakpoint
-          bp = add_breakpoint args
-          event! :result, :method_breakpoint, bp
+          case args[0]
+          when :method
+            bp = add_breakpoint args
+            event! :result, :method_breakpoint, bp
+          when :watch
+            ivar = args[1]
+            result = frame_eval(ivar)
+
+            if @success_last_eval
+              object =
+                if b = current_frame.binding
+                  b.receiver
+                else
+                  current_frame.self
+                end
+              puts "#{object} #{ivar} = #{result}"
+              bp = add_breakpoint [:watch, ivar, object, result]
+              event! :result, :watch_breakpoint, bp
+            else
+              event! :result, nil
+            end
+          end
         when :dap
           process_dap args
         else
