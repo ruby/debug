@@ -144,7 +144,7 @@ module DEBUGGER__
           when :method_breakpoint, :watch_breakpoint
             bp = ev_args[1]
             if bp
-              @bps[bp.key] = bp
+              add_breakpoint(bp)
               show_bps bp
             else
               # can't make a bp
