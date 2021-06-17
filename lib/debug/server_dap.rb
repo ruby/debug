@@ -211,7 +211,7 @@ module DEBUGGER__
              'source'
           @q_msg << req
         else
-          raise "Unkown request: #{req.inspect}"
+          raise "Unknown request: #{req.inspect}"
         end
       end
     end
