@@ -301,7 +301,7 @@ module DEBUGGER__
           remove_instance_variable(:@prev)
         end
       end
-    rescue Exception => e
+    rescue Exception
       false
     end
 
@@ -388,7 +388,7 @@ module DEBUGGER__
         retried = false
         @tp.enable(target: @method)
 
-      rescue ArgumentError => e
+      rescue ArgumentError
         raise if retried
         retried = true
         sig_method_name = @sig_method_name

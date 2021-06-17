@@ -140,7 +140,7 @@ module DEBUGGER__
           when :try_display
             failed_results = ev_args[1]
             if failed_results.size > 0
-              i, msg = failed_results.last
+              i, _msg = failed_results.last
               if i+1 == @displays.size
                 @ui.puts "canceled: #{@displays.pop}"
               end
@@ -791,12 +791,12 @@ module DEBUGGER__
     end
 
     def managed_thread_clients
-      thcs, unmanaged_ths = update_thread_list
+      thcs, _unmanaged_ths = update_thread_list
       thcs
     end
 
     def thread_switch n
-      thcs, unmanaged_ths = update_thread_list
+      thcs, _unmanaged_ths = update_thread_list
 
       if tc = thcs[n]
         if tc.mode
@@ -1170,6 +1170,7 @@ module DEBUGGER__
   end
 
   class ::Module
+    undef method_added
     def method_added mid; end
     def singleton_method_added mid; end
   end

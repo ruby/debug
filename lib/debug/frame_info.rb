@@ -44,10 +44,10 @@ module DEBUGGER__
       # p frame_type: frame_type, self: self
       case frame_type
       when :block
-        level, block_loc, args = block_identifier
+        level, block_loc, _args = block_identifier
         "block in #{block_loc}#{level}"
       when :method
-        ci, args = method_identifier
+        ci, _args = method_identifier
         "#{ci}"
       when :c
         c_identifier

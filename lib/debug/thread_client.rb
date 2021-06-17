@@ -62,6 +62,7 @@ module DEBUGGER__
     def initialize id, q_evt, q_cmd, thr = Thread.current
       @id = id
       @thread = thr
+      @target_frames = nil
       @q_evt = q_evt
       @q_cmd = q_cmd
       @step_tp = nil
@@ -329,7 +330,7 @@ module DEBUGGER__
 
         b = current_frame.binding
         result = if b
-                   f, l = b.source_location
+                   f, _l = b.source_location
                    b.eval(src, "(rdbg)/#{f}")
                  else
                    frame_self = current_frame.self
@@ -360,7 +361,7 @@ module DEBUGGER__
     end
 
     def show_frames max = (@target_frames || []).size
-      if max > 0 && frames = @target_frames
+      if max > 0 && @target_frames
         size = @target_frames.size
         max += 1 if size == max + 1
         max.times{|i|

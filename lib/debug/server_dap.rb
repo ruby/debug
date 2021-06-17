@@ -12,9 +12,7 @@ module DEBUGGER__
       req = JSON.load(bytes)
 
       # capability
-      send_response req, {
-             # Capability
-
+      send_response(req,
              ## Supported
              supportsConfigurationDoneRequest: true,
              supportsFunctionBreakpoints: true,
@@ -73,8 +71,7 @@ module DEBUGGER__
              # supportsCancelRequest:
              # supportsSteppingGranularity:
              # supportsInstructionBreakpoints:
-           }
-
+      )
       send_event 'initialized'
     end
 
@@ -120,7 +117,7 @@ module DEBUGGER__
 
         l = @sock.read(s = $1.to_i)
         $stderr.puts "[>] #{l}" if SHOW_PROTOCOL
-        req = JSON.load(l)
+        JSON.load(l)
       when nil
         nil
       else
@@ -182,9 +179,7 @@ module DEBUGGER__
         ## control
         when 'continue'
           @q_msg << 'c'
-          send_response req, {
-            allThreadsContinued: true
-          }
+          send_response req, allThreadsContinued: true
         when 'next'
           @q_msg << 'n'
           send_response req
@@ -243,9 +238,9 @@ module DEBUGGER__
     def event type, *args
       case type
       when :suspend_bp
-        i, bp = *args
+        _i, bp = *args
         reason = bp.kind_of?(CatchBreakpoint) ? 'exception' : 'breakpoint'
-        send_event 'stopped', reason: 'breakpoint',
+        send_event 'stopped', reason: reason,
                               description: bp ? bp.description : 'temporary bp',
                               threadId: 1,
                               allThreadsStopped: true
