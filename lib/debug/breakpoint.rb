@@ -246,7 +246,7 @@ module DEBUGGER__
     end
 
     def description
-      "#{@last_exc} is raised."
+      "#{@last_exc.inspect} is raised."
     end
   end
 

@@ -239,9 +239,17 @@ module DEBUGGER__
       case type
       when :suspend_bp
         _i, bp = *args
-        reason = bp.kind_of?(CatchBreakpoint) ? 'exception' : 'breakpoint'
+        if bp.kind_of?(CatchBreakpoint)
+          reason = 'exception'
+          text = bp.description
+        else
+          reason = 'breakpoint'
+          text = bp ? bp.description : 'temporary bp'
+        end
+
         send_event 'stopped', reason: reason,
-                              description: bp ? bp.description : 'temporary bp',
+                              description: text,
+                              text: text,
                               threadId: 1,
                               allThreadsStopped: true
       when :suspend_trap
