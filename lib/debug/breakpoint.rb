@@ -58,6 +58,10 @@ module DEBUGGER__
       end
     end
 
+    def description
+      to_s
+    end
+
     class << self
       include Color
 
@@ -239,6 +243,10 @@ module DEBUGGER__
 
     def to_s
       "#{LABEL} #{@pat.inspect}"
+    end
+
+    def description
+      "#{@last_exc} is raised."
     end
   end
 

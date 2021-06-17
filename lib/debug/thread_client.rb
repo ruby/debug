@@ -69,7 +69,12 @@ module DEBUGGER__
       @src_lines_on_stop = (::DEBUGGER__::CONFIG[:show_src_lines]   || 10).to_i
       @show_frames_on_stop = (::DEBUGGER__::CONFIG[:show_frames] || 2).to_i
       @frame_formatter = method(:default_frame_formatter)
+      @var_map = {} # { thread_local_var_id => obj } for DAP
       set_mode nil
+    end
+
+    def name
+      "##{@id} #{@thread.name || @thread.backtrace.last}"
     end
 
     def close
@@ -574,6 +579,10 @@ module DEBUGGER__
 
         when :breakpoint
           add_breakpoint args
+
+        when :dap
+          process_dap args
+
         else
           raise [cmd, *args].inspect
         end

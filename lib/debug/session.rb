@@ -67,8 +67,14 @@ module DEBUGGER__
       @tc_id = 0
       @initial_commands = []
 
+      @frame_map = {} # {id => [threadId, frame_depth]} for DAP
+      @var_map   = {1 => [:globals], } # {id => ...} for DAP
+      @src_map   = {} # {id => src}
+
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
-        ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
+        unless @management_threads.include? Thread.current
+          ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
+        end
       }
       @tp_load_script.enable
 
@@ -114,6 +120,8 @@ module DEBUGGER__
             @ui.event :suspend_bp, i, bp
           when :trap
             @ui.event :suspend_trap, ev_args[1]
+          else
+            @ui.event :suspended
           end
 
           if @displays.empty?
@@ -147,6 +155,10 @@ module DEBUGGER__
             # ignore
           end
 
+          wait_command_loop tc
+
+        when :dap_result
+          dap_event ev_args # server.rb
           wait_command_loop tc
         end
       end
@@ -201,6 +213,17 @@ module DEBUGGER__
         @ui.puts "(rdbg:init) #{line}"
       end
 
+      case line
+      when String
+        process_command line
+      when Hash
+        process_dap_request line # defined in server.rb
+      else
+        raise "unexpected input: #{line.inspect}"
+      end
+    end
+
+    def process_command line
       if line.empty?
         if @repl_prev_line
           line = @repl_prev_line
@@ -765,6 +788,11 @@ module DEBUGGER__
       end
     end
 
+    def managed_thread_clients
+      thcs, unmanaged_ths = update_thread_list
+      thcs
+    end
+
     def thread_switch n
       thcs, unmanaged_ths = update_thread_list
 
@@ -1073,7 +1101,7 @@ module DEBUGGER__
     [init_script = ::DEBUGGER__::CONFIG[:init_script],
      './.rdbgrc',
      File.expand_path('~/.rdbgrc')].each{|path|
-      next unless path
+       next unless path
 
       if File.file? path
         ::DEBUGGER__::SESSION.add_initial_commands File.readlines(path)
@@ -1153,4 +1181,14 @@ module DEBUGGER__
   end
 
   METHOD_ADDED_TRACKER = self.create_method_added_tracker
+
+  SHORT_INSPECT_LENGTH = 40
+  def self.short_inspect obj, use_short = true
+    str = obj.inspect
+    if use_short && str.length > SHORT_INSPECT_LENGTH
+      str[0...SHORT_INSPECT_LENGTH] + '...'
+    else
+      str
+    end
+  end
 end

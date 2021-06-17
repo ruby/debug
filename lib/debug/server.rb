@@ -38,7 +38,17 @@ module DEBUGGER__
             @unsent_messages.clear
           }
 
-          process
+          setup_interrupt do
+            process
+          end
+
+        rescue => e
+          DEBUGGER__.message "ReaderThreadError: #{e}"
+        ensure
+          DEBUGGER__.message "Disconnected."
+          @sock = nil
+          @q_msg.close
+          @q_ans.close
         end
       end
     end
@@ -58,6 +68,13 @@ module DEBUGGER__
         end
 
         @width = w.to_i
+
+      when /^Content-Length: (\d+)/
+        require_relative 'server_dap'
+
+        raise unless @sock.read(2) == "\r\n"
+        self.extend(UI_DAP)
+        dap_setup @sock.read($1.to_i)
       else
         raise "Greeting message error: #{g}"
       end
@@ -67,32 +84,23 @@ module DEBUGGER__
       @q_msg = Queue.new
       @q_ans = Queue.new
 
-      setup_interrupt do
-        pause
+      pause
 
-        while line = @sock.gets
-          case line
-          when /\Apause/
-            pause
-          when /\Acommand ?(.+)/
-            @q_msg << $1
-          when /\Aanswer (.*)/
-            @q_ans << $1
-          when /\Awidth (.+)/
-            @width = $1.to_i
-          else
-            STDERR.puts "unsupported: #{line}"
-            exit!
-          end
+      while line = @sock.gets
+        case line
+        when /\Apause/
+          pause
+        when /\Acommand ?(.+)/
+          @q_msg << $1
+        when /\Aanswer (.*)/
+          @q_ans << $1
+        when /\Awidth (.+)/
+          @width = $1.to_i
+        else
+          STDERR.puts "unsupported: #{line}"
+          exit!
         end
       end
-    rescue => e
-      DEBUGGER__.message "Error: #{e}"
-    ensure
-      DEBUGGER__.message "Disconnected."
-      @sock = nil
-      @q_msg.close
-      @q_ans.close
     end
 
     def remote?

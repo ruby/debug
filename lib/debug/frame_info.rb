@@ -40,6 +40,22 @@ module DEBUGGER__
       end
     end
 
+    def name
+      # p frame_type: frame_type, self: self
+      case frame_type
+      when :block
+        level, block_loc, args = block_identifier
+        "block in #{block_loc}#{level}"
+      when :method
+        ci, args = method_identifier
+        "#{ci}"
+      when :c
+        c_identifier
+      when :other
+        other_identifier
+      end
+    end
+
     def file_lines
       SESSION.source(self.iseq)
     end
@@ -90,7 +106,7 @@ module DEBUGGER__
 
     def return_str
       if binding && iseq && has_return_value
-        short_inspect(return_value)
+        DEBUGGER__.short_inspect(return_value)
       end
     end
 
@@ -99,17 +115,6 @@ module DEBUGGER__
     end
 
     private
-
-    SHORT_INSPECT_LENGTH = 40
-
-    def short_inspect obj
-      str = obj.inspect
-      if str.length > SHORT_INSPECT_LENGTH
-        str[0...SHORT_INSPECT_LENGTH] + '...'
-      else
-        str
-      end
-    end
 
     def get_singleton_class obj
       obj.singleton_class # TODO: don't use it
@@ -121,7 +126,7 @@ module DEBUGGER__
       vars = iseq.locals[0...argc]
       vars.map{|var|
         begin
-          { name: var, value: short_inspect(binding.local_variable_get(var)) }
+          { name: var, value: DEBUGGER__.short_inspect(binding.local_variable_get(var)) }
         rescue NameError, TypeError
           nil
         end
