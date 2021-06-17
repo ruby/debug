@@ -473,6 +473,8 @@ module DEBUGGER__
           @tracer ||= TracePoint.new(){|tp|
             next if File.dirname(tp.path) == dir
             next if tp.path == '<internal:trace_point>'
+            # Skip when `JSON.generate` is called during tests
+            next if tp.binding.eval('self').to_s == 'JSON' and ENV['RUBY_DEBUG_TEST_MODE']
             # next if tp.event != :line
             @ui.puts pretty_tp(tp)
           }
