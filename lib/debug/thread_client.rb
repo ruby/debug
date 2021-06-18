@@ -441,11 +441,15 @@ module DEBUGGER__
             frame = @target_frames.first
             path = frame.location.absolute_path || "!eval:#{frame.path}"
             line = frame.location.lineno
-            frame.iseq.traceable_lines_norec(lines = {})
-            next_line = lines.keys.bsearch{|e| e > line}
-            if !next_line && (last_line = frame.iseq.last_line) > line
-              next_line = last_line
+
+            if frame.iseq
+              frame.iseq.traceable_lines_norec(lines = {})
+              next_line = lines.keys.bsearch{|e| e > line}
+              if !next_line && (last_line = frame.iseq.last_line) > line
+                next_line = last_line
+              end
             end
+
             depth = @target_frames.first.frame_depth
 
             step_tp{
