@@ -9,7 +9,7 @@ module DEBUGGER__
   if File.exist? File.join(__dir__, 'debug.so')
     require_relative 'debug.so'
   else
-    require "debug/debug"
+    require_relative 'debug'
   end
 
   class FrameInfo
