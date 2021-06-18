@@ -50,9 +50,9 @@ module DEBUGGER__
     cookie:      'RUBY_DEBUG_COOKIE',      # Cookie for negotiation
   }.freeze
 
-  def self.config_to_env config
-    CONFIG_MAP.each{|key, evname|
-      ENV[evname] = config[key].to_s if config[key]
+  def self.config_to_env_hash config
+    CONFIG_MAP.each_with_object({}){|(key, evname), env|
+      env[evname] = config[key].to_s if config[key]
     }
   end
 
