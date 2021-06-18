@@ -27,11 +27,11 @@ module DEBUGGER__
           /Tracing:   line at .*rb:5\r\n/,
           /Tracing:   line at .*rb:6\r\n/,
           /Tracing:   call Object#foo at .*rb:1\r\n/,
-          /Tracing:   line at .*rb:2\r\n/,
+          /Tracing:    line at .*rb:2\r\n/,
           /Tracing:   return Object#foo => 10 at .*rb:3\r\n/,
           /Tracing:   line at .*rb:8\r\n/,
         ]
-        assert_line_text(Regexp.union(trace_regexps))
+        assert_line_text(combine_regexps(trace_regexps))
 
         type "q!"
       end
@@ -39,7 +39,7 @@ module DEBUGGER__
 
     def test_trace_off_stops_tracing
       debug_code(program) do
-        type "b 5"
+        type "b 6"
         type "trace on"
         type "continue"
 
@@ -48,7 +48,7 @@ module DEBUGGER__
           /Tracing:   line at .*rb:6\r\n/,
         ]
 
-        assert_line_text(Regexp.union(trace_regexps))
+        assert_line_text(combine_regexps(trace_regexps))
 
         type "trace off"
         assert_no_line_text(/Tracing:   call Object#foo at .*rb:1\r\n/)
