@@ -28,9 +28,9 @@ when :attach
 
   begin
     if ARGV.empty? && config[:port]
-      connect [config[:host], config[:port]].compact
+      DEBUGGER__::Client.new([config[:host], config[:port]].compact).connect
     else
-      connect ARGV
+      DEBUGGER__::Client.new(ARGV).connect
     end
   rescue DEBUGGER__::CommandLineOptionError
     puts opt.help

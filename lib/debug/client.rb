@@ -162,10 +162,6 @@ module DEBUGGER__
   end
 end
 
-def connect argv = ARGV
-  DEBUGGER__::Client.new(argv).connect
-end
-
 if __FILE__ == $0
-  connect
+  DEBUGGER__::Client.new(argv).connect
 end
