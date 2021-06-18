@@ -14,6 +14,11 @@ module DEBUGGER__
       "#{fail_msg}\n[DEBUG SESSION LOG]\n> " + @backlog.join('> ')
     end
 
+
+    def combine_regexps(regexps)
+      Regexp.new(regexps.map(&:source).reduce(:+))
+    end
+
     def debug_code(program, **options, &block)
       @queue = Queue.new
       block.call
