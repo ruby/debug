@@ -28,6 +28,7 @@ module DEBUGGER__
     end
 
     DEBUG_MODE = false
+    ASK_CMD = %w[quit delete kill]
 
     def debug_print msg
       print msg if DEBUG_MODE
@@ -59,7 +60,7 @@ module DEBUGGER__
                   cmd.call
                   cmd = @queue.pop
                 end
-                if ask_cmd.include?(cmd)
+                if ASK_CMD.include?(cmd)
                   write.puts(cmd)
                   cmd = @queue.pop
                 end
