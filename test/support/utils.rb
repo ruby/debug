@@ -86,6 +86,12 @@ module DEBUGGER__
           assert_empty_queue(exception: e)
         rescue Timeout::Error => e
           assert false, create_message("TIMEOUT ERROR (#{timeout_sec} sec)")
+        ensure
+          if @server_pid
+            Process.kill(:KILL, @server_pid)
+            Process.waitpid(@server_pid)
+            @server_pid = nil
+          end
         end
       end
     end
