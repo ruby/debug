@@ -64,6 +64,7 @@ module DEBUGGER__
                   cmd = @queue.pop
                 end
                 write.puts(cmd)
+                @last_backlog.clear
                 next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
               when REPL_RPOMPT
                 # check if the previous command breaks the debugger before continuing
