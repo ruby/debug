@@ -34,7 +34,7 @@ module DEBUGGER__
     end
 
     RUBY = RbConfig.ruby
-    REPL_RPOMPT = '(rdbg)'
+    REPL_RPOMPT = /\(rdbg\)/
 
     def create_pseudo_terminal(boot_options: "-r debug/run")
       inject_lib_to_load_path
