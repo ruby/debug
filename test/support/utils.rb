@@ -14,16 +14,17 @@ module DEBUGGER__
       "#{fail_msg}\n[DEBUG SESSION LOG]\n> " + @backlog.join('> ')
     end
 
-
     def combine_regexps(regexps)
       Regexp.new(regexps.map(&:source).reduce(:+))
     end
 
+    # This method will execute both local and remote mode by default.
     def debug_code(program, **options, &block)
       @queue = Queue.new
-      block.call
+      @scenario = block
+      @scenario.call
       write_temp_file(strip_line_num(program))
-      create_pseudo_terminal(**options)
+      setup_terminal(**options)
       check_line_num!(program)
     end
 
@@ -35,19 +36,51 @@ module DEBUGGER__
     end
 
     RUBY = RbConfig.ruby
-    REPL_RPOMPT = /\(rdbg\)/
+    RUBY_DEBUG_TEST_PORT = '12345'
 
-    def create_pseudo_terminal(boot_options: "-r debug/run")
+    def setup_terminal(boot_options: "-r debug/run", remote: true)
+      ENV['RUBY_DEBUG_TEST_LOCAL_ONLY_MODE'] = 'false' # for fast debug test
       inject_lib_to_load_path
+
+      if remote && ENV['RUBY_DEBUG_TEST_LOCAL_ONLY_MODE'] == 'false'
+        setup_terminal(remote: false) # local test will be executed first
+        @mutex = Mutex.new
+        repl_prompt = /\(rdb\)/
+
+        # run test on Unix domain socket mode
+        boot_options = '-r debug/open'
+        cmd = "#{__dir__}/../../exe/rdbg -A"
+        new_child_process("#{RUBY} #{boot_options} #{temp_file_path}")
+        create_pseudo_terminal(cmd, repl_prompt)
+
+        # run test on TCP/IP mode
+        cmd = "#{__dir__}/../../exe/rdbg -A #{RUBY_DEBUG_TEST_PORT}"
+        new_child_process("#{__dir__}/../../exe/rdbg -O --port=#{RUBY_DEBUG_TEST_PORT} #{temp_file_path}")
+      else
+        # run test on local mode
+        repl_prompt = /\(rdbg\)/
+        cmd = "#{RUBY} #{boot_options} #{temp_file_path}"
+      end
+      create_pseudo_terminal(cmd, repl_prompt)
+    end
+
+    def new_child_process(cmd)
+      @scenario.call
+      @mutex.synchronize do
+        r, _, @server_pid = PTY.spawn(cmd, :in=>'/dev/null', :out=>'/dev/null')
+        r.read(1) # wait for the remote server to boot up
+      end
+    end
+
+    def create_pseudo_terminal(cmd, repl_prompt)
       ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
 
       timeout_sec = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
-      PTY.spawn("#{RUBY} #{boot_options} #{temp_file_path}") do |read, write, pid|
+      PTY.spawn(cmd) do |read, write, _|
         @backlog = []
         @last_backlog = []
-        ask_cmd = ['quit', 'delete', 'kill']
         begin
           Timeout.timeout(timeout_sec) do
             while (line = read.gets)
@@ -67,7 +100,7 @@ module DEBUGGER__
                 write.puts(cmd)
                 @last_backlog.clear
                 next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
-              when REPL_RPOMPT
+              when repl_prompt
                 # check if the previous command breaks the debugger before continuing
                 if error_index = @last_backlog.index { |l| l.match?(/REPL ERROR/) }
                   raise "Debugger terminated because of: #{@last_backlog[error_index..-1].join}"
