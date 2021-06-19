@@ -436,7 +436,7 @@ module DEBUGGER__
       when :backtrace
         event! :dap_result, :backtrace, req, {
           stackFrames: @target_frames.map.with_index{|frame, i|
-            path = frame.path
+            path = frame.realpath
             ref = frame.file_lines unless File.exist?(path)
 
             {
