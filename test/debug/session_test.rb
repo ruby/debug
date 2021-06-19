@@ -17,7 +17,7 @@ module DEBUGGER__
     end
 
     def test_session_starts_manually
-      debug_code(program, boot_options: "") do
+      debug_code(program, boot_options: "", remote: false) do
         assert_line_num(5)
         type 'quit'
         type 'y'
@@ -25,7 +25,7 @@ module DEBUGGER__
     end
 
     def test_later_breakpoint_fires_correctly
-      debug_code(program, boot_options: "") do
+      debug_code(program, boot_options: "", remote: false) do
         assert_line_num(5)
         type 'c'
         assert_line_num(6)
@@ -49,7 +49,7 @@ module DEBUGGER__
     end
 
     def test_session_starts_manually
-      debug_code(program, boot_options: "") do
+      debug_code(program, boot_options: "", remote: false) do
         assert_line_num(5)
         type 'quit'
         type 'y'
@@ -57,7 +57,7 @@ module DEBUGGER__
     end
 
     def test_later_breakpoint_fires_correctly
-      debug_code(program, boot_options: "") do
+      debug_code(program, boot_options: "", remote: false) do
         assert_line_num(5)
         type 'c'
         assert_line_num(6)
