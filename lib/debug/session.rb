@@ -54,7 +54,6 @@ end
 module DEBUGGER__
   class Session
     def initialize ui
-      @ui = ui
       @sr = SourceRepository.new
       @bps = {} # bp.key => bp
                 #   [file, line] => LineBreakpoint
@@ -86,7 +85,8 @@ module DEBUGGER__
       end
 
       @management_threads = [@session_server]
-      @management_threads << @ui.reader_thread if @ui.respond_to? :reader_thread
+
+      set_ui(ui)
 
       setup_threads
 
@@ -96,6 +96,11 @@ module DEBUGGER__
         end
       }
       @tp_thread_begin.enable
+    end
+
+    def set_ui(ui)
+      @ui = ui
+      @management_threads << @ui.reader_thread if @ui.respond_to? :reader_thread
     end
 
     def session_server_main
