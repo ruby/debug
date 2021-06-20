@@ -1023,21 +1023,6 @@ module DEBUGGER__
 
   # start methods
 
-  def self.console **kw
-    set_config(kw)
-
-    require_relative 'console'
-
-    initialize_session UI_Console.new
-
-    set_starter_breakpoint
-
-    @prev_handler = trap(:SIGINT){
-      ThreadClient.current.on_trap :SIGINT
-    }
-  end
-
-
   def self.set_starter_breakpoint
     if !::DEBUGGER__::CONFIG[:nonstop]
       if loc = ::DEBUGGER__.require_location
@@ -1079,25 +1064,19 @@ module DEBUGGER__
   class << self
     define_method :initialize_session do |ui|
       ::DEBUGGER__.const_set(:SESSION, Session.new(ui))
+      load_rc
+    end
+  end
 
-      # default breakpoints
-
-      # ::DEBUGGER__.add_catch_breakpoint 'RuntimeError'
-
-      Binding.module_eval do
-        def bp command: nil
-          if command
-            cmds = command.split(";;")
-            SESSION.add_initial_commands cmds
-          end
-
-          ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true
-          true
-        end
+  Binding.module_eval do
+    def bp command: nil
+      if command
+        cmds = command.split(";;")
+        SESSION.add_initial_commands cmds
       end
 
-
-      load_rc
+      ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true
+      true
     end
   end
 

@@ -92,5 +92,16 @@ module DEBUGGER__
       trap(:INT, prev_handler)
     end
   end
-end
 
+  def self.console **kw
+    set_config(kw)
+
+    set_starter_breakpoint
+
+    @prev_handler = trap(:SIGINT){
+      ThreadClient.current.on_trap :SIGINT
+    }
+  end
+
+  initialize_session(UI_Console.new)
+end
