@@ -1080,13 +1080,7 @@ module DEBUGGER__
 
   Binding.module_eval do
     def bp command: nil
-      if command
-        cmds = command.split(";;")
-        SESSION.add_initial_commands cmds
-      end
-
-      ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true
-      true
+      DEBUGGER__.console(command: command)
     end
   end
 

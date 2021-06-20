@@ -93,14 +93,29 @@ module DEBUGGER__
     end
   end
 
-  def self.console **kw
-    set_config(kw)
-
-    set_starter_breakpoint
-
+  def self.set_prev_handler
     @prev_handler = trap(:SIGINT){
       ThreadClient.current.on_trap :SIGINT
     }
+  end
+
+  def self.stop_at_require
+    set_config({})
+    set_starter_breakpoint
+    set_prev_handler
+  end
+
+  def self.console command: nil, **kw
+    set_config(kw)
+
+    if command
+      cmds = command.split(";;")
+      SESSION.add_initial_commands cmds
+    end
+
+    ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true
+
+    set_prev_handler
   end
 
   initialize_session(UI_Console.new)

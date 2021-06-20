@@ -18,7 +18,7 @@ module DEBUGGER__
 
     def test_session_starts_manually
       debug_code(program, boot_options: "") do
-        assert_line_num(5)
+        assert_line_num(4)
         type 'quit'
         type 'y'
       end
@@ -26,7 +26,7 @@ module DEBUGGER__
 
     def test_later_breakpoint_fires_correctly
       debug_code(program, boot_options: "") do
-        assert_line_num(5)
+        assert_line_num(4)
         type 'c'
         assert_line_num(6)
         type 'quit'
