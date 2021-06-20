@@ -1025,9 +1025,24 @@ module DEBUGGER__
 
     initialize_session UI_Console.new
 
+    set_starter_breakpoint
+
     @prev_handler = trap(:SIGINT){
       ThreadClient.current.on_trap :SIGINT
     }
+  end
+
+
+  def self.set_starter_breakpoint
+    if !::DEBUGGER__::CONFIG[:nonstop]
+      if loc = ::DEBUGGER__.require_location
+        # require 'debug/console' or 'debug'
+        add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
+      else
+        # -r
+        add_line_breakpoint $0, 1, oneshot: true, hook_call: false
+      end
+    end
   end
 
   def self.open host: nil, port: ::DEBUGGER__::CONFIG[:port], sock_path: nil, sock_dir: nil, **kw
@@ -1038,6 +1053,8 @@ module DEBUGGER__
     else
       open_unix sock_path: sock_path, sock_dir: sock_dir
     end
+
+    set_starter_breakpoint
   end
 
   def self.open_tcp host: nil, port:, **kw
@@ -1074,15 +1091,6 @@ module DEBUGGER__
         end
       end
 
-      if !::DEBUGGER__::CONFIG[:nonstop]
-        if loc = ::DEBUGGER__.require_location
-          # require 'debug/console' or 'debug'
-          add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
-        else
-          # -r
-          add_line_breakpoint $0, 1, oneshot: true, hook_call: false
-        end
-      end
 
       load_rc
     end
