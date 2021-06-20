@@ -1073,11 +1073,9 @@ module DEBUGGER__
 
   # boot utilities
 
-  class << self
-    define_method :initialize_session do |ui|
-      ::DEBUGGER__.const_set(:SESSION, Session.new(ui))
-      load_rc
-    end
+  def self.initialize_session(ui)
+    ::DEBUGGER__.const_set(:SESSION, Session.new(ui))
+    load_rc
   end
 
   Binding.module_eval do
