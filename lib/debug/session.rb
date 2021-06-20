@@ -1050,13 +1050,25 @@ module DEBUGGER__
   def self.open_tcp host: nil, port:, **kw
     set_config(kw)
     require_relative 'server'
-    initialize_session UI_TcpServer.new(host: host, port: port)
+    ui = UI_TcpServer.new(host: host, port: port)
+
+    if defined?(SESSION)
+      DEBUGGER__::SESSION.set_ui(ui)
+    else
+      initialize_session(ui)
+    end
   end
 
   def self.open_unix sock_path: nil, sock_dir: nil, **kw
     set_config(kw)
     require_relative 'server'
-    initialize_session UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
+    ui = UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
+
+    if defined?(SESSION)
+      DEBUGGER__::SESSION.set_ui(ui)
+    else
+      initialize_session(ui)
+    end
   end
 
   # boot utilities
