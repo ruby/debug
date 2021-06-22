@@ -55,7 +55,7 @@ module DEBUGGER__
               when /INTERNAL_INFO:\s(.*)/
                 @internal_info = JSON.parse(Regexp.last_match(1))
                 cmd = @queue.pop
-                if cmd.is_a?(Proc)
+                while cmd.is_a?(Proc)
                   cmd.call
                   cmd = @queue.pop
                 end
