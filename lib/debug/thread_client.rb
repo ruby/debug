@@ -477,17 +477,14 @@ module DEBUGGER__
         when :eval
           eval_type, eval_src = *args
 
-          case eval_type
-          when :display, :try_display
-          else
-            result = frame_eval(eval_src)
-          end
           result_type = nil
 
           case eval_type
           when :p
+            result = frame_eval(eval_src)
             puts "=> " + result.inspect
           when :pp
+            result = frame_eval(eval_src)
             puts "=> "
             PP.pp(result, out = ''.dup, SESSION.width)
             puts out
