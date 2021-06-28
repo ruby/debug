@@ -29,6 +29,12 @@ $ gem install debug --pre
 
 or specify `-Ipath/to/debug/lib` in `RUBYOPT` or each ruby command-line option, especially for debug this gem development.
 
+If you use Bunlder, write the following line to your Gemfile.
+
+```
+gem "debug", ">= 1.0.0.a"
+```
+
 # How to use
 
 ## Invoke with debugger
