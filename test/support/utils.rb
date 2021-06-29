@@ -38,11 +38,18 @@ module DEBUGGER__
     RUBY = RbConfig.ruby
     RUBY_DEBUG_TEST_PORT = '12345'
 
+    nr = ENV['RUBY_DEBUG_TEST_NO_REMOTE']
+    NO_REMOTE = nr == 'true' || nr == '1'
+
+    if !NO_REMOTE
+      warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
+    end
+
     def setup_terminal(boot_options: "-r debug/run", remote: true)
-      ENV['RUBY_DEBUG_TEST_LOCAL_ONLY_MODE'] = 'false' # for fast debug test
+
       inject_lib_to_load_path
 
-      if remote && ENV['RUBY_DEBUG_TEST_LOCAL_ONLY_MODE'] == 'false'
+      if remote && !NO_REMOTE
         setup_terminal(remote: false) # local test will be executed first
         @mutex = Mutex.new
         repl_prompt = /\(rdb\)/
@@ -120,7 +127,7 @@ module DEBUGGER__
         rescue Timeout::Error => e
           assert false, create_message("TIMEOUT ERROR (#{timeout_sec} sec)")
         ensure
-          if @server_pid
+          if defined?(@server_pid) && @server_pid
             Process.kill(:KILL, @server_pid)
             Process.waitpid(@server_pid)
             @server_pid = nil
