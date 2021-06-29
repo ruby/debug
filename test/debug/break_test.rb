@@ -83,7 +83,7 @@ module DEBUGGER__
       RUBY
     end
 
-    def test_debugger_stops_when_the_exception_raised
+    def test_debugger_stops_when_the_c_method_is_called
       debug_code(program) do
         type 'b Integer#abs'
         type 'continue'
@@ -125,6 +125,15 @@ module DEBUGGER__
       RUBY
     end
 
+    def test_break_with_instance_method_stops_at_correct_place_a
+      debug_code(program) do
+        type 'break Foo::Bar#a'
+        type 'continue'
+        assert_line_num 3
+        type 'quit!'
+      end
+    end
+
     def test_break_with_instance_method_stops_at_correct_place_b
       # instance method #b has extra empty line intentionally
       # to test lineno 8 is not displayed.
@@ -136,20 +145,11 @@ module DEBUGGER__
       end
     end
 
-    def test_break_with_oneline_class_method_stops_at_correct_place
+    def test_break_with_class_method_stops_at_correct_place
       debug_code(program) do
         type 'break Foo::Bar.c'
         type 'continue'
         assert_line_num 9
-        type 'quit!'
-      end
-    end
-
-    def test_break_with_instance_method_stops_at_correct_place_a
-      debug_code(program) do
-        type 'break Foo::Bar#a'
-        type 'continue'
-        assert_line_num 3
         type 'quit!'
       end
     end
