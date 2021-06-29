@@ -33,11 +33,12 @@ module DEBUGGER__
     def test_debugger_only_stops_when_the_ivar_of_instance_changes
       debug_code(program) do
         type 'continue'
+        # stops at binding.bp
         assert_line_text('Student#initialize(name="John")')
         type 'continue'
-        assert_line_num(21) # stops when assigned to "Josh"
-        type 'quit'
-        type 'y'
+        # stops when @name changes
+        assert_line_text(/@name = John -> Josh/)
+        type 'continue'
       end
     end
   end
