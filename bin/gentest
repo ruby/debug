@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+require_relative '../test/tool/test_builder'
+
+file_info = {}
+
+OptionParser.new do |opt|
+  opt.banner = 'Usage: bin/gentest [file] [option]'
+  opt.on('-m METHOD', 'Method name in the test file') do |m|
+    file_info[:method] = m
+  end
+  opt.on('-c CLASS', 'Class name in the test file') do |c|
+    file_info[:class] = c
+  end
+  opt.parse!(ARGV)
+end
+
+exit if ARGV.empty?
+
+DEBUGGER__::TestBuilder.new(ARGV, file_info[:method], file_info[:class]).start
