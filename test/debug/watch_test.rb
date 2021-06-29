@@ -3,29 +3,6 @@
 require_relative '../support/test_case'
 
 module DEBUGGER__
-  class TopLevelInstanceVariableWatchingTest < TestCase
-    def program
-      <<~RUBY
-        1| @a = 1
-        2| @b = 2
-        3| @c = 3
-        4| @a = 2
-        5| foo = "foo" # stops here
-      RUBY
-    end
-
-    def test_debugger_stops_when_the_expression_changes
-      debug_code(program) do
-        type 'step'
-        type 'watch @a'
-        type 'continue'
-        assert_line_num(5) # stops at the next line
-        type 'quit'
-        type 'y'
-      end
-    end
-  end if false # To be removed
-
   class ObjectInstanceVariableWatchingTest < TestCase
     def program
       <<~RUBY
