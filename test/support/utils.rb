@@ -169,7 +169,11 @@ module DEBUGGER__
 
     def assert_empty_queue(exception: nil)
       message = "expect all commands/assertions to be executed. still have #{@queue.length} left."
-      message += "\nassociated exception: #{exception.class} - #{exception.message}" if exception
+      if exception
+        message += "\nassociated exception: #{exception.class} - #{exception.message}" +
+                   exception.backtrace.map{|l| "  #{l}\n"}.join +
+                   "\n[BACKLOG]\n" + @backlog.map{|l| "  #{l}"}.join
+      end
       assert_empty @queue, message
     end
 
