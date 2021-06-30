@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Open the door for the debugger to connect.
 # Users can connect to debuggee program with "rdbg --attach" option.

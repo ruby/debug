@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 module DEBUGGER__
   def self.unix_domain_socket_dir

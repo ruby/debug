@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 begin
   require 'irb/color'
   require "irb/color_printer"

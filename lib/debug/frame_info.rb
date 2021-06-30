@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 module DEBUGGER__
   FrameInfo = Struct.new(:location, :self, :binding, :iseq, :class, :frame_depth,

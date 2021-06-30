@@ -1,4 +1,5 @@
-﻿
+﻿# frozen_string_literal: true
+
 # skip to load debugger for bundle exec
 return if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
 
