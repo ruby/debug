@@ -11,7 +11,7 @@ module DEBUGGER__
     end
 
     def create_message fail_msg
-      "#{fail_msg}\n[DEBUG SESSION LOG]\n> " + @backlog.join('> ')
+      "#{fail_msg} on #{@mode} mode\n[DEBUG SESSION LOG]\n> " + @backlog.join('> ')
     end
 
     def combine_regexps(regexps)
@@ -46,7 +46,6 @@ module DEBUGGER__
     end
 
     def setup_terminal(boot_options: "-r debug/run", remote: true)
-
       inject_lib_to_load_path
 
       if remote && !NO_REMOTE
@@ -55,16 +54,19 @@ module DEBUGGER__
         repl_prompt = /\(rdb\)/
 
         # run test on Unix domain socket mode
+        @mode = 'UNIX DOMAIN SOCKET'
         boot_options = '-r debug/open'
         cmd = "#{__dir__}/../../exe/rdbg -A"
         new_child_process("#{RUBY} #{boot_options} #{temp_file_path}")
         create_pseudo_terminal(cmd, repl_prompt)
 
         # run test on TCP/IP mode
+        @mode = 'TCP/IP'
         cmd = "#{__dir__}/../../exe/rdbg -A #{RUBY_DEBUG_TEST_PORT}"
         new_child_process("#{__dir__}/../../exe/rdbg -O --port=#{RUBY_DEBUG_TEST_PORT} #{temp_file_path}")
       else
         # run test on local mode
+        @mode = 'LOCAL'
         repl_prompt = /\(rdbg\)/
         cmd = "#{RUBY} #{boot_options} #{temp_file_path}"
       end
