@@ -15,8 +15,6 @@ If you spot any problem, please open an issue.
 
 ```bash
 $ rake test
-# or
-$ ruby bin/test-unit.rb
 ```
 
 ### Run specific test(s)
