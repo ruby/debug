@@ -30,6 +30,15 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_catch_command_isnt_repeatable
+      debug_code(program) do
+        type 'catch StandardError'
+        type ''
+        assert_no_line_text(/duplicated breakpoint/)
+        type 'q!'
+      end
+    end
   end
 
   class ReraisedExceptionCatchTest < TestCase
