@@ -557,6 +557,9 @@ module DEBUGGER__
         end
         @tc << [:eval, :call, 'binding.irb']
 
+        # don't repeat irb command
+        @repl_prev_line = nil
+
       ### Thread control
 
       # * `th[read]`
