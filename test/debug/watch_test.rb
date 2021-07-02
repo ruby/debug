@@ -41,5 +41,14 @@ module DEBUGGER__
         type 'continue'
       end
     end
+
+    def test_watch_command_isnt_repeatable
+      debug_code(program) do
+        type 'continue'
+        type ''
+        assert_no_line_text(/duplicated breakpoint/)
+        type 'quit!'
+      end
+    end
   end
 end

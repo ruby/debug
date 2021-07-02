@@ -72,6 +72,15 @@ module DEBUGGER__
         type 'quit!'
       end
     end
+
+    def test_break_command_isnt_repeatable
+      debug_code(program) do
+        type 'break Foo::Baz.c'
+        type ''
+        assert_no_line_text(/duplicated breakpoint/)
+        type 'quit!'
+      end
+    end
   end
 
   class BreakAtCMethodsTest < TestCase
