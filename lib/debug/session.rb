@@ -884,6 +884,9 @@ module DEBUGGER__
       else
         @bps[bp.key] = bp
       end
+
+      # don't repeat commands that add breakpoints
+      @repl_prev_line = nil
     end
 
     def rehash_bps
