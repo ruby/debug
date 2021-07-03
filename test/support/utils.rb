@@ -15,12 +15,18 @@ module DEBUGGER__
     end
 
     # This method will execute both local and remote mode by default.
-    def debug_code(program, **options, &block)
-      @queue = Queue.new
+    def debug_code(program, boot_options: '-r debug/run', remote: true, &block)
       @scenario = block
-      @scenario.call
       write_temp_file(strip_line_num(program))
-      setup_terminal(**options)
+      inject_lib_to_load_path
+
+      debug_on_local boot_options
+
+      if remote && !NO_REMOTE
+        debug_on_unix_domain_socket
+        debug_on_tcpip
+      end
+
       check_line_num!(program)
     end
 
@@ -41,49 +47,44 @@ module DEBUGGER__
       warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
     end
 
-    def setup_terminal(boot_options: "-r debug/run", remote: true)
-      inject_lib_to_load_path
-
-      if remote && !NO_REMOTE
-        setup_terminal(remote: false) # local test will be executed first
-        @mutex = Mutex.new
-        repl_prompt = /\(rdb\)/
-
-        # run test on Unix domain socket mode
-        @mode = 'UNIX DOMAIN SOCKET'
-        boot_options = '-r debug/open'
-        cmd = "#{__dir__}/../../exe/rdbg -A"
-        new_child_process("#{RUBY} #{boot_options} #{temp_file_path}")
-        create_pseudo_terminal(cmd, repl_prompt)
-
-        # run test on TCP/IP mode
-        @mode = 'TCP/IP'
-        cmd = "#{__dir__}/../../exe/rdbg -A #{RUBY_DEBUG_TEST_PORT}"
-        new_child_process("#{__dir__}/../../exe/rdbg -O --port=#{RUBY_DEBUG_TEST_PORT} #{temp_file_path}")
-      else
-        # run test on local mode
-        @mode = 'LOCAL'
-        repl_prompt = /\(rdbg\)/
-        cmd = "#{RUBY} #{boot_options} #{temp_file_path}"
-      end
-      create_pseudo_terminal(cmd, repl_prompt)
+    def debug_on_local boot_options
+      # run test on local mode
+      @mode = 'LOCAL'
+      repl_prompt = /\(rdbg\)/
+      cmd = "#{RUBY} #{boot_options} #{temp_file_path}"
+      run_test_scenario(cmd, repl_prompt)
     end
 
-    def new_child_process(cmd)
-      @scenario.call
-      @mutex.synchronize do
-        @remote_r, @remote_w, @server_pid = PTY.spawn(cmd, :in=>'/dev/null', :out=>'/dev/null')
-        @remote_r.read(1) # wait for the remote server to boot up
-      end
+    def debug_on_unix_domain_socket repl_prompt = '(rdbg:remote)'
+      @mode = 'UNIX DOMAIN SOCKET'
+      boot_options = '-r debug/open'
+      cmd = "#{__dir__}/../../exe/rdbg -A"
+      setup_remote_debuggee("#{RUBY} #{boot_options} #{temp_file_path}")
+      run_test_scenario(cmd, repl_prompt)
     end
 
-    def create_pseudo_terminal(cmd, repl_prompt)
+    def debug_on_tcpip repl_prompt = '(rdbg:remote)'
+      @mode = 'TCP/IP'
+      cmd = "#{__dir__}/../../exe/rdbg -A #{RUBY_DEBUG_TEST_PORT}"
+      setup_remote_debuggee("#{__dir__}/../../exe/rdbg -O --port=#{RUBY_DEBUG_TEST_PORT} #{temp_file_path}")
+      run_test_scenario(cmd, repl_prompt)
+    end
+
+    def setup_remote_debuggee(cmd)
+      @remote_r, @remote_w, @remote_debuggee_pid = PTY.spawn(cmd, :in=>'/dev/null', :out=>'/dev/null')
+      @remote_r.read(1) # wait for the remote server to boot up
+    end
+
+    def run_test_scenario(cmd, repl_prompt)
       ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
 
+      @queue = Queue.new
+      @scenario.call
+
       timeout_sec = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
-      PTY.spawn(cmd) do |read, write, _|
+      PTY.spawn(cmd) do |read, write, pid|
         @backlog = []
         @last_backlog = []
         begin
@@ -125,13 +126,20 @@ module DEBUGGER__
         rescue Timeout::Error => e
           assert false, create_message("TIMEOUT ERROR (#{timeout_sec} sec)")
         ensure
-          if defined?(@server_pid) && @server_pid
+          # kill remote debuggee
+          if defined?(@remote_debuggee_pid) && @remote_debuggee_pid
             @remote_r.close
             @remote_w.close
-            Process.kill(:KILL, @server_pid)
-            Process.waitpid(@server_pid)
-            @server_pid = nil
+            Process.kill(:KILL, @remote_debuggee_pid)
+            Process.waitpid(@remote_debuggee_pid)
+            @remote_debuggee_pid = nil
           end
+
+          # kill debug console process
+          read.close
+          write.close
+          Process.kill(:KILL, pid)
+          Process.waitpid pid
         end
       end
     end
