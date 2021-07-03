@@ -478,9 +478,7 @@ module DEBUGGER__
         case arg
         when /(\d+)/
           if @displays[n = $1.to_i]
-            if ask "clear \##{n} #{@displays[n]}?"
-              @displays.delete_at n
-            end
+            @displays.delete_at n
           end
           @tc << [:eval, :display, @displays]
         when nil
