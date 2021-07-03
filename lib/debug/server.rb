@@ -15,8 +15,8 @@ module DEBUGGER__
       @accept_m = Mutex.new
       @accept_cv = ConditionVariable.new
       @client_addr = nil
-      @q_msg = Queue.new
-      @q_ans = Queue.new
+      @q_msg = nil
+      @q_ans = nil
       @unsent_messages = []
       @width = 80
 
@@ -38,6 +38,9 @@ module DEBUGGER__
               @sock.puts m
             }
             @unsent_messages.clear
+
+            @q_msg = Queue.new
+            @q_ans = Queue.new
           }
 
           setup_interrupt do
@@ -50,7 +53,9 @@ module DEBUGGER__
           DEBUGGER__.message "Disconnected."
           @sock = nil
           @q_msg.close
+          @q_msg = nil
           @q_ans.close
+          @q_ans = nil
         end
       end
     end
@@ -83,9 +88,6 @@ module DEBUGGER__
     end
 
     def process
-      @q_msg = Queue.new
-      @q_ans = Queue.new
-
       pause
 
       while line = @sock.gets
@@ -143,7 +145,15 @@ module DEBUGGER__
       if s = @sock         # already connection
         # ok
       elsif skip == true   # skip process
-        return yield nil
+        no_sock = true
+        r = @accept_m.synchronize do
+          if @sock
+            no_sock = false
+          else
+            yield nil
+          end
+        end
+        return r if no_sock
       else                 # wait for connection
         until s = @sock
           @accept_m.synchronize{
@@ -192,6 +202,7 @@ module DEBUGGER__
     def readline
       (sock do |s|
         s.puts "input"
+        sleep 0.01 until @q_msg
         @q_msg.pop
       end || 'continue').strip
     end

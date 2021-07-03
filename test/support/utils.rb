@@ -60,16 +60,15 @@ module DEBUGGER__
 
     def debug_on_unix_domain_socket repl_prompt = '(rdbg:remote)'
       @mode = 'UNIX DOMAIN SOCKET'
-      boot_options = '-r debug/open'
       cmd = "#{__dir__}/../../exe/rdbg -A"
-      setup_remote_debuggee("#{RUBY} #{boot_options} #{temp_file_path}")
+      setup_remote_debuggee("#{__dir__}/../../exe/rdbg -O -- #{temp_file_path}")
       run_test_scenario(cmd, repl_prompt)
     end
 
     def debug_on_tcpip repl_prompt = '(rdbg:remote)'
       @mode = 'TCP/IP'
       cmd = "#{__dir__}/../../exe/rdbg -A #{RUBY_DEBUG_TEST_PORT}"
-      setup_remote_debuggee("#{__dir__}/../../exe/rdbg -O --port=#{RUBY_DEBUG_TEST_PORT} #{temp_file_path}")
+      setup_remote_debuggee("#{__dir__}/../../exe/rdbg -O --port=#{RUBY_DEBUG_TEST_PORT} -- #{temp_file_path}")
       run_test_scenario(cmd, repl_prompt)
     end
 
@@ -103,6 +102,7 @@ module DEBUGGER__
                   write.puts(cmd)
                   cmd = @queue.pop
                 end
+
                 write.puts(cmd)
                 @last_backlog.clear
                 next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
