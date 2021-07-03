@@ -25,7 +25,7 @@ module DEBUGGER__
     end
 
     DEBUG_MODE = false
-    ASK_CMD = %w[quit delete kill]
+    ASK_CMD = %w[quit delete kill undisplay]
 
     def debug_print msg
       print msg if DEBUG_MODE
