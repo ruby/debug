@@ -243,9 +243,6 @@ module DEBUGGER__
      2| b = 2
      3| c = 3
      4| d = 4
-     5|
-     6| binding.bp
-     7| __END__
       RUBY
     end
 
@@ -258,9 +255,6 @@ module DEBUGGER__
         type "y" # confirm deletion
 
         type "continue"
-
-        assert_line_num(6) # directly stops at bp
-        type "q!"
       end
     end
 

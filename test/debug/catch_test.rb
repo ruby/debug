@@ -83,10 +83,7 @@ module DEBUGGER__
          8|   end
          9| end
         10|
-        11| # we need this rescue + binding.bp workaround because the test framework can't handle exception exit yet
-        12| Foo.raised_exception rescue nil
-        13|
-        14| binding.bp
+        11| Foo.raised_exception rescue nil
       RUBY
     end
 
@@ -94,9 +91,6 @@ module DEBUGGER__
       debug_code(program) do
         type 'catch TestException'
         type 'continue'
-        assert_line_num(14)
-        type 'quit'
-        type 'y'
       end
     end
 
@@ -106,9 +100,6 @@ module DEBUGGER__
         type 'continue'
         assert_line_num(7)
         type 'continue'
-        assert_line_num(14)
-        type 'quit'
-        type 'y'
       end
     end
   end
