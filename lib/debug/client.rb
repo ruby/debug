@@ -15,11 +15,11 @@ module DEBUGGER__
     begin
       require 'readline'
       def readline
-        Readline.readline("\n(rdb) ", true)
+        Readline.readline("\n(rdbg:remote) ", true)
       end
     rescue LoadError
       def readline
-        print "\n(rdb) "
+        print "\n(rdbg:remote) "
         gets
       end
     end
