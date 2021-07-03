@@ -29,10 +29,14 @@ $ gem install debug --pre
 
 or specify `-Ipath/to/debug/lib` in `RUBYOPT` or each ruby command-line option, especially for debug this gem development.
 
-If you use Bunlder, write the following line to your Gemfile.
+If you use Bundler, write the following line to your Gemfile. And use rdbg command with -c option.
 
 ```
-gem "debug", ">= 1.0.0.a"
+gem "debug", ">= 1.0.0.beta"
+```
+
+```
+$ rdbg -c bundle exec ruby target.rb
 ```
 
 # How to use
