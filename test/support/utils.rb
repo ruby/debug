@@ -20,6 +20,9 @@ module DEBUGGER__
       write_temp_file(strip_line_num(program))
       inject_lib_to_load_path
 
+      ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
+      ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
+
       debug_on_local boot_options
 
       if remote && !NO_REMOTE
@@ -76,9 +79,6 @@ module DEBUGGER__
     end
 
     def run_test_scenario(cmd, repl_prompt)
-      ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
-      ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
-
       @queue = Queue.new
       @scenario.call
 
