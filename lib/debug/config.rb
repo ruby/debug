@@ -93,7 +93,7 @@ module DEBUGGER__
 
       o.on('-e COMMAND', 'execute debug command at the beginning of the script.') do |cmd|
         config[:commands] ||= ''
-        config[:commands] << cmd + ';;'
+        config[:commands] += cmd + ';;'
       end
 
       o.on('-x FILE', '--init-script=FILE', 'execute debug command in the FILE.') do |file|
