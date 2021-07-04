@@ -14,10 +14,6 @@ module DEBUGGER__
       "#{fail_msg} on #{@mode} mode\n[DEBUG SESSION LOG]\n> " + @backlog.join('> ')
     end
 
-    def combine_regexps(regexps)
-      Regexp.new(regexps.map(&:source).reduce(:+))
-    end
-
     # This method will execute both local and remote mode by default.
     def debug_code(program, **options, &block)
       @queue = Queue.new
