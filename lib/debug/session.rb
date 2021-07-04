@@ -53,6 +53,8 @@ class RubyVM::InstructionSequence
 end
 
 module DEBUGGER__
+  PresetCommand = Struct.new(:commands, :source, :auto_continue)
+
   class Session
     def initialize ui
       @ui = ui
@@ -68,7 +70,7 @@ module DEBUGGER__
       @displays = []
       @tc = nil
       @tc_id = 0
-      @initial_commands = []
+      @preset_command = nil
 
       @frame_map = {} # {id => [threadId, frame_depth]} for DAP
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
@@ -106,6 +108,8 @@ module DEBUGGER__
         output.each{|str| @ui.puts str}
 
         case ev
+        when :init
+          wait_command_loop tc
         when :load
           iseq, src = ev_args
           on_load iseq, src
@@ -166,11 +170,20 @@ module DEBUGGER__
       @th_clients.each{|th, thc| thc.close}
     end
 
-    def add_initial_commands cmds
-      cmds.each{|c|
-        c.gsub('#.*', '').strip!
-        @initial_commands << c unless c.empty?
-      }
+    def add_preset_commands name, cmds, kick: true, continue: true
+      cs = cmds.map{|c|
+        c = c.strip.gsub(/\A\s*\#.*/, '').strip
+        c unless c.empty?
+      }.compact
+
+      unless cs.empty?
+        if @preset_command
+          @preset_command.commands += cs
+        else
+          @preset_command = PresetCommand.new(cs, name, continue)
+        end
+        ThreadClient.current.on_init name if kick
+      end
     end
 
     def source iseq
@@ -204,12 +217,23 @@ module DEBUGGER__
     end
 
     def wait_command
-      if @initial_commands.empty?
+      if @preset_command
+        if @preset_command.commands.empty?
+          if @preset_command.auto_continue
+            @preset_command = nil
+            @tc << :continue
+            return
+          else
+            @preset_command = nil
+            return :retry
+          end
+        else
+          line = @preset_command.commands.shift
+          @ui.puts "(rdbg:#{@preset_command.source}) #{line}"
+        end
+      else
         @ui.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}" if ENV['RUBY_DEBUG_TEST_MODE']
         line = @ui.readline
-      else
-        line = @initial_commands.shift.strip
-        @ui.puts "(rdbg:init) #{line}"
       end
 
       case line
@@ -244,21 +268,25 @@ module DEBUGGER__
       # * `s[tep]`
       #   * Step in. Resume the program until next breakable point.
       when 's', 'step'
+        cancel_auto_continue
         @tc << [:step, :in]
 
       # * `n[ext]`
       #   * Step over. Resume the program until next line.
       when 'n', 'next'
+        cancel_auto_continue
         @tc << [:step, :next]
 
       # * `fin[ish]`
       #   * Finish this frame. Resume the program until the current frame is finished.
       when 'fin', 'finish'
+        cancel_auto_continue
         @tc << [:step, :finish]
 
       # * `c[ontinue]`
       #   * Resume the program.
       when 'c', 'continue'
+        cancel_auto_continue
         @tc << :continue
 
       # * `q[uit]` or `Ctrl-D`
@@ -604,6 +632,12 @@ module DEBUGGER__
       @ui.puts "[REPL ERROR] #{e.inspect}"
       @ui.puts e.backtrace.map{|e| '  ' + e}
       return :retry
+    end
+
+    def cancel_auto_continue
+      if @preset_command&.auto_continue
+        @preset_command.auto_continue = false
+      end
     end
 
     def show_help arg
@@ -1072,10 +1106,15 @@ module DEBUGGER__
       # ::DEBUGGER__.add_catch_breakpoint 'RuntimeError'
 
       Binding.module_eval do
-        def bp command: nil
+        def bp command: nil, nonstop: nil
           if command
             cmds = command.split(";;")
-            SESSION.add_initial_commands cmds
+            # nonstop
+            #  nil, true -> auto_continue
+            #  false     -> stop
+            SESSION.add_preset_commands 'binding.bp(command:)', cmds,
+                                        kick: false,
+                                        continue: nonstop == false ? false : true
           end
 
           ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true
@@ -1098,21 +1137,21 @@ module DEBUGGER__
   end
 
   def self.load_rc
-    ['./rdbgrc.rb', File.expand_path('~/.rdbgrc.rb')].each{|path|
-      if File.file? path
-        load path
-      end
-    }
-
-    # debug commands file
-    [init_script = ::DEBUGGER__::CONFIG[:init_script],
-     './.rdbgrc',
-     File.expand_path('~/.rdbgrc')].each{|path|
-       next unless path
+    [[File.expand_path('~/.rdbgrc'), true],
+     [File.expand_path('~/.rdbgrc.rb'), true],
+     # ['./.rdbgrc', true], # disable because of security concern
+     [::DEBUGGER__::CONFIG[:init_script], false],
+     ].each{|(path, rc)|
+      next unless path
+      next if rc && ::DEBUGGER__::CONFIG[:no_rc] # ignore rc
 
       if File.file? path
-        ::DEBUGGER__::SESSION.add_initial_commands File.readlines(path)
-      elsif path == init_script
+        if path.end_with?('.rb')
+          load path
+        else
+          ::DEBUGGER__::SESSION.add_preset_commands path, File.readlines(path)
+        end
+      elsif !rc
         warn "Not found: #{path}"
       end
     }
@@ -1120,7 +1159,7 @@ module DEBUGGER__
     # given debug commands
     if ::DEBUGGER__::CONFIG[:commands]
       cmds = ::DEBUGGER__::CONFIG[:commands].split(';;')
-      ::DEBUGGER__::SESSION.add_initial_commands cmds
+      ::DEBUGGER__::SESSION.add_preset_commands "commands", cmds, kick: false, continue: false
     end
   end
 

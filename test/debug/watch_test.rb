@@ -35,7 +35,6 @@ module DEBUGGER__
         type 'continue'
         # stops at binding.bp
         assert_line_text('Student#initialize(name="John")')
-        type 'continue'
         # stops when @name changes
         assert_line_text(/@name = John -> Josh/)
         type 'continue'

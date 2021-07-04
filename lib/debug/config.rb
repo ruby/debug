@@ -35,6 +35,7 @@ module DEBUGGER__
     nonstop:     'RUBY_DEBUG_NONSTOP',     # Nonstop mode ('1' is nonstop)
     init_script: 'RUBY_DEBUG_INIT_SCRIPT', # debug command script path loaded at first stop
     commands:    'RUBY_DEBUG_COMMANDS',    # debug commands invoked at first stop. commands should be separated by ';;'
+    no_rc:       'RUBY_DEBUG_NO_RC',       # ignore loading ~/.rdbgrc(.rb)
 
     # UI setting
     show_src_lines: 'RUBY_DEBUG_SHOW_SRC_LINES', # Show n lines source code on breakpoint (default: 10 lines).
@@ -90,13 +91,25 @@ module DEBUGGER__
         config[:nonstop] = '1'
       end
 
-      o.on('-e COMMAND', 'execute debug command at the beginning of the script.') do |cmd|
+      o.on('-e COMMAND', 'Execute debug command at the beginning of the script.') do |cmd|
         config[:commands] ||= ''
         config[:commands] += cmd + ';;'
       end
 
-      o.on('-x FILE', '--init-script=FILE', 'execute debug command in the FILE.') do |file|
+      o.on('-x FILE', '--init-script=FILE', 'Execute debug command in the FILE.') do |file|
         config[:init_script] = file
+      end
+      o.on('--no-rc', 'Ignore ~/.rdbgrc') do
+        config[:no_rc] = true
+      end
+      o.on('--no-color', 'Disable colorize') do
+        config[:no_color] = true
+      end
+
+      o.on('-c', '--command', 'Enable command mode.',
+                              'The first argument should be a command name in $PATH.',
+                              'Example: \'rdbg -c bundle exec rake test\'') do
+        config[:command] = true
       end
 
       o.separator ''
@@ -152,10 +165,6 @@ module DEBUGGER__
       o.on("-h", "--help", "Print help") do
         puts o
         exit
-      end
-
-      o.on('-c', '--command', 'Command mode (first argument is command name)') do
-        config[:command] = true
       end
 
       o.on('--util=NAME', 'Utility mode (used by tools)') do |name|

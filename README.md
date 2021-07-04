@@ -463,8 +463,13 @@ exe/rdbg [options] -- [debuggee options]
 
 Debug console mode:
     -n, --nonstop                    Do not stop at the beginning of the script.
-    -e COMMAND                       execute debug command at the beginning of the script.
-    -x, --init-script=FILE           execute debug command in the FILE.
+    -e COMMAND                       Execute debug command at the beginning of the script.
+    -x, --init-script=FILE           Execute debug command in the FILE.
+        --no-rc                      Ignore ~/.rdbgrc
+        --no-color                   Disable colorize
+    -c, --command                    Enable command mode.
+                                     The first argument should be a command name in $PATH.
+                                     Example: 'rdbg -c bundle exec rake test'
 
     -O, --open                       Start remote debugging with opening the network port.
                                      If TCP/IP options are not given,
@@ -496,7 +501,6 @@ Attach mode:
 
 Other options:
     -h, --help                       Print help
-    -c, --command                    Command mode (first argument is command name)
         --util=NAME                  Utility mode (used by tools)
 
 NOTE

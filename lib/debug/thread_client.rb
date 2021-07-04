@@ -138,6 +138,11 @@ module DEBUGGER__
       wait_next_action
     end
 
+    def on_init name
+      event! :init, name
+      wait_next_action
+    end
+
     def on_breakpoint tp, bp
       on_suspend tp.event, tp, bp: bp
     end
