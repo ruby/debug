@@ -12,7 +12,24 @@ module DEBUGGER__
     def assert_line_text(expected)
       @queue.push(Proc.new {
         result = collect_recent_backlog
-        expected = Regexp.escape(expected) if expected.is_a?(String)
+
+        expected =
+          case expected
+          when Array
+            case expected.first
+            when String
+              expected.map { |s| Regexp.escape(s) }.join
+            when Regexp
+              Regexp.new(expected.map(&:source).reduce(:+))
+            end
+          when String
+            Regexp.escape(expected)
+          when Regexp
+            expected
+          else
+            raise "Unknown expectation value: #{expected.inspect}"
+          end
+
         msg = "Expected to include `#{expected}` in\n(\n#{result})\n"
 
         assert_block(FailureMessage.new { create_message(msg) }) do
