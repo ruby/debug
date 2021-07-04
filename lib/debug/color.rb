@@ -25,7 +25,7 @@ module DEBUGGER__
 
     if defined? IRB::ColorPrinter.pp
       def color_pp obj
-        IRB::ColorPrinter.pp(obj, "")
+        IRB::ColorPrinter.pp(obj, "".dup)
       end
     else
       def color_pp obj
