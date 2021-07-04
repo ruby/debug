@@ -11,7 +11,7 @@ module DEBUGGER__
   module Color
     if defined? IRB::Color.colorize
       def colorize str, color
-        if CONFIG[:use_colorize]
+        if !CONFIG[:no_color]
           IRB::Color.colorize str, color
         else
           str
@@ -34,7 +34,7 @@ module DEBUGGER__
     end
 
     def colored_inspect obj
-      if CONFIG[:use_colorize]
+      if !CONFIG[:no_color]
         color_pp obj
       else
         obj.pretty_inspect

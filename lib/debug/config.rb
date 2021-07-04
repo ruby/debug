@@ -41,7 +41,7 @@ module DEBUGGER__
     show_frames:    'RUBY_DEBUG_SHOW_FRAMES',    # Show n frames on breakpoint (default: 2 frames).
     use_short_path: 'RUBY_DEBUG_USE_SHORT_PATH', # Show shoten PATH (like $(Gem)/foo.rb).
     skip_nosrc:     'RUBY_DEBUG_SKIP_NOSRC',     # Skip on no source code lines (default: false).
-    use_colorize:   'RUBY_DEBUG_USE_COLORIZE',   # Show coloring
+    no_color:       'RUBY_DEBUG_NO_COLOR',       # Do not use colorize
 
     # remote
     port:        'RUBY_DEBUG_PORT',        # TCP/IP remote debugging: port
@@ -60,7 +60,6 @@ module DEBUGGER__
   def self.parse_argv argv
     config = {
       mode: :start,
-      use_colorize: true,
     }
     CONFIG_MAP.each{|key, evname|
       if val = ENV[evname]

@@ -27,8 +27,8 @@ module DEBUGGER__
       @last_backlog[3].slice!("\e[?2004l\r")
       @last_backlog[3..].each{|l|
         # l.gsub!(/(')|(")/) doesn't work.
-        l = l.gsub(/(')/) { "\\#{Regexp.last_match(1)}" }
-        l = l.gsub(/(")/) { "\\#{Regexp.last_match(1)}" }
+        l = l.gsub(/(\')/) { "\\#{Regexp.last_match(1)}" }
+        l = l.gsub(/(\")/) { "\\#{Regexp.last_match(1)}" }
         lines += "\"#{l.chomp}\\r\\n\" \\\n"
       }
       lines
@@ -50,7 +50,7 @@ module DEBUGGER__
 
     def create_pseudo_terminal
       ENV['RUBYOPT'] = "-I #{__dir__}/../../lib"
-      ENV['RUBY_DEBUG_USE_COLORIZE'] = "false"
+      ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
       ENV['RUBY_DEBUG_TEST_ASSERT_AS_STRING'] ||= 'false'
       ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] ||= 'true'

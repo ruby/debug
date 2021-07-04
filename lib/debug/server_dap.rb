@@ -7,7 +7,7 @@ module DEBUGGER__
     SHOW_PROTOCOL = ENV['RUBY_DEBUG_DAP_SHOW_PROTOCOL'] == '1'
 
     def dap_setup bytes
-      DEBUGGER__.set_config(use_colorize: false)
+      DEBUGGER__.set_config(no_color: true)
       @seq = 0
 
       $stderr.puts '[>]' + bytes if SHOW_PROTOCOL

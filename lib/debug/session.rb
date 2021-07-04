@@ -174,7 +174,7 @@ module DEBUGGER__
     end
 
     def source iseq
-      if CONFIG[:use_colorize]
+      if !CONFIG[:no_color]
         @sr.get_colored(iseq)
       else
         @sr.get(iseq)
