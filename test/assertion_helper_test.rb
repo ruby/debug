@@ -35,7 +35,7 @@ module DEBUGGER__
     end
 
     def test_the_helper_takes_an_array_of_regexp_expectations_and_combine_them
-      assert_raise_message(/Expected to include `\(\?-mix:foobar\)`/) do
+      assert_raise_message(/Expected to include `\(\?m-ix:foo.*bar\)`/) do
         debug_code(program) do
           assert_line_text([/foo/, /bar/])
         end
