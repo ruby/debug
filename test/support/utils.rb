@@ -76,8 +76,8 @@ module DEBUGGER__
     def new_child_process(cmd)
       @scenario.call
       @mutex.synchronize do
-        r, _, @server_pid = PTY.spawn(cmd, :in=>'/dev/null', :out=>'/dev/null')
-        r.read(1) # wait for the remote server to boot up
+        @remote_r, @remote_w, @server_pid = PTY.spawn(cmd, :in=>'/dev/null', :out=>'/dev/null')
+        @remote_r.read(1) # wait for the remote server to boot up
       end
     end
 
@@ -130,6 +130,8 @@ module DEBUGGER__
           assert false, create_message("TIMEOUT ERROR (#{timeout_sec} sec)")
         ensure
           if defined?(@server_pid) && @server_pid
+            @remote_r.close
+            @remote_w.close
             Process.kill(:KILL, @server_pid)
             Process.waitpid(@server_pid)
             @server_pid = nil
