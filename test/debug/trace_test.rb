@@ -24,12 +24,12 @@ module DEBUGGER__
         type "continue"
 
         trace_regexps = [
-          /Tracing:   line at .*rb:5\r\n/,
-          /Tracing:   line at .*rb:6\r\n/,
-          /Tracing:   call Object#foo at .*rb:1\r\n/,
-          /Tracing:    line at .*rb:2\r\n/,
-          /Tracing:   return Object#foo => 10 at .*rb:3\r\n/,
-          /Tracing:   line at .*rb:8\r\n/,
+          /Tracing:   line at .*rb:5/,
+          /Tracing:   line at .*rb:6/,
+          /Tracing:   call Object#foo at .*rb:1/,
+          /Tracing:    line at .*rb:2/,
+          /Tracing:   return Object#foo => 10 at .*rb:3/,
+          /Tracing:   line at .*rb:8/,
         ]
         assert_line_text(trace_regexps)
 
@@ -44,14 +44,14 @@ module DEBUGGER__
         type "continue"
 
         trace_regexps = [
-          /Tracing:   line at .*rb:5\r\n/,
-          /Tracing:   line at .*rb:6\r\n/,
+          /Tracing:   line at .*rb:5/,
+          /Tracing:   line at .*rb:6/,
         ]
 
         assert_line_text(trace_regexps)
 
         type "trace off"
-        assert_no_line_text(/Tracing:   call Object#foo at .*rb:1\r\n/)
+        assert_no_line_text(/Tracing:   call Object#foo at .*rb:1/)
 
         type "q!"
       end
