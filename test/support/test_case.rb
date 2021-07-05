@@ -16,7 +16,7 @@ module DEBUGGER__
     end
 
     def remove_temp_file
-      File.unlink(@temp_file)
+      File.unlink(@temp_file) if @temp_file
       @temp_file = nil
     end
 
