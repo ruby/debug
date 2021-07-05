@@ -33,6 +33,8 @@ module DEBUGGER__
 
     # This method will execute both local and remote mode by default.
     def debug_code(program, boot_options: '-r debug/run', remote: true, &block)
+      check_line_num!(program)
+
       @scenario = block
       write_temp_file(strip_line_num(program))
       inject_lib_to_load_path
@@ -46,8 +48,6 @@ module DEBUGGER__
         debug_on_unix_domain_socket
         debug_on_tcpip
       end
-
-      check_line_num!(program)
     end
 
     DEBUG_MODE = false
