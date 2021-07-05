@@ -6,7 +6,7 @@ module DEBUGGER__
   class PseudoTerminalTest < TestCase
     def program
       <<~RUBY
-        a = 1
+        1| a = 1
       RUBY
     end
 
