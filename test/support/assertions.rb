@@ -20,7 +20,7 @@ module DEBUGGER__
             when String
               expected.map { |s| Regexp.escape(s) }.join
             when Regexp
-              Regexp.new(expected.map(&:source).reduce(:+))
+              Regexp.compile(expected.map(&:source).join('.*'), Regexp::MULTILINE)
             end
           when String
             Regexp.escape(expected)
