@@ -3,6 +3,7 @@
 require 'pty'
 require 'timeout'
 require 'json'
+require_relative "../../lib/debug/client"
 
 module DEBUGGER__
   module TestUtils
@@ -77,8 +78,8 @@ module DEBUGGER__
 
     def debug_on_unix_domain_socket repl_prompt = '(rdbg:remote)'
       @mode = 'UNIX DOMAIN SOCKET'
-      cmd = "#{RDBG_EXECUTABLE} -A"
-      setup_remote_debuggee("#{RDBG_EXECUTABLE} -O -- #{temp_file_path}")
+      socket_path = setup_socket_remote_debuggee
+      cmd = "#{RDBG_EXECUTABLE} -A #{socket_path}"
       run_test_scenario(cmd, repl_prompt)
     end
 
@@ -87,6 +88,12 @@ module DEBUGGER__
       cmd = "#{RDBG_EXECUTABLE} -A #{RUBY_DEBUG_TEST_PORT}"
       setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{RUBY_DEBUG_TEST_PORT} -- #{temp_file_path}")
       run_test_scenario(cmd, repl_prompt)
+    end
+
+    def setup_socket_remote_debuggee
+      socket_path = DEBUGGER__.create_unix_domain_socket_name
+      setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{socket_path} #{temp_file_path}")
+      socket_path
     end
 
     def setup_remote_debuggee(cmd)
@@ -167,8 +174,6 @@ module DEBUGGER__
     def manual_debug_code(program)
       print("[Starting a Debug Session with @#{caller.first}]\n")
       write_temp_file(strip_line_num(program))
-
-      require_relative "../../lib/debug/client"
 
       socket_path = DEBUGGER__.create_unix_domain_socket_name
       inject_lib_to_load_path
