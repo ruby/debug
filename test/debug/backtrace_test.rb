@@ -67,6 +67,18 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_backtrace_prints_a_given_number_of_traces
+      debug_code(program) do
+        type 'b 13'
+        type 'c'
+        type 'bt 2'
+        assert_line_text(/Foo#third_call_with_block/)
+        assert_line_text(/Foo#second_call/)
+        assert_no_line_text(/Foo#first_call/)
+        type 'q!'
+      end
+    end
   end
 
   class BlockTraceTest < TestCase
