@@ -11,7 +11,7 @@ New debug.rb has several advantages:
 * Remote debugging: Support remote debugging natively.
   * UNIX domain socket
   * TCP/IP
-  * VSCode/DAP integration (TODO)
+  * VSCode/DAP integration ([VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg))
 * Extensible: application can introduce debugging support with several methods
   * By `rdbg` command
   * By loading libraries with `-r` command line option
@@ -310,11 +310,9 @@ $ rdbg --attach hostname 12345
 
 ### Initial scripts
 
-If there are `.rdbgrc` files are there at the current directory and the home directory, files are loaded as initial scripts which contains debugger commands. `RUBY_DEBUG_INIT_SCRIPT` environment variable can specify the initial script file.
+If there are `~/.rdbgrc`, the file is loaded as initial scripts which contains debugger commands at the beginning of debug session. `RUBY_DEBUG_INIT_SCRIPT` environment variable can specify the initial script file. You can write configurations in a file. For example, you can set break points with `break file:123` in `~/.rdbgrc`.
 
-Initial scripts are evaluated at the first suspend timing (generally, it is the beginning of the target script). For example, you can set break points with `break file:123`.
-
-If there are `.rdbgrc.rb` files at the current directory and the home directory, files are loaded as a ruby script at the initializing timing.
+If there are `~/.rdbgrc.rb` is available, it is loaded as a ruby script at same timing.
 
 ### Environment variables
 
