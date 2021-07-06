@@ -553,7 +553,11 @@ module DEBUGGER__
 
           case type
           when :backtrace
-            show_frames
+            if arg = args.first
+              show_frames(arg)
+            else
+              show_frames
+            end
 
           when :list
             show_src(update_line: true, **(args.first || {}))

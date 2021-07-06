@@ -429,7 +429,12 @@ module DEBUGGER__
       # * `bt` or `backtrace`
       #   * Show backtrace (frame) information.
       when 'bt', 'backtrace'
-        @tc << [:show, :backtrace]
+        case arg
+        when /\A(\d+)\z/
+          @tc << [:show, :backtrace, arg.to_i]
+        else
+          @tc << [:show, :backtrace]
+        end
 
       # * `l[ist]`
       #   * Show current frame's source code.
