@@ -56,6 +56,7 @@ module DEBUGGER__
       print msg if ENV['RUBY_DEBUG_TEST_DEBUG_MODE']
     end
 
+    RDBG_EXECUTABLE = "#{__dir__}/../../exe/rdbg"
     RUBY = RbConfig.ruby
     RUBY_DEBUG_TEST_PORT = '12345'
 
@@ -76,15 +77,15 @@ module DEBUGGER__
 
     def debug_on_unix_domain_socket repl_prompt = '(rdbg:remote)'
       @mode = 'UNIX DOMAIN SOCKET'
-      cmd = "#{__dir__}/../../exe/rdbg -A"
-      setup_remote_debuggee("#{__dir__}/../../exe/rdbg -O -- #{temp_file_path}")
+      cmd = "#{RDBG_EXECUTABLE} -A"
+      setup_remote_debuggee("#{RDBG_EXECUTABLE} -O -- #{temp_file_path}")
       run_test_scenario(cmd, repl_prompt)
     end
 
     def debug_on_tcpip repl_prompt = '(rdbg:remote)'
       @mode = 'TCP/IP'
-      cmd = "#{__dir__}/../../exe/rdbg -A #{RUBY_DEBUG_TEST_PORT}"
-      setup_remote_debuggee("#{__dir__}/../../exe/rdbg -O --port=#{RUBY_DEBUG_TEST_PORT} -- #{temp_file_path}")
+      cmd = "#{RDBG_EXECUTABLE} -A #{RUBY_DEBUG_TEST_PORT}"
+      setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{RUBY_DEBUG_TEST_PORT} -- #{temp_file_path}")
       run_test_scenario(cmd, repl_prompt)
     end
 
