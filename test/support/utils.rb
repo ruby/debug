@@ -142,14 +142,7 @@ module DEBUGGER__
         rescue Timeout::Error => e
           assert false, create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)")
         ensure
-          # kill remote debuggee
-          if defined?(@remote_debuggee_pid) && @remote_debuggee_pid
-            @remote_r.close
-            @remote_w.close
-            Process.kill(:KILL, @remote_debuggee_pid)
-            Process.waitpid(@remote_debuggee_pid)
-            @remote_debuggee_pid = nil
-          end
+          kill_remote_debugee
 
           # kill debug console process
           read.close
@@ -162,6 +155,16 @@ module DEBUGGER__
 
     private
 
+    def kill_remote_debugee
+      if defined?(@remote_debuggee_pid) && @remote_debuggee_pid
+        @remote_r.close
+        @remote_w.close
+        Process.kill(:KILL, @remote_debuggee_pid)
+        Process.waitpid(@remote_debuggee_pid)
+        @remote_debuggee_pid = nil
+      end
+    end
+
     # use this to start a debug session with the test program
     def manual_debug_code(program)
       print("[Starting a Debug Session with @#{caller.first}]\n")
@@ -169,18 +172,11 @@ module DEBUGGER__
 
       require_relative "../../lib/debug/client"
 
-      socket_path = DEBUGGER__.create_unix_domain_socket_name
-      inject_lib_to_load_path
-      ENV["RUBY_DEBUG_SOCK_PATH"] = socket_path
-      pid = spawn("#{RUBY} -r debug/open #{temp_file_path}")
+      setup_remote_debuggee("#{__dir__}/../../exe/rdbg -O -- #{temp_file_path}")
 
-      while !File.exist?(socket_path)
-        sleep 0.1
-      end
-
-      DEBUGGER__::Client.new([socket_path]).connect
+      DEBUGGER__::Client.new([]).connect
     ensure
-      Process.kill('QUIT', pid)
+      kill_remote_debugee
     end
 
     def inject_lib_to_load_path
