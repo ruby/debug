@@ -78,7 +78,7 @@ module DEBUGGER__
 
     def debug_on_unix_domain_socket repl_prompt = '(rdbg:remote)'
       @mode = 'UNIX DOMAIN SOCKET'
-      socket_path = setup_socket_remote_debuggee
+      socket_path = setup_unix_doman_socket_remote_debuggee
       cmd = "#{RDBG_EXECUTABLE} -A #{socket_path}"
       run_test_scenario(cmd, repl_prompt)
     end
@@ -165,7 +165,7 @@ module DEBUGGER__
     def manual_debug_code(program)
       print("[Starting a Debug Session with @#{caller.first}]\n")
       write_temp_file(strip_line_num(program))
-      socket_path = setup_socket_remote_debuggee
+      socket_path = setup_unix_doman_socket_remote_debuggee
 
       while !File.exist?(socket_path)
         sleep 0.1
@@ -176,7 +176,7 @@ module DEBUGGER__
       kill_remote_debuggee
     end
 
-    def setup_socket_remote_debuggee
+    def setup_unix_doman_socket_remote_debuggee
       socket_path = DEBUGGER__.create_unix_domain_socket_name
       setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{socket_path} #{temp_file_path}")
       socket_path
