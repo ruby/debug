@@ -95,17 +95,17 @@ module DEBUGGER__
       @remote_r.read(1) # wait for the remote server to boot up
     end
 
+    TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
+
     def run_test_scenario(cmd, repl_prompt)
       @queue = Queue.new
       @scenario.call
-
-      timeout_sec = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
       PTY.spawn(cmd) do |read, write, pid|
         @backlog = []
         @last_backlog = []
         begin
-          Timeout.timeout(timeout_sec) do
+          Timeout.timeout(TIMEOUT_SEC) do
             while (line = read.gets)
               debug_print line
               case line.chomp
@@ -141,7 +141,7 @@ module DEBUGGER__
           # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
           assert_empty_queue(exception: e)
         rescue Timeout::Error => e
-          assert false, create_message("TIMEOUT ERROR (#{timeout_sec} sec)")
+          assert false, create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)")
         ensure
           # kill remote debuggee
           if defined?(@remote_debuggee_pid) && @remote_debuggee_pid
