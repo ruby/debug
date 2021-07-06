@@ -90,17 +90,6 @@ module DEBUGGER__
       run_test_scenario(cmd, repl_prompt)
     end
 
-    def setup_socket_remote_debuggee
-      socket_path = DEBUGGER__.create_unix_domain_socket_name
-      setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{socket_path} #{temp_file_path}")
-      socket_path
-    end
-
-    def setup_remote_debuggee(cmd)
-      @remote_r, @remote_w, @remote_debuggee_pid = PTY.spawn(cmd)
-      @remote_r.read(1) # wait for the remote server to boot up
-    end
-
     TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
     def run_test_scenario(cmd, repl_prompt)
@@ -185,6 +174,17 @@ module DEBUGGER__
       DEBUGGER__::Client.new([socket_path]).connect
     ensure
       kill_remote_debuggee
+    end
+
+    def setup_socket_remote_debuggee
+      socket_path = DEBUGGER__.create_unix_domain_socket_name
+      setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{socket_path} #{temp_file_path}")
+      socket_path
+    end
+
+    def setup_remote_debuggee(cmd)
+      @remote_r, @remote_w, @remote_debuggee_pid = PTY.spawn(cmd)
+      @remote_r.read(1) # wait for the remote server to boot up
     end
 
     def inject_lib_to_load_path
