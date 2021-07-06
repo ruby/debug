@@ -162,27 +162,6 @@ module DEBUGGER__
 
     private
 
-    # use this to start a debug session with the test program
-    def manual_debug_code(program)
-      print("[Starting a Debug Session with @#{caller.first}]\n")
-      write_temp_file(strip_line_num(program))
-
-      require_relative "../../lib/debug/client"
-
-      socket_path = DEBUGGER__.create_unix_domain_socket_name
-      inject_lib_to_load_path
-      ENV["RUBY_DEBUG_SOCK_PATH"] = socket_path
-      pid = spawn("#{RUBY} -r debug/open #{temp_file_path}")
-
-      while !File.exist?(socket_path)
-        sleep 0.1
-      end
-
-      DEBUGGER__::Client.new([socket_path]).connect
-    ensure
-      Process.kill('QUIT', pid)
-    end
-
     def inject_lib_to_load_path
       ENV['RUBYOPT'] = "-I #{__dir__}/../../lib"
     end
