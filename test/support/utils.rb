@@ -11,7 +11,24 @@ module DEBUGGER__
     end
 
     def create_message fail_msg
-      "#{fail_msg} on #{@mode} mode\n[DEBUG SESSION LOG]\n> " + @backlog.join('> ')
+      "#{fail_msg} on #{@mode} mode\n[DEBUGGER SESSION LOG]\n> #{@backlog.join('> ')}#{debuggee_backlog}"
+    end
+
+    def debuggee_backlog
+      return if @mode == 'LOCAL'
+
+      backlog = []
+      begin
+        Timeout.timeout(TIMEOUT_SEC) do
+          while (line = @remote_r.gets)
+            backlog << line
+          end
+        end
+      rescue Timeout::Error, Errno::EIO
+        # result of `gets` return Errno::EIO in some platform
+        # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
+      end
+      "\n[DEBUGGEE SESSION LOG]\n> #{backlog.join('> ')}"
     end
 
     # This method will execute both local and remote mode by default.
@@ -73,7 +90,7 @@ module DEBUGGER__
     end
 
     def setup_remote_debuggee(cmd)
-      @remote_r, @remote_w, @remote_debuggee_pid = PTY.spawn(cmd, :in=>'/dev/null', :out=>'/dev/null')
+      @remote_r, @remote_w, @remote_debuggee_pid = PTY.spawn(cmd)
       @remote_r.read(1) # wait for the remote server to boot up
     end
 
