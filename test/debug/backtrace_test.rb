@@ -79,6 +79,18 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_backtrace_prints_traces_that_match_the_pattern
+      debug_code(program) do
+        type 'b 13'
+        type 'c'
+        type 'bt /rb:7/'
+        assert_line_text(/Foo#second_call/)
+        assert_no_line_text(/Foo#third_call_with_block/)
+        assert_no_line_text(/Foo#first_call/)
+        type 'q!'
+      end
+    end
   end
 
   class BlockTraceTest < TestCase

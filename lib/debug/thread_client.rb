@@ -363,21 +363,28 @@ module DEBUGGER__
       end
     end
 
-    def frame_str(i)
+    def frame_str(i, frames: @target_frames)
       cur_str = (@current_frame_index == i ? '=>' : '  ')
       prefix = "#{cur_str}##{i}"
-      frame = @target_frames[i]
+      frame = frames[i]
       frame_string = @frame_formatter.call(frame)
       "#{prefix}\t#{frame_string}"
     end
 
-    def show_frames max = (@target_frames || []).size
+    def show_frames(max = (@target_frames || []).size, path_pattern: nil)
       if max > 0 && @target_frames
-        size = @target_frames.size
+        frames =
+          if path_pattern
+            @target_frames.select { |f| f.location_str.match?(path_pattern) }
+          else
+            @target_frames
+          end
+
+        size = frames.size
         max += 1 if size == max + 1
         max.times{|i|
           break if i >= size
-          puts frame_str(i)
+          puts frame_str(i, frames: frames)
         }
         puts "  # and #{size - max} frames (use `bt' command for all frames)" if max < size
       end
@@ -553,8 +560,11 @@ module DEBUGGER__
 
           case type
           when :backtrace
-            if arg = args.first
+            case arg = args.first
+            when Integer
               show_frames(arg)
+            when Regexp
+              show_frames(path_pattern: arg)
             else
               show_frames
             end
