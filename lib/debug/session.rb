@@ -437,14 +437,15 @@ module DEBUGGER__
       when 'bt', 'backtrace'
         case arg
         when /\A(\d+)\z/
-          @tc << [:show, :backtrace, arg.to_i]
-        when /\A\/.*\/\z/
-          @tc << [:show, :backtrace, eval(arg)]
-        when /\A(\d+)\s+(\/.*\/)\z/
+          @tc << [:show, :backtrace, arg.to_i, nil]
+        when /\A\/(.*)\/\z/
+          pattern = $1
+          @tc << [:show, :backtrace, nil, Regexp.compile(pattern)]
+        when /\A(\d+)\s+\/(.*)\/\z/
           max, pattern = $1, $2
-          @tc << [:show, :backtrace, max.to_i, eval(pattern)]
+          @tc << [:show, :backtrace, max.to_i, Regexp.compile(pattern)]
         else
-          @tc << [:show, :backtrace]
+          @tc << [:show, :backtrace, nil, nil]
         end
 
       # * `l[ist]`

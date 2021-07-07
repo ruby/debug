@@ -559,15 +559,16 @@ module DEBUGGER__
 
           case type
           when :backtrace
-            case arg = args.first
-            when Integer
-              if pattern = args[1]
-                show_frames(arg, location_pattern: pattern)
+            max_lines, pattern = args
+
+            if max_lines
+              if pattern
+                show_frames(max_lines, location_pattern: pattern)
               else
-                show_frames(arg)
+                show_frames(max_lines)
               end
-            when Regexp
-              show_frames(location_pattern: arg)
+            elsif pattern
+              show_frames(location_pattern: pattern)
             else
               show_frames
             end
