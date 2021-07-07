@@ -331,6 +331,10 @@ module DEBUGGER__
       end
     end
 
+    def instance_eval_for_cmethod frame_self, src
+      frame_self.instance_eval(src)
+    end
+
     def frame_eval src, re_raise: false
       begin
         @success_last_eval = false
@@ -341,7 +345,7 @@ module DEBUGGER__
                    b.eval(src, "(rdbg)/#{f}")
                  else
                    frame_self = current_frame.self
-                   frame_self.instance_eval(src)
+                   instance_eval_for_cmethod(frame_self, src)
                  end
         @success_last_eval = true
         result
