@@ -80,10 +80,6 @@ $ ruby -r debug/run target.rb
 # target.rb
 require 'debug/run' # start the debug console
 
-# or
-
-require 'debug/session'  # introduce the functionality
-DEBUGGER__.console       # and start the debug console
 # ... rest of program ...
 ```
 
