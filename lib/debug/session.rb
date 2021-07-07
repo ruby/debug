@@ -432,6 +432,8 @@ module DEBUGGER__
         case arg
         when /\A(\d+)\z/
           @tc << [:show, :backtrace, arg.to_i]
+        when /\A\/.*\/\z/
+          @tc << [:show, :backtrace, eval(arg)]
         else
           @tc << [:show, :backtrace]
         end
