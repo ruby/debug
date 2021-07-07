@@ -2,14 +2,11 @@
 
 ## Basic functionality
 
-* VScode DAP support
 * Support Ractors
 * Signal (SIGINT) support
-* Remote connection with openssl
 
 ## UI
 
-* Coloring
 * Interactive breakpoint setting
 * irb integration
 * Web browser integrated UI
@@ -28,6 +25,3 @@
 
 ## Tests
 
-* Test framework
-* Tests for commands
-* Tests for remote debugging
