@@ -385,6 +385,12 @@ The `<...>` notation means the argument.
 
 * `bt` or `backtrace`
   * Show backtrace (frame) information.
+* `bt <num>` or `backtrace <num>`
+  * Only shows first `<num>` frames.
+* `bt /location_regexp/` or `backtrace /location_regexp/`
+  * Only shows frames with location info that matches `/location_regexp/`.
+* `bt <num> /location_regexp/` or `backtrace <num> /location_regexp/`
+  * Only shows first `<num>` frames with location info that matches `/location_regexp/`.
 * `l[ist]`
   * Show current frame's source code.
   * Next `list` command shows the successor lines.
