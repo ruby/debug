@@ -920,6 +920,9 @@ module DEBUGGER__
     # breakpoint management
 
     def add_breakpoint bp
+      # don't repeat commands that add breakpoints
+      @repl_prev_line = nil
+
       if @bps.has_key? bp.key
         unless bp.duplicable?
           @ui.puts "duplicated breakpoint: #{bp}"
@@ -928,9 +931,6 @@ module DEBUGGER__
       else
         @bps[bp.key] = bp
       end
-
-      # don't repeat commands that add breakpoints
-      @repl_prev_line = nil
     end
 
     def rehash_bps
