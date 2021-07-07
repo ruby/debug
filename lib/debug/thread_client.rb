@@ -367,11 +367,11 @@ module DEBUGGER__
       "#{prefix}\t#{frame_string}"
     end
 
-    def show_frames(max = (@target_frames || []).size, path_pattern: nil)
+    def show_frames(max = (@target_frames || []).size, location_pattern: nil)
       if max > 0 && @target_frames
         frames =
-          if path_pattern
-            @target_frames.select { |f| f.location_str.match?(path_pattern) }
+          if location_pattern
+            @target_frames.select { |f| f.location_str.match?(location_pattern) }
           else
             @target_frames
           end
@@ -558,12 +558,12 @@ module DEBUGGER__
             case arg = args.first
             when Integer
               if pattern = args[1]
-                show_frames(arg, path_pattern: pattern)
+                show_frames(arg, location_pattern: pattern)
               else
                 show_frames(arg)
               end
             when Regexp
-              show_frames(path_pattern: arg)
+              show_frames(location_pattern: arg)
             else
               show_frames
             end
