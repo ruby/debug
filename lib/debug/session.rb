@@ -434,6 +434,9 @@ module DEBUGGER__
           @tc << [:show, :backtrace, arg.to_i]
         when /\A\/.*\/\z/
           @tc << [:show, :backtrace, eval(arg)]
+        when /\A(\d+)\s+(\/.*\/)\z/
+          max, pattern = $1, $2
+          @tc << [:show, :backtrace, max.to_i, eval(pattern)]
         else
           @tc << [:show, :backtrace]
         end

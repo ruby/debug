@@ -381,7 +381,6 @@ module DEBUGGER__
           end
 
         size = frames.size
-        max += 1 if size == max + 1
         max.times{|i|
           break if i >= size
           puts frame_str(i, frames: frames)
@@ -562,7 +561,11 @@ module DEBUGGER__
           when :backtrace
             case arg = args.first
             when Integer
-              show_frames(arg)
+              if pattern = args[1]
+                show_frames(arg, path_pattern: pattern)
+              else
+                show_frames(arg)
+              end
             when Regexp
               show_frames(path_pattern: arg)
             else
