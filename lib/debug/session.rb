@@ -101,6 +101,12 @@ module DEBUGGER__
       @tp_thread_begin.enable
     end
 
+    def reset_ui ui
+      @ui.close
+      @ui = ui
+      @management_threads << @ui.reader_thread if @ui.respond_to? :reader_thread
+    end
+
     def session_server_main
       while evt = @q_evt.pop
         # varible `@internal_info` is only used for test
@@ -1061,44 +1067,71 @@ module DEBUGGER__
 
   # start methods
 
-  def self.console **kw
+  def self.start nonstop: false, **kw
     set_config(kw)
 
-    require_relative 'console'
+    unless defined? SESSION
+      require_relative 'console'
+      initialize_session UI_Console.new
+    end
 
-    initialize_session UI_Console.new
-
-    @prev_handler = trap(:SIGINT){
-      ThreadClient.current.on_trap :SIGINT
-    }
+    setup_initial_suspend unless nonstop
   end
 
-  def self.open host: nil, port: ::DEBUGGER__::CONFIG[:port], sock_path: nil, sock_dir: nil, **kw
+  def self.open host: nil, port: ::DEBUGGER__::CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false, **kw
     set_config(kw)
 
     if port
-      open_tcp host: host, port: port
+      open_tcp host: host, port: port, nonstop: nonstop
     else
-      open_unix sock_path: sock_path, sock_dir: sock_dir
+      open_unix sock_path: sock_path, sock_dir: sock_dir, nonstop: nonstop
     end
   end
 
-  def self.open_tcp host: nil, port:, **kw
+  def self.open_tcp host: nil, port:, nonstop: false, **kw
     set_config(kw)
     require_relative 'server'
-    initialize_session UI_TcpServer.new(host: host, port: port)
+
+    if defined? SESSION
+      SESSION.reset_ui UI_TcpServer.new(host: host, port: port)
+    else
+      initialize_session UI_TcpServer.new(host: host, port: port)
+    end
+
+    setup_initial_suspend unless nonstop
   end
 
-  def self.open_unix sock_path: nil, sock_dir: nil, **kw
+  def self.open_unix sock_path: nil, sock_dir: nil, nonstop: false, **kw
     set_config(kw)
     require_relative 'server'
-    initialize_session UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
+
+    if defined? SESSION
+      SESSION.reset_ui UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
+    else
+      initialize_session UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
+    end
+
+    setup_initial_suspend unless nonstop
   end
 
   # boot utilities
 
+  def self.setup_initial_suspend
+    if !::DEBUGGER__::CONFIG[:nonstop]
+      if loc = ::DEBUGGER__.require_location
+        # require 'debug/console' or 'debug'
+        add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
+      else
+        # -r
+        add_line_breakpoint $0, 1, oneshot: true, hook_call: false
+      end
+    end
+  end
+
   class << self
     define_method :initialize_session do |ui|
+      DEBUGGER__.warn "Session start (pid: #{Process.pid})"
+
       ::DEBUGGER__.const_set(:SESSION, Session.new(ui))
 
       # default breakpoints
@@ -1119,16 +1152,6 @@ module DEBUGGER__
 
           ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true
           true
-        end
-      end
-
-      if !::DEBUGGER__::CONFIG[:nonstop]
-        if loc = ::DEBUGGER__.require_location
-          # require 'debug/console' or 'debug'
-          add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
-        else
-          # -r
-          add_line_breakpoint $0, 1, oneshot: true, hook_call: false
         end
       end
 
@@ -1236,6 +1259,15 @@ module DEBUGGER__
       str[0...SHORT_INSPECT_LENGTH] + '...'
     else
       str
+    end
+  end
+
+  def self.warn msg, level = :warn
+    case level
+    when :warn
+      STDERR.puts "DEBUGGER: #{msg}" unless CONFIG[:quiet]
+    when :error
+      STDERR.puts "DEBUGGER: #{msg}"
     end
   end
 end

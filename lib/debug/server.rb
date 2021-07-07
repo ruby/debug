@@ -25,7 +25,7 @@ module DEBUGGER__
         Thread.current.abort_on_exception = true
 
         accept do |server|
-          DEBUGGER__.message "Connected."
+          DEBUGGER__.warn "Connected."
 
           @accept_m.synchronize{
             @sock = server
@@ -48,9 +48,9 @@ module DEBUGGER__
           end
 
         rescue => e
-          DEBUGGER__.message "ReaderThreadError: #{e}"
+          DEBUGGER__.warn "ReaderThreadError: #{e}", :error
         ensure
-          DEBUGGER__.message "Disconnected."
+          DEBUGGER__.warn "Disconnected."
           @sock = nil
           @q_msg.close
           @q_msg = nil
@@ -158,7 +158,7 @@ module DEBUGGER__
         until s = @sock
           @accept_m.synchronize{
             unless @sock
-              DEBUGGER__.message "wait for debuger connection..."
+              DEBUGGER__.warn "wait for debuger connection..."
               @accept_cv.wait(@accept_m)
             end
           }
@@ -237,7 +237,7 @@ module DEBUGGER__
 
     def accept
       Socket.tcp_server_sockets @host, @port do |socks|
-        ::DEBUGGER__.message "Debugger can attach via TCP/IP (#{socks.map{|e| e.local_address.inspect}})"
+        ::DEBUGGER__.warn "Debugger can attach via TCP/IP (#{socks.map{|e| e.local_address.inspect}})"
         Socket.accept_loop(socks) do |sock, client|
           @client_addr = client
           yield sock
@@ -267,7 +267,7 @@ module DEBUGGER__
         @sock_path = DEBUGGER__.create_unix_domain_socket_name(@sock_dir)
       end
 
-      ::DEBUGGER__.message "Debugger can attach via UNIX domain socket (#{@sock_path})"
+      ::DEBUGGER__.warn "Debugger can attach via UNIX domain socket (#{@sock_path})"
       Socket.unix_server_loop @sock_path do |sock, client|
         @client_addr = client
         yield sock
@@ -275,9 +275,5 @@ module DEBUGGER__
         sock.close
       end
     end
-  end
-
-  def self.message msg
-    $stderr.puts "DEBUGGER: #{msg}"
   end
 end

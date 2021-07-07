@@ -43,8 +43,10 @@ module DEBUGGER__
     use_short_path: 'RUBY_DEBUG_USE_SHORT_PATH', # Show shoten PATH (like $(Gem)/foo.rb).
     skip_nosrc:     'RUBY_DEBUG_SKIP_NOSRC',     # Skip on no source code lines (default: false).
     no_color:       'RUBY_DEBUG_NO_COLOR',       # Do not use colorize
+    no_sigint_hook: 'RUBY_DEBUG_NO_SIGINT_HOOK', # Do not suspend on SIGINT
+    quiet:          'RUBY_DEBUG_QUIET',          # Do not show messages
 
-    # remote
+    # remote setting
     port:        'RUBY_DEBUG_PORT',        # TCP/IP remote debugging: port
     host:        'RUBY_DEBUG_HOST',        # TCP/IP remote debugging: host (localhost if not given)
     sock_path:   'RUBY_DEBUG_SOCK_PATH',   # UNIX Domain Socket remote debugging: socket path

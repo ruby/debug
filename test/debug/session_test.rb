@@ -9,7 +9,7 @@ module DEBUGGER__
        1| a = 1
        2| b = 2
        3| require "debug"
-       4| DEBUGGER__.console
+       4| DEBUGGER__.start
        5| c = 3
        6| binding.bp
        7| "foo"

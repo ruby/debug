@@ -8,6 +8,17 @@ require 'io/console/size'
 module DEBUGGER__
   class UI_Console < UI_Base
     def initialize
+      unless CONFIG[:no_sigint_hook]
+        @prev_handler = trap(:SIGINT){
+          ThreadClient.current.on_trap :SIGINT
+        }
+      end
+    end
+
+    def close
+      if @prev_handler
+        trap(:SIGINT, @prev_handler)
+      end
     end
 
     def remote?
