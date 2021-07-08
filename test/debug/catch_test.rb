@@ -16,7 +16,7 @@ module DEBUGGER__
     def test_debugger_stops_when_the_exception_raised
       debug_code(program) do
         type 'catch ZeroDivisionError'
-        assert_line_text('ZeroDivisionError')
+        assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
         assert_line_text('Integer#/')
         type 'q!'

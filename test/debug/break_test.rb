@@ -37,6 +37,7 @@ module DEBUGGER__
     def test_break_with_namespaced_instance_method_stops_at_correct_place
       debug_code(program) do
         type 'break Foo::Bar#b'
+        assert_line_text(/#0  BP - Method \(pending\)  Foo::Bar#b/)
         type 'continue'
         assert_line_num 8
         type 'quit!'
@@ -209,6 +210,7 @@ module DEBUGGER__
     def test_stops_at_correct_place_when_breakpoint_set_in_a_regular_line
       debug_code(program) do
         type 'break 4'
+        assert_line_text(/#0  BP - Line  .*\.rb:4 \(call\)/)
         type 'continue'
         assert_line_num 4
         type 'quit'
@@ -241,6 +243,7 @@ module DEBUGGER__
     def test_conditional_breakpoint_stops_if_condition_is_true
       debug_code(program) do
         type 'break if n == 1'
+        assert_line_text(/#0  BP - Check  n == 1/)
         type 'continue'
         assert_line_num 8
         type 'quit'
@@ -251,6 +254,7 @@ module DEBUGGER__
     def test_conditional_breakpoint_stops_at_specified_location_if_condition_is_true
       debug_code(program) do
         type 'break 16 if d == 1'
+        assert_line_text(/#0  BP - Line  .*\.rb:16 \(return\) if d == 1/)
         type 'continue'
         assert_line_num 16
         type 'quit'
