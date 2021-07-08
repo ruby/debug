@@ -21,13 +21,13 @@ module DEBUGGER__
         type 'set'
         # show all configurations with descriptions
         assert_line_text([
-          /show_src_lines = \(default\)     # UI: Show n lines source code on breakpoint \(default: 10 lines\)/,
-          /show_frames = \(default\)        # UI: Show n frames on breakpoint \(default: 2 frames\)/,
+          /show_src_lines = \(default\)/,
+          /show_frames = \(default\)/
         ])
         # only show this configuratio
         type 'set show_frames'
         assert_line_text([
-          /show_frames = \(default\)        # UI: Show n frames on breakpoint \(default: 2 frames\)/
+          /show_frames = \(default\)/
         ])
         type 'q!'
       end
@@ -37,7 +37,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'set show_frames=1'
         assert_line_text([
-          /show_frames = 1                # UI: Show n frames on breakpoint \(default: 2 frames\)/
+          /show_frames = 1/
         ])
         type 'b 5'
         type 'c'

@@ -23,7 +23,7 @@ module DEBUGGER__
         type 'c'
 
         type 'info'
-        assert_line_text('#<RuntimeError: Boom> rescued during inspection')
+        assert_line_text('#<RuntimeError: Boom>')
         type 'q!'
       end
     end
@@ -48,10 +48,10 @@ module DEBUGGER__
         type 'c'
         type 'info'
         assert_line_text(
-          " %self => main\r\n" \
-          " %return => 11\r\n" \
-          " a => 1\r\n" \
-          " @var => 10\r\n"
+          "%self => main\r\n" \
+          "%return => 11\r\n" \
+          "a => 1\r\n" \
+          "@var => 10\r\n"
         )
         type 'q!'
       end

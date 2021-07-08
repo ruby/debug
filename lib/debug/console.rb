@@ -26,7 +26,11 @@ module DEBUGGER__
     end
 
     def width
-      IO.console_size[1]
+      if w = IO.console_size[1] == 0 # for tests PTY
+        IO.default_console_size[1]
+      else
+        w
+      end
     end
 
     def quit n

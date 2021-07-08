@@ -33,8 +33,8 @@ module DEBUGGER__
       end
     end
 
-    def colored_inspect obj
-      if !CONFIG[:no_color]
+    def colored_inspect obj, no_color: false
+      if !no_color && !CONFIG[:no_color]
         color_pp obj
       else
         obj.pretty_inspect

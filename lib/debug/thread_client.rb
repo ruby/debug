@@ -310,7 +310,7 @@ module DEBUGGER__
       max_inspect_lines = CONFIG[:show_inspect_lines] || 10
 
       if (max_inspect_lines > 0 && (info.size > max_inspect_lines)) || info.any?{|l| l.size > w}
-        info = "#{colorize_cyan(label)} => #{obj.pretty_inspect}".lines
+        info = "#{colorize_cyan(label)} => #{colored_inspect(obj, no_color: true)}".lines
         if max_inspect_lines > 0 && info.size > max_inspect_lines
           info = info.first(max_inspect_lines - 2) +
                  ["...(#{info.size - (max_inspect_lines - 1)} lines)\n" + info.last]
