@@ -107,6 +107,11 @@ module DEBUGGER__
       @management_threads << @ui.reader_thread if @ui.respond_to? :reader_thread
     end
 
+    def disable_session_tps
+      @tp_load_script.disable
+      @tp_thread_begin.disable
+    end
+
     def session_server_main
       while evt = @q_evt.pop
         # varible `@internal_info` is only used for test
@@ -299,6 +304,7 @@ module DEBUGGER__
       #   * Finish debugger (with the debuggee process on non-remote debugging).
       when 'q', 'quit'
         if ask 'Really quit?'
+          disable_session_tps
           @ui.quit arg.to_i
           @tc << :continue
         else
@@ -308,6 +314,7 @@ module DEBUGGER__
       # * `q[uit]!`
       #   * Same as q[uit] but without the confirmation prompt.
       when 'q!', 'quit!'
+        disable_session_tps
         @ui.quit arg.to_i
         @tc << :continue
 
