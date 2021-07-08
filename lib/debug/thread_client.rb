@@ -361,27 +361,29 @@ module DEBUGGER__
       end
     end
 
-    def frame_str(i, frames: @target_frames)
+    def frame_str(i, frame: @target_frames[i])
       cur_str = (@current_frame_index == i ? '=>' : '  ')
       prefix = "#{cur_str}##{i}"
-      frame = frames[i]
       frame_string = @frame_formatter.call(frame)
       "#{prefix}\t#{frame_string}"
     end
 
-    def show_frames(max = (@target_frames || []).size, location_pattern: nil)
-      if max > 0 && @target_frames
-        frames =
-          if location_pattern
-            @target_frames.select { |f| f.location_str.match?(location_pattern) }
-          else
-            @target_frames
-          end
+    def show_frames max = nil, pattern = nil
+      if @target_frames && (max ||= @target_frames.size) > 0
+        frames = []
+        if pattern
+          @target_frames.each_with_index{|f, i|
+            frames << [i, f] if f.name.match?(pattern) || f.location_str.match?(pattern)
+          }
+        else
+          frames = @target_frames.map.with_index{|f, i| [i, f]}
+        end
 
         size = frames.size
         max.times{|i|
-          break if i >= size
-          puts frame_str(i, frames: frames)
+          break unless frames[i]
+          index, frame = frames[i]
+          puts frame_str(index, frame: frame)
         }
         puts "  # and #{size - max} frames (use `bt' command for all frames)" if max < size
       end
@@ -557,19 +559,8 @@ module DEBUGGER__
 
           case type
           when :backtrace
-            max_lines, pattern = args
-
-            if max_lines
-              if pattern
-                show_frames(max_lines, location_pattern: pattern)
-              else
-                show_frames(max_lines)
-              end
-            elsif pattern
-              show_frames(location_pattern: pattern)
-            else
-              show_frames
-            end
+            max_lines, pattern = *args
+            show_frames max_lines, pattern
 
           when :list
             show_src(update_line: true, **(args.first || {}))
