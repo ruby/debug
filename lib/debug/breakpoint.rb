@@ -240,7 +240,9 @@ module DEBUGGER__
     def setup
       @tp = TracePoint.new(:raise){|tp|
         exc = tp.raised_exception
+        next if SystemExit === exc
         should_suspend = false
+
         exc.class.ancestors.each{|cls|
           if @pat === cls.name
             should_suspend = true
