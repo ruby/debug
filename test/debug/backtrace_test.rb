@@ -80,13 +80,25 @@ module DEBUGGER__
       end
     end
 
-    def test_backtrace_prints_traces_that_match_the_pattern
+    def test_backtrace_filters_traces_with_location
       debug_code(program) do
         type 'b 13'
         type 'c'
         type 'bt /rb:\d\z/'
         assert_line_text(/Foo#second_call/)
         assert_line_text(/Foo#first_call/)
+        assert_no_line_text(/Foo#third_call_with_block/)
+        type 'q!'
+      end
+    end
+
+    def test_backtrace_filters_traces_with_method_name
+      debug_code(program) do
+        type 'b 13'
+        type 'c'
+        type 'bt /second/'
+        assert_line_text(/Foo#second_call/)
+        assert_no_line_text(/Foo#first_call/)
         assert_no_line_text(/Foo#third_call_with_block/)
         type 'q!'
       end
