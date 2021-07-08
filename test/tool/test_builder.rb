@@ -70,7 +70,8 @@ module DEBUGGER__
             command = input.chomp
           when %r{\[Y/n\]}
             input = $stdin.gets
-            write.puts
+            input ||= ''
+            write.puts(input)
             @scenario.push("type '#{command}'")
             @scenario.push("type '#{input.chomp}'")
           when /INTERNAL_INFO:\s(.*)/
