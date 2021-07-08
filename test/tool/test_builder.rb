@@ -9,7 +9,7 @@ module DEBUGGER__
   class TestBuilder
     def initialize(target, m, c)
       @debuggee = File.absolute_path(target[0])
-      m = 'test_foo' if m.nil?
+      m = "test_#{Time.now.to_i}" if m.nil?
       c = 'FooTest' if c.nil?
       @method = m
       @class = c
