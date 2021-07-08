@@ -40,8 +40,9 @@ module DEBUGGER__
       @last_backlog[3].slice!("\e[?2004l\r")
       file_name = File.basename(@debuggee, '.rb')
       lines = @last_backlog[3..].map{|l|
+        l = Regexp.escape(l.chomp).gsub(/\\\s/, ' ')
         l = l.sub(%r{~.*#{file_name}.*|/Users/.*#{file_name}.*}, '.*')
-        "          /#{l.chomp}"
+        "          /#{l}"
       }.join("/,\n")
       "[\n#{lines}/\n        ]"
     end
