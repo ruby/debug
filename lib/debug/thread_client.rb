@@ -72,6 +72,8 @@ module DEBUGGER__
       @frame_formatter = method(:default_frame_formatter)
       @var_map = {} # { thread_local_var_id => obj } for DAP
       set_mode nil
+
+      ::DEBUGGER__.warn("Thread \##{@id} is created.")
     end
 
     def name
