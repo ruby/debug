@@ -302,20 +302,39 @@ module DEBUGGER__
       end
     end
 
+    def puts_variable_info label, obj
+      info = "#{colorize_cyan(label)} => #{colored_inspect(obj)}".lines
+      w = SESSION.width
+      max_inspect_lines = CONFIG[:show_inspect_lines] || 10
+
+      if (max_inspect_lines > 0 && (info.size > max_inspect_lines)) || info.any?{|l| l.size > w}
+        info = "#{colorize_cyan(label)} => #{obj.pretty_inspect}".lines
+        if max_inspect_lines > 0 && info.size > max_inspect_lines
+          info = info.first(max_inspect_lines - 2) +
+                 ["...(#{info.size - (max_inspect_lines - 1)} lines)\n" + info.last]
+        end
+        info.map!{|l|
+          l.length > w ? l[0..(w-4)] + '...' : l
+        }
+      end
+
+      puts info
+    end
+
     def show_locals
       if s = current_frame&.self
-        puts " #{colorize_cyan("%self")} => #{colored_inspect(s)}"
+        puts_variable_info '%self', s
       end
       if current_frame&.has_return_value
-        puts " #{colorize_cyan("%return")} => #{colored_inspect(current_frame.return_value)}"
+        puts_variable_info '%return', current_frame.return_value
       end
       if current_frame&.has_raised_exception
-        puts " #{colorize_cyan("%raised")} => #{colored_inspect(current_frame.raised_exception)}"
+        puts_variable_info "%raised", current_frame.raised_exception
       end
       if b = current_frame&.binding
         b.local_variables.each{|loc|
           value = b.local_variable_get(loc)
-          puts " #{colorize_cyan(loc)} => #{colored_inspect(value)}"
+          puts_variable_info loc, value
         }
       end
     end
@@ -324,7 +343,7 @@ module DEBUGGER__
       if s = current_frame&.self
         s.instance_variables.each{|iv|
           value = s.instance_variable_get(iv)
-          puts " #{colorize_cyan(iv)} => #{colored_inspect(value)}"
+          puts_variable_info iv, value
         }
       end
     end
