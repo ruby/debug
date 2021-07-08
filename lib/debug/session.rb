@@ -430,10 +430,10 @@ module DEBUGGER__
       #   * Show backtrace (frame) information.
       # * `bt <num>` or `backtrace <num>`
       #   * Only shows first `<num>` frames.
-      # * `bt /location_regexp/` or `backtrace /location_regexp/`
-      #   * Only shows frames with location info that matches `/location_regexp/`.
-      # * `bt <num> /location_regexp/` or `backtrace <num> /location_regexp/`
-      #   * Only shows first `<num>` frames with location info that matches `/location_regexp/`.
+      # * `bt /regexp/` or `backtrace /regexp/`
+      #   * Only shows frames with method name or location info that matches `/regexp/`.
+      # * `bt <num> /regexp/` or `backtrace <num> /regexp/`
+      #   * Only shows first `<num>` frames with method name or location info that matches `/regexp/`.
       when 'bt', 'backtrace'
         case arg
         when /\A(\d+)\z/
