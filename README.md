@@ -448,6 +448,15 @@ The `<...>` notation means the argument.
 * `th[read] <thnum>`
   * Switch thread specified by `<thnum>`.
 
+### Configuration
+
+* set
+  * Show all configuration with description
+* set <name>
+  * Show current configuration of <name>
+* set <name>=<val>
+  * Set <name> to <val>
+
 ### Help
 
 * `h[elp]`
@@ -463,10 +472,11 @@ exe/rdbg [options] -- [debuggee options]
 
 Debug console mode:
     -n, --nonstop                    Do not stop at the beginning of the script.
-    -e COMMAND                       Execute debug command at the beginning of the script.
+    -e DEBUG_COMMAND                 Execute debug command at the beginning of the script.
     -x, --init-script=FILE           Execute debug command in the FILE.
         --no-rc                      Ignore ~/.rdbgrc
         --no-color                   Disable colorize
+    -q, --no-verbose                 Disable verbose messages
     -c, --command                    Enable command mode.
                                      The first argument should be a command name in $PATH.
                                      Example: 'rdbg -c bundle exec rake test'

@@ -626,6 +626,17 @@ module DEBUGGER__
         end
         return :retry
 
+      ### Configuration
+      # * set
+      #   * Show all configuration with description
+      # * set <name>
+      #   * Show current configuration of <name>
+      # * set <name>=<val>
+      #   * Set <name> to <val>
+      when 'set'
+        set_command arg
+        return :retry
+
       ### Help
 
       # * `h[elp]`
@@ -656,6 +667,35 @@ module DEBUGGER__
       @ui.puts e.backtrace.map{|e| '  ' + e}
       return :retry
     end
+
+    def show_config key
+      key = key.to_sym
+      if CONFIG_SET[key]
+        v = CONFIG[key]
+        kv = "#{key} = #{v.nil? ? '(default)' : v.inspect}"
+        desc = CONFIG_SET[key][1]
+        @ui.puts kv.length <= 30 ? ("%-30s \# %s" % [kv, desc]) : "\# #{desc}\n#{kv}"
+      else
+        @ui.puts "Uknown configuration: #{key}"
+      end
+    end
+
+    def set_command arg
+      case arg
+      when nil
+        CONFIG_SET.each do |k, _|
+          show_config k
+        end
+      when /\A(\w+)\s*=\s*(\w+)\z/
+        if CONFIG_SET[key = $1.to_sym]
+          DEBUGGER__.set_config({key => $2})
+        end
+        show_config $1
+      when /\A(\w+)\z/
+        show_config $1
+      end
+    end
+
 
     def cancel_auto_continue
       if @preset_command&.auto_continue
@@ -1282,7 +1322,7 @@ module DEBUGGER__
   def self.warn msg, level = :warn
     case level
     when :warn
-      STDERR.puts "DEBUGGER: #{msg}" unless CONFIG[:quiet]
+      STDERR.puts "DEBUGGER: #{msg}" unless CONFIG[:no_verbose]
     when :error
       STDERR.puts "DEBUGGER: #{msg}"
     end

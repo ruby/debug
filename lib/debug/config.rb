@@ -30,34 +30,52 @@ module DEBUGGER__
     create_unix_domain_socket_name_prefix(base_dir) + "-#{Process.pid}"
   end
 
-  CONFIG_MAP = {
-    # boot setting
-    nonstop:     'RUBY_DEBUG_NONSTOP',     # Nonstop mode ('1' is nonstop)
-    init_script: 'RUBY_DEBUG_INIT_SCRIPT', # debug command script path loaded at first stop
-    commands:    'RUBY_DEBUG_COMMANDS',    # debug commands invoked at first stop. commands should be separated by ';;'
-    no_rc:       'RUBY_DEBUG_NO_RC',       # ignore loading ~/.rdbgrc(.rb)
-
+  CONFIG_SET = {
     # UI setting
-    show_src_lines: 'RUBY_DEBUG_SHOW_SRC_LINES', # Show n lines source code on breakpoint (default: 10 lines).
-    show_frames:    'RUBY_DEBUG_SHOW_FRAMES',    # Show n frames on breakpoint (default: 2 frames).
-    use_short_path: 'RUBY_DEBUG_USE_SHORT_PATH', # Show shoten PATH (like $(Gem)/foo.rb).
-    skip_nosrc:     'RUBY_DEBUG_SKIP_NOSRC',     # Skip on no source code lines (default: false).
-    no_color:       'RUBY_DEBUG_NO_COLOR',       # Do not use colorize
-    no_sigint_hook: 'RUBY_DEBUG_NO_SIGINT_HOOK', # Do not suspend on SIGINT
-    quiet:          'RUBY_DEBUG_QUIET',          # Do not show messages
+    show_src_lines: ['RUBY_DEBUG_SHOW_SRC_LINES', "UI: Show n lines source code on breakpoint (default: 10 lines)", :int],
+    show_frames:    ['RUBY_DEBUG_SHOW_FRAMES',    "UI: Show n frames on breakpoint (default: 2 frames)",            :int],
+    use_short_path: ['RUBY_DEBUG_USE_SHORT_PATH', "UI: Show shoten PATH (like $(Gem)/foo.rb)",                      :bool],
+    skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "UI: Skip on no source code lines (default: false)",              :bool],
+    no_color:       ['RUBY_DEBUG_NO_COLOR',       "UI: Do not use colorize (default: false)",                       :bool],
+    no_sigint_hook: ['RUBY_DEBUG_NO_SIGINT_HOOK', "UI: Do not suspend on SIGINT (default: false)",                  :bool],
+    no_verbose:     ['RUBY_DEBUG_NO_VERBOSE',     "UI: Disable verbose messages (defauit: false)",                  :bool],
+
+    # boot setting
+    nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool],
+    init_script:    ['RUBY_DEBUG_INIT_SCRIPT', "BOOT: debug command script path loaded at first stop"],
+    commands:       ['RUBY_DEBUG_COMMANDS',    "BOOT: debug commands invoked at first stop. commands should be separated by ';;'"],
+    no_rc:          ['RUBY_DEBUG_NO_RC',       "BOOT: ignore loading ~/.rdbgrc(.rb)",                               :bool],
 
     # remote setting
-    port:        'RUBY_DEBUG_PORT',        # TCP/IP remote debugging: port
-    host:        'RUBY_DEBUG_HOST',        # TCP/IP remote debugging: host (localhost if not given)
-    sock_path:   'RUBY_DEBUG_SOCK_PATH',   # UNIX Domain Socket remote debugging: socket path
-    sock_dir:    'RUBY_DEBUG_SOCK_DIR',    # UNIX Domain Socket remote debugging: socket directory
-    cookie:      'RUBY_DEBUG_COOKIE',      # Cookie for negotiation
+    port:           ['RUBY_DEBUG_PORT',      "REMOTE: TCP/IP remote debugging: port"],
+    host:           ['RUBY_DEBUG_HOST',      "REMOTE: TCP/IP remote debugging: host (localhost if not given)"],
+    sock_path:      ['RUBY_DEBUG_SOCK_PATH', "REMOTE: UNIX Domain Socket remote debugging: socket path"],
+    sock_dir:       ['RUBY_DEBUG_SOCK_DIR',  "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
+    cookie:         ['RUBY_DEBUG_COOKIE',    "REMOTE: Cookie for negotiation"],
   }.freeze
+
+  CONFIG_MAP = CONFIG_SET.map{|k, (ev, desc)| [k, ev]}.to_h.freeze
 
   def self.config_to_env_hash config
     CONFIG_MAP.each_with_object({}){|(key, evname), env|
       env[evname] = config[key].to_s if config[key]
     }
+  end
+
+  def self.parse_config_value name, valstr
+    case CONFIG_SET[name][2]
+    when :bool
+      case valstr
+      when '1', 'true', 'TRUE', 'T'
+        true
+      else
+        false
+      end
+    when :int
+      valstr.to_i
+    else
+      valstr
+    end
   end
 
   def self.parse_argv argv
@@ -66,16 +84,7 @@ module DEBUGGER__
     }
     CONFIG_MAP.each{|key, evname|
       if val = ENV[evname]
-        if /_USE_/ =~ evname || /NONSTOP/ =~ evname
-          case val
-          when '1', 'true', 'TRUE', 'T'
-            config[key] = true
-          else
-            config[key] = false
-          end
-        else
-          config[key] = val
-        end
+        config[key] = parse_config_value(key, val)
       end
     }
     return config if !argv || argv.empty?
@@ -93,7 +102,7 @@ module DEBUGGER__
         config[:nonstop] = '1'
       end
 
-      o.on('-e COMMAND', 'Execute debug command at the beginning of the script.') do |cmd|
+      o.on('-e DEBUG_COMMAND', 'Execute debug command at the beginning of the script.') do |cmd|
         config[:commands] ||= ''
         config[:commands] += cmd + ';;'
       end
@@ -106,6 +115,9 @@ module DEBUGGER__
       end
       o.on('--no-color', 'Disable colorize') do
         config[:no_color] = true
+      end
+      o.on('-q', '--no-verbose', 'Disable verbose messages') do
+        config[:no_verbose] = true
       end
 
       o.on('-c', '--command', 'Enable command mode.',
@@ -191,7 +203,7 @@ module DEBUGGER__
   def self.set_config kw
     kw.each{|k, v|
       if CONFIG_MAP[k]
-        CONFIG[k] = v # TODO: ractor support
+        CONFIG[k] = parse_config_value(k, v) # TODO: ractor support
       else
         raise "unknown option: #{k}"
       end

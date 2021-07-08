@@ -69,8 +69,6 @@ module DEBUGGER__
       @q_cmd = q_cmd
       @step_tp = nil
       @output = []
-      @src_lines_on_stop = (::DEBUGGER__::CONFIG[:show_src_lines]   || 10).to_i
-      @show_frames_on_stop = (::DEBUGGER__::CONFIG[:show_frames] || 2).to_i
       @frame_formatter = method(:default_frame_formatter)
       @var_map = {} # { thread_local_var_id => obj } for DAP
       set_mode nil
@@ -167,8 +165,8 @@ module DEBUGGER__
       end
 
       if event != :pause
-        show_src max_lines: @src_lines_on_stop
-        show_frames @show_frames_on_stop
+        show_src max_lines: (::DEBUGGER__::CONFIG[:show_src_lines] || 10)
+        show_frames ::DEBUGGER__::CONFIG[:show_frames] || 2
 
         if bp
           event! :suspend, :breakpoint, bp.key
