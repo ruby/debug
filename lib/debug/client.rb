@@ -47,6 +47,7 @@ module DEBUGGER__
       end
 
       @width = IO.console_size[1]
+      @width = 80 if @width == 0
       @width_changed = false
 
       send "version: #{VERSION} width: #{@width} cookie: #{CONFIG[:cookie]}"
