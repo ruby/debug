@@ -970,6 +970,7 @@ module DEBUGGER__
     ## event
 
     def on_load iseq, src
+      DEBUGGER__.warn "Load #{iseq.absolute_path || iseq.path}"
       @sr.add iseq, src
 
       pending_line_breakpoints do |bp|
