@@ -168,10 +168,16 @@ module DEBUGGER__
           @content = lines.split("\n")[..-3].join("\n") + "\n#{content}  end\nend\n" if lines.include? @class
         end
       end
-      @content ||= content_with_module
-      File.write(path, @content)
+      if @content
+        puts "appended: #{path}"
+      else
+        @content = content_with_module
+        puts "created: #{path}"
+        puts "    class: #{@class}"
+      end
+      puts "    method: #{@method}"
 
-      puts "created: #{path}"
+      File.write(path, @content)
     end
 
     def remove_temp_file
