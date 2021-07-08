@@ -674,7 +674,12 @@ module DEBUGGER__
         v = CONFIG[key]
         kv = "#{key} = #{v.nil? ? '(default)' : v.inspect}"
         desc = CONFIG_SET[key][1]
-        @ui.puts kv.length <= 30 ? ("%-30s \# %s" % [kv, desc]) : "\# #{desc}\n#{kv}"
+        line = "%-30s \# %s" % [kv, desc]
+        if line.size > SESSION.width
+          @ui.puts "\# #{desc}\n#{kv}"
+        else
+          @ui.puts line
+        end
       else
         @ui.puts "Uknown configuration: #{key}"
       end
