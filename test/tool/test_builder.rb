@@ -94,6 +94,8 @@ module DEBUGGER__
           @backlog.push(line)
           @last_backlog.push(line)
         end
+      rescue Errno::EIO => e
+        p e
       end
       exit if @backlog.empty? || @backlog[0].match?(/LoadError/)  # @debuggee is empty or doesn't exist
     end
