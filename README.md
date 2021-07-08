@@ -493,6 +493,9 @@ Debug console mode:
 
   'rdbg target.rb foo bar'                starts like 'ruby target.rb foo bar'.
   'rdbg -- -r foo -e bar'                 starts like 'ruby -r foo -e bar'.
+  'rdbg -c rake test'                     starts like 'rake test'.
+  'rdbg -c -- rake test -t'               starts like 'rake test -t'.
+  'rdbg -c bundle exec rake test'         starts like 'bundle exec rake test'.
   'rdbg -O target.rb foo bar'             starts and accepts attaching with UNIX domain socket.
   'rdbg -O --port 1234 target.rb foo bar' starts accepts attaching with TCP/IP localhost:1234.
   'rdbg -O --port 1234 -- -r foo -e bar'  starts accepts attaching with TCP/IP localhost:1234.

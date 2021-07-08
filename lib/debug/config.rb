@@ -153,6 +153,9 @@ module DEBUGGER__
       o.separator ''
       o.separator "  '#{rdbg} target.rb foo bar'                starts like 'ruby target.rb foo bar'."
       o.separator "  '#{rdbg} -- -r foo -e bar'                 starts like 'ruby -r foo -e bar'."
+      o.separator "  '#{rdbg} -c rake test'                     starts like 'rake test'."
+      o.separator "  '#{rdbg} -c -- rake test -t'               starts like 'rake test -t'."
+      o.separator "  '#{rdbg} -c bundle exec rake test'         starts like 'bundle exec rake test'."
       o.separator "  '#{rdbg} -O target.rb foo bar'             starts and accepts attaching with UNIX domain socket."
       o.separator "  '#{rdbg} -O --port 1234 target.rb foo bar' starts accepts attaching with TCP/IP localhost:1234."
       o.separator "  '#{rdbg} -O --port 1234 -- -r foo -e bar'  starts accepts attaching with TCP/IP localhost:1234."
