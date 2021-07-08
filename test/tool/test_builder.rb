@@ -167,6 +167,8 @@ module DEBUGGER__
       end
       @content ||= content_with_module
       File.write(path, @content)
+
+      puts "created: #{path}"
     end
 
     def remove_temp_file
