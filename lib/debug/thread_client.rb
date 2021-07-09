@@ -200,7 +200,9 @@ module DEBUGGER__
       if SUPPORT_TARGET_THREAD
         @step_tp = TracePoint.new(:line, :b_return, :return){|tp|
           next if SESSION.break? tp.path, tp.lineno
-          next if !pass_frame_filter?
+          loc = caller_locations(1, 1).first
+          loc_path = loc.absolute_path || "!eval:#{loc.path}"
+          next if !pass_frame_filter?(loc_path)
           next if !yield
           next if tp.path.start_with?(__dir__)
           next unless File.exist?(tp.path) if ::DEBUGGER__::CONFIG[:skip_nosrc]
@@ -213,7 +215,9 @@ module DEBUGGER__
         @step_tp = TracePoint.new(:line, :b_return, :return){|tp|
           next if thread != Thread.current
           next if SESSION.break? tp.path, tp.lineno
-          next if !pass_frame_filter?
+          loc = caller_locations(1, 1).first
+          loc_path = loc.absolute_path || "!eval:#{loc.path}"
+          next if !pass_frame_filter?(loc_path)
           next if !yield
           next unless File.exist?(tp.path) if ::DEBUGGER__::CONFIG[:skip_nosrc]
 
@@ -221,15 +225,6 @@ module DEBUGGER__
           on_suspend tp.event, tp
         }
         @step_tp.enable
-      end
-    end
-
-    def pass_frame_filter?
-      loc = caller_locations(2, 1).first
-      loc_path = loc.absolute_path || "!eval:#{loc.path}"
-
-      DEBUGGER__.frame_filters.all? do |filter|
-        filter.call(loc_path)
       end
     end
 
@@ -401,15 +396,22 @@ module DEBUGGER__
       "#{prefix}\t#{frame_string}"
     end
 
-    def show_frames max = nil, pattern = nil
-      if @target_frames && (max ||= @target_frames.size) > 0
+    def pass_frame_filter?(path)
+      DEBUGGER__.frame_filters.all? do |filter|
+        filter.call(path)
+      end
+    end
+
+    def show_frames(max = nil, pattern = nil)
+      return unless @target_frames
+
+      if (max ||= @target_frames.size) > 0
         frames = []
-        if pattern
-          @target_frames.each_with_index{|f, i|
-            frames << [i, f] if f.name.match?(pattern) || f.location_str.match?(pattern)
-          }
-        else
-          frames = @target_frames.map.with_index{|f, i| [i, f]}
+        @target_frames.each_with_index do |f, i|
+          next if pattern && !(f.name.match?(pattern) || f.location_str.match?(pattern))
+          next unless pass_frame_filter?(f.path)
+
+          frames << [i, f]
         end
 
         size = frames.size
