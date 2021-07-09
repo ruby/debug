@@ -121,15 +121,14 @@ module DEBUGGER__
                 next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
               when repl_prompt
                 # check if the previous command breaks the debugger before continuing
-                if error_index = @last_backlog.index { |l| l.match?(/REPL ERROR/) }
-                  raise "Debugger terminated because of: #{@last_backlog[error_index..-1].join}"
-                end
+                check_error(/REPL ERROR/)
               end
 
               @backlog.push(line)
               @last_backlog.push(line)
             end
 
+            check_error(/Traceback/)
             assert_empty_queue
           end
         rescue Errno::EIO => e
@@ -150,6 +149,12 @@ module DEBUGGER__
     end
 
     private
+
+    def check_error(error)
+      if error_index = @last_backlog.index { |l| l.match?(error) }
+        raise create_message("Debugger terminated because of: #{@last_backlog[error_index..-1].join}")
+      end
+    end
 
     def kill_remote_debuggee
       if defined?(@remote_debuggee_pid) && @remote_debuggee_pid
