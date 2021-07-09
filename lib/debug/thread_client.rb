@@ -5,6 +5,7 @@ require 'pp'
 
 require_relative 'frame_info'
 require_relative 'color'
+require_relative "extensible"
 
 module DEBUGGER__
   class ThreadClient
@@ -199,6 +200,7 @@ module DEBUGGER__
       if SUPPORT_TARGET_THREAD
         @step_tp = TracePoint.new(:line, :b_return, :return){|tp|
           next if SESSION.break? tp.path, tp.lineno
+          next if !pass_frame_filter?
           next if !yield
           next if tp.path.start_with?(__dir__)
           next unless File.exist?(tp.path) if ::DEBUGGER__::CONFIG[:skip_nosrc]
@@ -211,6 +213,7 @@ module DEBUGGER__
         @step_tp = TracePoint.new(:line, :b_return, :return){|tp|
           next if thread != Thread.current
           next if SESSION.break? tp.path, tp.lineno
+          next if !pass_frame_filter?
           next if !yield
           next unless File.exist?(tp.path) if ::DEBUGGER__::CONFIG[:skip_nosrc]
 
@@ -218,6 +221,15 @@ module DEBUGGER__
           on_suspend tp.event, tp
         }
         @step_tp.enable
+      end
+    end
+
+    def pass_frame_filter?
+      loc = caller_locations(2, 1).first
+      loc_path = loc.absolute_path || "!eval:#{loc.path}"
+
+      DEBUGGER__.frame_filters.all? do |filter|
+        filter.call(loc_path)
       end
     end
 
