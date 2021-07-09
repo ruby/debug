@@ -88,7 +88,7 @@ module DEBUGGER__
             end
             @last_backlog.clear
             next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
-          when /q!/, /quit!/
+          when /q!$/, /quit!$/
             @scenario.push("type '#{command}'")
           end
 
