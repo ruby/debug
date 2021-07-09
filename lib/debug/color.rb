@@ -24,8 +24,12 @@ module DEBUGGER__
     end
 
     if defined? IRB::ColorPrinter.pp
-      def color_pp obj
-        IRB::ColorPrinter.pp(obj, "".dup)
+      def color_pp obj, width = nil
+        if !CONFIG[:no_color]
+          IRB::ColorPrinter.pp(obj, "".dup, width)
+        else
+          obj.pretty_inspect
+        end
       end
     else
       def color_pp obj
@@ -34,7 +38,7 @@ module DEBUGGER__
     end
 
     def colored_inspect obj, no_color: false
-      if !no_color && !CONFIG[:no_color]
+      if !no_color
         color_pp obj
       else
         obj.pretty_inspect
