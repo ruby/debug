@@ -524,8 +524,7 @@ module DEBUGGER__
           when :pp
             result = frame_eval(eval_src)
             puts "=> "
-            PP.pp(result, out = ''.dup, SESSION.width)
-            puts out
+            puts color_pp(result, SESSION.width)
           when :call
             result = frame_eval(eval_src)
           when :display, :try_display
