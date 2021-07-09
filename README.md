@@ -83,12 +83,31 @@ require 'debug/run' # start the debug console
 # ... rest of program ...
 ```
 
+
 ```
 $ ruby target.rb
 ```
 
 When you run the program with the debug console, you will see the debug console prompt `(rdbg)`.
 The debuggee program (`target.rb`) is suspended at the beginning of `target.rb`.
+
+
+Alternatively, start the debugger at a specific location in your program using `binding.bp`.
+
+```ruby
+# target.rb
+require 'debug' # start the debugger
+
+# ... program ...
+
+binding.bp # setup a breakpoint at this line
+
+# ... rest of program ...
+```
+
+```
+$ ruby target.rb
+```
 
 You can type any debugger's command described bellow. "c" or "continue" resume the debuggee program.
 You can suspend the debuggee program and show the debug console with `Ctrl-C`.
@@ -476,7 +495,6 @@ Debug console mode:
     -x, --init-script=FILE           Execute debug command in the FILE.
         --no-rc                      Ignore ~/.rdbgrc
         --no-color                   Disable colorize
-    -q, --no-verbose                 Disable verbose messages
     -c, --command                    Enable command mode.
                                      The first argument should be a command name in $PATH.
                                      Example: 'rdbg -c bundle exec rake test'
