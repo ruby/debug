@@ -101,6 +101,10 @@ module DEBUGGER__
       @tp_thread_begin.enable
     end
 
+    def active?
+      @ui ? true : false
+    end
+
     def reset_ui ui
       @ui.close
       @ui = ui
@@ -172,8 +176,11 @@ module DEBUGGER__
         end
       end
     ensure
+      @tp_load_script.disable
+      @tp_thread_begin.disable
       @bps.each{|k, bp| bp.disable}
       @th_clients.each{|th, thc| thc.close}
+      @ui = nil
     end
 
     def add_preset_commands name, cmds, kick: true, continue: true
@@ -1203,6 +1210,8 @@ module DEBUGGER__
 
       Binding.module_eval do
         def bp command: nil, nonstop: nil
+          return unless SESSION.active?
+
           if command
             cmds = command.split(";;")
             # nonstop
