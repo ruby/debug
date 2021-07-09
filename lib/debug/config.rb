@@ -32,6 +32,7 @@ module DEBUGGER__
 
   CONFIG_SET = {
     # UI setting
+    log_level:      ['RUBY_DEBUG_LOG_LEVEL',      "UI: Log level same as Logger (default: WARN)",                   :loglevel],
     show_src_lines: ['RUBY_DEBUG_SHOW_SRC_LINES', "UI: Show n lines source code on breakpoint (default: 10 lines)", :int],
     show_frames:    ['RUBY_DEBUG_SHOW_FRAMES',    "UI: Show n frames on breakpoint (default: 2 frames)",            :int],
     show_info_lines:['RUBY_DEBUG_SHOW_INFO_LINES',"UI: Show n lines on info command (default: 10 lines, 0 for unlimited)",   :int],
@@ -39,7 +40,6 @@ module DEBUGGER__
     skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "UI: Skip on no source code lines (default: false)",              :bool],
     no_color:       ['RUBY_DEBUG_NO_COLOR',       "UI: Do not use colorize (default: false)",                       :bool],
     no_sigint_hook: ['RUBY_DEBUG_NO_SIGINT_HOOK', "UI: Do not suspend on SIGINT (default: false)",                  :bool],
-    no_verbose:     ['RUBY_DEBUG_NO_VERBOSE',     "UI: Disable verbose messages (defauit: false)",                  :bool],
 
     # boot setting
     nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool],
@@ -74,6 +74,12 @@ module DEBUGGER__
       end
     when :int
       valstr.to_i
+    when :loglevel
+      if DEBUGGER__::LOG_LEVELS[s = valstr.to_sym]
+        s
+      else
+        raise "Unknown loglevel: #{valstr}"
+      end
     else
       valstr
     end
@@ -116,9 +122,6 @@ module DEBUGGER__
       end
       o.on('--no-color', 'Disable colorize') do
         config[:no_color] = true
-      end
-      o.on('-q', '--no-verbose', 'Disable verbose messages') do
-        config[:no_verbose] = true
       end
 
       o.on('-c', '--command', 'Enable command mode.',

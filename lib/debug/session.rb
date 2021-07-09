@@ -700,7 +700,11 @@ module DEBUGGER__
         end
       when /\A(\w+)\s*=\s*(\w+)\z/
         if CONFIG_SET[key = $1.to_sym]
-          DEBUGGER__.set_config({key => $2})
+          begin
+            DEBUGGER__.set_config({key => $2})
+          rescue => e
+            @ui.puts e.message
+          end
         end
         show_config $1
       when /\A(\w+)\z/
@@ -977,7 +981,7 @@ module DEBUGGER__
     ## event
 
     def on_load iseq, src
-      DEBUGGER__.warn "Load #{iseq.absolute_path || iseq.path}"
+      DEBUGGER__.info "Load #{iseq.absolute_path || iseq.path}"
       @sr.add iseq, src
 
       pending_line_breakpoints do |bp|
@@ -1334,12 +1338,33 @@ module DEBUGGER__
     end
   end
 
-  def self.warn msg, level = :warn
-    case level
-    when :warn
-      STDERR.puts "DEBUGGER: #{msg}" unless CONFIG[:no_verbose]
-    when :error
-      STDERR.puts "DEBUGGER: #{msg}"
+  LOG_LEVELS = {
+    UNKNOWN: 0,
+    FATAL:   1,
+    ERROR:   2,
+    WARN:    3,
+    INFO:    4,
+  }.freeze
+
+  def self.warn msg
+    log :WARN, msg
+  end
+
+  def self.info msg
+    log :INFO, msg
+  end
+
+  def self.log level, msg
+    lv = LOG_LEVELS[level]
+    config_lv = LOG_LEVELS[CONFIG[:log_level] || :WARN]
+
+    if lv <= config_lv
+      if level == :WARN
+        # :WARN on debugger is general information
+        STDERR.puts "DEBUGGER: #{msg}"
+      else
+        STDERR.puts "DEBUGGER (#{level}): #{msg}"
+      end
     end
   end
 end

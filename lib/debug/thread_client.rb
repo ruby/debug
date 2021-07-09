@@ -73,7 +73,7 @@ module DEBUGGER__
       @var_map = {} # { thread_local_var_id => obj } for DAP
       set_mode nil
 
-      ::DEBUGGER__.warn("Thread \##{@id} is created.")
+      ::DEBUGGER__.info("Thread \##{@id} is created.")
     end
 
     def name
