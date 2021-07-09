@@ -132,6 +132,7 @@ module DEBUGGER__
             assert_empty_queue
           end
         rescue Errno::EIO => e
+          check_error(/Traceback/)
           # result of `gets` return this exception in some platform
           # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
           assert_empty_queue(exception: e)
