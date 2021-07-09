@@ -128,13 +128,13 @@ module DEBUGGER__
               @last_backlog.push(line)
             end
 
-            check_error(/Traceback/)
+            check_error(/DEBUGGEE Exception/)
             assert_empty_queue
           end
+        # result of `gets` return this exception in some platform
+        # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
         rescue Errno::EIO => e
-          check_error(/Traceback/)
-          # result of `gets` return this exception in some platform
-          # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
+          check_error(/DEBUGGEE Exception/)
           assert_empty_queue(exception: e)
         rescue Timeout::Error => e
           assert false, create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)")

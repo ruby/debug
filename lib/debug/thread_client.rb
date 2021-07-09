@@ -634,7 +634,7 @@ module DEBUGGER__
     rescue SystemExit
       raise
     rescue Exception => e
-      pp [__FILE__, __LINE__, e, e.backtrace]
+      pp ["DEBUGGER Exception: #{__FILE__}:#{__LINE__}", e, e.backtrace]
       raise
     ensure
       set_mode nil
