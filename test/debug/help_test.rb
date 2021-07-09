@@ -32,5 +32,13 @@ module DEBUGGER__
         type "continue"
       end
     end
+
+    def test_help_with_undefined_command_shows_an_error
+      debug_code(program) do
+        type 'help foo'
+        assert_line_text(/not found: foo/)
+        type 'q!'
+      end
+    end
   end
 end
