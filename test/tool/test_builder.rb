@@ -38,13 +38,21 @@ module DEBUGGER__
       return '//' unless @last_backlog[3]
 
       @last_backlog[3].slice!("\e[?2004l\r")
+      if @last_backlog.length == 4
+        "/#{generate_pattern(@last_backlog[3])}/"
+      else
+        lines = @last_backlog[3..].map{|l|
+          l = generate_pattern(l)
+          "          /#{l}"
+        }.join("/,\n")
+        "[\n#{lines}/\n        ]"
+      end
+    end
+
+    def generate_pattern(line)
       file_name = File.basename(@debuggee, '.rb')
-      lines = @last_backlog[3..].map{|l|
-        l = Regexp.escape(l.chomp).gsub(/\\\s/, ' ')
-        l = l.sub(%r{~.*#{file_name}.*|/Users/.*#{file_name}.*}, '.*')
-        "          /#{l}"
-      }.join("/,\n")
-      "[\n#{lines}/\n        ]"
+      escaped_line = Regexp.escape(line.chomp).gsub(/\\\s/, ' ')
+      escaped_line.sub(%r{~.*#{file_name}.*|/Users/.*#{file_name}.*}, '.*')
     end
 
     RUBY = RbConfig.ruby
