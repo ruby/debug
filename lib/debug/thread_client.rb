@@ -5,7 +5,7 @@ require 'pp'
 
 require_relative 'frame_info'
 require_relative 'color'
-require_relative "extensible"
+require_relative 'frame_filter'
 
 module DEBUGGER__
   class ThreadClient
@@ -397,9 +397,17 @@ module DEBUGGER__
     end
 
     def pass_frame_filter?(path)
-      DEBUGGER__.frame_filters.all? do |filter|
-        filter.call(path)
+      included = DEBUGGER__.inclusion_patterns.all? do |pattern|
+        path.match?(pattern)
       end
+
+      return false unless included
+
+      excluded = DEBUGGER__.exclusion_patterns.any? do |pattern|
+        path.match?(pattern)
+      end
+
+      !excluded
     end
 
     def show_frames(max = nil, pattern = nil)
