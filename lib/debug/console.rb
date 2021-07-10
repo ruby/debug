@@ -40,7 +40,7 @@ module DEBUGGER__
     def ask prompt
       setup_interrupt do
         print prompt
-        (gets || '').strip
+        ($stdin.gets || '').strip
       end
     end
 
