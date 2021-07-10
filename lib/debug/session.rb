@@ -7,6 +7,7 @@ require_relative 'config'
 require_relative 'thread_client'
 require_relative 'source_repository'
 require_relative 'breakpoint'
+require_relative "command_register"
 
 require 'json' if ENV['RUBY_DEBUG_TEST_MODE']
 
@@ -99,6 +100,11 @@ module DEBUGGER__
         end
       }
       @tp_thread_begin.enable
+
+      @registered_commands = {}
+      DEBUGGER__.regsiter_commands.each do |command|
+        command.names.each { |n| @registered_commands[n] = command }
+      end
     end
 
     def active?
@@ -660,8 +666,13 @@ module DEBUGGER__
 
       ### END
       else
-        @ui.puts "unknown command: #{line}"
-        @repl_prev_line = nil
+        if command = @registered_commands[cmd]
+          command.session_operation.call(@ui, arg)
+        else
+          @ui.puts "unknown command: #{line}"
+          @repl_prev_line = nil
+        end
+
         return :retry
       end
 
