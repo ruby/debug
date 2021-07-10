@@ -68,7 +68,7 @@ module DEBUGGER__
         @backlog = []
         @last_backlog = []
         @scenario = []
-        while (array = read.expect(%r{.*\n|\(rdbg\)|\[Y/n\]}))
+        while (array = read.expect(%r{.*\n|\(rdbg\)|\[(?i)y/n\]}))
           line = array[0]
           print line
           case line.chomp
@@ -77,7 +77,7 @@ module DEBUGGER__
             input ||= 'quit'
             write.puts(input)
             command = input.chomp
-          when %r{\[Y/n\]}
+          when %r{\[y/n\]}i
             input = $stdin.gets
             input ||= ''
             write.puts(input)
