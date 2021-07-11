@@ -169,7 +169,7 @@ module DEBUGGER__
     end
 
     def create_file
-      path = "#{__dir__}/../debug/#{@class.delete_suffix('Test').downcase}_test.rb"
+      path = "#{__dir__}/../debug/#{@class.sub(/(?i:t)est/, '').downcase}_test.rb"
       if File.exist?(path)
         File.open(path, 'r') do |f|
           lines = f.read
