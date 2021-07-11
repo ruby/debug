@@ -12,7 +12,7 @@ module DEBUGGER__
       m = "test_#{Time.now.to_i}" if m.nil?
       c = 'FooTest' if c.nil?
       @method = m
-      @class = c
+      @class = c.sub(/(^[a-z])/) { Regexp.last_match(1).upcase }
     end
 
     def start
