@@ -242,7 +242,7 @@ module DEBUGGER__
 
     def test_conditional_breakpoint_stops_if_condition_is_true
       debug_code(program) do
-        type 'break if n == 1'
+        type 'break if: n == 1'
         assert_line_text(/#0  BP - Check  n == 1/)
         type 'continue'
         assert_line_num 8
@@ -253,7 +253,7 @@ module DEBUGGER__
 
     def test_conditional_breakpoint_stops_at_specified_location_if_condition_is_true
       debug_code(program) do
-        type 'break 16 if d == 1'
+        type 'break 16 if: d == 1'
         assert_line_text(/#0  BP - Line  .*\.rb:16 \(return\) if d == 1/)
         type 'continue'
         assert_line_num 16
