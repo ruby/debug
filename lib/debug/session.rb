@@ -701,7 +701,7 @@ module DEBUGGER__
     end
 
     def config_set key, val, append: false
-      if CONFIG_SET[key = key.to_s]
+      if CONFIG_SET[key = key.to_sym]
         begin
           if append
             DEBUGGER__.append_config(key, val)
