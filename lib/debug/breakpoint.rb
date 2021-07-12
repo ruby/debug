@@ -83,12 +83,14 @@ module DEBUGGER__
 
     attr_reader :path, :line, :iseq
 
-    def initialize path, line, cond: nil, oneshot: false, hook_call: true
+    def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil, nonstop: false
       @path = path
       @line = line
       @cond = cond
       @oneshot = oneshot
       @hook_call = hook_call
+      @command = command
+      @nonstop = nonstop
 
       @iseq = nil
       @type = nil
@@ -102,17 +104,18 @@ module DEBUGGER__
     def setup
       return unless @type
 
-      if !@cond
-        @tp = TracePoint.new(@type) do |tp|
-          delete if @oneshot
-          suspend
-        end
-      else
-        @tp = TracePoint.new(@type) do |tp|
+      @tp = TracePoint.new(@type) do |tp|
+        if @cond
           next unless safe_eval tp.binding, @cond
-          delete if @oneshot
-          suspend
         end
+        delete if @oneshot
+
+        if @command
+          provider, cmds = @command
+          SESSION.add_preset_commands provider, cmds, kick: false, continue: @nonstop
+        end
+
+        suspend
       end
     end
 

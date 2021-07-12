@@ -1215,19 +1215,16 @@ module DEBUGGER__
       Binding.module_eval do
         def bp command: nil, nonstop: nil
           return unless SESSION.active?
+          cmds = ['binding.bp', command.split(";;")] if command && !command.strip.empty?
 
-          if command
-            cmds = command.split(";;")
-            # nonstop
-            #  nil, true -> auto_continue
-            #  false     -> stop
-            SESSION.add_preset_commands 'binding.bp(command:)', cmds,
-                                        kick: false,
-                                        continue: nonstop == false ? false : true
-          end
+          # nonstop
+          #  nil: auto_continue if command is given
+          nonstop = true if cmds if nonstop == nil
 
-          ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true
+          # maybe it is the end of the file
+          ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, command: cmds, nonstop: nonstop
           true
+          
         end
         alias debug bp
       end
