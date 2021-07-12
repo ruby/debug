@@ -53,7 +53,7 @@ module DEBUGGER__
     private
 
     def collect_recent_backlog
-      @last_backlog[1..].join
+      @last_backlog[1..].join.gsub(/\e\[\d+m/, '')
     end
   end
 end
