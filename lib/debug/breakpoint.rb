@@ -90,6 +90,7 @@ module DEBUGGER__
       @oneshot = oneshot
       @hook_call = hook_call
       @command = command
+      @pending = false
 
       @iseq = nil
       @type = nil
@@ -97,8 +98,8 @@ module DEBUGGER__
       @key = [@path, @line].freeze
 
       super()
-      try_activate
 
+      try_activate
       @pending = !@iseq
     end
 
@@ -140,7 +141,9 @@ module DEBUGGER__
       setup
       enable
 
-      DEBUGGER__.warn "#{self} is activated." if @pending
+      if @pending && !@oneshot
+        DEBUGGER__.warn "#{self} is activated."
+      end
     end
 
     def activate_exact iseq, events, line
