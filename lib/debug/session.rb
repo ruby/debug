@@ -1092,7 +1092,7 @@ module DEBUGGER__
           when MethodBreakpoint
             if bp.method.nil?
               if bp.sig_method_name == mid.to_s
-                bp.try_enable(quiet: true)
+                bp.try_enable(added: true)
               end
             end
 

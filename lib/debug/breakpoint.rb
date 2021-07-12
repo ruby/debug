@@ -396,13 +396,14 @@ module DEBUGGER__
       try_enable
     end
 
-    def try_enable quiet: false
+    def try_enable added: false
       eval_class_name
       search_method
 
       begin
         retried = false
         @tp.enable(target: @method)
+        DEBUGGER__.warn "#{self} is activated." if added
 
       rescue ArgumentError
         raise if retried
@@ -423,7 +424,7 @@ module DEBUGGER__
         retry
       end
     rescue Exception
-      raise unless quiet
+      raise unless added
     end
 
     def sig
@@ -432,7 +433,7 @@ module DEBUGGER__
 
     def to_s
       if @method
-        "#{LABEL} #{sig}"
+        "#{LABEL} #{sig} at #{@method.source_location.join(':')}"
       else
         "#{PENDING_LABEL} #{sig}"
       end + super
