@@ -13,6 +13,8 @@ module DEBUGGER__
           ThreadClient.current.on_trap :SIGINT
         }
       end
+
+      @history_loaded = false
     end
 
     def close
@@ -62,7 +64,25 @@ module DEBUGGER__
     begin
       require 'readline'
 
+      at_exit{
+        # Save
+        path = File.expand_path(CONFIG[:history_file] || '~/.rdbg_history')
+        open(path, 'w'){|f|
+          Readline::HISTORY.each{|hist|
+            next if hist.empty?
+            f.puts hist
+          }
+        }
+      }
+
       def readline_setup
+        unless @history_loaded
+          if File.exist?(f = File.expand_path(CONFIG[:history_file] || '~/.rdbg_history'))
+            File.readlines(f).each{|line| line.strip!; Readline::HISTORY.push line unless line.empty?}
+          end
+          @history_loaded = true
+        end
+
         Readline.completion_proc = proc{|given|
           buff = Readline.line_buffer
           Readline.completion_append_character= ' '
