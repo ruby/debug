@@ -73,19 +73,14 @@ module DEBUGGER__
       false
     end
 
-    class << self
-      include Color
+    include Color
 
-      def generate_label(name)
-        colorize(" BP - #{name} ", [:YELLOW, :BOLD, :REVERSE])
-      end
+    def generate_label(name)
+      colorize(" BP - #{name} ", [:YELLOW, :BOLD, :REVERSE])
     end
   end
 
   class LineBreakpoint < Breakpoint
-    LABEL = generate_label("Line")
-    PENDING_LABEL = generate_label("Line (pending)")
-
     attr_reader :path, :line, :iseq
 
     def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil, nonstop: nil
@@ -219,9 +214,9 @@ module DEBUGGER__
       oneshot = @oneshot ? " (oneshot)" : ""
 
       if @iseq
-        "#{LABEL} #{@path}:#{@line} (#{@type})#{oneshot}" + super
+        "#{generate_label("Line")} #{@path}:#{@line} (#{@type})#{oneshot}" + super
       else
-        "#{PENDING_LABEL} #{@path}:#{@line}#{oneshot}" + super
+        "#{generate_label("Line (pending)")} #{@path}:#{@line}#{oneshot}" + super
       end
     end
 
@@ -231,7 +226,6 @@ module DEBUGGER__
   end
 
   class CatchBreakpoint < Breakpoint
-    LABEL = generate_label("Catch")
     attr_reader :last_exc
 
     def initialize pat
@@ -260,7 +254,7 @@ module DEBUGGER__
     end
 
     def to_s
-      "#{LABEL} #{@pat.inspect}"
+      "#{generate_label("Catch")} #{@pat.inspect}"
     end
 
     def description
@@ -269,8 +263,6 @@ module DEBUGGER__
   end
 
   class CheckBreakpoint < Breakpoint
-    LABEL = generate_label("Check")
-
     def initialize expr
       @expr = expr.freeze
       @key = [:check, @expr].freeze
@@ -292,13 +284,11 @@ module DEBUGGER__
     end
 
     def to_s
-      "#{LABEL} #{@expr}"
+      "#{generate_label("Check")} #{@expr}"
     end
   end
 
   class WatchIVarBreakpoint < Breakpoint
-    LABEL = generate_label("Watch")
-
     def initialize ivar, object, current
       @ivar = ivar.to_sym
       @object = object
@@ -339,14 +329,11 @@ module DEBUGGER__
         else
           "#{@current}"
         end
-      "#{LABEL} #{@object} #{@ivar} = #{value_str}"
+      "#{generate_label("Watch")} #{@object} #{@ivar} = #{value_str}"
     end
   end
 
   class MethodBreakpoint < Breakpoint
-    LABEL = generate_label("Method")
-    PENDING_LABEL = generate_label("Method (pending)")
-
     attr_reader :sig_method_name, :method
 
     def initialize b, klass_name, op, method_name, cond, command: nil
@@ -436,9 +423,9 @@ module DEBUGGER__
 
     def to_s
       if @method
-        "#{LABEL} #{sig} at #{@method.source_location.join(':')}"
+        "#{generate_label("Method")} #{sig} at #{@method.source_location.join(':')}"
       else
-        "#{PENDING_LABEL} #{sig}"
+        "#{generate_label("Method (pending)")} #{sig}"
       end + super
     end
   end
