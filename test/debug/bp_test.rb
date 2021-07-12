@@ -30,7 +30,7 @@ module DEBUGGER__
       <<~RUBY
      1| class Foo
      2|   def bar
-     3|     binding.bp(command: "continue")
+     3|     binding.bp(do: "continue")
      4|     baz
      5|   end
      6|

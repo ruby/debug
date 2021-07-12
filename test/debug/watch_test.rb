@@ -11,7 +11,7 @@ module DEBUGGER__
          3|
          4|   def initialize(name)
          5|     @name = name
-         6|     binding.bp(command: "watch @name")
+         6|     binding.bp(do: "watch @name")
          7|   end
          8| end
          9|

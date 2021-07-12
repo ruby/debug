@@ -346,10 +346,10 @@ module DEBUGGER__
       #    * Set breakpoint on the method `<expr>.<name>`.
       # * `b[reak] ... if: <expr>`
       #   * break if `<expr>` is true at specified location.
+      # * `b[reak] ... pre: <command>`
+      #   * break and run `<command>` before stopping.
       # * `b[reak] ... do: <command>`
       #   * break and run `<command>`, and continue.
-      # * `b[reak] ... if: <cond_expr> do: <command>`
-      #   * combination of `if:` and `do:`.
       # * `b[reak] if: <expr>`
       #   * break if: `<expr>` is true at any lines.
       #   * Note that this feature is super slow.
@@ -872,42 +872,37 @@ module DEBUGGER__
       end
     end
 
+    BREAK_KEYWORDS = %w(if: do: pre:).freeze
+
+    def parse_break arg
+      mode = :sig
+      expr = Hash.new{|h, k| h[k] = []}
+      arg.split(' ').each{|w|
+        if BREAK_KEYWORDS.any?{|pat| w == pat}
+          mode = w[0..-2].to_sym
+        else
+          expr[mode] << w
+        end
+      }
+      expr.default_proc = nil
+      expr.transform_values{|v| v.join(' ')}
+    end
+
     def repl_add_breakpoint arg
-      arg.strip!
-      make_command = -> cmd do
-        ['break do', cmd.split(';;').map{|e| e.strip}]
-      end
+      expr = parse_break arg.strip
+      cond = expr[:if]
+      cmd = ['break', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
 
-      case arg
-      when /\Aif:\s*(.+)do:\s*(.+)\z/
-        cond = $1
-        cmd = make_command.call($2)
-      when /\Aif:\s*(.+)\z/
-        cond = $1
-      when /\A(.+?)\s+if:\s+(.+)\s+do:\s*(.+)e\z/
-        sig = $1
-        cond = $2
-        cmd = make_command.call $3
-      when /\A(.+?)\s+if:\s+(.+)\z/
-        sig = $1
-        cond = $2
-      when /\A(.+?)\s+do:(.+)\z/
-        sig = $1
-        cmd = make_command.call $2
-      else
-        sig = arg
-      end
-
-      case sig
+      case expr[:sig]
       when /\A(\d+)\z/
-        add_line_breakpoint @tc.location.path, $1.to_i, cond: cond, command: cmd
+        add_line_breakpoint @tc.location.path, $1.to_i, cond: expr[:if], command: cmd
       when /\A(.+)[:\s+](\d+)\z/
-        add_line_breakpoint $1, $2.to_i, cond: cond, command: cmd
+        add_line_breakpoint $1, $2.to_i, cond: expr[:if], command: cmd
       when /\A(.+)([\.\#])(.+)\z/
-        @tc << [:breakpoint, :method, $1, $2, $3, cond, cmd]
+        @tc << [:breakpoint, :method, $1, $2, $3, expr[:if], cmd]
         return :noretry
       when nil
-        add_check_breakpoint cond
+        add_check_breakpoint expr[:if]
       else
         @ui.puts "Unknown breakpoint format: #{arg}"
         @ui.puts
@@ -1263,18 +1258,15 @@ module DEBUGGER__
       # ::DEBUGGER__.add_catch_breakpoint 'RuntimeError'
 
       Binding.module_eval do
-        def bp command: nil, nonstop: nil
+        def bp pre: nil, do: nil
           return unless SESSION.active?
-          cmds = ['binding.bp', command.split(";;")] if command && !command.strip.empty?
 
-          # nonstop
-          #  nil: auto_continue if command is given
-          nonstop = true if cmds if nonstop == nil
+          if pre || (do_expr = binding.local_variable_get(:do))
+            cmds = ['binding.bp', pre, do_expr]
+          end
 
-          # maybe it is the end of the file
-          ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, command: cmds, nonstop: nonstop
+          ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, command: cmds
           true
-          
         end
         alias debug bp
       end

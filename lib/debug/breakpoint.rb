@@ -50,8 +50,9 @@ module DEBUGGER__
 
     def suspend
       if @command
-        provider, cmds, nonstop = @command
-        nonstop = true if nonstop.nil?
+        provider, pre_cmds, do_cmds = @command
+        nonstop = true if do_cmds
+        cmds = [*pre_cmds&.split(';;'), *do_cmds&.split(';;')]
         SESSION.add_preset_commands provider, cmds, kick: false, continue: nonstop
       end
 
@@ -60,8 +61,9 @@ module DEBUGGER__
 
     def to_s
       s = ''.dup
-      s << " if: #{@cond}"       if defined?(@cond) && @cond
-      s << " do: #{@command[1].join(';; ')}" if defined?(@command) && @command
+      s << " if: #{@cond}"        if defined?(@cond) && @cond
+      s << " pre: #{@command[1]}" if defined?(@command) && @command && @command[1]
+      s << " do: #{@command[2]}"  if defined?(@command) && @command && @command[2]
       s
     end
 
@@ -83,7 +85,7 @@ module DEBUGGER__
   class LineBreakpoint < Breakpoint
     attr_reader :path, :line, :iseq
 
-    def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil, nonstop: nil
+    def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil
       @path = path
       @line = line
       @cond = cond
