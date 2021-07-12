@@ -38,7 +38,7 @@ module DEBUGGER__
     show_info_lines:['RUBY_DEBUG_SHOW_INFO_LINES',"UI: Show n lines on info command (default: 10 lines, 0 for unlimited)",   :int],
     use_short_path: ['RUBY_DEBUG_USE_SHORT_PATH', "UI: Show shoten PATH (like $(Gem)/foo.rb)",                      :bool],
     skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "UI: Skip on no source code lines (default: false)",              :bool],
-    skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "UI: Skip showing frames for given paths (default: [])",          :array],
+    skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "UI: Skip showing frames for given paths (default: [])",          :path],
     no_color:       ['RUBY_DEBUG_NO_COLOR',       "UI: Do not use colorize (default: false)",                       :bool],
     no_sigint_hook: ['RUBY_DEBUG_NO_SIGINT_HOOK', "UI: Do not suspend on SIGINT (default: false)",                  :bool],
 
@@ -47,6 +47,7 @@ module DEBUGGER__
     init_script:    ['RUBY_DEBUG_INIT_SCRIPT', "BOOT: debug command script path loaded at first stop"],
     commands:       ['RUBY_DEBUG_COMMANDS',    "BOOT: debug commands invoked at first stop. commands should be separated by ';;'"],
     no_rc:          ['RUBY_DEBUG_NO_RC',       "BOOT: ignore loading ~/.rdbgrc(.rb)",                               :bool],
+    history:        ['RUBY_DEBUG_HISTORY',     "BOOT: save and load history file (default: ~/.rdbg_history)"],
 
     # remote setting
     port:           ['RUBY_DEBUG_PORT',      "REMOTE: TCP/IP remote debugging: port"],
@@ -83,8 +84,14 @@ module DEBUGGER__
       else
         raise "Unknown loglevel: #{valstr}"
       end
-    when :array # array of String
-      valstr.split(/:/)
+    when :path # array of String
+      valstr.split(/:/).map{|e|
+        if /\A\/(.+)\/\z/ =~ e
+          Regexp.compile $1
+        else
+          e
+        end
+      }
     else
       valstr
     end
@@ -224,7 +231,7 @@ module DEBUGGER__
 
   def self.append_config key, val
     if CONFIG_SET[key]
-      if CONFIG_SET[key][2] == :array
+      if CONFIG_SET[key][2] == :path
         CONFIG[key] = [*CONFIG[key], *parse_config_value(key, val)];
       else
         raise "not an Array type: #{key}"

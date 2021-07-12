@@ -394,7 +394,14 @@ module DEBUGGER__
         frames = []
         @target_frames.each_with_index{|f, i|
           next if pattern && !(f.name.match?(pattern) || f.location_str.match?(pattern))
-          next if CONFIG[:skip_path] && CONFIG[:skip_path].any?{|path| f.location_str.start_with?(path)}
+          next if CONFIG[:skip_path] && CONFIG[:skip_path].any?{|pat|
+            case pat
+            when String
+              f.location_str.start_with?(pat)
+            when Regexp
+              f.location_str.match?(pat)
+            end
+          }
 
           frames << [i, f]
         }
