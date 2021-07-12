@@ -30,7 +30,7 @@ module DEBUGGER__
       <<~RUBY
      1| class Foo
      2|   def bar
-     3|     binding.bp(command: "continue")
+     3|     binding.bp(command: "p 'aaaaa'")
      4|     baz
      5|   end
      6|
@@ -46,7 +46,9 @@ module DEBUGGER__
     def test_breakpoint_execute_command_argument_correctly
       debug_code(program) do
         type 'continue'
-        assert_line_text('Foo#baz')
+        assert_line_text(/aaaaa/)
+        # should stay at Foo#bar
+        assert_no_line_text(/Foo#baz/)
         type 'q!'
       end
     end

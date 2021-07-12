@@ -875,7 +875,7 @@ module DEBUGGER__
     def repl_add_breakpoint arg
       arg.strip!
       make_command = -> cmd do
-        ['break do', cmd.split(';;').map{|e| e.strip}]
+        ['break do', cmd.split(';;').map{|e| e.strip}, false]
       end
 
       case arg
@@ -1265,7 +1265,7 @@ module DEBUGGER__
       Binding.module_eval do
         def bp command: nil, nonstop: nil
           return unless SESSION.active?
-          cmds = ['binding.bp', command.split(";;")] if command && !command.strip.empty?
+          cmds = ['binding.bp', command.split(";;"), false] if command && !command.strip.empty?
 
           # nonstop
           #  nil: auto_continue if command is given
@@ -1274,7 +1274,7 @@ module DEBUGGER__
           # maybe it is the end of the file
           ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, command: cmds, nonstop: nonstop
           true
-          
+
         end
         alias debug bp
       end

@@ -38,6 +38,8 @@ module DEBUGGER__
         # stops when @name changes
         assert_line_text(/#0  BP - Watch  #<Student:.*> @name = John/)
         type 'continue'
+        assert_line_text(/#0  BP - Watch  #<Student:.*> @name = John -> Josh/)
+        type 'continue'
       end
     end
 
