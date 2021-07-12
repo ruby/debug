@@ -254,7 +254,7 @@ module DEBUGGER__
     def test_conditional_breakpoint_stops_at_specified_location_if_condition_is_true
       debug_code(program) do
         type 'break 16 if: d == 1'
-        assert_line_text(/#0  BP - Line  .*\.rb:16 \(return\) if d == 1/)
+        assert_line_text(/#0  BP - Line  .*\.rb:16 \(return\) if: d == 1/)
         type 'continue'
         assert_line_num 16
         type 'quit'

@@ -49,15 +49,20 @@ module DEBUGGER__
     end
 
     def suspend
+      if @command
+        provider, cmds, nonstop = @command
+        nonstop = true if nonstop.nil?
+        SESSION.add_preset_commands provider, cmds, kick: false, continue: nonstop
+      end
+
       ThreadClient.current.on_breakpoint @tp, self
     end
 
     def to_s
-      if @cond
-        " if #{@cond}"
-      else
-        ""
-      end
+      s = ''.dup
+      s << " if: #{@cond}"       if defined?(@cond) && @cond
+      s << " do: #{@command[1].join(';; ')}" if defined?(@command) && @command
+      s
     end
 
     def description
@@ -91,9 +96,6 @@ module DEBUGGER__
       @hook_call = hook_call
       @command = command
 
-      nonstop = command ? true : false if nonstop.nil?
-      @nonstop = nonstop
-
       @iseq = nil
       @type = nil
 
@@ -111,11 +113,6 @@ module DEBUGGER__
           next unless safe_eval tp.binding, @cond
         end
         delete if @oneshot
-
-        if @command
-          provider, cmds = @command
-          SESSION.add_preset_commands provider, cmds, kick: false, continue: @nonstop
-        end
 
         suspend
       end
@@ -349,7 +346,7 @@ module DEBUGGER__
 
     attr_reader :sig_method_name, :method
 
-    def initialize b, klass_name, op, method_name, cond
+    def initialize b, klass_name, op, method_name, cond, command: nil
       @sig_klass_name = klass_name
       @sig_op = op
       @sig_method_name = method_name
@@ -358,6 +355,7 @@ module DEBUGGER__
       @klass = nil
       @method = nil
       @cond = cond
+      @command = command
       @key = "#{klass_name}#{op}#{method_name}".freeze
 
       super(false)

@@ -435,8 +435,8 @@ module DEBUGGER__
     def make_breakpoint args
       case args.first
       when :method
-        klass_name, op, method_name, cond = args[1..]
-        bp = MethodBreakpoint.new(current_frame.binding, klass_name, op, method_name, cond)
+        klass_name, op, method_name, cond, cmd = args[1..]
+        bp = MethodBreakpoint.new(current_frame.binding, klass_name, op, method_name, cond, command: cmd)
         begin
           bp.enable
         rescue Exception => e

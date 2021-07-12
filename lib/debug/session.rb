@@ -348,6 +348,8 @@ module DEBUGGER__
       #   * break if `<expr>` is true at specified location.
       # * `b[reak] ... do: <command>`
       #   * break and run `<command>`, and continue.
+      # * `b[reak] ... if: <cond_expr> do: <command>`
+      #   * combination of `if:` and `do:`.
       # * `b[reak] if: <expr>`
       #   * break if: `<expr>` is true at any lines.
       #   * Note that this feature is super slow.
@@ -839,23 +841,26 @@ module DEBUGGER__
 
     def repl_add_breakpoint arg
       arg.strip!
+      make_command = -> cmd do
+        ['break do', cmd.split(';;').map{|e| e.strip}]
+      end
 
       case arg
       when /\Aif:\s*(.+)do:\s*(.+)\z/
         cond = $1
-        cmd = ['break do', $2.split(';;')]
+        cmd = make_command.call($2)
       when /\Aif:\s*(.+)\z/
         cond = $1
       when /\A(.+?)\s+if:\s+(.+)\s+do:\s*(.+)e\z/
         sig = $1
         cond = $2
-        cmd = ['break do', $3.split(';;')]
+        cmd = make_command.call $3
       when /\A(.+?)\s+if:\s+(.+)\z/
         sig = $1
         cond = $2
       when /\A(.+?)\s+do:(.+)\z/
         sig = $1
-        cmd = ['break do', $2.split(';;')]
+        cmd = make_command.call $2
       else
         sig = arg
       end
@@ -866,7 +871,7 @@ module DEBUGGER__
       when /\A(.+)[:\s+](\d+)\z/
         add_line_breakpoint $1, $2.to_i, cond: cond, command: cmd
       when /\A(.+)([\.\#])(.+)\z/
-        @tc << [:breakpoint, :method, $1, $2, $3, cond]
+        @tc << [:breakpoint, :method, $1, $2, $3, cond, cmd]
         return :noretry
       when nil
         add_check_breakpoint cond

@@ -389,6 +389,8 @@ The `<...>` notation means the argument.
   * break if `<expr>` is true at specified location.
 * `b[reak] ... do: <command>`
   * break and run `<command>`, and continue.
+* `b[reak] ... if: <cond_expr> do: <command>`
+  * combination of `if:` and `do:`.
 * `b[reak] if: <expr>`
   * break if: `<expr>` is true at any lines.
   * Note that this feature is super slow.
