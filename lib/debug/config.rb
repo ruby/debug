@@ -66,7 +66,7 @@ module DEBUGGER__
   end
 
   def self.parse_config_value name, valstr
-    return nil if valstr == nil
+    return valstr unless valstr.kind_of? String
 
     case CONFIG_SET[name][2]
     when :bool
