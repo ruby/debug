@@ -1229,6 +1229,7 @@ module DEBUGGER__
           ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true
           true
         end
+        alias debug bp
       end
 
       load_rc
