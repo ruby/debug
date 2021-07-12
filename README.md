@@ -473,12 +473,16 @@ The `<...>` notation means the argument.
 
 ### Configuration
 
-* set
-  * Show all configuration with description
-* set <name>
-  * Show current configuration of <name>
-* set <name>=<val>
-  * Set <name> to <val>
+* `config`
+  * Show all configuration with description.
+* `config <name>`
+  * Show current configuration of <name>.
+* `config set <name> <val>` or `config <name> = <val>`
+  * Set <name> to <val>.
+* `config append <name> <val>` or `config <name> << <val>`
+  * Append `<val>` to `<name>` if it is an array.
+* `config unset <name>`
+  * Set <name> to default.
 
 ### Help
 

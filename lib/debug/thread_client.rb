@@ -392,13 +392,12 @@ module DEBUGGER__
     def show_frames max = nil, pattern = nil
       if @target_frames && (max ||= @target_frames.size) > 0
         frames = []
-        if pattern
-          @target_frames.each_with_index{|f, i|
-            frames << [i, f] if f.name.match?(pattern) || f.location_str.match?(pattern)
-          }
-        else
-          frames = @target_frames.map.with_index{|f, i| [i, f]}
-        end
+        @target_frames.each_with_index{|f, i|
+          next if pattern && !(f.name.match?(pattern) || f.location_str.match?(pattern))
+          next if CONFIG[:skip_path] && CONFIG[:skip_path].any?{|path| f.location_str.start_with?(path)}
+
+          frames << [i, f]
+        }
 
         size = frames.size
         max.times{|i|

@@ -638,14 +638,18 @@ module DEBUGGER__
         return :retry
 
       ### Configuration
-      # * set
-      #   * Show all configuration with description
-      # * set <name>
-      #   * Show current configuration of <name>
-      # * set <name>=<val>
-      #   * Set <name> to <val>
-      when 'set'
-        set_command arg
+      # * `config`
+      #   * Show all configuration with description.
+      # * `config <name>`
+      #   * Show current configuration of <name>.
+      # * `config set <name> <val>` or `config <name> = <val>`
+      #   * Set <name> to <val>.
+      # * `config append <name> <val>` or `config <name> << <val>`
+      #   * Append `<val>` to `<name>` if it is an array.
+      # * `config unset <name>`
+      #   * Set <name> to default.
+      when 'config'
+        config_command arg
         return :retry
 
       ### Help
@@ -679,7 +683,7 @@ module DEBUGGER__
       return :retry
     end
 
-    def show_config key
+    def config_show key
       key = key.to_sym
       if CONFIG_SET[key]
         v = CONFIG[key]
@@ -692,27 +696,56 @@ module DEBUGGER__
           @ui.puts line
         end
       else
-        @ui.puts "Uknown configuration: #{key}"
+        @ui.puts "Unknown configuration: #{key}. 'config' shows all configurations."
       end
     end
 
-    def set_command arg
+    def config_set key, val, append: false
+      if CONFIG_SET[key = key.to_s]
+        begin
+          if append
+            DEBUGGER__.append_config(key, val)
+          else
+            DEBUGGER__.set_config({key => val})
+          end
+        rescue => e
+          @ui.puts e.message
+        end
+      end
+
+      config_show key
+    end
+
+    def config_command arg
       case arg
       when nil
         CONFIG_SET.each do |k, _|
-          show_config k
+          config_show k
         end
-      when /\A(\w+)\s*=\s*(\w+)\z/
+
+      when /\Aunset\s+(.+)\z/
         if CONFIG_SET[key = $1.to_sym]
-          begin
-            DEBUGGER__.set_config({key => $2})
-          rescue => e
-            @ui.puts e.message
-          end
+          DEBUGGER__.set_config({key => nil})
         end
-        show_config $1
+        config_show key
+
+      when /\A(\w+)\s*=\s*(.+)\z/
+        config_set $1, $2
+
+      when /\A\s*set\s+(\w+)\s+(.+)\z/
+        config_set $1, $2
+
+      when /\A(\w+)\s*<<\s*(.+)\z/
+        config_set $1, $2, append: true
+
+      when /\A\s*append\s+(\w+)\s+(.+)\z/
+        config_set $1, $2
+
       when /\A(\w+)\z/
-        show_config $1
+        config_show $1
+
+      else
+        @ui.puts "Can not parse parameters: #{arg}"
       end
     end
 

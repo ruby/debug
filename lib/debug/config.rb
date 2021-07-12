@@ -38,6 +38,7 @@ module DEBUGGER__
     show_info_lines:['RUBY_DEBUG_SHOW_INFO_LINES',"UI: Show n lines on info command (default: 10 lines, 0 for unlimited)",   :int],
     use_short_path: ['RUBY_DEBUG_USE_SHORT_PATH', "UI: Show shoten PATH (like $(Gem)/foo.rb)",                      :bool],
     skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "UI: Skip on no source code lines (default: false)",              :bool],
+    skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "UI: Skip showing frames for given paths (default: [])",          :array],
     no_color:       ['RUBY_DEBUG_NO_COLOR',       "UI: Do not use colorize (default: false)",                       :bool],
     no_sigint_hook: ['RUBY_DEBUG_NO_SIGINT_HOOK', "UI: Do not suspend on SIGINT (default: false)",                  :bool],
 
@@ -64,6 +65,8 @@ module DEBUGGER__
   end
 
   def self.parse_config_value name, valstr
+    return nil if valstr == nil
+
     case CONFIG_SET[name][2]
     when :bool
       case valstr
@@ -80,6 +83,8 @@ module DEBUGGER__
       else
         raise "Unknown loglevel: #{valstr}"
       end
+    when :array # array of String
+      valstr.split(/:/)
     else
       valstr
     end
@@ -212,8 +217,20 @@ module DEBUGGER__
       if CONFIG_MAP[k]
         CONFIG[k] = parse_config_value(k, v) # TODO: ractor support
       else
-        raise "unknown option: #{k}"
+        raise "Unknown configuration: #{k}"
       end
     }
+  end
+
+  def self.append_config key, val
+    if CONFIG_SET[key]
+      if CONFIG_SET[key][2] == :array
+        CONFIG[key] = [*CONFIG[key], *parse_config_value(key, val)];
+      else
+        raise "not an Array type: #{key}"
+      end
+    else
+      raise "Unknown configuration: #{key}"
+    end
   end
 end
