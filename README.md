@@ -385,10 +385,12 @@ The `<...>` notation means the argument.
    * Set breakpoint on the method `<class>#<name>`.
 * `b[reak] <expr>.<name>`
    * Set breakpoint on the method `<expr>.<name>`.
-* `b[reak] ... if <expr>`
+* `b[reak] ... if: <expr>`
   * break if `<expr>` is true at specified location.
-* `b[reak] if <expr>`
-  * break if `<expr>` is true at any lines.
+* `b[reak] ... do: <command>`
+  * break and run `<command>`, and continue.
+* `b[reak] if: <expr>`
+  * break if: `<expr>` is true at any lines.
   * Note that this feature is super slow.
 * `catch <Error>`
   * Set breakpoint on raising `<Error>`.
