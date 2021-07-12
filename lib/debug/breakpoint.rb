@@ -83,13 +83,15 @@ module DEBUGGER__
 
     attr_reader :path, :line, :iseq
 
-    def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil, nonstop: false
+    def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil, nonstop: nil
       @path = path
       @line = line
       @cond = cond
       @oneshot = oneshot
       @hook_call = hook_call
       @command = command
+
+      nonstop = command ? true : false if nonstop.nil?
       @nonstop = nonstop
 
       @iseq = nil

@@ -344,10 +344,12 @@ module DEBUGGER__
       #    * Set breakpoint on the method `<class>#<name>`.
       # * `b[reak] <expr>.<name>`
       #    * Set breakpoint on the method `<expr>.<name>`.
-      # * `b[reak] ... if <expr>`
+      # * `b[reak] ... if: <expr>`
       #   * break if `<expr>` is true at specified location.
-      # * `b[reak] if <expr>`
-      #   * break if `<expr>` is true at any lines.
+      # * `b[reak] ... do: <command>`
+      #   * break and run `<command>`, and continue.
+      # * `b[reak] if: <expr>`
+      #   * break if: `<expr>` is true at any lines.
       #   * Note that this feature is super slow.
       when 'b', 'break'
         if arg == nil
@@ -839,20 +841,30 @@ module DEBUGGER__
       arg.strip!
 
       case arg
-      when /\Aif\s+(.+)\z/
+      when /\Aif:\s*(.+)do:\s*(.+)\z/
         cond = $1
-      when /(.+?)\s+if\s+(.+)\z/
+        cmd = ['break do', $2.split(';;')]
+      when /\Aif:\s*(.+)\z/
+        cond = $1
+      when /\A(.+?)\s+if:\s+(.+)\s+do:\s*(.+)e\z/
         sig = $1
         cond = $2
+        cmd = ['break do', $3.split(';;')]
+      when /\A(.+?)\s+if:\s+(.+)\z/
+        sig = $1
+        cond = $2
+      when /\A(.+?)\s+do:(.+)\z/
+        sig = $1
+        cmd = ['break do', $2.split(';;')]
       else
         sig = arg
       end
 
       case sig
       when /\A(\d+)\z/
-        add_line_breakpoint @tc.location.path, $1.to_i, cond: cond
+        add_line_breakpoint @tc.location.path, $1.to_i, cond: cond, command: cmd
       when /\A(.+)[:\s+](\d+)\z/
-        add_line_breakpoint $1, $2.to_i, cond: cond
+        add_line_breakpoint $1, $2.to_i, cond: cond, command: cmd
       when /\A(.+)([\.\#])(.+)\z/
         @tc << [:breakpoint, :method, $1, $2, $3, cond]
         return :noretry
