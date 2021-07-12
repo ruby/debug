@@ -103,6 +103,8 @@ module DEBUGGER__
 
       super()
       try_activate
+
+      @pending = !@iseq
     end
 
     def setup
@@ -140,9 +142,10 @@ module DEBUGGER__
 
       @key = [@path, @line].freeze
       SESSION.rehash_bps
-
       setup
       enable
+
+      DEBUGGER__.warn "#{self} is activated." if @pending
     end
 
     def activate_exact iseq, events, line
