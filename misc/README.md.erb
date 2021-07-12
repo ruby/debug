@@ -329,20 +329,19 @@ If there are `~/.rdbgrc`, the file is loaded as initial scripts which contains d
 
 If there are `~/.rdbgrc.rb` is available, it is loaded as a ruby script at same timing.
 
-### Environment variables
+### Configurations
 
-You can control debuggee's behavior with environment variables:
+You can configure debugger's setting with environment variables and `config` command.
+You can write any configuration into `~/.rdbgrc` like:
 
-* `RUBY_DEBUG_NONSTOP`: 1 for nonstop at the beginning of program.
-* `RUBY_DEBUG_INIT_SCRIPT`: Initial script path loaded at the first stop.
-* `RUBY_DEBUG_COMMANDS`: Debug commands invoked at the first stop. Commands should be separated by ';;'.
-* `RUBY_DEBUG_SHOW_SRC_LINES`: Show n lines source code on breakpoint (default: 10 lines).
-* `RUBY_DEBUG_SHOW_FRAMES`: Show n frames on breakpoint (default: 2 frames).
-* Remote debugging
-  * `RUBY_DEBUG_PORT`: TCP/IP remote debugging: port to open.
-  * `RUBY_DEBUG_HOST`: TCP/IP remote debugging: host (localhost if not given) to open.
-  * `RUBY_DEBUG_SOCK_PATH`: UNIX Domain Socket remote debugging: socket path to open.
-  * `RUBY_DEBUG_SOCK_DIR`: UNIX Domain Socket remote debugging: socket directory to open.
+```
+config set log_level INFO
+config set no_color true
+```
+<% cat = nil; DEBUGGER__::CONFIG_SET.each do |key, (env, desc)| %>
+<% /\A(\w+): (.+)/ =~ desc; if cat != $1; cat = 1 %>
+* <%= $1 %>
+<% cat = $1; end %>  * `<%= env %>` (`<%= key %>`): <%= $2 %><% end %>
 
 ## Debug command on the debug console
 

@@ -329,20 +329,41 @@ If there are `~/.rdbgrc`, the file is loaded as initial scripts which contains d
 
 If there are `~/.rdbgrc.rb` is available, it is loaded as a ruby script at same timing.
 
-### Environment variables
+### Configurations
 
-You can control debuggee's behavior with environment variables:
+You can configure debugger's setting with environment variables and `config` command.
+You can write any configuration into `~/.rdbgrc` like:
 
-* `RUBY_DEBUG_NONSTOP`: 1 for nonstop at the beginning of program.
-* `RUBY_DEBUG_INIT_SCRIPT`: Initial script path loaded at the first stop.
-* `RUBY_DEBUG_COMMANDS`: Debug commands invoked at the first stop. Commands should be separated by ';;'.
-* `RUBY_DEBUG_SHOW_SRC_LINES`: Show n lines source code on breakpoint (default: 10 lines).
-* `RUBY_DEBUG_SHOW_FRAMES`: Show n frames on breakpoint (default: 2 frames).
-* Remote debugging
-  * `RUBY_DEBUG_PORT`: TCP/IP remote debugging: port to open.
-  * `RUBY_DEBUG_HOST`: TCP/IP remote debugging: host (localhost if not given) to open.
-  * `RUBY_DEBUG_SOCK_PATH`: UNIX Domain Socket remote debugging: socket path to open.
-  * `RUBY_DEBUG_SOCK_DIR`: UNIX Domain Socket remote debugging: socket directory to open.
+```
+config set log_level INFO
+config set no_color true
+```
+
+
+* UI
+  * `RUBY_DEBUG_LOG_LEVEL` (`log_level`): Log level same as Logger (default: WARN)
+  * `RUBY_DEBUG_SHOW_SRC_LINES` (`show_src_lines`): Show n lines source code on breakpoint (default: 10 lines)
+  * `RUBY_DEBUG_SHOW_FRAMES` (`show_frames`): Show n frames on breakpoint (default: 2 frames)
+  * `RUBY_DEBUG_SHOW_INFO_LINES` (`show_info_lines`): Show n lines on info command (default: 10 lines, 0 for unlimited)
+  * `RUBY_DEBUG_USE_SHORT_PATH` (`use_short_path`): Show shoten PATH (like $(Gem)/foo.rb)
+  * `RUBY_DEBUG_SKIP_NOSRC` (`skip_nosrc`): Skip on no source code lines (default: false)
+  * `RUBY_DEBUG_SKIP_PATH` (`skip_path`): Skip showing frames for given paths (default: [])
+  * `RUBY_DEBUG_NO_COLOR` (`no_color`): Do not use colorize (default: false)
+  * `RUBY_DEBUG_NO_SIGINT_HOOK` (`no_sigint_hook`): Do not suspend on SIGINT (default: false)
+
+* BOOT
+  * `RUBY_DEBUG_NONSTOP` (`nonstop`): Nonstop mode
+  * `RUBY_DEBUG_INIT_SCRIPT` (`init_script`): debug command script path loaded at first stop
+  * `RUBY_DEBUG_COMMANDS` (`commands`): debug commands invoked at first stop. commands should be separated by ';;'
+  * `RUBY_DEBUG_NO_RC` (`no_rc`): ignore loading ~/.rdbgrc(.rb)
+  * `RUBY_DEBUG_HISTORY` (`history`): save and load history file (default: ~/.rdbg_history)
+
+* REMOTE
+  * `RUBY_DEBUG_PORT` (`port`): TCP/IP remote debugging: port
+  * `RUBY_DEBUG_HOST` (`host`): TCP/IP remote debugging: host (localhost if not given)
+  * `RUBY_DEBUG_SOCK_PATH` (`sock_path`): UNIX Domain Socket remote debugging: socket path
+  * `RUBY_DEBUG_SOCK_DIR` (`sock_dir`): UNIX Domain Socket remote debugging: socket directory
+  * `RUBY_DEBUG_COOKIE` (`cookie`): Cookie for negotiation
 
 ## Debug command on the debug console
 
