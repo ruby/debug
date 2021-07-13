@@ -441,6 +441,10 @@ The `<...>` notation means the argument.
   * Show predecessor lines as opposed to the `list` command.
 * `l[ist] <start>` or `l[ist] <start>-<end>`
   * Show current frame's source code from the line <start> to <end> if given.
+* `ls`
+  * Executes `irb`'s `ls` command with current binding.
+* `ls <obj>`
+  * Executes `irb`'s `ls` command with the given obj.
 * `edit`
   * Open the current file on the editor (use `EDITOR` environment variable).
   * Note that edited file will not be reloaded.

@@ -481,6 +481,10 @@ module DEBUGGER__
           return :retry
         end
 
+      # * `ls`
+      #   * Executes `irb`'s `ls` command with current binding.
+      # * `ls <obj>`
+      #   * Executes `irb`'s `ls` command with the given obj.
       when 'ls'
         if @ui.remote?
           @ui.puts "not supported on the remote console."
