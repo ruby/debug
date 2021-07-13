@@ -482,6 +482,10 @@ module DEBUGGER__
         end
 
       when 'ls'
+        if @ui.remote?
+          @ui.puts "not supported on the remote console."
+          return :retry
+        end
         @tc << [:irb, :ls, arg]
 
       # * `edit`

@@ -22,7 +22,7 @@ module DEBUGGER__
     end
 
     def test_ls_lists_local_variables
-      debug_code(program) do
+      debug_code(program, remote: false) do
         type 'c'
         type 'ls'
         assert_line_text(/locals.*: _  foo/)
@@ -31,7 +31,7 @@ module DEBUGGER__
     end
 
     def test_ls_lists_object_info
-      debug_code(program) do
+      debug_code(program, remote: false) do
         type 'c'
         type 'ls foo'
         assert_line_text([
@@ -43,7 +43,7 @@ module DEBUGGER__
     end
 
     def test_ls_lists_class_info
-      debug_code(program) do
+      debug_code(program, remote: false) do
         type 'c'
         type 'ls Foo'
         assert_line_text(
