@@ -17,7 +17,8 @@ end
 
 task :default => [:clobber, :compile, :test, 'README.md']
 
-file 'README.md' => ['lib/debug/session.rb', 'exe/rdbg', 'misc/README.md.erb'] do
+file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
+                     'exe/rdbg', 'misc/README.md.erb'] do
   require_relative 'lib/debug/session'
   require 'erb'
   File.write 'README.md', ERB.new(File.read('misc/README.md.erb')).result
