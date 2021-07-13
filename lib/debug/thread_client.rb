@@ -2,6 +2,7 @@
 
 require 'objspace'
 require 'pp'
+require "irb"
 
 require_relative 'frame_info'
 require_relative 'color'
@@ -15,6 +16,7 @@ module DEBUGGER__
       end
     end
 
+    extend IRB::ExtendCommandBundle
     include Color
 
     attr_reader :location, :thread, :mode, :id
@@ -689,8 +691,5 @@ module DEBUGGER__
     def reset_irb_context
       IRB.conf[:MAIN_CONTEXT] = nil
     end
-
-    require "irb"
-    extend IRB::ExtendCommandBundle
   end
 end
