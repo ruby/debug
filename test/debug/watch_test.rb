@@ -11,7 +11,7 @@ module DEBUGGER__
          3|
          4|   def initialize(name)
          5|     @name = name
-         6|     binding.bp(do: "watch @name")
+         6|     binding.break(do: "watch @name")
          7|   end
          8| end
          9|
@@ -33,7 +33,7 @@ module DEBUGGER__
     def test_debugger_only_stops_when_the_ivar_of_instance_changes
       debug_code(program) do
         type 'continue'
-        # stops at binding.bp
+        # stops at binding.break
         assert_line_text('Student#initialize(name="John")')
         # stops when @name changes
         assert_line_text(/#0  BP - Watch  #<Student:.*> @name = John/)

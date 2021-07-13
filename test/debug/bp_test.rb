@@ -8,7 +8,7 @@ module DEBUGGER__
       <<~RUBY
      1| class Foo
      2|   def bar
-     3|     binding.bp
+     3|     binding.break
      4|   end
      5| end
      6|
@@ -30,12 +30,12 @@ module DEBUGGER__
       <<~RUBY
      1| class Foo
      2|   def bar
-     3|     binding.bp(pre: "p 'aaaaa'")
+     3|     binding.break(pre: "p 'aaaaa'")
      4|     baz
      5|   end
      6|
      7|   def baz
-     8|     binding.bp
+     8|     binding.break
      9|   end
     10| end
     11|
@@ -71,12 +71,12 @@ module DEBUGGER__
       <<~RUBY
      1| class Foo
      2|   def bar
-     3|     binding.bp(do: "p 'aaaaa'")
+     3|     binding.break(do: "p 'aaaaa'")
      4|     baz
      5|   end
      6|
      7|   def baz
-     8|     binding.bp
+     8|     binding.break
      9|   end
     10| end
     11|

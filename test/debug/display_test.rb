@@ -8,7 +8,7 @@ module DEBUGGER__
       <<~RUBY
      1| a = 1
      2| b = 2
-     3| binding.bp
+     3| binding.break
      4| __END__
       RUBY
     end

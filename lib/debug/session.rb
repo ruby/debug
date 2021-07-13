@@ -1258,17 +1258,18 @@ module DEBUGGER__
       # ::DEBUGGER__.add_catch_breakpoint 'RuntimeError'
 
       Binding.module_eval do
-        def bp pre: nil, do: nil
+        def break pre: nil, do: nil
           return unless SESSION.active?
 
           if pre || (do_expr = binding.local_variable_get(:do))
-            cmds = ['binding.bp', pre, do_expr]
+            cmds = ['binding.break', pre, do_expr]
           end
 
           ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, command: cmds
           true
         end
-        alias debug bp
+        alias b break
+        # alias bp break
       end
 
       load_rc

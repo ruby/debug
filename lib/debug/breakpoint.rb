@@ -167,7 +167,6 @@ module DEBUGGER__
     end
 
     def duplicable?
-      # only binding.bp or DEBUGGER__.console are duplicable
       @oneshot
     end
 

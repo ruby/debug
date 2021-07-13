@@ -7,7 +7,7 @@ module DEBUGGER__
     def program
       <<~RUBY
       1| h = { foo: "bar" }
-      2| binding.bp
+      2| binding.break
       RUBY
     end
 

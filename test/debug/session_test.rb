@@ -11,7 +11,7 @@ module DEBUGGER__
        3| require "debug"
        4| DEBUGGER__.start
        5| c = 3
-       6| binding.bp
+       6| binding.break
        7| "foo"
       RUBY
     end
@@ -43,7 +43,7 @@ module DEBUGGER__
        3| require "debug/run"
        4|
        5| c = 3
-       6| binding.bp
+       6| binding.break
        7| "foo"
       RUBY
     end

@@ -13,7 +13,7 @@ module DEBUGGER__
      5| a = 1
      6| foo + a
      7|
-     8| binding.bp
+     8| binding.break
      9| __END__
       RUBY
     end

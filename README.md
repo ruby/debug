@@ -92,7 +92,7 @@ When you run the program with the debug console, you will see the debug console 
 The debuggee program (`target.rb`) is suspended at the beginning of `target.rb`.
 
 
-Alternatively, start the debugger at a specific location in your program using `binding.bp`.
+Alternatively, start the debugger at a specific location in your program using `binding.break` (`binding.b` for short).
 
 ```ruby
 # target.rb
@@ -100,7 +100,7 @@ require 'debug' # start the debugger
 
 # ... program ...
 
-binding.bp # setup a breakpoint at this line
+binding.break # setup a breakpoint at this line
 
 # ... rest of program ...
 ```
