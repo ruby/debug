@@ -580,6 +580,26 @@ module DEBUGGER__
             raise "unsupported frame operation: #{arg.inspect}"
           end
           event! :result, nil
+        when :irb
+          cmd, arg_expr = *args
+
+          raise "unsupported irb command: #{cmd}" unless cmd == :ls
+
+          begin
+            # most irb commands require irb workplace or irb session present in the environment to work
+            init_irb_context
+
+            if arg_expr
+              arg = frame_eval(arg_expr)
+              self.class.send("irb_#{cmd}", arg)
+            else
+              self.class.send("irb_#{cmd}")
+            end
+          ensure
+            reset_irb_context
+          end
+
+          event! :result, nil
         when :show
           type = args.shift
 
@@ -658,5 +678,19 @@ module DEBUGGER__
       str += " (not under control)" unless self.mode
       str
     end
+
+    def init_irb_context
+      IRB.init_config(nil)
+      workspace = IRB::WorkSpace.new(current_frame.binding)
+      irb = IRB::Irb.new(workspace, nil)
+      IRB.conf[:MAIN_CONTEXT] = irb.context
+    end
+
+    def reset_irb_context
+      IRB.conf[:MAIN_CONTEXT] = nil
+    end
+
+    require "irb"
+    extend IRB::ExtendCommandBundle
   end
 end

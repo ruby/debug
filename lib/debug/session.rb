@@ -481,6 +481,9 @@ module DEBUGGER__
           return :retry
         end
 
+      when 'ls'
+        @tc << [:irb, :ls, arg]
+
       # * `edit`
       #   * Open the current file on the editor (use `EDITOR` environment variable).
       #   * Note that edited file will not be reloaded.
