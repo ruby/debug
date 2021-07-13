@@ -12,7 +12,7 @@ New debug.rb has several advantages:
   * UNIX domain socket
   * TCP/IP
   * VSCode/DAP integration ([VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg))
-* Extensible: application can introduce debugging support with several methods
+* Extensible: application can introduce debugging support with several ways:
   * By `rdbg` command
   * By loading libraries with `-r` command line option
   * By calling Ruby's method explicitly
@@ -29,321 +29,345 @@ $ gem install debug --pre
 
 or specify `-Ipath/to/debug/lib` in `RUBYOPT` or each ruby command-line option, especially for debug this gem development.
 
-If you use Bundler, write the following line to your Gemfile. And use rdbg command with -c option.
+If you use Bundler, write the following line to your Gemfile.
 
 ```
 gem "debug", ">= 1.0.0.beta"
 ```
 
+# HOW TO USE
+
+To use a debugger, roughly you will do the following steps:
+
+1. Set breakpoints.
+2. Run a program with the debugger.
+3. At the breakpoint, enter the debugger console.
+4. Use debug commands.
+    * Query the prgram status (e.g. `p lvar` to see the local variable `lvar`).
+    * Control program flow (e.g. move to the another line with `step`, to the next line with `next`).
+    * Set another breakpoints (e.g. `catch Exception` to set the breakpoints when `Exception` is raiesd).
+    * Change the configuration (e.g. `config set no_color true` to disable coloring).
+    * Continue the program (`c` or `continue`) and goto 3.
+
+## Invoke with the debugger
+
+There are several options for (1) and (2). Please choose your favorite way.
+
+### Modify source code as `binding.pry` and `binding.irb`
+
+If you can modify the source code, you can use the debugger by adding `require 'debug'` line at the top of your program and putting `binding.break` method (`binding.b` for short) into lines where you want to stop as breakpoints like `binding.pry` and `binding.irb`.
+After that, you run the program as usuall and you will enter the debug console at breakpoints you inserted.
+
+The following example shows the demonstration of `binding.break`.
+
+```shell
+$ cat target.rb                        # Sample prgram
+require 'debug'
+
+a = 1
+b = 2
+binding.break                          # Program will stop here
+c = 3
+d = 4
+binding.break                          # Program will stop here
+p [a, b, c, d]
+
+$ ruby target.rb                       # Run the program normally.
+DEBUGGER: Session start (pid: 7604)
+[1, 10] in target.rb
+      1| require 'debug'
+      2|
+      3| a = 1
+      4| b = 2
+=>    5| binding.break                 # Now you can see it stops at this line
+      6| c = 3
+      7| d = 4
+      8| binding.break
+      9| p [a, b, c, d]
+     10|
+=>#0    <main> at target.rb:5
+
+(rdbg) info locals                     # You can show local variables
+=>#0    <main> at target.rb:5
+%self => main
+a => 1
+b => 2
+c => nil
+d => nil
+
+(rdbg) continue                        # Continue the execution
+[3, 11] in target.rb
+      3| a = 1
+      4| b = 2
+      5| binding.break
+      6| c = 3
+      7| d = 4
+=>    8| binding.break                 # Again the program stops at here
+      9| p [a, b, c, d]
+     10|
+     11| __END__
+=>#0    <main> at target.rb:8
+
+(rdbg) info locals                     # And you can see the updated local variables
+=>#0    <main> at target.rb:8
+%self => main
+a => 1
+b => 2
+c => 3
+d => 4
+
+(rdbg) continue
+[1, 2, 3, 4]
 ```
-$ rdbg -c bundle exec ruby target.rb
-```
 
-# How to use
+### Invoke the prorgam from the debugger as a traditional debuggers
 
-## Invoke with debugger
+If you don't want to modify the source code, you can set breakpoints with a debug command `break` (`b` for short).
+Using `rdbg` command to launch the program without any modifications, you can run the program with the debugger.
 
-You can run ruby program on debugger with the local debug console or the remote debug console.
+```shell
+$ cat target.rb                        # Sample prgram
+a = 1
+b = 2
+c = 3
+d = 4
+p [a, b, c, d]
 
-* (a) Run a ruby program with the local debug console
-* (b) Run a ruby program with the remote debug console by opening a network port
-  * (b-1) Open with UNIX domain socket
-  * (b-2) Open with TCP/IP port
-
-(b-1) is useful when you want to use debugging features after running the program.
-(b-2) is also useful when you don't have a ssh access for the Ruby process.
-
-To use debugging feature, you can have 3 ways.
-
-* (1) Use `rdbg` command
-* (2) Use `ruby -r debug...` command line option
-* (3) Write `require 'debug...'` in .rb files
-
-### Local debug console
-
-#### (1) Use `rdbg` command
-
-```
-$ rdbg target.rb
-$ rdbg -- -r foo -e expr # -- is required to make clear rdbg options and ruby's options
-```
-
-#### (2) Use `-r debug/run` command line option
-
-```
-$ ruby -r debug/run target.rb
-```
-
-#### (3) Write `require 'debug...'` in .rb files
-
-```ruby
-# target.rb
-require 'debug/run' # start the debug console
-
-# ... rest of program ...
-```
-
-
-```
-$ ruby target.rb
-```
-
-When you run the program with the debug console, you will see the debug console prompt `(rdbg)`.
-The debuggee program (`target.rb`) is suspended at the beginning of `target.rb`.
-
-
-Alternatively, start the debugger at a specific location in your program using `binding.break` (`binding.b` for short).
-
-```ruby
-# target.rb
-require 'debug' # start the debugger
-
-# ... program ...
-
-binding.break # setup a breakpoint at this line
-
-# ... rest of program ...
-```
-
-```
-$ ruby target.rb
-```
-
-You can type any debugger's command described bellow. "c" or "continue" resume the debuggee program.
-You can suspend the debuggee program and show the debug console with `Ctrl-C`.
-
-The following example shows simple usage of the debug console. You can show the all variables
-
-```
-$ rdbg  ~/src/rb/target.rb
-
-[1, 5] in /home/ko1/src/rb/target.rb
+$ rdbg target.rb                       # run like `ruby target.rb`
+DEBUGGER: Session start (pid: 7656)
+[1, 7] in target.rb
 =>    1| a = 1
       2| b = 2
       3| c = 3
-      4| p [a + b + c]
-      5|
---> #0  /home/ko1/src/rb/target.rb:1:in `<main>'
+      4| d = 4
+      5| p [a, b, c, d]
+      6|
+      7| __END__
+=>#0    <main> at target.rb:1
 
-(rdbg) info                                             # Show all local variables
- %self => main
- a => nil
- b => nil
- c => nil
+(rdbg)
+```
 
-(rdbg) p a                                              # Same as p(a)
-=> nil
+`rdbg` command suspends the program at the beginning of the given script (`target.rb` in this case) and you can use debug commands. `(rdbg)` is prompt. Let's set breakpoints on line 3 and line 5 with `break` command (`b` for short).
 
-(rdbg) s                                                # Step in ("s" is a short name of "step")
+```shell
+(rdbg) break 3                         # set breakpoint at line 3
+#0  BP - Line  /mnt/c/ko1/src/rb/ruby-debug/target.rb:3 (line)
 
-[1, 5] in /home/ko1/src/rb/target.rb
-      1| a = 1
-=>    2| b = 2
-      3| c = 3
-      4| p [a + b + c]
-      5|
---> #0  /home/ko1/src/rb/target.rb:2:in `<main>'
+(rdbg) b 5                             # set breakpoint at line 5
+#1  BP - Line  /mnt/c/ko1/src/rb/ruby-debug/target.rb:5 (line)
 
-(rdbg) <Enter>                                          # Repeat the last command ("step")
+(rdbg) break                           # show all registered breakpoints
+#0  BP - Line  /mnt/c/ko1/src/rb/ruby-debug/target.rb:3 (line)
+#1  BP - Line  /mnt/c/ko1/src/rb/ruby-debug/target.rb:5 (line)
+```
 
-[1, 5] in /home/ko1/src/rb/target.rb
+You can see that two breakpoints are registered. Let's continue the program by `continue` command.
+
+```shell
+(rdbg) continue
+[1, 7] in target.rb
       1| a = 1
       2| b = 2
 =>    3| c = 3
-      4| p [a + b + c]
-      5|
---> #0  /home/ko1/src/rb/target.rb:3:in `<main>'
+      4| d = 4
+      5| p [a, b, c, d]
+      6|
+      7| __END__
+=>#0    <main> at target.rb:3
 
-(rdbg)                                                  # Repeat the last command ("step")
+Stop by #0  BP - Line  /mnt/c/ko1/src/rb/ruby-debug/target.rb:3 (line)
 
-[1, 5] in /home/ko1/src/rb/target.rb
+(rdbg)
+```
+
+You can see that we can stop at line 3.
+Let's see the local variables with `info` command, and continue.
+You can also confirm that the program will suspend at line 5 and you can use `info` command again.
+
+```shell
+(rdbg) info
+=>#0    <main> at target.rb:3
+%self => main
+a => 1
+b => 2
+c => nil
+d => nil
+
+(rdbg) continue
+[1, 7] in target.rb
       1| a = 1
       2| b = 2
       3| c = 3
-=>    4| p [a + b + c]
-      5|
---> #0  /home/ko1/src/rb/target.rb:4:in `<main>'
+      4| d = 4
+=>    5| p [a, b, c, d]
+      6|
+      7| __END__
+=>#0    <main> at target.rb:5
 
-(rdbg) info                                             # Show all local variables
- %self => main
- a => 1
- b => 2
- c => 3
+Stop by #1  BP - Line  /mnt/c/ko1/src/rb/ruby-debug/target.rb:5 (line)
 
-(rdbg) c                                                # Continue the program ("c" is a short name of "continue")
-[6]
+(rdbg) info
+=>#0    <main> at target.rb:5
+%self => main
+a => 1
+b => 2
+c => 3
+d => 4
+
+(rdbg) continue
+[1, 2, 3, 4]
 ```
 
-### Remote debug (1) UNIX domain socket
+By the way, using `rdbg` command you can suspend your application with `C-c` (SIGINT) and enter the debug console.
+It will help that if you want to know what the program is doing.
 
-#### (1) Use `rdbg` command
+### Use `rdbg` with commands written in Ruby
 
-```
-$ rdbg --open target.rb # or rdbg -O target.rb for shorthand
-Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-5042)
-```
+If you want to run a command written in Ruby like like `rake`, `rails`, `bundle`, `rspec` and so on, you can use `rdbg -c` option.
 
-#### (2) Use `-r debug/open` command line option
+* Without `-c` option, `rdbg <name>` means that `<name>` is Ruby script and invoke it like `ruby <name>` with the debugger.
+* With `-c` option, `rdbg -c <name>` means that `<name>` is command in `PATH` and simply invoke it with the debugger.
 
-```
-$ ruby -r debug/open target.rb
-Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-5042)
-```
+Examples:
+* `rdbg -c -- rails server`
+* `rdbg -c -- bundle exec ruby foo.rb`
+* `rdbg -c -- bundle exec rake test`
+* `rdbg -c -- ruby target.rb` is same as `rdbg target.rb`
 
-#### (3) Write `require 'debug/open'` in .rb files
+NOTE: `--` is needed to separate the command line options for `rdbg` and invoking command. For example, `rdbg -c rake -T` is recognized like `rdbg -c -T -- rake`. It should be `rdbg -c -- rake -T`.
 
-```ruby
-# target.rb
-require 'debug/open' # open the debugger entry point by UNIX domain socket.
+NOTE: If you want to use bundler (`bundle` command), you need to write `gem debug` line in your `Gemfile`.
 
-# or
+### Using VSCode
 
-require 'debug/server' # introduce remote debugging feature
-DEBUGGER__.open        # open the debugger entry point by UNIX domain socket.
-# or DEBUGGER__.open_unix to specify UNIX domain socket.
-```
+Like other langauges, you can use this debugger on the VSCode.
 
-```
-$ ruby target.rb
-Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-5042)
-```
+1. Install [VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg) 
+2. Open `.rb` file (e.g. `target.rb`)
+3. Register breakpoints with "Toggle breakpoint" in Run menu (or type F9 key)
+4. Choose "Start debugging" in "Run" menu (or type F5 key)
+5. You will see a dialog "Debug command line" and you can choose your favorite command line your want to run.
+6. Chosed command line is invoked with `rdbg -c` and VSCode shows the details at breakponts.
 
-It runs target.rb and accept debugger connection within UNIX domain socket.
-The debuggee process waits for debugger connection at the beginning of `target.rb` like that:
+Plase refer [Debugging in Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging) for operations on VSCode.
 
-```
-$ rdbg -O ~/src/rb/target.rb
-DEBUGGER: Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-29828)
-DEBUGGER: wait for debugger connection...
-```
+You can configure the extension in `.vscode/launch.json`.
+Please see the extension page for more details.
 
-You can attach the program with the following command:
+## Remote debugging
 
-```
-$ rdbg --attach # or rdbg -A for shorthand
+You can use this debugger as a remote debugger. For example, it will help the following situations:
 
-[1, 4] in /home/ko1/src/rb/target.rb
-      1| (1..).each do |i|
-=>    2|   sleep 0.5
-      3|   p i
-      4| end
---> #0  [C] /home/ko1/src/rb/target.rb:2:in `sleep'
-    #1  /home/ko1/src/rb/target.rb:2:in `block in <main>' {|i=17|}
-    #2  [C] /home/ko1/src/rb/target.rb:1:in `each'
-    # and 1 frames (use `bt' command for all frames)
+* Your application does not run on TTY and it is hard to use `binding.pry` or `binding.irb`.
+  * Your application is running on Docker container and there is no TTY.
+  * Your application is running as a daemon.
+  * Your application uses pipe for STDIN or STDOUT.
+* Your application is running as a daemon and you want to query the running status (checking a backtrace and so on).
 
-(rdb)
-```
+You can run your application as a remote debuggee and the remote debugger console can attach to the debugee anytime.
 
-and you can input any debug commands. `c` (or `continue`) continues the debuggee process.
+### Invoke as a remote debuggee
 
-You can detach the debugger from the debugger process with `quit` command.
-You can re-connect to the debuggee process by `rdbg -A` command again, and the debuggee process suspends the execution (and debugger can input any debug commands).
+There are two ways to invoke a script as remote debuggee: Use `rdbg --open` and require `debug/open` (or `debug/open_nonstop`).
 
-If you don't want to stop the debuggee process at the beginning of debuggee process (`target.rb`), you can use the following to specify "non-stop" option.
+#### `rdbg --open` (or `rdbg -O` for short)
 
-* Use `rdbg -n` option
-* Set the environment variable `RUBY_DEBUG_NONSTOP=1`
+You can run a script with `rdbg --open target.rb` command and run a `target.rb` as a debuggee program. It also opens the network port and suspends at the beginning of `target.rb`.
 
-If you are running multiple debuggee processes, the attach command (`rdbg -A`) shows the options like that:
-
-```
-$ rdbg --attach
-Please select a debug session:
-  ruby-debug-ko1-19638
-  ruby-debug-ko1-19603
+```shell
+$ exe/rdbg --open target.rb
+DEBUGGER: Session start (pid: 7773)
+DEBUGGER: Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-7773)
+DEBUGGER: wait for debuger connection...
 ```
 
-and you need to specify one (copy and paste the name):
+By deafult, `rdbg --open` uses UNIX domain socket and generates path name automatically (`/home/ko1/.ruby-debug-sock/ruby-debug-ko1-7773` in this case).
 
-```
-$ rdbg --attach ruby-debug-ko1-19638
-```
+You can connect to the debuggee with `rdbg --attach` command (`rdbg -A` for short).
 
-The socket file is located at
-* `RUBY_DEBUG_SOCK_DIR` environment variable if available.
-* `XDG_RUNTIME_DIR` environment variable if available.
-* `$HOME/.ruby-debug-sock` if `$HOME` is available.
+```shell
+$ rdbg -A
+[1, 7] in target.rb
+=>    1| a = 1
+      2| b = 2
+      3| c = 3
+      4| d = 4
+      5| p [a, b, c, d]
+      6|
+      7| __END__
+=>#0    <main> at target.rb:1
 
-### Remote debug (2) TCP/IP
-
-You can open the TCP/IP port instead of using UNIX domain socket.
-
-#### (1) Use `rdbg` command
-
-```
-$ rdbg -O --port=12345 target.rb
-# or
-$ rdbg --open --port=12345 target.rb
-Debugger can attach via TCP/IP (localhost:12345)
+(rdbg:remote)
 ```
 
-#### (2) Use `-r debug/open` command line option
+If there is no other opening ports on the default directory, `rdbg --attach` command chooses the only one opening UNIX domain socket and connect to it. If there are more files, you need to specify the file.
 
+When `rdbg --attach` connects to the debuggee, you can use any debug commands (set breakpoints, continue the program and so on) like local debug console. When an debuggee program exits, the remote console will also terminate.
 
-```
-$ RUBY_DEBUG_PORT=12345 ruby -r debug/open target.rb
-Debugger can attach via TCP/IP (localhost:12345)
-```
+NOTE: If you use `quit` command, only remote console exits and the debuggee program continues to run (and you can connect it again). If you want to exit the debuggee program, use `kill` command.
 
-#### (3) Write `require 'debug/open'` in .rb files
+If you want to use TCP/IP for the remote debugging, you need to specify the port and host with `--port` like `rdbg --open --port 12345` and it binds to `localhost:12345`.
 
-```ruby
-# target.rb
-require 'debug/open' # open the debugger entry point.
-```
+To connect to the debugeee, you need to specify the port.
 
-and run with environment variable RUBY_DEBUG_PORT
-
-```
-$ RUBY_DEBUG_PORT=12345 ruby target.rb
-Debugger can attach via TCP/IP (localhost:12345)
-```
-
-or
-
-```ruby
-# target.rb
-require 'debug/server' # introduce remote debugging feature
-DEBUGGER__.open(port: 12345)
-# or DEBUGGER__.open_tcp(port: 12345)
-```
-
-```
-$ ruby target.rb
-Debugger can attach via TCP/IP (localhost:12345)
-```
-
-You can also specify the host with the `RUBY_DEBUG_HOST` environment variable. And also `DEBUGGER__.open` method accepts a `host:` keyword parameter. If the host is not given, `localhost` will be used.
-
-To attach the debuggee process, specify the port number (and hostname if needed) for the `rdbg --attach` (or `rdbg -A`) command.
-
-```
+```shell
 $ rdbg --attach 12345
-$ rdbg --attach hostname 12345
 ```
 
-### Initial scripts
+If you want to choose the host to bind, you can use `--host` option.
+Note that all messages communicated between the debugger and the debuggee are *NOT* encrypted so please use remote debugging carefully.
 
-If there are `~/.rdbgrc`, the file is loaded as initial scripts which contains debugger commands at the beginning of debug session. `RUBY_DEBUG_INIT_SCRIPT` environment variable can specify the initial script file. You can write configurations in a file. For example, you can set break points with `break file:123` in `~/.rdbgrc`.
+#### `require 'debug/open'` in a program
 
-If there are `~/.rdbgrc.rb` is available, it is loaded as a ruby script at same timing.
+If you can modify the program, you can open debugging port by adding `require 'debug/open'` line in the program.
 
-### Configurations
+If you don't want to stop the program at the beginning, you can also use `require 'debug/open_nonstop'`.
+Using `debug/open_nonstop` is useful if you want to open a backdoor to the application.
+However, it is also danger because it can become antoher vulnerability.
+Please use it carefully.
 
-You can configure debugger's setting with environment variables and `config` command.
-You can write any configuration into `~/.rdbgrc` like:
+By default, UNIX domain socket is used for the debugging port. To use TCP/IP, you can set the `RUBY_DEBUG_PORT` environment variable.
+
+```shell
+$ RUBY_DEBUG_PORT=12345 ruby target.rb
+```
+
+## Configuration
+
+You can configure the debugger's behavior with debug commands and environment variables.
+When the debug session is started, initial scripts are loaded so you can put your favorite configurations in the intial scripts.
+
+### Configuration list
+
+You can configure debugger's behavior with environment variables and `config` command. Each configuration has environment variable and the name which can be specified by `config` command.
 
 ```
+# configulation example
 config set log_level INFO
 config set no_color true
 ```
+
 <% cat = nil; DEBUGGER__::CONFIG_SET.each do |key, (env, desc)| %>
 <% /\A(\w+): (.+)/ =~ desc; if cat != $1; cat = 1 %>
 * <%= $1 %>
 <% cat = $1; end %>  * `<%= env %>` (`<%= key %>`): <%= $2 %><% end %>
 
+### Initial scripts
+
+If there is `~/.rdbgrc`, the file is loaded as an initial scripts which contains debug commands) when the debug session is started. 
+
+* `RUBY_DEBUG_INIT_SCRIPT` environment variable can specify the initial script file.
+* You can specify the initial script with `rdbg -x initial_script` (like gdb's `-x` option).
+
+Initial scripts are useful to write your favorite configurations.
+For example, you can set break points with `break file:123` in `~/.rdbgrc`.
+
+If there are `~/.rdbgrc.rb` is available, it is also loaded as a ruby script at same timing.
+
 ## Debug command on the debug console
+
+On the debug console, you can use the following debug commands.
 
 * `Enter` repeats the last command (useful when repeating `step`s).
 * `Ctrl-D` is equal to `quit` command.
@@ -355,6 +379,34 @@ The `<...>` notation means the argument.
 
 <%= DEBUGGER__.help %>
 
+## `binding.break` method
+
+`binding.braek` (or `binding.b`) set breakpoints at written line. It also has several keywords.
+
+If `do: 'command'` is specified, the debugger suspends the program and run the `command` as a debug command and continue the program.
+It is useful if you only want to call a debug command and don't want to stop there.
+
+```
+def initialzie
+  @a = 1
+  binding.b do: 'watch @a'
+end
+```
+
+On this case, register a watch breakpont for `@a` and continue to run.
+
+If `pre: 'command'` is specified, the debuger suspends the program and run the `command` as a debug command, and keep suspend.
+It is useful if you have operations before suspend.
+
+```
+def foo
+  binding.b pre: 'p bar()'
+  ...
+end
+```
+
+On this case, you can see the result of `bar()` everytime when you stops there.
+
 ## rdbg command help
 
 ```
@@ -364,6 +416,7 @@ The `<...>` notation means the argument.
 # Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/ruby/debug.
+This debugger is not mature so your feedback will help us.
 
 Please also check the [contributing guideline](/CONTRIBUTING.md).
 
