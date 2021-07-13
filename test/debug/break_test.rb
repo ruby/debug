@@ -122,6 +122,61 @@ module DEBUGGER__
     end
   end
 
+  class BreakWithCommandTest < TestCase
+    def program
+      <<~RUBY
+     1| def foo
+     2|   "foo"
+     3| end
+     4|
+     5| s = "a"
+     6|
+     7| foo
+     8|
+     9| "for another bp to stop"
+    10| __END__
+      RUBY
+    end
+
+    def test_break_command_executes_pre_option_and_stops_with_line_bp
+      debug_code(program) do
+        type 'break 6 pre: p s*10'
+        type 'c'
+        assert_line_text(/aaaaaaaaaa/)
+        type 'c'
+      end
+    end
+
+    def test_break_command_executes_pre_option_and_stops_with_method_bp
+      debug_code(program) do
+        type 'break Object#foo pre: p "foobar"'
+        type 'c'
+        assert_line_text(/foobar/)
+        type 'c'
+      end
+    end
+
+    def test_break_command_executes_do_option_and_continues_with_line_bp
+      debug_code(program) do
+        type 'break 6 do: p s*10'
+        type 'break 9'
+        type 'c'
+        assert_line_text(/aaaaaaaaaa/)
+        type 'c'
+      end
+    end
+
+    def test_break_command_executes_do_option_and_continues_with_method_bp
+      debug_code(program) do
+        type 'break Object#foo do: p "foobar"'
+        type 'break 9'
+        type 'c'
+        assert_line_text(/foobar/)
+        type 'c'
+      end
+    end
+  end
+
   #
   # Tests adding breakpoints to empty methods
   #
