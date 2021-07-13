@@ -94,13 +94,12 @@ module DEBUGGER__
       CONFIG[:no_color] = nil
     end
 
+    SESSION_class = Struct.new('SESSION')
+
     private
 
     def stub_width_method
-      # When defining `Struct.new('SESSION')` directly under the class to solve
-      # `warning: redefining constant`, RR::Errors::DoubleNotFoundError occurred in
-      # testing of Github workflow.
-      DEBUGGER__.const_set('SESSION', Struct.new('SESSION'))
+      DEBUGGER__.const_set('SESSION', SESSION_class)
       stub(::DEBUGGER__::SESSION).width { IO.console_size[1] }
     end
 
