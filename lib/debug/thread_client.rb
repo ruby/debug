@@ -654,7 +654,7 @@ module DEBUGGER__
               frame_eval("self")
             end
 
-          Command::Ls.execute(current_frame, subject)
+          Command::Ls.execute(current_frame, subject, @output)
 
           event! :result, nil
         when :show
