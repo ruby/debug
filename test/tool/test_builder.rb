@@ -37,21 +37,27 @@ module DEBUGGER__
     end
 
     def format_as_regexp
-      return '//' unless @last_backlog[3]
-
-      @last_backlog[3].slice!("\e[?2004l\r")
-      if @last_backlog.length == 4
-        "/#{generate_pattern(@last_backlog[3])}/"
+      if index = @last_backlog.find_index('(rdbg)')
+        index += 2
       else
-        lines = @last_backlog[3..].map{|l|
+        index = 0
+      end
+      len = @last_backlog.length - 1
+      if len < index
+        '//'
+      elsif len == index
+        Regexp.new(generate_pattern(@last_backlog[3])).inspect
+      else
+        lines = @last_backlog[index..].map{|l|
           l = generate_pattern(l)
-          "          /#{l}"
-        }.join("/,\n")
-        "[\n#{lines}/\n        ]"
+          "          #{Regexp.new(l).inspect}"
+        }.join(",\n")
+        "[\n#{lines}\n        ]"
       end
     end
 
     def generate_pattern(line)
+      line.slice!("\e[?2004l\r")
       file_name = File.basename(@debuggee, '.rb')
       escaped_line = Regexp.escape(line.chomp).gsub(/\\\s/, ' ')
       escaped_line.sub(%r{~.*#{file_name}.*|/Users/.*#{file_name}.*}, '.*')
