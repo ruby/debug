@@ -51,7 +51,7 @@ module DEBUGGER__
       end
     end
 
-    ASK_CMD = %w[quit delete kill undisplay]
+    ASK_CMD = %w[quit q delete del kill undisplay]
 
     def debug_print msg
       print msg if ENV['RUBY_DEBUG_TEST_DEBUG_MODE']
