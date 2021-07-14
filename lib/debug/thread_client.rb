@@ -5,6 +5,7 @@ require 'pp'
 
 require_relative 'frame_info'
 require_relative 'color'
+require_relative 'command/ls'
 
 module DEBUGGER__
   class ThreadClient
@@ -632,6 +633,17 @@ module DEBUGGER__
           else
             raise "unsupported frame operation: #{arg.inspect}"
           end
+          event! :result, nil
+        when :ls
+          subject =
+            if arg_expr = args.first
+              frame_eval(arg_expr)
+            else
+              frame_eval("self")
+            end
+
+          Command::Ls.execute(current_frame, subject)
+
           event! :result, nil
         when :show
           type = args.shift

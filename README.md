@@ -487,6 +487,11 @@ The `<...>` notation means the argument.
   * Filter the output with `</pattern/>`.
 * `i[nfo] th[read[s]]`
   * Show all threads (same as `th[read]`).
+* `ls`
+  * Show you available methods, constants, local variables, and instance variables in the current scope.
+* `ls <object>`
+  * Show you available methods, local variables, and instance variables of the given object.
+  * If the object is a class/module, it also lists its constants.
 * `display`
   * Show display setting.
 * `display <expr>`
