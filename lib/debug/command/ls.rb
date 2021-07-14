@@ -4,8 +4,8 @@ module DEBUGGER__
   module Command
     class Ls
       class << self
-        def execute(current_frame, obj)
-          o = Output.new
+        def execute(current_frame, obj, output)
+          o = Output.new(output)
 
           locals = current_frame.binding.local_variables
           klass  = (obj.class == Class || obj.class == Module ? obj : obj.class)
@@ -42,7 +42,8 @@ module DEBUGGER__
 
         MARGIN = "  "
 
-        def initialize
+        def initialize(output)
+          @output = output
           @line_width = screen_width - MARGIN.length # right padding
         end
 
@@ -50,13 +51,17 @@ module DEBUGGER__
           strs = strs.sort
           return if strs.empty?
 
+          line = "#{colorize_blue(name)}: "
+
           # Attempt a single line
-          print "#{colorize_blue(name)}: "
           if fits_on_line?(strs, cols: strs.size, offset: "#{name}: ".length)
-            puts strs.join(MARGIN)
+            line += strs.join(MARGIN)
+            @output << line
             return
           end
-          puts
+
+          # Multi-line
+          @output << line
 
           # Dump with the largest # of columns that fits on a line
           cols = strs.size
@@ -65,7 +70,7 @@ module DEBUGGER__
           end
           widths = col_widths(strs, cols: cols)
           strs.each_slice(cols) do |ss|
-            puts ss.map.with_index { |s, i| "#{MARGIN}%-#{widths[i]}s" % s }.join
+            @output << ss.map.with_index { |s, i| "#{MARGIN}%-#{widths[i]}s" % s }.join
           end
         end
 
