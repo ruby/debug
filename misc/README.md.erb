@@ -379,7 +379,54 @@ The `<...>` notation means the argument.
 
 <%= DEBUGGER__.help %>
 
-## `binding.break` method
+## Debugger API
+
+### Start debugging
+
+#### Start by requiring
+
+You can start debugging without `rdbg` command by requiring the following libraries:
+
+* `require 'debug'`: Same as `rdbg -n --no-sigint-hook`
+* `require 'debug/start'`: Same as 'rdbg'
+* `require 'debug/open'`: Same as `rdbg --open`
+* `require 'debug/open_nonstop'`: Same as `rdbg --open -n`
+
+You need to require one of them at the very beginning of the application.
+Using `ruby -r` (for example `ruby -r debug/start target.rb`) is another way to invoke with debugger.
+
+NOTE: Until Ruby 3.0, there is old `lib/debug.rb` standard library. So that if this gem is not installed, or if `Gemfile` missed to list this gem and `bunde exec` is used, you will see the following output:
+
+```shell
+$ ruby -r debug -e0
+.../2.7.3/lib/ruby/2.7.0/x86_64-linux/continuation.so: warning: callcc is obsolete; use Fiber instead
+Debug.rb
+Emacs support available.
+
+.../2.7.3/lib/ruby/2.7.0/rubygems/core_ext/kernel_require.rb:162:    if RUBYGEMS_ACTIVATION_MONITOR.respond_to?(:mon_owned?)
+(rdb:1)
+```
+
+`lib/debug.rb` was not maintained well in recent years, and the purpose of this library is to rewrite old `lib/debug.rb` with recent techniques.
+
+#### Start by method
+
+After loading `debug/session`, you can start debug session with the following methods. They are convinient if you want to specifies debug configrations in your program.
+
+* `DEBUGGER__.start(**kw)`: start debug session with local console.
+* `DEBUGGER__.open(**kw)`: open debug port with configuration (without configurations open with UNIX domain socket)
+* `DEBUGGER__.open_unix(**kw)`: open debug port with UNIX domain socket
+* `DEBUGGER__.open_tcp(**kw)`: open debug port with TCP/IP
+
+```ruby
+require 'debug/session'
+DEBUGGER__.start(no_color: true,    # disable colorize
+                 log_level: 'INFO') # Change log_level to INFO
+
+... # your application code
+```
+
+### `binding.break` method
 
 `binding.break` (or `binding.b`) set breakpoints at written line. It also has several keywords.
 
