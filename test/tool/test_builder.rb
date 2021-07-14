@@ -20,6 +20,8 @@ module DEBUGGER__
       create_file
     end
 
+    private
+
     def format_as_string
       return if @last_backlog[3]
 
