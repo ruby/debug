@@ -550,28 +550,6 @@ module DEBUGGER__
         end
         return :retry
 
-      # * `trace [on|off]`
-      #   * enable or disable line tracer.
-      when 'trace'
-        case arg
-        when 'on'
-          dir = __dir__
-          @tracer ||= TracePoint.new(:call, :return, :b_call, :b_return, :line, :class, :end){|tp|
-            next if File.dirname(tp.path) == dir
-            next if tp.path == '<internal:trace_point>'
-            # Skip when `JSON.generate` is called during tests
-            next if tp.binding.eval('self').to_s == 'JSON' and ENV['RUBY_DEBUG_TEST_MODE']
-            # next if tp.event != :line
-            @ui.puts pretty_tp(tp)
-          }
-          @tracer.enable
-        when 'off'
-          @tracer && @tracer.disable
-        end
-        enabled = (@tracer && @tracer.enabled?) ? true : false
-        @ui.puts "Trace #{enabled ? 'on' : 'off'}"
-        return :retry
-
       ### Frame control
 
       # * `f[rame]`

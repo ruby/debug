@@ -483,8 +483,6 @@ The `<...>` notation means the argument.
   * Remove all display settings.
 * `undisplay <displaynum>`
   * Remove a specified display setting.
-* `trace [on|off]`
-  * enable or disable line tracer.
 
 ### Frame control
 
