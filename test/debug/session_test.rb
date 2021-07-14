@@ -40,7 +40,7 @@ module DEBUGGER__
       <<~RUBY
        1| a = 1
        2| b = 2
-       3| require "debug/run"
+       3| require "debug/start"
        4|
        5| c = 3
        6| binding.break

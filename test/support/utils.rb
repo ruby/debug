@@ -33,7 +33,7 @@ module DEBUGGER__
     end
 
     # This method will execute both local and remote mode by default.
-    def debug_code(program, boot_options: '-r debug/run', remote: true, &block)
+    def debug_code(program, boot_options: '-r debug/start', remote: true, &block)
       check_line_num!(program)
 
       @scenario = block

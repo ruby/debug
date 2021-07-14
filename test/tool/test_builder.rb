@@ -72,7 +72,7 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_TEST_ASSERT_AS_STRING'] ||= 'false'
       ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] ||= 'true'
 
-      PTY.spawn("#{RUBY} -r debug/run #{@debuggee}") do |read, write, _|
+      PTY.spawn("#{RUBY} -r debug/start #{@debuggee}") do |read, write, _|
         @backlog = []
         @last_backlog = []
         @scenario = []
