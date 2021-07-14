@@ -79,19 +79,23 @@ module DEBUGGER__
         while (array = read.expect(%r{.*\n|\(rdbg\)|\[(?i)y/n\]}))
           line = array[0]
           print line
+          @backlog.push(line)
+          @last_backlog.push(line)
           case line.chomp
           when '(rdbg)'
-            input = $stdin.gets
-            input ||= 'quit'
-            write.puts(input)
-            command = input.chomp
+            command = write_user_input(write, 'quit')
           when %r{\[y/n\]}i
-            input = $stdin.gets
-            input ||= ''
-            write.puts(input)
             @scenario.push("type '#{command}'")
-            @scenario.push("type '#{input.chomp}'")
+            @scenario.push("assert_line_text(#{format_as_string})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_STRING'] == 'false'
+            @scenario.push("assert_line_text(#{format_as_regexp})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] == 'false'
+            @scenario.push("type '#{write_user_input(write, '')}'")
+            command = nil
+            @last_backlog.clear
           when /INTERNAL_INFO:\s(.*)/
+            # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
+            @backlog.pop
+            @last_backlog.pop
+
             if command && !@last_backlog.join.match?(/unknown command:/)
               @scenario.push("type '#{command}'")
               case command
@@ -103,18 +107,21 @@ module DEBUGGER__
               @scenario.push("assert_line_text(#{format_as_regexp})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] == 'false'
             end
             @last_backlog.clear
-            next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
           when /q!$/, /quit!$/
             @scenario.push("type '#{command}'")
           end
-
-          @backlog.push(line)
-          @last_backlog.push(line)
         end
       rescue Errno::EIO => e
         p e
       end
       exit if @backlog.empty? || @backlog[0].match?(/LoadError/)  # @debuggee is empty or doesn't exist
+    end
+
+    def write_user_input(write, default)
+      input = $stdin.gets
+      input ||= default
+      write.puts(input)
+      input.chomp
     end
 
     def format_scenario
