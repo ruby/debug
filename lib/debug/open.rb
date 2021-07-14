@@ -7,7 +7,7 @@
 # Otherwise, UNIX domain socket is used.
 #
 
-require_relative 'server'
+require_relative 'session'
 return unless defined?(DEBUGGER__)
 
 DEBUGGER__.open

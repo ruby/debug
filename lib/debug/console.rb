@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'session'
-return unless defined?(DEBUGGER__)
-
 require 'io/console/size'
 
 module DEBUGGER__
