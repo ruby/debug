@@ -134,6 +134,9 @@ module DEBUGGER__
       o.on('--no-color', 'Disable colorize') do
         config[:no_color] = true
       end
+      o.on('--no-sigint-hook', 'Disable to trap SIGINT') do
+        config[:no_sigint_hook] = true
+      end
 
       o.on('-c', '--command', 'Enable command mode.',
                               'The first argument should be a command name in $PATH.',
