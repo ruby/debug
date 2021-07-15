@@ -287,6 +287,7 @@ $ exe/rdbg -e 'b 20;; c ;; bt ;; info ;; q!' -e c target.rb
 
 ```
 ❯ exe/rdbg -e 'b 20;; c ;; bt ;; info ;; q!' -e c target.rb
+DEBUGGER: Session start (pid: 9815)
 [1, 10] in target.rb
 =>    1| class Foo
       2|   def first_call
@@ -299,10 +300,10 @@ $ exe/rdbg -e 'b 20;; c ;; bt ;; info ;; q!' -e c target.rb
       9|     end
      10|   end
 =>#0    <main> at target.rb:1
-(rdbg:init) b 20
-#1 line bp /PATH_TO_PROJECT/debug/target.rb:20 (return)
-(rdbg:init) c
-[15, 23] in target.rb
+(rdbg:commands) b 20
+#0  BP - Line  /PATH_TO_PROJECT/target.rb:20 (return)
+(rdbg:commands) c
+[15, 24] in target.rb
      15|     yield(10)
      16|   end
      17|
@@ -312,25 +313,26 @@ $ exe/rdbg -e 'b 20;; c ;; bt ;; info ;; q!' -e c target.rb
      21| end
      22|
      23| Foo.new.first_call
+     24|
 =>#0    Foo#forth_call(num1=20, num2=10) at target.rb:20 #=> 30
-  #1    block{|ten=10|} in second_call at target.rb:8
+  #1    block {|ten=10|} in second_call at target.rb:8
   # and 4 frames (use `bt' command for all frames)
 
-Stop by #1 line bp /PATH_TO_PROJECT/debug/target.rb:20 (return)
-(rdbg:init) bt
+Stop by #0  BP - Line  /PATH_TO_PROJECT/target.rb:20 (return)
+(rdbg:commands) bt
 =>#0    Foo#forth_call(num1=20, num2=10) at target.rb:20 #=> 30
-  #1    block{|ten=10|} in second_call at target.rb:8
-  #2    Foo#third_call_with_block(block=#<Proc:0x00007f8bc32f0c28 target.rb:7>) at target.rb:15
+  #1    block {|ten=10|} in second_call at target.rb:8
+  #2    Foo#third_call_with_block(block=#<Proc:0x00007f9283101568 target.rb:7>) at target.rb:15
   #3    Foo#second_call(num=20) at target.rb:7
-  #4    first_call at target.rb:3
+  #4    Foo#first_call at target.rb:3
   #5    <main> at target.rb:23
-(rdbg:init) info
+(rdbg:commands) info
 =>#0    Foo#forth_call(num1=20, num2=10) at target.rb:20 #=> 30
- %self => #<Foo:0x00007f8bc32f0ed0>
- %return => 30
- num1 => 20
- num2 => 10
- @ivar1 => 10
- @ivar2 => 20
-(rdbg:init) q!
+%self => #<Foo:0x00007f92831016d0 @ivar1=10, @ivar2=20>
+%return => 30
+num1 => 20
+num2 => 10
+@ivar1 => 10
+@ivar2 => 20
+(rdbg:commands) q!
 ```
