@@ -501,21 +501,45 @@ module DEBUGGER__
 
         @tc << [:show, :edit, arg]
 
-      # * `i[nfo]`, `i[nfo] l[ocal[s]]`
+      # * `i[nfo]`
+      #    * Show information about current frame (local/instance variables and defined consntants).
+      # * `i[nfo] l[ocal[s]]`
       #   * Show information about the current frame (local variables)
       #   * It includes `self` as `%self` and a return value as `%return`.
+      # * `i[nfo] i[var[s]]` or `i[nfo] instance`
+      #   * Show information about insttance variables about `self`.
+      # * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
+      #   * Show information about accessible constants except toplevel constants.
+      # * `i[nfo] g[lobal[s]]`
+      #   * Show information about global variables
+      # * `i[nfo] ... </pattern/>`
+      #   * Filter the output with `</pattern/>`.
       # * `i[nfo] th[read[s]]`
       #   * Show all threads (same as `th[read]`).
       when 'i', 'info'
-        case arg
+        if /\/(.+)\/\z/ =~ arg
+          pat = Regexp.compile($1)
+          sub = $~.pre_match.strip
+        else
+          sub = arg
+        end
+
+        case sub
         when nil
-          @tc << [:show, :local]
-        when 'l', /locals?/
-          @tc << [:show, :local]
+          @tc << [:show, :default, pat] # something useful
+        when 'l', /^locals?/
+          @tc << [:show, :locals, pat]
+        when 'i', /^ivars?/i, /^instance[_ ]variables?/i
+          @tc << [:show, :ivars, pat]
+        when 'c', /^consts?/i, /^constants?/i
+          @tc << [:show, :consts, pat]
+        when 'g', /^globals?/i, /^global[_ ]variables?/i
+          @tc << [:show, :globals, pat]
         when 'th', /threads?/
           thread_list
           return :retry
         else
+          @ui.puts "unrecognized argument for info command: #{arg}"
           show_help 'info'
           return :retry
         end
