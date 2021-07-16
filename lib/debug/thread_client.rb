@@ -304,7 +304,9 @@ module DEBUGGER__
       end
     end
 
-    def puts_variable_info label, obj
+    def puts_variable_info label, obj, pat
+      return if pat && pat !~ label
+
       info = "#{colorize_cyan(label)} => #{colored_inspect(obj)}".lines
       w = SESSION.width
       max_inspect_lines = CONFIG[:show_inspect_lines] || 10
@@ -323,31 +325,71 @@ module DEBUGGER__
       puts info
     end
 
-    def show_locals
+    def show_locals pat
       if s = current_frame&.self
-        puts_variable_info '%self', s
+        puts_variable_info '%self', s, pat
       end
       if current_frame&.has_return_value
-        puts_variable_info '%return', current_frame.return_value
+        puts_variable_info '%return', current_frame.return_value, pat
       end
       if current_frame&.has_raised_exception
-        puts_variable_info "%raised", current_frame.raised_exception
+        puts_variable_info "%raised", current_frame.raised_exception, pat
       end
       if b = current_frame&.binding
         b.local_variables.each{|loc|
           value = b.local_variable_get(loc)
-          puts_variable_info loc, value
+          puts_variable_info loc, value, pat
         }
       end
     end
 
-    def show_ivars
+    def show_ivars pat
       if s = current_frame&.self
         s.instance_variables.each{|iv|
           value = s.instance_variable_get(iv)
-          puts_variable_info iv, value
+          puts_variable_info iv, value, pat
         }
       end
+    end
+
+    def show_consts pat, only_self: false
+      if s = current_frame&.self
+        cs = {}
+        if s.kind_of? Module
+          cs[s] = :self
+        else
+          s = s.class
+          cs[s] = :self unless only_self
+        end
+
+        unless only_self
+          s.ancestors.each{|c| break if c == Object; cs[c] = :ancestors}
+          if b = current_frame&.binding
+            b.eval('Module.nesting').each{|c| cs[c] = :nesting unless cs.has_key? c}
+          end
+        end
+
+        names = {}
+
+        cs.each{|c, _|
+          c.constants(false).each{|name|
+            next if names.has_key? name
+            names[name] = nil
+            value = c.const_get(name)
+            puts_variable_info name, value, pat
+          }
+        }
+      end
+    end
+
+    SKIP_GLOBAL_LIST = %i[$= $KCODE $-K $SAFE].freeze
+    def show_globals pat
+      global_variables.each{|name|
+        next if SKIP_GLOBAL_LIST.include? name
+
+        value = eval(name.to_s)
+        puts_variable_info name, value, pat
+      }
     end
 
     def instance_eval_for_cmethod frame_self, src
@@ -594,10 +636,27 @@ module DEBUGGER__
           when :edit
             show_by_editor(args.first)
 
-          when :local
-            show_frame
-            show_locals
-            show_ivars
+          when :default
+            pat = args.shift
+            show_locals pat
+            show_ivars  pat
+            show_consts pat, only_self: true
+
+          when :locals
+            pat = args.shift
+            show_locals pat
+
+          when :ivars
+            pat = args.shift
+            show_ivars pat
+
+          when :consts
+            pat = args.shift
+            show_consts pat
+
+          when :globals
+            pat = args.shift
+            show_globals pat
 
           when :object_info
             expr = args.shift

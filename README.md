@@ -470,9 +470,17 @@ The `<...>` notation means the argument.
   * Note that edited file will not be reloaded.
 * `edit <file>`
   * Open <file> on the editor.
-* `i[nfo]`, `i[nfo] l[ocal[s]]`
+* `i[nfo]`
+   * Show information about current frame (local/instance variables and defined consntants).
+* `i[nfo] l[ocal[s]]`
   * Show information about the current frame (local variables)
   * It includes `self` as `%self` and a return value as `%return`.
+* `i[nfo] i[var[s]]` or `i[nfo] instance`
+  * Show information about insttance variables about `self`.
+* `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
+  * Show information about accessible constants except toplevel constants.
+* `i[nfo] g[lobal[s]]`
+  * Show information about global variables
 * `i[nfo] th[read[s]]`
   * Show all threads (same as `th[read]`).
 * `display`
