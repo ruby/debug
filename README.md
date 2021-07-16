@@ -481,6 +481,8 @@ The `<...>` notation means the argument.
   * Show information about accessible constants except toplevel constants.
 * `i[nfo] g[lobal[s]]`
   * Show information about global variables
+* `i[nfo] ... </pattern/>`
+  * Filter the output with `</pattern/>`.
 * `i[nfo] th[read[s]]`
   * Show all threads (same as `th[read]`).
 * `display`
