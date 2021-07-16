@@ -307,19 +307,22 @@ module DEBUGGER__
     def puts_variable_info label, obj, pat
       return if pat && pat !~ label
 
+      begin
+        inspected = obj.inspect
+      rescue Exception => e
+        inspected = e.inspect
+      end
+      mono_info = "#{label} = #{inspected}"
+
       w = SESSION::width
 
-      valstr = colored_inspect(obj, width: 2 ** 30)
-      if valstr.lines.size > 1
-        begin
-          valstr = obj.inspect
-        rescue Exception => e
-          valstr = e.inspect
-        end
+      if mono_info.length >= w
+        info = mono_info[0 .. (w-4)] + '...'
+      else
+        valstr = colored_inspect(obj, width: 2 ** 30)
+        valstr = inspected if valstr.lines.size > 1
+        info = "#{colorize_cyan(label)} = #{valstr}"
       end
-
-      info = "#{colorize_cyan(label)} => #{valstr}"
-      info = info[0..(w-4)] + '...' if info.length > w
 
       puts info
     end

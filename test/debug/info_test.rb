@@ -48,10 +48,10 @@ module DEBUGGER__
         type 'c'
         type 'info'
         assert_line_text(
-          "%self => main\r\n" \
-          "%return => 11\r\n" \
-          "a => 1\r\n" \
-          "@var => 10\r\n"
+          "%self = main\r\n" \
+          "%return = 11\r\n" \
+          "a = 1\r\n" \
+          "@var = 10\r\n"
         )
         type 'q!'
       end
@@ -125,11 +125,11 @@ module DEBUGGER__
     def test_info_constant
       debug_code(program) do
         type 'info'
-        assert_line_text(/%self => main/)
-        assert_no_line_text(/SystemExit => SystemExit/)
+        assert_line_text(/%self = main/)
+        assert_no_line_text(/SystemExit = SystemExit/)
         type 'info constant'
         assert_line_text([
-          /SystemExit => SystemExit/,
+          /SystemExit = SystemExit/,
         ])
         type 'b 17'
         type 'b 19'
@@ -138,35 +138,35 @@ module DEBUGGER__
 
         type 'info'
         assert_line_text([
-          /%self => D::C1/,
-          /l1 => 10/,
-          /l2 => 20/,
-          /@i1 => 100/,
-          /@i2 => 200/,
-          /CONST1 => 1/,
-          /CONST2 => 2/
+          /%self = D::C1/,
+          /l1 = 10/,
+          /l2 = 20/,
+          /@i1 = 100/,
+          /@i2 = 200/,
+          /CONST1 = 1/,
+          /CONST2 = 2/
         ])
-        assert_no_line_text /C1 => D::C1/
+        assert_no_line_text /C1 = D::C1/
 
         type 'info constants'
         assert_line_text([
-          /C1 => D::C1/
+          /C1 = D::C1/
         ])
 
         type 'c'
         assert_line_num 19
 
         type 'info'
-        assert_line_text /%self => \#<D::C1/
+        assert_line_text /%self = \#<D::C1/
         type 'info constants'
         assert_line_text([
-          /CONST1 => 1/,
-          /CONST2 => 2/,
-          /C0_CONST1 => \-1/,
-          /C0_CONST2 => \-2/,
-          /C1 => D::C1/,
-          /D_CONST1 => 1/,
-          /D_CONST2 => 1/,
+          /CONST1 = 1/,
+          /CONST2 = 2/,
+          /C0_CONST1 = \-1/,
+          /C0_CONST2 = \-2/,
+          /C1 = D::C1/,
+          /D_CONST1 = 1/,
+          /D_CONST2 = 1/,
         ])
 
         type 'c'
