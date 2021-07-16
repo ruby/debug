@@ -354,7 +354,6 @@ config set no_color true
   * `RUBY_DEBUG_LOG_LEVEL` (`log_level`): Log level same as Logger (default: WARN)
   * `RUBY_DEBUG_SHOW_SRC_LINES` (`show_src_lines`): Show n lines source code on breakpoint (default: 10 lines)
   * `RUBY_DEBUG_SHOW_FRAMES` (`show_frames`): Show n frames on breakpoint (default: 2 frames)
-  * `RUBY_DEBUG_SHOW_INFO_LINES` (`show_info_lines`): Show n lines on info command (default: 10 lines, 0 for unlimited)
   * `RUBY_DEBUG_USE_SHORT_PATH` (`use_short_path`): Show shoten PATH (like $(Gem)/foo.rb)
   * `RUBY_DEBUG_SKIP_NOSRC` (`skip_nosrc`): Skip on no source code lines (default: false)
   * `RUBY_DEBUG_SKIP_PATH` (`skip_path`): Skip showing frames for given paths (default: [])
