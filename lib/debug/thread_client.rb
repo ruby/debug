@@ -336,7 +336,7 @@ module DEBUGGER__
         puts_variable_info "%raised", current_frame.raised_exception, pat
       end
       if b = current_frame&.binding
-        b.local_variables.each{|loc|
+        b.local_variables.sort.each{|loc|
           value = b.local_variable_get(loc)
           puts_variable_info loc, value, pat
         }
@@ -345,7 +345,7 @@ module DEBUGGER__
 
     def show_ivars pat
       if s = current_frame&.self
-        s.instance_variables.each{|iv|
+        s.instance_variables.sort.each{|iv|
           value = s.instance_variable_get(iv)
           puts_variable_info iv, value, pat
         }
@@ -372,7 +372,7 @@ module DEBUGGER__
         names = {}
 
         cs.each{|c, _|
-          c.constants(false).each{|name|
+          c.constants(false).sort.each{|name|
             next if names.has_key? name
             names[name] = nil
             value = c.const_get(name)
@@ -384,7 +384,7 @@ module DEBUGGER__
 
     SKIP_GLOBAL_LIST = %i[$= $KCODE $-K $SAFE].freeze
     def show_globals pat
-      global_variables.each{|name|
+      global_variables.sort.each{|name|
         next if SKIP_GLOBAL_LIST.include? name
 
         value = eval(name.to_s)
