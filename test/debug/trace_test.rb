@@ -21,7 +21,7 @@ module DEBUGGER__
     def test_trace_on_starts_tracing
       debug_code(program) do
         type "trace on"
-        assert_line_text /unknown command: trace on/
+        assert_line_text(/unknown command: trace on/)
         type "q!"
       end
     end

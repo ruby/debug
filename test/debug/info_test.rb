@@ -146,7 +146,7 @@ module DEBUGGER__
           /CONST1 = 1/,
           /CONST2 = 2/
         ])
-        assert_no_line_text /C1 = D::C1/
+        assert_no_line_text(/C1 = D::C1/)
 
         type 'info constants'
         assert_line_text([
@@ -157,7 +157,7 @@ module DEBUGGER__
         assert_line_num 19
 
         type 'info'
-        assert_line_text /%self = \#<D::C1/
+        assert_line_text(/%self = \#<D::C1/)
         type 'info constants'
         assert_line_text([
           /CONST1 = 1/,
