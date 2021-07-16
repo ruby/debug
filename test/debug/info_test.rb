@@ -164,9 +164,9 @@ module DEBUGGER__
           /CONST2 => 2/,
           /C0_CONST1 => \-1/,
           /C0_CONST2 => \-2/,
+          /C1 => D::C1/,
           /D_CONST1 => 1/,
           /D_CONST2 => 1/,
-          /C1 => D::C1/
         ])
 
         type 'c'
