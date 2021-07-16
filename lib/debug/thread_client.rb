@@ -307,20 +307,19 @@ module DEBUGGER__
     def puts_variable_info label, obj, pat
       return if pat && pat !~ label
 
-      info = "#{colorize_cyan(label)} => #{colored_inspect(obj)}".lines
-      w = SESSION.width
-      max_inspect_lines = CONFIG[:show_inspect_lines] || 10
+      w = SESSION::width
 
-      if (max_inspect_lines > 0 && (info.size > max_inspect_lines)) || info.any?{|l| l.size > w}
-        info = "#{colorize_cyan(label)} => #{colored_inspect(obj, no_color: true)}".lines
-        if max_inspect_lines > 0 && info.size > max_inspect_lines
-          info = info.first(max_inspect_lines - 2) +
-                 ["...(#{info.size - (max_inspect_lines - 1)} lines)\n" + info.last]
+      valstr = colored_inspect(obj, width: 2 ** 30)
+      if valstr.lines.size > 1
+        begin
+          valstr = obj.inspect
+        rescue Exception => e
+          valstr = e.inspect
         end
-        info.map!{|l|
-          l.length > w ? l[0..(w-4)] + '...' : l
-        }
       end
+
+      info = "#{colorize_cyan(label)} => #{valstr}"
+      info = info[0..(w-4)] + '...' if info.length > w
 
       puts info
     end
