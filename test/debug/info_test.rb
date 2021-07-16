@@ -91,4 +91,86 @@ module DEBUGGER__
       end
     end
   end
+
+  class InfoConstantTest < TestCase
+    def program
+      <<~RUBY
+         1|
+         1| class C0
+         2|   C0_CONST1 = -1
+         3|   C0_CONST2 = -2
+         4| end
+         5|
+         6| class D
+         7|   D_CONST1 = 1
+         8|   D_CONST2 = 1
+         9|   class C1 < C0
+        10|     CONST1 = 1
+        11|     CONST2 = 2
+        12|     l1 = 10
+        13|     l2 = 20
+        14|     @i1 = 100
+        15|     @i2 = 200
+        16|
+        17|     def foo
+        18|       :foo
+        19|     end
+        20|   end
+        21| end
+        22|
+        23| D::C1.new.foo
+      RUBY
+    end
+
+    def test_info_constant
+      debug_code(program) do
+        type 'info'
+        assert_line_text(/%self => main/)
+        assert_no_line_text(/SystemExit => SystemExit/)
+        type 'info constant'
+        assert_line_text([
+          /SystemExit => SystemExit/,
+        ])
+        type 'b 17'
+        type 'b 19'
+        type 'c'
+        assert_line_num 18
+
+        type 'info'
+        assert_line_text([
+          /%self => D::C1/,
+          /l1 => 10/,
+          /l2 => 20/,
+          /@i1 => 100/,
+          /@i2 => 200/,
+          /CONST1 => 1/,
+          /CONST2 => 2/
+        ])
+        assert_no_line_text /C1 => D::C1/
+
+        type 'info constants'
+        assert_line_text([
+          /C1 => D::C1/
+        ])
+
+        type 'c'
+        assert_line_num 19
+
+        type 'info'
+        assert_line_text /%self => \#<D::C1/
+        type 'info constants'
+        assert_line_text([
+          /CONST1 => 1/,
+          /CONST2 => 2/,
+          /C0_CONST1 => \-1/,
+          /C0_CONST2 => \-2/,
+          /D_CONST1 => 1/,
+          /D_CONST2 => 1/,
+          /C1 => D::C1/
+        ])
+
+        type 'c'
+      end
+    end
+  end
 end
