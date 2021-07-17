@@ -5,7 +5,7 @@ require 'pp'
 
 require_relative 'frame_info'
 require_relative 'color'
-require_relative 'command/ls'
+require_relative 'command/outline'
 
 module DEBUGGER__
   class ThreadClient
@@ -634,7 +634,7 @@ module DEBUGGER__
             raise "unsupported frame operation: #{arg.inspect}"
           end
           event! :result, nil
-        when :ls
+        when :outline
           subject =
             if arg_expr = args.first
               frame_eval(arg_expr)
@@ -642,7 +642,7 @@ module DEBUGGER__
               frame_eval("self")
             end
 
-          Command::Ls.execute(current_frame, subject, @output)
+          Command::Outline.execute(current_frame, subject, @output)
 
           event! :result, nil
         when :show

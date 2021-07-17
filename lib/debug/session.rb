@@ -545,13 +545,13 @@ module DEBUGGER__
           return :retry
         end
 
-      # * `ls`
+      # * `o[utline]` or `ls`
       #   * Show you available methods, constants, local variables, and instance variables in the current scope.
-      # * `ls <object>`
-      #   * Show you available methods, local variables, and instance variables of the given object.
+      # * `o[utline] <expr>` or `ls <expr>`
+      #   * Show you available methods and instance variables of the given object.
       #   * If the object is a class/module, it also lists its constants.
-      when 'ls'
-        @tc << [:ls, arg]
+      when 'outline', 'o', 'ls'
+        @tc << [:outline, arg]
 
       # * `display`
       #   * Show display setting.
