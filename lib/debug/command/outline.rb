@@ -2,7 +2,7 @@
 
 module DEBUGGER__
   module Command
-    class Ls
+    class Outline
       class << self
         def execute(current_frame, obj, output)
           o = Output.new(output)
