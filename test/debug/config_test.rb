@@ -67,4 +67,78 @@ module DEBUGGER__
       end
     end
   end
+
+  class ShowSrcLinesTest < TestCase
+    def program
+      <<~RUBY
+      1| p 1
+      2| p 2
+      3| p 3
+      4| p 4
+      5| p 5
+      6| p 6
+      7| p 7
+      8| p 8
+      9| p 9
+      10| binding.b
+      11| p 11
+      12| p 12
+      13| p 13
+      14| p 14
+      15| p 15
+      RUBY
+    end
+
+    def test_show_src_lines_control_the_lines_displayed_on_breakpoint
+      debug_code(program) do
+        type 'config set show_src_lines 2'
+        type 'continue'
+        assert_line_text([
+          /9| p 9/,
+          /=>   10| binding.b/
+        ])
+
+        assert_no_line_text(/p 11/)
+        type 'continue'
+      end
+    end
+  end
+
+  class ShowFramesTest < TestCase
+    def program
+      <<~RUBY
+     1| def m1
+     2|   m2
+     3| end
+     4|
+     5| def m2
+     6|   m3
+     7| end
+     8|
+     9| def m3
+    10|   foo
+    11| end
+    12|
+    13| def foo
+    14|   binding.b
+    15| end
+    16|
+    17| m1
+      RUBY
+    end
+
+    def test_show_frames_control_the_frames_displayed_on_breakpoint
+      debug_code(program) do
+        type 'config set show_frames 2'
+        type 'continue'
+        assert_line_text([
+          /Object#foo at/,
+          /Object#m3 at/
+        ])
+
+        assert_no_line_text(/Object#m2/)
+        type 'continue'
+      end
+    end
+  end
 end
