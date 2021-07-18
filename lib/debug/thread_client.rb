@@ -202,6 +202,9 @@ module DEBUGGER__
           next if !yield
           next if tp.path.start_with?(__dir__)
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
+          loc = caller_locations(1, 1).first
+          loc_path = loc.absolute_path || "!eval:#{loc.path}"
+          next if skip_path?(loc_path)
 
           tp.disable
           on_suspend tp.event, tp
@@ -213,12 +216,19 @@ module DEBUGGER__
           next if SESSION.break? tp.path, tp.lineno
           next if !yield
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
+          loc = caller_locations(1, 1).first
+          loc_path = loc.absolute_path || "!eval:#{loc.path}"
+          next if skip_path?(loc_path)
 
           tp.disable
           on_suspend tp.event, tp
         }
         @step_tp.enable
       end
+    end
+
+    def skip_path?(path)
+      CONFIG[:skip_path] && CONFIG[:skip_path].any? { |skip_path| path.match?(skip_path) }
     end
 
     def current_frame
