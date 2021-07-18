@@ -141,4 +141,68 @@ module DEBUGGER__
       end
     end
   end
+
+  class SkipPathTest < TestCase
+    def lib_file
+      <<~RUBY
+        def lib_m1
+          yield
+        end
+        def lib_m2
+          2
+        end
+      RUBY
+    end
+
+    def program(lib_file)
+      <<~RUBY
+     1| DEBUGGER__::CONFIG[:skip_path] = [/library/]
+     2|
+     3| load "#{lib_file.path}"
+     4|
+     5| def foo
+     6|   1
+     7| end
+     8|
+     9| result = lib_m1 do
+    10|   foo + lib_m2
+    11| end
+    12|
+    13| binding.b
+      RUBY
+    end
+
+    def write_lib_temp_file
+      Tempfile.create(%w[library .rb]).tap do |f|
+        f.write(lib_file)
+        f.close
+      end
+    end
+
+    def test_skip_path_skip_frames_that_match_the_path
+      lib_file = write_lib_temp_file
+      debug_code(program(lib_file)) do
+        type 'b 9'
+        type 'continue'
+        type 'n'
+
+        # don't display frame that matches skip_path
+        assert_line_text([
+          /#0\s+block in <main> at/,
+          /#2\s+<main> at/
+        ])
+        assert_no_line_text(/#1/)
+
+        type 'c'
+
+        # make sure the debugger and program can proceed normally
+        type 'p "result: #{result.to_s}"'
+        assert_line_text(/result: 3/)
+
+        type 'c'
+      end
+    ensure
+      File.unlink(lib_file)
+    end
+  end
 end
