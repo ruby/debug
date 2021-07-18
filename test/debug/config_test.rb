@@ -184,7 +184,11 @@ module DEBUGGER__
       debug_code(program(lib_file)) do
         type 'b 9'
         type 'continue'
-        type 'n'
+        type 's'
+
+        # skip definition of lib_m1
+        assert_line_text(/foo \+ lib_m2/)
+        assert_no_line_text(/def lib_m1/)
 
         # don't display frame that matches skip_path
         assert_line_text([
