@@ -72,6 +72,7 @@ module DEBUGGER__
       @frame_formatter = method(:default_frame_formatter)
       @var_map = {} # { thread_local_var_id => obj } for DAP
       set_mode nil
+      thr.instance_variable_set(:@__thread_client_id, id)
 
       ::DEBUGGER__.info("Thread \##{@id} is created.")
     end
@@ -145,6 +146,11 @@ module DEBUGGER__
 
     def on_breakpoint tp, bp
       on_suspend tp.event, tp, bp: bp
+    end
+
+    def on_trace trace_id, msg
+      event! :trace, trace_id, msg
+      wait_next_action
     end
 
     def on_suspend event, tp = nil, bp: nil, sig: nil
@@ -699,6 +705,16 @@ module DEBUGGER__
             else
               event! :result, nil
             end
+          end
+
+        when :trace
+          case args.shift
+          when :pass
+            obj = frame_eval args.shift
+            opt = args.shift
+            event! :result, :trace_pass, obj.object_id, obj.inspect, opt
+          else
+            raise "unreachable"
           end
         when :dap
           process_dap args

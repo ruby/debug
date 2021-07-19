@@ -518,6 +518,25 @@ The `<...>` notation means the argument.
 * `irb`
   * Invoke `irb` on the current frame.
 
+### Trace
+
+* `trace`
+  * Show available tracers list.
+* `trace line`
+  * Add a line tracer. It indicates line events.
+* `trace call`
+  * Add a call tracer. It indicate call/return events.
+* `trace pass <expr>`
+  * Add a pass tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
+* `trace ... </pattern/>`
+  * Indicates only matched events to `</pattern/>` (RegExp).
+* `trace ... into: <file>`
+  * Save trace information into: `<file>`.
+* `trace off <num>`
+  * Disable tracer specified by `<num>` (use `trace` command to check the numbers).
+* `trace off [line|call|pass]`
+  * Disable all tracers. If `<type>` is provided, disable specified type tracers.
+
 ### Thread control
 
 * `th[read]`
