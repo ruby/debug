@@ -7,6 +7,7 @@ require_relative 'config'
 require_relative 'thread_client'
 require_relative 'source_repository'
 require_relative 'breakpoint'
+require_relative 'tracer'
 
 require 'json' if ENV['RUBY_DEBUG_TEST_MODE']
 
@@ -65,6 +66,8 @@ module DEBUGGER__
                 #   "Foo#bar" => MethodBreakpoint
                 #   [:watch, ivar] => WatchIVarBreakpoint
                 #   [:check, expr] => CheckBreakpoint
+      #
+      @tracers = []
       @th_clients = {} # {Thread => ThreadClient}
       @q_evt = Queue.new
       @displays = []
@@ -125,6 +128,12 @@ module DEBUGGER__
           on_load iseq, src
           @ui.event :load
           tc << :continue
+        when :trace
+          trace_id, msg = ev_args
+          if t = @tracers.find{|t| t.object_id == trace_id}
+            t.puts msg
+          end
+          tc << :continue
         when :thread_begin
           th = ev_args.shift
           on_thread_begin th
@@ -164,12 +173,17 @@ module DEBUGGER__
             else
               # can't make a bp
             end
+          when :trace_pass
+            obj_id = ev_args[1]
+            obj_inspect = ev_args[2]
+            opt = ev_args[3]
+            @tracers << t = PassTracer.new(@ui, obj_id, obj_inspect, **opt)
+            @ui.puts "Enable #{t.to_s}"
           else
             # ignore
           end
 
           wait_command_loop tc
-
         when :dap_result
           dap_event ev_args # server.rb
           wait_command_loop tc
@@ -180,6 +194,7 @@ module DEBUGGER__
       @tp_thread_begin.disable
       @bps.each{|k, bp| bp.disable}
       @th_clients.each{|th, thc| thc.close}
+      @tracers.each{|t| t.disable}
       @ui = nil
     end
 
@@ -622,6 +637,79 @@ module DEBUGGER__
 
         # don't repeat irb command
         @repl_prev_line = nil
+
+      ### Trace
+      # * `trace`
+      #   * Show available tracers list.
+      # * `trace line`
+      #   * Add a line tracer. It indicates line events.
+      # * `trace call`
+      #   * Add a call tracer. It indicate call/return events.
+      # * `trace pass <expr>`
+      #   * Add a pass tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
+      # * `trace ... </pattern/>`
+      #   * Indicates only matched events to `</pattern/>` (RegExp).
+      # * `trace ... into: <file>`
+      #   * Save trace information into: `<file>`.
+      # * `trace off <num>`
+      #   * Disable tracer specified by `<num>` (use `trace` command to check the numbers).
+      # * `trace off [line|call|pass]`
+      #   * Disable all tracers. If `<type>` is provided, disable specified type tracers.
+      when 'trace'
+        if (re = /\s+into:\s*(.+)/) =~ arg
+          into = $1
+          arg.sub!(re, '')
+        end
+
+        if (re = /\s\/(.+)\/\z/) =~ arg
+          pattern = $1
+          arg.sub!(re, '')
+        end
+
+        case arg
+        when nil
+          @ui.puts 'Tracers:'
+          @tracers.each_with_index{|t, i|
+            @ui.puts "* \##{i} #{t}"
+          }
+          @ui.puts
+          return :retry
+
+        when /\Aline\z/
+          @tracers << t = LineTracer.new(@ui, pattern: pattern, into: into)
+          @ui.puts "Enable #{t.to_s}"
+          return :retry
+
+        when /\Acall\z/
+          @tracers << t = CallTracer.new(@ui, pattern: pattern, into: into)
+          @ui.puts "Enabble #{t.to_s}"
+          return :retry
+
+        when /\Apass\s+(.+)/
+          @tc << [:trace, :pass, $1.strip, {pattern: pattern, into: into}]
+
+        when /\Aoff\s+(\d+)\z/
+          if t = @tracers[$1.to_i]
+            t.disable
+            @ui.puts "Disable #{t.to_s}"
+          else
+            @ui.puts "Unmatched: #{$1}"
+          end
+          return :retry
+
+        when /\Aoff(\s+(line|call|type))?\z/
+          @tracers.each{|t|
+            if $2.nil? || t.type == $2
+              t.disable
+              @ui.puts "Disable #{t.to_s}"
+            end
+          }
+          return :retry
+
+        else
+          @ui.puts "Unknown trace option: #{arg.inspect}"
+          return :retry
+        end
 
       ### Thread control
 
