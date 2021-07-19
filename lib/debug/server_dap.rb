@@ -438,8 +438,8 @@ module DEBUGGER__
       when :backtrace
         event! :dap_result, :backtrace, req, {
           stackFrames: @target_frames.map.with_index{|frame, i|
-            path = frame.realpath
-            ref = frame.file_lines unless File.exist?(path)
+            path = frame.realpath || frame.path
+            ref = frame.file_lines unless path && File.exist?(path)
 
             {
               # id: ??? # filled by SESSION
