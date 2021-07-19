@@ -76,14 +76,14 @@ module DEBUGGER__
       run_test_scenario(cmd, repl_prompt)
     end
 
-    def debug_on_unix_domain_socket repl_prompt = '(rdbg:remote)'
+    def debug_on_unix_domain_socket repl_prompt = /\(rdbg:remote\)/
       @mode = 'UNIX DOMAIN SOCKET'
       socket_path = setup_unix_doman_socket_remote_debuggee
       cmd = "#{RDBG_EXECUTABLE} -A #{socket_path}"
       run_test_scenario(cmd, repl_prompt)
     end
 
-    def debug_on_tcpip repl_prompt = '(rdbg:remote)'
+    def debug_on_tcpip repl_prompt = /\(rdbg:remote\)/
       @mode = 'TCP/IP'
       cmd = "#{RDBG_EXECUTABLE} -A #{RUBY_DEBUG_TEST_PORT}"
       setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{RUBY_DEBUG_TEST_PORT} -- #{temp_file_path}")
