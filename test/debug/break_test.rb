@@ -262,7 +262,7 @@ module DEBUGGER__
       RUBY
     end
 
-    def test_stops_at_correct_place_when_breakpoint_set_in_a_regular_line
+    def test_break_stops_at_correct_place_when_breakpoint_set_in_a_regular_line
       debug_code(program) do
         type 'break 4'
         assert_line_text(/#0  BP - Line  .*\.rb:4 \(call\)/)
@@ -273,7 +273,7 @@ module DEBUGGER__
       end
     end
 
-    def test_stops_at_correct_place_when_breakpoint_set_in_empty_line
+    def test_break_stops_at_correct_place_when_breakpoint_set_in_empty_line
       debug_code(program) do
         type 'break 6'
         type 'continue'
