@@ -570,10 +570,9 @@ module DEBUGGER__
           case eval_type
           when :p
             result = frame_eval(eval_src)
-            puts "=> " + result.inspect
+            puts "=> " + color_pp(result, 2 ** 30)
           when :pp
             result = frame_eval(eval_src)
-            puts "=> "
             puts color_pp(result, SESSION.width)
           when :call
             result = frame_eval(eval_src)
