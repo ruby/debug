@@ -192,7 +192,7 @@ module DEBUGGER__
 
   CONFIG = ::DEBUGGER__.parse_argv(ENV['RUBY_DEBUG_OPT'])
 
-  def self.set_config kw
+  def self.set_config(**kw)
     kw.each{|k, v|
       if CONFIG_MAP[k]
         CONFIG[k] = parse_config_value(k, v) # TODO: ractor support

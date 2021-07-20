@@ -709,7 +709,7 @@ module DEBUGGER__
           if append
             DEBUGGER__.append_config(key, val)
           else
-            DEBUGGER__.set_config({key => val})
+            DEBUGGER__.set_config(**{key => val})
           end
         rescue => e
           @ui.puts e.message
@@ -728,7 +728,7 @@ module DEBUGGER__
 
       when /\Aunset\s+(.+)\z/
         if CONFIG_SET[key = $1.to_sym]
-          DEBUGGER__.set_config({key => nil})
+          DEBUGGER__.set_config(**{key => nil})
         end
         config_show key
 
@@ -1190,7 +1190,7 @@ module DEBUGGER__
   # start methods
 
   def self.start nonstop: false, **kw
-    set_config(kw)
+    set_config(**kw)
 
     unless defined? SESSION
       require_relative 'local'
@@ -1201,7 +1201,7 @@ module DEBUGGER__
   end
 
   def self.open host: nil, port: ::DEBUGGER__::CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false, **kw
-    set_config(kw)
+    set_config(**kw)
 
     if port
       open_tcp host: host, port: port, nonstop: nonstop
@@ -1211,7 +1211,7 @@ module DEBUGGER__
   end
 
   def self.open_tcp host: nil, port:, nonstop: false, **kw
-    set_config(kw)
+    set_config(**kw)
     require_relative 'server'
 
     if defined? SESSION
@@ -1224,7 +1224,7 @@ module DEBUGGER__
   end
 
   def self.open_unix sock_path: nil, sock_dir: nil, nonstop: false, **kw
-    set_config(kw)
+    set_config(**kw)
     require_relative 'server'
 
     if defined? SESSION
