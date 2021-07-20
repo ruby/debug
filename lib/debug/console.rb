@@ -2,7 +2,7 @@
 module DEBUGGER__
   class Console
     begin
-      raise LoadError
+      raise LoadError if CONFIG['no_reline'] || true
 
       require 'reline'
       require_relative 'color'

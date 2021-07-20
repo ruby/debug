@@ -11,6 +11,7 @@ module DEBUGGER__
     skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "UI: Skip showing frames for given paths (default: [])",          :path],
     no_color:       ['RUBY_DEBUG_NO_COLOR',       "UI: Do not use colorize (default: false)",                       :bool],
     no_sigint_hook: ['RUBY_DEBUG_NO_SIGINT_HOOK', "UI: Do not suspend on SIGINT (default: false)",                  :bool],
+    no_reline:      ['RUBY_DEBUG_NO_RELINE',      "UI: Do not use Reline library (default: false)",                 :bool],
 
     # boot setting
     nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool],
