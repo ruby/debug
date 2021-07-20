@@ -1,35 +1,6 @@
 # frozen_string_literal: true
 
 module DEBUGGER__
-  def self.unix_domain_socket_dir
-    case
-    when path = ::DEBUGGER__::CONFIG[:sock_dir]
-    when path = ENV['XDG_RUNTIME_DIR']
-    when home = ENV['HOME']
-      path = File.join(home, '.ruby-debug-sock')
-
-      case
-      when !File.exist?(path)
-        Dir.mkdir(path, 0700)
-      when !File.directory?(path)
-        raise "#{path} is not a directory."
-      end
-    else
-      raise 'specify RUBY_DEBUG_SOCK_DIR environment variable for UNIX domain socket directory.'
-    end
-
-    path
-  end
-
-  def self.create_unix_domain_socket_name_prefix(base_dir = unix_domain_socket_dir)
-    user = ENV['USER'] || 'ruby-debug'
-    File.join(base_dir, "ruby-debug-#{user}")
-  end
-
-  def self.create_unix_domain_socket_name(base_dir = unix_domain_socket_dir)
-    create_unix_domain_socket_name_prefix(base_dir) + "-#{Process.pid}"
-  end
-
   CONFIG_SET = {
     # UI setting
     log_level:      ['RUBY_DEBUG_LOG_LEVEL',      "UI: Log level same as Logger (default: WARN)",                   :loglevel],
@@ -240,5 +211,34 @@ module DEBUGGER__
     else
       raise "Unknown configuration: #{key}"
     end
+  end
+
+  def self.unix_domain_socket_dir
+    case
+    when path = ::DEBUGGER__::CONFIG[:sock_dir]
+    when path = ENV['XDG_RUNTIME_DIR']
+    when home = ENV['HOME']
+      path = File.join(home, '.ruby-debug-sock')
+
+      case
+      when !File.exist?(path)
+        Dir.mkdir(path, 0700)
+      when !File.directory?(path)
+        raise "#{path} is not a directory."
+      end
+    else
+      raise 'specify RUBY_DEBUG_SOCK_DIR environment variable for UNIX domain socket directory.'
+    end
+
+    path
+  end
+
+  def self.create_unix_domain_socket_name_prefix(base_dir = unix_domain_socket_dir)
+    user = ENV['USER'] || 'ruby-debug'
+    File.join(base_dir, "ruby-debug-#{user}")
+  end
+
+  def self.create_unix_domain_socket_name(base_dir = unix_domain_socket_dir)
+    create_unix_domain_socket_name_prefix(base_dir) + "-#{Process.pid}"
   end
 end
