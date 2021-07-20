@@ -30,12 +30,6 @@ module DEBUGGER__
   CONFIG_MAP = CONFIG_SET.map{|k, (ev, desc)| [k, ev]}.to_h.freeze
 
   class Config
-    def self.config_to_env_hash config
-      CONFIG_MAP.each_with_object({}){|(key, evname), env|
-        env[evname] = config[key].to_s if config[key]
-      }
-    end
-
     def self.config
       @config
     end
@@ -257,6 +251,20 @@ module DEBUGGER__
       opt.parse!(argv)
 
       config
+    end
+
+    def self.config_to_env_hash config
+      CONFIG_MAP.each_with_object({}){|(key, evname), env|
+        unless config[key].nil?
+          case CONFIG_SET[key][2]
+          when :path
+            valstr = config[key].map{|e| e.kind_of?(Regexp) ? e.inspect : e}.join(':')
+          else
+            valstr = config[key].to_s
+          end
+          env[evname] = valstr
+        end
+      }
     end
   end
 
