@@ -57,7 +57,7 @@ module DEBUGGER__
     end
 
     def set_config(**kw)
-      conf = self.config.dup
+      conf = config.dup
       kw.each{|k, v|
         if CONFIG_MAP[k]
           conf[k] = parse_config_value(k, v) # TODO: ractor support
