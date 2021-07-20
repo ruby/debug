@@ -671,7 +671,11 @@ module DEBUGGER__
 
       ### END
       else
+        require 'did_you_mean'
+        spell_checker = DidYouMean::SpellChecker.new(dictionary: DEBUGGER__.commands)
+        correction = spell_checker.correct(line.split(/\s/).first || '')
         @ui.puts "unknown command: #{line}"
+        @ui.puts "Did you mean? #{correction.join(' or ')}"
         @repl_prev_line = nil
         return :retry
       end
