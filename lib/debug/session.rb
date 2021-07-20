@@ -222,6 +222,7 @@ module DEBUGGER__
             break
           end
         rescue Interrupt
+          @ui.puts "\n^C"
           retry
         end
       end
