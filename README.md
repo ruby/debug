@@ -359,6 +359,7 @@ config set no_color true
   * `RUBY_DEBUG_SKIP_PATH` (`skip_path`): Skip showing frames for given paths (default: [])
   * `RUBY_DEBUG_NO_COLOR` (`no_color`): Do not use colorize (default: false)
   * `RUBY_DEBUG_NO_SIGINT_HOOK` (`no_sigint_hook`): Do not suspend on SIGINT (default: false)
+  * `RUBY_DEBUG_NO_RELINE` (`no_reline`): Do not use Reline library (default: false)
 
 * BOOT
   * `RUBY_DEBUG_NONSTOP` (`nonstop`): Nonstop mode
