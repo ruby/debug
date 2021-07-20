@@ -37,7 +37,7 @@ module DEBUGGER__
     end
 
     def format_as_regexp
-      if index = @last_backlog.find_index('(rdbg)')
+      if index = @last_backlog.index { |l| l.match? /\(rdbg\)/ }
         index += 2
       else
         index = 0
@@ -46,7 +46,7 @@ module DEBUGGER__
       if len < index
         '//'
       elsif len == index
-        Regexp.new(generate_pattern(@last_backlog[3])).inspect
+        Regexp.new(generate_pattern(@last_backlog[index])).inspect
       else
         lines = @last_backlog[index..].map{|l|
           l = generate_pattern(l)
