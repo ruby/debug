@@ -661,7 +661,7 @@ module DEBUGGER__
       #   * Show help for all commands.
       # * `h[elp] <command>`
       #   * Show help for the given command.
-      when 'h', 'help'
+      when 'h', 'help', '?'
         if arg
           show_help arg
         else
