@@ -10,9 +10,10 @@ module DEBUGGER__
     def initialize(target, m, c)
       @debuggee = File.absolute_path(target[0])
       m = "test_#{Time.now.to_i}" if m.nil?
-      c = 'FooTest' if c.nil?
       @method = m
-      @class = c.sub(/(^[a-z])/) { Regexp.last_match(1).upcase }
+      c = 'FooTest' if c.nil?
+      c_upcase = c.sub(/(^[a-z])/) { Regexp.last_match(1).upcase }
+      @class = "#{c_upcase}Test" unless c_upcase.match? /(?i:t)est/
     end
 
     def start
