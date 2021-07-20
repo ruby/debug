@@ -82,7 +82,7 @@ module DEBUGGER__
           @backlog.push(line)
           @last_backlog.push(line)
           case line.chomp
-          when '(rdbg)'
+          when /\(rdbg\)/
             command = write_user_input(write, 'quit')
           when %r{\[y/n\]}i
             @scenario.push("type '#{command}'")
