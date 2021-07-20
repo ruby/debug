@@ -103,8 +103,15 @@ module DEBUGGER__
           Timeout.timeout(TIMEOUT_SEC) do
             while (line = read.gets)
               debug_print line
+              @backlog.push(line)
+              @last_backlog.push(line)
+
               case line.chomp
               when /INTERNAL_INFO:\s(.*)/
+                # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
+                @backlog.pop
+                @last_backlog.pop
+
                 @internal_info = JSON.parse(Regexp.last_match(1))
                 cmd = @queue.pop
                 while cmd.is_a?(Proc)
@@ -114,18 +121,21 @@ module DEBUGGER__
                 if ASK_CMD.include?(cmd)
                   write.puts(cmd)
                   cmd = @queue.pop
+                  if cmd.is_a?(Proc)
+                    assertion = cmd
+                    cmd = @queue.pop
+                  end
                 end
 
                 write.puts(cmd)
                 @last_backlog.clear
                 next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
+              when %r{\[y/n\]}i
+                assertion&.call
               when repl_prompt
                 # check if the previous command breaks the debugger before continuing
                 check_error(/REPL ERROR/)
               end
-
-              @backlog.push(line)
-              @last_backlog.push(line)
             end
 
             check_error(/DEBUGGEE Exception/)
