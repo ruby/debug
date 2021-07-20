@@ -1192,8 +1192,8 @@ module DEBUGGER__
     set_config(kw)
 
     unless defined? SESSION
-      require_relative 'console'
-      initialize_session UI_Console.new
+      require_relative 'local'
+      initialize_session UI_LocalConsole.new
     end
 
     setup_initial_suspend unless nonstop
@@ -1240,7 +1240,7 @@ module DEBUGGER__
   def self.setup_initial_suspend
     if !::DEBUGGER__::CONFIG[:nonstop]
       if loc = ::DEBUGGER__.require_location
-        # require 'debug/console' or 'debug'
+        # require 'debug/start' or 'debug'
         add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
       else
         # -r

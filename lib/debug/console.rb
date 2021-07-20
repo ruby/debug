@@ -1,61 +1,55 @@
 # frozen_string_literal: true
-
-require 'io/console/size'
-
 module DEBUGGER__
-  class UI_Console < UI_Base
-    def initialize
-      unless CONFIG[:no_sigint_hook]
-        @prev_handler = trap(:SIGINT){
-          ThreadClient.current.on_trap :SIGINT
-        }
+  class Console
+    begin
+      raise LoadError
+
+      require 'reline'
+      require_relative 'color'
+      include Color
+
+      def readline_setup prompt
+        commands = DEBUGGER__.commands
+        Reline.completion_proc = -> given do
+          buff = Reline.line_buffer
+          Reline.completion_append_character= ' '
+
+          if /\s/ =~ buff # second parameters
+            given = File.expand_path(given + 'a').sub(/a\z/, '')
+            files = Dir.glob(given + '*')
+            if files.size == 1 && File.directory?(files.first)
+              Reline.completion_append_character= '/'
+            end
+            files
+          else
+            commands.grep(/\A#{given}/)
+          end
+        end
+
+        Reline.output_modifier_proc = -> buff, **kw do
+          c, rest = get_command buff
+          if commands.include?(c)
+            colorize(c, [:GREEN, :UNDERLINE]) + (rest ? colorize_code(rest) : '')
+          else
+            colorize_code(buff)
+          end
+        end
       end
-    end
 
-    def close
-      if @prev_handler
-        trap(:SIGINT, @prev_handler)
+      def get_command line
+        if /\A([a-z]+)(\s.+)?$/ =~ line.strip
+          return $1, $2
+        else
+          line
+        end
       end
-    end
 
-    def remote?
-      false
-    end
-
-    def width
-      if (w = IO.console_size[1]) == 0 # for tests PTY
-        80
-      else
-        w
+      def readline prompt = "(rdbg) "
+        readline_setup prompt
+        Reline.readmultiline(prompt, true){ true }
       end
-    end
 
-    def quit n
-      exit n
-    end
-
-    def ask prompt
-      setup_interrupt do
-        print prompt
-        ($stdin.gets || '').strip
-      end
-    end
-
-    def puts str = nil
-      case str
-      when Array
-        str.each{|line|
-          $stdout.puts line.chomp
-        }
-      when String
-        str.each_line{|line|
-          $stdout.puts line.chomp
-        }
-      when nil
-        $stdout.puts
-      end
-    end
-
+    rescue LoadError
     begin
       require 'readline'
 
@@ -77,33 +71,17 @@ module DEBUGGER__
         }
       end
 
-      def readline_body
+      def readline
         readline_setup
-        Readline.readline("\n(rdbg) ", true)
+        Readline.readline("(rdbg) ", true)
       end
+
     rescue LoadError
-      def readline_body
-        print "\n(rdbg) "
+      def readline
+        print "(rdbg) "
         gets
       end
     end
-
-    def readline
-      setup_interrupt do
-        (readline_body || 'quit').strip
-      end
-    end
-
-    def setup_interrupt
-      current_thread = Thread.current # should be session_server thread
-
-      prev_handler = trap(:INT){
-        current_thread.raise Interrupt
-      }
-
-      yield
-    ensure
-      trap(:INT, prev_handler)
     end
   end
 end
