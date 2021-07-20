@@ -330,5 +330,25 @@ module DEBUGGER__
         type 'quit!'
       end
     end
+
+    def test_break_with_colon_between_file_and_line_stops_at_correct_place
+      debug_code(program) do
+        type "b #{temp_file_path}:4"
+        assert_line_text(/\#0  BP \- Line  .*/)
+        type 'c'
+        assert_line_num 4
+        type 'q!'
+      end
+    end
+
+    def test_break_with_space_between_file_and_line_stops_at_correct_place
+      debug_code(program) do
+        type "b #{temp_file_path} 9"
+        assert_line_text(/\#0  BP \- Line  .*/)
+        type 'c'
+        assert_line_num 9
+        type 'q!'
+      end
+    end
   end
 end
