@@ -8,10 +8,12 @@ module DEBUGGER__
     show_frames:    ['RUBY_DEBUG_SHOW_FRAMES',    "UI: Show n frames on breakpoint (default: 2 frames)",            :int],
     use_short_path: ['RUBY_DEBUG_USE_SHORT_PATH', "UI: Show shoten PATH (like $(Gem)/foo.rb)",                      :bool],
     skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "UI: Skip on no source code lines (default: false)",              :bool],
-    skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "UI: Skip showing frames for given paths (default: [])",          :path],
     no_color:       ['RUBY_DEBUG_NO_COLOR',       "UI: Do not use colorize (default: false)",                       :bool],
     no_sigint_hook: ['RUBY_DEBUG_NO_SIGINT_HOOK', "UI: Do not suspend on SIGINT (default: false)",                  :bool],
     no_reline:      ['RUBY_DEBUG_NO_RELINE',      "UI: Do not use Reline library (default: false)",                 :bool],
+
+    # control setting
+    skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "CONTROL: Skip showing/entering frames for given paths (default: [])",          :path],
 
     # boot setting
     nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool],
