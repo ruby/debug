@@ -707,9 +707,9 @@ module DEBUGGER__
       if CONFIG_SET[key = key.to_sym]
         begin
           if append
-            DEBUGGER__.append_config(key, val)
+            CONFIG.append_config(key, val)
           else
-            DEBUGGER__.set_config(**{key => val})
+            CONFIG[key] = val
           end
         rescue => e
           @ui.puts e.message
@@ -728,7 +728,7 @@ module DEBUGGER__
 
       when /\Aunset\s+(.+)\z/
         if CONFIG_SET[key = $1.to_sym]
-          DEBUGGER__.set_config(**{key => nil})
+          CONFIG[key] = nil
         end
         config_show key
 
@@ -1190,7 +1190,7 @@ module DEBUGGER__
   # start methods
 
   def self.start nonstop: false, **kw
-    set_config(**kw)
+    CONFIG.set_config(**kw)
 
     unless defined? SESSION
       require_relative 'local'
@@ -1200,8 +1200,8 @@ module DEBUGGER__
     setup_initial_suspend unless nonstop
   end
 
-  def self.open host: nil, port: ::DEBUGGER__::CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false, **kw
-    set_config(**kw)
+  def self.open host: nil, port: CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false, **kw
+    CONFIG.set_config(**kw)
 
     if port
       open_tcp host: host, port: port, nonstop: nonstop
@@ -1211,7 +1211,7 @@ module DEBUGGER__
   end
 
   def self.open_tcp host: nil, port:, nonstop: false, **kw
-    set_config(**kw)
+    CONFIG.set_config(**kw)
     require_relative 'server'
 
     if defined? SESSION
@@ -1224,7 +1224,7 @@ module DEBUGGER__
   end
 
   def self.open_unix sock_path: nil, sock_dir: nil, nonstop: false, **kw
-    set_config(**kw)
+    CONFIG.set_config(**kw)
     require_relative 'server'
 
     if defined? SESSION
@@ -1239,7 +1239,7 @@ module DEBUGGER__
   # boot utilities
 
   def self.setup_initial_suspend
-    if !::DEBUGGER__::CONFIG[:nonstop]
+    if !CONFIG[:nonstop]
       if loc = ::DEBUGGER__.require_location
         # require 'debug/start' or 'debug'
         add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
@@ -1283,10 +1283,10 @@ module DEBUGGER__
     [[File.expand_path('~/.rdbgrc'), true],
      [File.expand_path('~/.rdbgrc.rb'), true],
      # ['./.rdbgrc', true], # disable because of security concern
-     [::DEBUGGER__::CONFIG[:init_script], false],
+     [CONFIG[:init_script], false],
      ].each{|(path, rc)|
       next unless path
-      next if rc && ::DEBUGGER__::CONFIG[:no_rc] # ignore rc
+      next if rc && CONFIG[:no_rc] # ignore rc
 
       if File.file? path
         if path.end_with?('.rb')
@@ -1300,8 +1300,8 @@ module DEBUGGER__
     }
 
     # given debug commands
-    if ::DEBUGGER__::CONFIG[:commands]
-      cmds = ::DEBUGGER__::CONFIG[:commands].split(';;')
+    if CONFIG[:commands]
+      cmds = CONFIG[:commands].split(';;')
       ::DEBUGGER__::SESSION.add_preset_commands "commands", cmds, kick: false, continue: false
     end
   end

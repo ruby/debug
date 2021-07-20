@@ -218,9 +218,9 @@ module DEBUGGER__
 
   class UI_TcpServer < UI_ServerBase
     def initialize host: nil, port: nil
-      @host = host || ::DEBUGGER__::CONFIG[:host] || '127.0.0.1'
+      @host = host || CONFIG[:host] || '127.0.0.1'
       @port = port || begin
-        port_str = ::DEBUGGER__::CONFIG[:port] || raise("Specify listening port by RUBY_DEBUG_PORT environment variable.")
+        port_str = CONFIG[:port] || raise("Specify listening port by RUBY_DEBUG_PORT environment variable.")
         if /\A\d+\z/ !~ port_str
           raise "Specify digits for port number"
         else
@@ -257,7 +257,7 @@ module DEBUGGER__
     def accept
       case
       when @sock_path
-      when sp = ::DEBUGGER__::CONFIG[:sock_path]
+      when sp = CONFIG[:sock_path]
         @sock_path = sp
       else
         @sock_path = DEBUGGER__.create_unix_domain_socket_name(@sock_dir)

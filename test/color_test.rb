@@ -44,7 +44,7 @@ module DEBUGGER__
     end
 
     def test_colored_inspect_does_not_color_objects_if_do_not_use_colorize
-      DEBUGGER__.set_config(no_color: true)
+      CONFIG[:no_color] = true
       stub_width_method
 
       dummy_class = Struct.new(:foo) do
@@ -79,7 +79,7 @@ module DEBUGGER__
     end
 
     def test_colorize_does_not_color_string_if_do_not_use_colorize
-      DEBUGGER__.set_config(no_color: true)
+      CONFIG[:no_color] = true
 
       [
         [:YELLOW, :BOLD, :REVERSE],

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require_relative '../lib/debug/config'
-config = DEBUGGER__.parse_argv(ARGV)
+config = DEBUGGER__::Config::parse_argv(ARGV)
 
 case config[:mode]
 when :start
@@ -11,17 +11,14 @@ when :start
   start_mode = config[:remote] ? "open" : 'start'
   cmd = config[:command] ? ARGV.shift : RbConfig.ruby
 
-  env = ::DEBUGGER__.config_to_env_hash(config)
+  env = ::DEBUGGER__::Config.config_to_env_hash(config)
   env['RUBYOPT'] = "-r #{libpath}/#{start_mode}"
 
   exec(env, cmd, *ARGV)
 
 when :attach
   require_relative "../lib/debug/client"
-
-  config.each{|k, v|
-    DEBUGGER__::CONFIG[k] = v
-  }
+  ::DEBUGGER__::CONFIG.update config
 
   begin
     if ARGV.empty? && config[:port]
