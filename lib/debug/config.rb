@@ -12,8 +12,9 @@ module DEBUGGER__
     no_reline:      ['RUBY_DEBUG_NO_RELINE',      "UI: Do not use Reline library (default: false)",                 :bool],
 
     # control setting
-    skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "CONTROL: Skip showing/entering frames for given paths (default: [])",          :path],
+    skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "CONTROL: Skip showing/entering frames for given paths (default: [])", :path],
     skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "CONTROL: Skip on no source code lines (default: false)",              :bool],
+    keep_alloc_site:['RUBY_DEBUG_KEEP_ALLOC_SITE',"CONTROL: Keep allocation site and p, pp shows it (default: false)",   :bool],
 
     # boot setting
     nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool],
@@ -82,9 +83,22 @@ module DEBUGGER__
     end
 
     def update conf
+      old_conf = self.class.instance_variable_get(:@config) || {}
+
       # TODO: Use Ractor.make_shareable(conf)
       self.class.instance_variable_set(:@config, conf.freeze)
-      self
+
+      # Post process
+      case
+      when !old_conf[:keep_alloc_site] && conf[:keep_alloc_site]
+        require 'objspace'
+        ObjectSpace.trace_object_allocations_start
+      when old_conf[:keep_alloc_site] && !conf[:keep_alloc_site]
+        require 'objspace'
+        ObjectSpace.trace_object_allocations_stop
+      else
+        # ignore
+      end
     end
 
     private def config

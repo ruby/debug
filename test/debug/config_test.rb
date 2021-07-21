@@ -209,4 +209,33 @@ module DEBUGGER__
       File.unlink(lib_file)
     end
   end
+
+  class ConfigKeepAllocSiteTest < TestCase
+    def program
+      <<~RUBY
+         1| a = Object.new
+         2| p a
+      RUBY
+    end
+
+    def test_p_with_keep_alloc_site
+      debug_code(program) do
+        type 'config set keep_alloc_site true'
+        assert_line_text([
+          /keep_alloc_site = true/
+        ])
+        type 's'
+        assert_line_num 2
+        type 'p a'
+        assert_line_text([
+          /allocated at/
+        ])
+        type 'pp a'
+        assert_line_text([
+          /allocated at/
+        ])
+        type 'q!'
+      end
+    end
+  end
 end

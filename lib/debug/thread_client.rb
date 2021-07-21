@@ -581,9 +581,15 @@ module DEBUGGER__
           when :p
             result = frame_eval(eval_src)
             puts "=> " + color_pp(result, 2 ** 30)
+            if alloc_path = ObjectSpace.allocation_sourcefile(result)
+              puts "allocated at #{alloc_path}:#{ObjectSpace.allocation_sourceline(result)}"
+            end
           when :pp
             result = frame_eval(eval_src)
             puts color_pp(result, SESSION.width)
+            if alloc_path = ObjectSpace.allocation_sourcefile(result)
+              puts "allocated at #{alloc_path}:#{ObjectSpace.allocation_sourceline(result)}"
+            end
           when :call
             result = frame_eval(eval_src)
           when :display, :try_display
