@@ -679,6 +679,7 @@ module DEBUGGER__
           correction = spell_checker.correct(line.split(/\s/).first || '')
           @ui.puts "Did you mean? #{correction.join(' or ')}"
         rescue LoadError
+          # Don't use D
         end
         return :retry
       end
