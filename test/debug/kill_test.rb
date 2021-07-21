@@ -13,6 +13,7 @@ module DEBUGGER__
     def test_kill_kills_the_debugger_process_if_confirmed
       debug_code(program) do
         type 'kill'
+        assert_line_text(/Really kill\? \[Y\/n\]/)
         type 'y'
       end
     end
@@ -20,6 +21,7 @@ module DEBUGGER__
     def test_kill_does_not_kill_the_debugger_process_if_not_confirmed
       debug_code(program) do
         type 'kill'
+        assert_line_text(/Really kill\? \[Y\/n\]/)
         type 'n'
         type 'q!'
       end
