@@ -6,14 +6,22 @@ module DEBUGGER__
   class KillTest < TestCase
     def program
       <<~RUBY
-      1| a = 1
+        1| a = 1
       RUBY
     end
 
-    def test_kill_kills_the_debugger_process_after_confirmation
+    def test_kill_kills_the_debugger_process_if_confirmed
       debug_code(program) do
-        type "kill"
-        type "y"
+        type 'kill'
+        type 'y'
+      end
+    end
+
+    def test_kill_does_not_kill_the_debugger_process_if_not_confirmed
+      debug_code(program) do
+        type 'kill'
+        type 'n'
+        type 'q!'
       end
     end
 
