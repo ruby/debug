@@ -1252,7 +1252,7 @@ module DEBUGGER__
         add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
       else
         # -r
-        add_line_breakpoint $0, 1, oneshot: true, hook_call: false
+        add_line_breakpoint $0, 0, oneshot: true, hook_call: false
       end
     end
   end
