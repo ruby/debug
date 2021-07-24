@@ -13,7 +13,11 @@ module DEBUGGER__
       @method = m
       c = 'FooTest' if c.nil?
       c_upcase = c.sub(/(^[a-z])/) { Regexp.last_match(1).upcase }
-      @class = "#{c_upcase}Test" unless c_upcase.match? /(?i:t)est/
+      if c_upcase.match? /(?i:t)est/
+        @class = c_upcase
+      else
+        @class = "#{c_upcase}Test"
+      end
     end
 
     def start
