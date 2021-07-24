@@ -4,7 +4,7 @@ module DEBUGGER__
   module AssertionHelpers
     def assert_line_num(expected)
       @queue.push(Proc.new {
-        msg = "Expected line number to be #{expected}, but was #{@internal_info['line']}\n"
+        msg = "Expected line number to be #{expected.inspect}, but was #{@internal_info['line']}\n"
         assert_block(FailureMessage.new { create_message(msg) }) { expected == @internal_info['line'] }
       })
     end
@@ -30,7 +30,7 @@ module DEBUGGER__
             raise "Unknown expectation value: #{expected.inspect}"
           end
 
-        msg = "Expected to include `#{expected}` in\n(\n#{result})\n"
+        msg = "Expected to include `#{expected.inspect}` in\n(\n#{result})\n"
 
         assert_block(FailureMessage.new { create_message(msg) }) do
           result.match? expected
@@ -42,7 +42,7 @@ module DEBUGGER__
       @queue.push(Proc.new {
         result = collect_recent_backlog
         expected = Regexp.escape(expected) if expected.is_a?(String)
-        msg = "Expected not to include `#{expected}` in\n(\n#{result})\n"
+        msg = "Expected not to include `#{expected.inspect}` in\n(\n#{result})\n"
 
         assert_block(FailureMessage.new { create_message(msg) }) do
           !result.match? expected
