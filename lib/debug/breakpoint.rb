@@ -247,7 +247,9 @@ module DEBUGGER__
     def setup
       @tp = TracePoint.new(:raise){|tp|
         exc = tp.raised_exception
+
         next if SystemExit === exc
+        next if CONFIG[:skip_path] && CONFIG[:skip_path].any? { |p| tp.path.match?(p) }
         should_suspend = false
 
         exc.class.ancestors.each{|cls|
