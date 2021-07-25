@@ -360,7 +360,7 @@ config set no_color true
   * `RUBY_DEBUG_NO_RELINE` (`no_reline`): Do not use Reline library (default: false)
 
 * CONTROL
-  * `RUBY_DEBUG_SKIP_PATH` (`skip_path`): Skip showing/entering frames for given paths (default: [])
+  * `RUBY_DEBUG_SKIP_FRAME_PATH` (`skip_frame_path`): Skip showing/entering frames for given paths (default: [])
   * `RUBY_DEBUG_SKIP_RAISE_PATH` (`skip_raise_path`): Skip catching exceptions raised from given paths (default: [])
   * `RUBY_DEBUG_SKIP_NOSRC` (`skip_nosrc`): Skip on no source code lines (default: false)
   * `RUBY_DEBUG_KEEP_ALLOC_SITE` (`keep_alloc_site`): Keep allocation site and p, pp shows it (default: false)

@@ -277,7 +277,7 @@ module DEBUGGER__
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
           loc = caller_locations(1, 1).first
           loc_path = loc.absolute_path || "!eval:#{loc.path}"
-          next if skip_path?(loc_path)
+          next if skip_frame_path?(loc_path)
 
           tp.disable
           suspend tp.event, tp
@@ -291,7 +291,7 @@ module DEBUGGER__
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
           loc = caller_locations(1, 1).first
           loc_path = loc.absolute_path || "!eval:#{loc.path}"
-          next if skip_path?(loc_path)
+          next if skip_frame_path?(loc_path)
 
           tp.disable
           suspend tp.event, tp
@@ -300,8 +300,8 @@ module DEBUGGER__
       end
     end
 
-    def skip_path?(path)
-      CONFIG[:skip_path] && CONFIG[:skip_path].any? { |skip_path| path.match?(skip_path) }
+    def skip_frame_path?(path)
+      CONFIG[:skip_frame_path] && CONFIG[:skip_frame_path].any? { |skip_frame_path| path.match?(skip_frame_path) }
     end
 
     ## cmd helpers
@@ -523,7 +523,7 @@ module DEBUGGER__
         frames = []
         @target_frames.each_with_index{|f, i|
           next if pattern && !(f.name.match?(pattern) || f.location_str.match?(pattern))
-          next if CONFIG[:skip_path] && CONFIG[:skip_path].any?{|pat|
+          next if CONFIG[:skip_frame_path] && CONFIG[:skip_frame_path].any?{|pat|
             case pat
             when String
               f.location_str.start_with?(pat)

@@ -156,7 +156,7 @@ module DEBUGGER__
 
     def program(lib_file)
       <<~RUBY
-     1| DEBUGGER__::CONFIG[:skip_path] = [/library/]
+     1| DEBUGGER__::CONFIG[:skip_frame_path] = [/library/]
      2|
      3| load "#{lib_file.path}"
      4|
@@ -179,7 +179,7 @@ module DEBUGGER__
       end
     end
 
-    def test_skip_path_skip_frames_that_match_the_path
+    def test_skip_frame_path_skip_frames_that_match_the_path
       lib_file = write_lib_temp_file
       debug_code(program(lib_file)) do
         type 'b 9'
@@ -190,7 +190,7 @@ module DEBUGGER__
         assert_line_text(/foo \+ lib_m2/)
         assert_no_line_text(/def lib_m1/)
 
-        # don't display frame that matches skip_path
+        # don't display frame that matches skip_frame_path
         assert_line_text([
           /#0\s+block in <main> at/,
           /#2\s+<main> at/
