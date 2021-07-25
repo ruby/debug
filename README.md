@@ -361,6 +361,7 @@ config set no_color true
 
 * CONTROL
   * `RUBY_DEBUG_SKIP_PATH` (`skip_path`): Skip showing/entering frames for given paths (default: [])
+  * `RUBY_DEBUG_SKIP_RAISE_PATH` (`skip_raise_path`): Skip catching exceptions raised from given paths (default: [])
   * `RUBY_DEBUG_SKIP_NOSRC` (`skip_nosrc`): Skip on no source code lines (default: false)
   * `RUBY_DEBUG_KEEP_ALLOC_SITE` (`keep_alloc_site`): Keep allocation site and p, pp shows it (default: false)
   * `RUBY_DEBUG_POSTMORTEM` (`postmortem`): Enable postmortem debug (default: false)

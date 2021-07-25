@@ -238,4 +238,52 @@ module DEBUGGER__
       end
     end
   end
+
+  class SkipRaisePathTest < TestCase
+    def lib_file
+      <<~RUBY
+        def lib_raise
+          raise "foo"
+        end
+      RUBY
+    end
+
+    def program(lib_file)
+      <<~RUBY
+     1| DEBUGGER__::CONFIG[:skip_raise_path] = [/library/]
+     2|
+     3| load "#{lib_file.path}"
+     4|
+     5| def foo
+     6|   lib_raise
+     7| rescue
+     8|   raise "bar"
+     9| end
+    10|
+    11| foo
+      RUBY
+    end
+
+    def write_lib_temp_file
+      Tempfile.create(%w[library .rb]).tap do |f|
+        f.write(lib_file)
+        f.close
+      end
+    end
+
+    def test_skip_raise_path_skip_exceptions_raised_from_skiped_paths
+      lib_file = write_lib_temp_file
+      debug_code(program(lib_file)) do
+        type 'catch RuntimeError'
+        type 'continue'
+
+        assert_no_line_text(/Object#lib_raise/)
+        assert_line_text(/Object#foo/)
+
+        type 'continue'
+      end
+    ensure
+      File.unlink(lib_file)
+    end
+  end
 end
