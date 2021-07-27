@@ -19,7 +19,7 @@ module DEBUGGER__
     def test_trace
       debug_code(program) do
         type 'trace'
-        assert_line_text /Tracers/
+        assert_line_text(/Tracers/)
         type 'trace line'
         type 'trace call'
         type 'trace'
@@ -30,7 +30,7 @@ module DEBUGGER__
     def test_trace_off
       debug_code(program) do
         type 'trace'
-        assert_line_text /Tracers/
+        assert_line_text(/Tracers/)
         type 'trace line'
         type 'trace call'
         type 'trace'
@@ -55,9 +55,9 @@ module DEBUGGER__
       debug_code(program) do
         type 'b 6'
         type 'trace line'
-        assert_line_text /Enable LineTracer/
+        assert_line_text(/Enable LineTracer/)
         type 'c'
-        assert_line_text /trace\/line/
+        assert_line_text(/trace\/line/)
         type 'q!'
       end
     end
@@ -66,7 +66,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'b 6'
         type 'trace call'
-        assert_line_text /Enabble CallTracer/
+        assert_line_text(/Enabble CallTracer/)
         type 'c'
         #assert_line_text /trace\/call/
         type 'q!'
@@ -77,9 +77,9 @@ module DEBUGGER__
       debug_code(program) do
         type 'b 7'
         type 'trace pass 1'
-        assert_line_text /Enable PassTracer/
+        assert_line_text(/Enable PassTracer/)
         type 'c'
-        assert_line_text /trace\/pass/
+        assert_line_text(/trace\/pass/)
         type 'q!'
       end
     end
