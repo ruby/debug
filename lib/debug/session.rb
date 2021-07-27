@@ -566,7 +566,7 @@ module DEBUGGER__
       #   * Show you available methods and instance variables of the given object.
       #   * If the object is a class/module, it also lists its constants.
       when 'outline', 'o', 'ls'
-        @tc << [:outline, arg]
+        @tc << [:show, :outline, arg]
 
       # * `display`
       #   * Show display setting.
