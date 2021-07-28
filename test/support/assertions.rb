@@ -3,15 +3,18 @@
 module DEBUGGER__
   module AssertionHelpers
     def assert_line_num(expected)
-      @queue.push(Proc.new {
-        msg = "Expected line number to be #{expected.inspect}, but was #{@internal_info['line']}\n"
-        assert_block(FailureMessage.new { create_message(msg) }) { expected == @internal_info['line'] }
+      @scenario.push(Proc.new { |test_info|
+        msg = "Expected line number to be #{expected.inspect}, but was #{test_info.internal_info['line']}\n"
+
+        assert_block(FailureMessage.new { create_message(msg, test_info) }) do
+          expected == test_info.internal_info['line']
+        end
       })
     end
 
     def assert_line_text(text)
-      @queue.push(Proc.new {
-        result = collect_recent_backlog
+      @scenario.push(Proc.new { |test_info|
+        result = collect_recent_backlog(test_info.last_backlog)
 
         expected =
           case text
@@ -32,15 +35,15 @@ module DEBUGGER__
 
         msg = "Expected to include `#{expected.inspect}` in\n(\n#{result})\n"
 
-        assert_block(FailureMessage.new { create_message(msg) }) do
+        assert_block(FailureMessage.new { create_message(msg, test_info) }) do
           result.match? expected
         end
       })
     end
 
     def assert_no_line_text(text)
-      @queue.push(Proc.new {
-        result = collect_recent_backlog
+      @scenario.push(Proc.new { |test_info|
+        result = collect_recent_backlog(test_info.last_backlog)
         if text.is_a?(String)
           expected = Regexp.escape(text)
         else
@@ -48,16 +51,26 @@ module DEBUGGER__
         end
         msg = "Expected not to include `#{expected.inspect}` in\n(\n#{result})\n"
 
-        assert_block(FailureMessage.new { create_message(msg) }) do
+        assert_block(FailureMessage.new { create_message(msg, test_info) }) do
           !result.match? expected
         end
       })
     end
 
+    def assert_block msg
+      if multithreaded_test?
+        # test-unit doesn't support multi thread
+        # FYI: test-unit/test-unit#204
+        throw :fail, msg.to_s unless yield
+      else
+        super
+      end
+    end
+
     private
 
-    def collect_recent_backlog
-      @last_backlog[1..].join
+    def collect_recent_backlog(last_backlog)
+      last_backlog[1..].join
     end
   end
 end
