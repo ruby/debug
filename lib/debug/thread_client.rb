@@ -77,6 +77,10 @@ module DEBUGGER__
       ::DEBUGGER__.info("Thread \##{@id} is created.")
     end
 
+    def set_mode mode
+      @mode = mode
+    end
+
     def name
       "##{@id} #{@thread.name || @thread.backtrace.last}"
     end
@@ -87,6 +91,19 @@ module DEBUGGER__
 
     def inspect
       "#<DBG:TC #{self.id}:#{self.mode}@#{@thread.backtrace[-1]}>"
+    end
+
+    def to_s
+      loc = current_frame&.location
+
+      if loc
+        str = "(#{@thread.name || @thread.status})@#{loc}"
+      else
+        str = "(#{@thread.name || @thread.status})@#{@thread.to_s}"
+      end
+
+      str += " (not under control)" unless self.mode
+      str
     end
 
     def puts str = ''
@@ -540,10 +557,6 @@ module DEBUGGER__
       end
     end
 
-    def set_mode mode
-      @mode = mode
-    end
-
     def wait_next_action
       set_mode :wait_next_action
 
@@ -757,19 +770,6 @@ module DEBUGGER__
       raise
     ensure
       set_mode nil
-    end
-
-    def to_s
-      loc = current_frame&.location
-
-      if loc
-        str = "(#{@thread.name || @thread.status})@#{loc}"
-      else
-        str = "(#{@thread.name || @thread.status})@#{@thread.to_s}"
-      end
-
-      str += " (not under control)" unless self.mode
-      str
     end
 
     # copyed from irb
