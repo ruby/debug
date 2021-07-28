@@ -147,7 +147,7 @@ module DEBUGGER__
           check_error(/DEBUGGEE Exception/)
           assert_empty_queue(exception: e)
         rescue Timeout::Error => e
-          assert false, create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)")
+          assert_block(create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)")) { false }
         ensure
           kill_remote_debuggee
           # kill debug console process
@@ -163,7 +163,7 @@ module DEBUGGER__
 
     def check_error(error)
       if error_index = @last_backlog.index { |l| l.match?(error) }
-        raise create_message("Debugger terminated because of: #{@last_backlog[error_index..-1].join}")
+        assert_block(create_message "Debugger terminated because of: #{@last_backlog[error_index..-1].join}" ) { false }
       end
     end
 
@@ -215,7 +215,7 @@ module DEBUGGER__
         message += "\nAssociated exception: #{exception.class} - #{exception.message}" +
                    exception.backtrace.map{|l| "  #{l}\n"}.join
       end
-      assert_empty @queue, FailureMessage.new { create_message message }
+      assert_block(FailureMessage.new { create_message message }) { @queue.empty? }
     end
 
     def strip_line_num(str)
