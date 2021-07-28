@@ -410,6 +410,7 @@ module DEBUGGER__
       }
     end
 
+    # this method is extracted to hide frame_eval's local variables from C method eval's binding
     def instance_eval_for_cmethod frame_self, src
       frame_self.instance_eval(src)
     end
