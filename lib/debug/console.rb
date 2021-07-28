@@ -44,7 +44,7 @@ module DEBUGGER__
         end
       end
 
-      def readline prompt = "(rdbg) "
+      def readline prompt
         readline_setup prompt
         Reline.readmultiline(prompt, true){ true }
       end
@@ -71,14 +71,14 @@ module DEBUGGER__
         }
       end
 
-      def readline
+      def readline prompt
         readline_setup
-        Readline.readline("(rdbg) ", true)
+        Readline.readline(prompt, true)
       end
 
     rescue LoadError
-      def readline
-        print "(rdbg) "
+      def readline prompt
+        print prompt
         gets
       end
     end

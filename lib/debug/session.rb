@@ -55,6 +55,7 @@ end
 
 module DEBUGGER__
   PresetCommand = Struct.new(:commands, :source, :auto_continue)
+  class PostmortemError < RuntimeError; end
 
   class Session
     def initialize ui
@@ -74,6 +75,8 @@ module DEBUGGER__
       @tc = nil
       @tc_id = 0
       @preset_command = nil
+      @postmortem_hook = nil
+      @postmortem = false
 
       @frame_map = {} # {id => [threadId, frame_depth]} for DAP
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
@@ -245,6 +248,14 @@ module DEBUGGER__
       @tc = nil
     end
 
+    def prompt
+      if @postmortem
+        '(rdbg:postmortem) '
+      else
+        '(rdbg) '
+      end
+    end
+
     def wait_command
       if @preset_command
         if @preset_command.commands.empty?
@@ -262,7 +273,7 @@ module DEBUGGER__
         end
       else
         @ui.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}" if ENV['RUBY_DEBUG_TEST_MODE']
-        line = @ui.readline
+        line = @ui.readline prompt
       end
 
       case line
@@ -298,18 +309,21 @@ module DEBUGGER__
       #   * Step in. Resume the program until next breakable point.
       when 's', 'step'
         cancel_auto_continue
+        check_postmortem
         @tc << [:step, :in]
 
       # * `n[ext]`
       #   * Step over. Resume the program until next line.
       when 'n', 'next'
         cancel_auto_continue
+        check_postmortem
         @tc << [:step, :next]
 
       # * `fin[ish]`
       #   * Finish this frame. Resume the program until the current frame is finished.
       when 'fin', 'finish'
         cancel_auto_continue
+        check_postmortem
         @tc << [:step, :finish]
 
       # * `c[ontinue]`
@@ -370,6 +384,8 @@ module DEBUGGER__
       #   * break if: `<expr>` is true at any lines.
       #   * Note that this feature is super slow.
       when 'b', 'break'
+        check_postmortem
+
         if arg == nil
           show_bps
           return :retry
@@ -386,6 +402,7 @@ module DEBUGGER__
 
       # skip
       when 'bv'
+        check_postmortem
         require 'json'
 
         h = Hash.new{|h, k| h[k] = []}
@@ -412,6 +429,8 @@ module DEBUGGER__
       # * `catch <Error>`
       #   * Set breakpoint on raising `<Error>`.
       when 'catch'
+        check_postmortem
+
         if arg
           bp = add_catch_breakpoint arg
           show_bps bp if bp
@@ -424,6 +443,8 @@ module DEBUGGER__
       #   * Stop the execution when the result of current scope's `@ivar` is changed.
       #   * Note that this feature is super slow.
       when 'wat', 'watch'
+        check_postmortem
+
         if arg && arg.match?(/\A@\w+/)
           @tc << [:breakpoint, :watch, arg]
         else
@@ -436,6 +457,8 @@ module DEBUGGER__
       # * `del[ete] <bpnum>`
       #   * delete specified breakpoint.
       when 'del', 'delete'
+        check_postmortem
+
         bp =
         case arg
         when nil
@@ -784,6 +807,9 @@ module DEBUGGER__
       return :retry
     rescue SystemExit
       raise
+    rescue PostmortemError => e
+      @ui.puts e.message
+      return :retry
     rescue Exception => e
       @ui.puts "[REPL ERROR] #{e.inspect}"
       @ui.puts e.backtrace.map{|e| '  ' + e}
@@ -1248,6 +1274,56 @@ module DEBUGGER__
       unless @session_server.status
         # TODO: Support it
         raise 'DEBUGGER: stop at forked process is not supported yet.'
+      end
+    end
+
+    def check_postmortem
+      if @postmortem
+        raise PostmortemError, "Can not use this command on postmortem mode."
+      end
+    end
+
+    def enter_postmortem_session frames
+      @postmortem = true
+      ThreadClient.current.on_suspend :postmortem, postmortem_frames: frames
+    ensure
+      @postmortem = false
+    end
+
+    def postmortem=(is_enable)
+      if is_enable
+        unless @postmortem_hook
+          @postmortem_hook = TracePoint.new(:raise){|tp|
+            exc = tp.raised_exception
+            frames = DEBUGGER__.capture_frames(__dir__)
+            exc.instance_variable_set(:@postmortem_frames, frames)
+          }
+          at_exit{
+            @postmortem_hook.disable
+            if CONFIG[:postmortem] && (exc = $!) != nil
+              begin
+                @ui.puts "Enter postmortem mode with #{exc.inspect}"
+                @ui.puts exc.backtrace.map{|e| '  ' + e}
+                @ui.puts "\n"
+
+                enter_postmortem_session exc.instance_variable_get(:@postmortem_frames)
+              rescue SystemExit
+                exit!
+              rescue Exception => e
+                @ui = STDERR unless @ui
+                @ui.puts "Error while postmortem console: #{e.inspect}"
+              end
+            end
+          }
+        end
+
+        if !@postmortem_hook.enabled?
+          @postmortem_hook.enable
+        end
+      else
+        if @postmortem_hook && @postmortem_hook.enabled?
+          @postmortem_hook.disable
+        end
       end
     end
   end

@@ -59,9 +59,9 @@ module DEBUGGER__
       end
     end
 
-    def readline
+    def readline prompt = '(rdbg)'
       setup_interrupt do
-        (@console.readline || 'quit').strip
+        (@console.readline(prompt) || 'quit').strip
       end
     end
 

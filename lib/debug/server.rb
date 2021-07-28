@@ -195,7 +195,7 @@ module DEBUGGER__
       end
     end
 
-    def readline
+    def readline prompt
       (sock do |s|
         s.puts "input"
         sleep 0.01 until @q_msg

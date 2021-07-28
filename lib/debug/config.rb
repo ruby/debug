@@ -15,6 +15,7 @@ module DEBUGGER__
     skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "CONTROL: Skip showing/entering frames for given paths (default: [])", :path],
     skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "CONTROL: Skip on no source code lines (default: false)",              :bool],
     keep_alloc_site:['RUBY_DEBUG_KEEP_ALLOC_SITE',"CONTROL: Keep allocation site and p, pp shows it (default: false)",   :bool],
+    postmortem:     ['RUBY_DEBUG_POSTMORTEM',     "CONTROL: Enable postmortem debug (default: false)",                   :bool],
 
     # boot setting
     nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool],
@@ -98,6 +99,10 @@ module DEBUGGER__
         ObjectSpace.trace_object_allocations_stop
       else
         # ignore
+      end
+
+      if !old_conf[:postmortem] != !conf[:postmortem]
+        SESSION.postmortem = conf[:postmortem]
       end
     end
 

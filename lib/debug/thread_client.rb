@@ -170,9 +170,15 @@ module DEBUGGER__
       wait_next_action
     end
 
-    def on_suspend event, tp = nil, bp: nil, sig: nil
+    def on_suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil
       @current_frame_index = 0
-      @target_frames = DEBUGGER__.capture_frames __dir__
+
+      if postmortem_frames
+        @target_frames = postmortem_frames
+        @postmortem = true
+      else
+        @target_frames = DEBUGGER__.capture_frames(__dir__)
+      end
 
       cf = @target_frames.first
       if cf
