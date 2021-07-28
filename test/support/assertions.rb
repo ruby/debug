@@ -9,25 +9,25 @@ module DEBUGGER__
       })
     end
 
-    def assert_line_text(expected)
+    def assert_line_text(text)
       @queue.push(Proc.new {
         result = collect_recent_backlog
 
         expected =
-          case expected
+          case text
           when Array
-            case expected.first
+            case text.first
             when String
-              expected.map { |s| Regexp.escape(s) }.join
+              text.map { |s| Regexp.escape(s) }.join
             when Regexp
-              Regexp.compile(expected.map(&:source).join('.*'), Regexp::MULTILINE)
+              Regexp.compile(text.map(&:source).join('.*'), Regexp::MULTILINE)
             end
           when String
-            Regexp.escape(expected)
+            Regexp.escape(text)
           when Regexp
-            expected
+            text
           else
-            raise "Unknown expectation value: #{expected.inspect}"
+            raise "Unknown expectation value: #{text.inspect}"
           end
 
         msg = "Expected to include `#{expected.inspect}` in\n(\n#{result})\n"
@@ -38,10 +38,14 @@ module DEBUGGER__
       })
     end
 
-    def assert_no_line_text(expected)
+    def assert_no_line_text(text)
       @queue.push(Proc.new {
         result = collect_recent_backlog
-        expected = Regexp.escape(expected) if expected.is_a?(String)
+        if text.is_a?(String)
+          expected = Regexp.escape(text)
+        else
+          expected = text
+        end
         msg = "Expected not to include `#{expected.inspect}` in\n(\n#{result})\n"
 
         assert_block(FailureMessage.new { create_message(msg) }) do
