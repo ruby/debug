@@ -61,12 +61,12 @@ module DEBUGGER__
       result
     end
 
-    def initialize id, q_evt, q_cmd, thr = Thread.current
+    def initialize id, q_evt, q_inst, thr = Thread.current
       @id = id
       @thread = thr
       @target_frames = nil
       @q_evt = q_evt
-      @q_cmd = q_cmd
+      @q_inst = q_inst
       @step_tp = nil
       @output = []
       @frame_formatter = method(:default_frame_formatter)
@@ -86,7 +86,7 @@ module DEBUGGER__
     end
 
     def close
-      @q_cmd.close
+      @q_inst.close
     end
 
     def inspect
@@ -117,8 +117,8 @@ module DEBUGGER__
       end
     end
 
-    def << req
-      @q_cmd << req
+    def << instruction
+      @q_inst << instruction
     end
 
     def generate_info
@@ -254,7 +254,7 @@ module DEBUGGER__
       CONFIG[:skip_path] && CONFIG[:skip_path].any? { |skip_path| path.match?(skip_path) }
     end
 
-    ## cmd helpers
+    ## instruction helpers
 
     # this method is extracted to hide frame_eval's local variables from C method eval's binding
     def instance_eval_for_cmethod frame_self, src
@@ -350,7 +350,7 @@ module DEBUGGER__
       end
     end
 
-    ## cmd: show
+    ## instruction: show
 
     def show_locals pat
       if s = current_frame&.self
@@ -442,7 +442,7 @@ module DEBUGGER__
       puts info
     end
 
-    ### cmd: show edit
+    ### instruction: show edit
 
     def show_by_editor path = nil
       unless path
@@ -466,7 +466,7 @@ module DEBUGGER__
       end
     end
 
-    ### cmd: show frames
+    ### instruction: show frames
 
     def show_frames max = nil, pattern = nil
       if @target_frames && (max ||= @target_frames.size) > 0
@@ -506,7 +506,7 @@ module DEBUGGER__
       "#{prefix}\t#{frame_string}"
     end
 
-    ### cmd: show outline
+    ### instruction: show outline
 
     def show_outline expr
       begin
@@ -546,7 +546,7 @@ module DEBUGGER__
       end.reverse
     end
 
-    ## cmd: breakpoint
+    ## instruction: breakpoint
 
     def make_breakpoint args
       case args.first
@@ -574,12 +574,10 @@ module DEBUGGER__
 
       SESSION.check_forked
 
-      while cmds = @q_cmd.pop
-        # pp [self, cmds: cmds]
+      while instruction = @q_inst.pop
+        instruction_type, *args = *instruction
 
-        cmd, *args = *cmds
-
-        case cmd
+        case instruction_type
         when :continue
           break
         when :step
@@ -771,7 +769,7 @@ module DEBUGGER__
         when :dap
           process_dap args
         else
-          raise [cmd, *args].inspect
+          raise [instruction_type, *args].inspect
         end
       end
 
