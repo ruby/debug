@@ -208,7 +208,7 @@ module DEBUGGER__
       }.compact
 
       unless cs.empty?
-        if @preset_command
+        if @preset_command && !@preset_command.commands.empty?
           @preset_command.commands += cs
         else
           @preset_command = PresetCommand.new(cs, name, continue)
