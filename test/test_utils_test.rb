@@ -11,7 +11,7 @@ module DEBUGGER__
     end
 
     def test_the_test_fails_when_debugger_exits_early
-      assert_raise_message(/expect all commands\/assertions to be executed/) do
+      assert_raise_message(/Expect all commands\/assertions to be executed/) do
         debug_code(program) do
           type 'continue'
           type 'foo'
