@@ -254,11 +254,38 @@ module DEBUGGER__
       CONFIG[:skip_path] && CONFIG[:skip_path].any? { |skip_path| path.match?(skip_path) }
     end
 
-    def current_frame
-      if @target_frames
-        @target_frames[@current_frame_index]
-      else
-        nil
+    ## cmd helpers
+
+    # this method is extracted to hide frame_eval's local variables from C method eval's binding
+    def instance_eval_for_cmethod frame_self, src
+      frame_self.instance_eval(src)
+    end
+
+    def frame_eval src, re_raise: false
+      begin
+        @success_last_eval = false
+
+        b = current_frame.binding
+        result = if b
+                   f, _l = b.source_location
+                   b.eval(src, "(rdbg)/#{f}")
+                 else
+                   frame_self = current_frame.self
+                   instance_eval_for_cmethod(frame_self, src)
+                 end
+        @success_last_eval = true
+        result
+
+      rescue Exception => e
+        return yield(e) if block_given?
+
+        puts "eval error: #{e}"
+
+        e.backtrace_locations.each do |loc|
+          break if loc.path == __FILE__
+          puts "  #{loc}"
+        end
+        raise if re_raise
       end
     end
 
@@ -315,50 +342,15 @@ module DEBUGGER__
       exit!
     end
 
-    def show_by_editor path = nil
-      unless path
-        if @target_frames && frame = @target_frames[@current_frame_index]
-          path = frame.path
-        else
-          return # can't get path
-        end
-      end
-
-      if File.exist?(path)
-        if editor = (ENV['RUBY_DEBUG_EDITOR'] || ENV['EDITOR'])
-          puts "command: #{editor}"
-          puts "   path: #{path}"
-          system(editor, path)
-        else
-          puts "can not find editor setting: ENV['RUBY_DEBUG_EDITOR'] or ENV['EDITOR']"
-        end
+    def current_frame
+      if @target_frames
+        @target_frames[@current_frame_index]
       else
-        puts "Can not find file: #{path}"
+        nil
       end
     end
 
-    def puts_variable_info label, obj, pat
-      return if pat && pat !~ label
-
-      begin
-        inspected = obj.inspect
-      rescue Exception => e
-        inspected = e.inspect
-      end
-      mono_info = "#{label} = #{inspected}"
-
-      w = SESSION::width
-
-      if mono_info.length >= w
-        info = mono_info[0 .. (w-4)] + '...'
-      else
-        valstr = colored_inspect(obj, width: 2 ** 30)
-        valstr = inspected if valstr.lines.size > 1
-        info = "#{colorize_cyan(label)} = #{valstr}"
-      end
-
-      puts info
-    end
+    ## cmd: show
 
     def show_locals pat
       if s = current_frame&.self
@@ -427,45 +419,54 @@ module DEBUGGER__
       }
     end
 
-    # this method is extracted to hide frame_eval's local variables from C method eval's binding
-    def instance_eval_for_cmethod frame_self, src
-      frame_self.instance_eval(src)
+    def puts_variable_info label, obj, pat
+      return if pat && pat !~ label
+
+      begin
+        inspected = obj.inspect
+      rescue Exception => e
+        inspected = e.inspect
+      end
+      mono_info = "#{label} = #{inspected}"
+
+      w = SESSION::width
+
+      if mono_info.length >= w
+        info = mono_info[0 .. (w-4)] + '...'
+      else
+        valstr = colored_inspect(obj, width: 2 ** 30)
+        valstr = inspected if valstr.lines.size > 1
+        info = "#{colorize_cyan(label)} = #{valstr}"
+      end
+
+      puts info
     end
 
-    def frame_eval src, re_raise: false
-      begin
-        @success_last_eval = false
+    ### cmd: show edit
 
-        b = current_frame.binding
-        result = if b
-                   f, _l = b.source_location
-                   b.eval(src, "(rdbg)/#{f}")
-                 else
-                   frame_self = current_frame.self
-                   instance_eval_for_cmethod(frame_self, src)
-                 end
-        @success_last_eval = true
-        result
-
-      rescue Exception => e
-        return yield(e) if block_given?
-
-        puts "eval error: #{e}"
-
-        e.backtrace_locations.each do |loc|
-          break if loc.path == __FILE__
-          puts "  #{loc}"
+    def show_by_editor path = nil
+      unless path
+        if @target_frames && frame = @target_frames[@current_frame_index]
+          path = frame.path
+        else
+          return # can't get path
         end
-        raise if re_raise
+      end
+
+      if File.exist?(path)
+        if editor = (ENV['RUBY_DEBUG_EDITOR'] || ENV['EDITOR'])
+          puts "command: #{editor}"
+          puts "   path: #{path}"
+          system(editor, path)
+        else
+          puts "can not find editor setting: ENV['RUBY_DEBUG_EDITOR'] or ENV['EDITOR']"
+        end
+      else
+        puts "Can not find file: #{path}"
       end
     end
 
-    def frame_str(i, frame: @target_frames[i])
-      cur_str = (@current_frame_index == i ? '=>' : '  ')
-      prefix = "#{cur_str}##{i}"
-      frame_string = @frame_formatter.call(frame)
-      "#{prefix}\t#{frame_string}"
-    end
+    ### cmd: show frames
 
     def show_frames max = nil, pattern = nil
       if @target_frames && (max ||= @target_frames.size) > 0
@@ -498,24 +499,14 @@ module DEBUGGER__
       puts frame_str(i)
     end
 
-    def outline_method(o, klass, obj)
-      singleton_class = begin obj.singleton_class; rescue TypeError; nil end
-      maps = class_method_map((singleton_class || klass).ancestors)
-      maps.each do |mod, methods|
-        name = mod == singleton_class ? "#{klass}.methods" : "#{mod}#methods"
-        o.dump(name, methods)
-      end
+    def frame_str(i, frame: @target_frames[i])
+      cur_str = (@current_frame_index == i ? '=>' : '  ')
+      prefix = "#{cur_str}##{i}"
+      frame_string = @frame_formatter.call(frame)
+      "#{prefix}\t#{frame_string}"
     end
 
-    def class_method_map(classes)
-      dumped = Array.new
-      classes.reject { |mod| mod >= Object }.map do |mod|
-        methods = mod.public_instance_methods(false).select do |m|
-          dumped.push(m) unless dumped.include?(m)
-        end
-        [mod, methods]
-      end.reverse
-    end
+    ### cmd: show outline
 
     def show_outline expr
       begin
@@ -535,6 +526,27 @@ module DEBUGGER__
         o.dump("locals", locals)
       end
     end
+
+    def outline_method(o, klass, obj)
+      singleton_class = begin obj.singleton_class; rescue TypeError; nil end
+      maps = class_method_map((singleton_class || klass).ancestors)
+      maps.each do |mod, methods|
+        name = mod == singleton_class ? "#{klass}.methods" : "#{mod}#methods"
+        o.dump(name, methods)
+      end
+    end
+
+    def class_method_map(classes)
+      dumped = Array.new
+      classes.reject { |mod| mod >= Object }.map do |mod|
+        methods = mod.public_instance_methods(false).select do |m|
+          dumped.push(m) unless dumped.include?(m)
+        end
+        [mod, methods]
+      end.reverse
+    end
+
+    ## cmd: breakpoint
 
     def make_breakpoint args
       case args.first
