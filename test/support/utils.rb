@@ -8,20 +8,20 @@ require_relative "../../lib/debug/client"
 module DEBUGGER__
   module TestUtils
     def type(command)
-      @queue.push(command)
+      @scenario.push(command)
     end
 
-    def create_message fail_msg
-      "#{fail_msg} on #{@mode} mode\n[DEBUGGER SESSION LOG]\n> #{@backlog.join('> ')}#{debuggee_backlog}"
+    def create_message fail_msg, test_info
+      "#{fail_msg} on #{test_info.mode} mode\n[DEBUGGER SESSION LOG]\n> #{test_info.backlog.join('> ')}#{debuggee_backlog test_info}"
     end
 
-    def debuggee_backlog
-      return if @mode == 'LOCAL'
+    def debuggee_backlog test_info
+      return if test_info.mode == 'LOCAL'
 
       backlog = []
       begin
         Timeout.timeout(TIMEOUT_SEC) do
-          while (line = @remote_r.gets)
+          while (line = test_info.remote_debuggee_info[0].gets)
             backlog << line
           end
         end
@@ -32,26 +32,60 @@ module DEBUGGER__
       "\n[DEBUGGEE SESSION LOG]\n> #{backlog.join('> ')}"
     end
 
+    TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :backlog, :last_backlog, :internal_info)
+
     # This method will execute both local and remote mode by default.
     def debug_code(program, boot_options: '-r debug/start', remote: true, &block)
       check_line_num!(program)
 
-      @scenario = block
       write_temp_file(strip_line_num(program))
+      @scenario = []
+      block.call
+      @scenario.freeze
       inject_lib_to_load_path
 
       ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
 
-      debug_on_local boot_options
-
       if remote && !NO_REMOTE
-        debug_on_unix_domain_socket
-        debug_on_tcpip
+        begin
+          th = [new_thread { debug_on_local boot_options, TestInfo.new(dup_scenario) },
+                new_thread { debug_on_unix_domain_socket TestInfo.new(dup_scenario) },
+                new_thread { debug_on_tcpip TestInfo.new(dup_scenario) }]
+          th.each do |t|
+            if fail_msg = t.join.value
+              th.each(&:kill)
+              flunk fail_msg
+            end
+          end
+        rescue => e
+          th.each(&:kill)
+          flunk e.inspect
+        end
+      else
+        debug_on_local boot_options, TestInfo.new(dup_scenario)
+      end
+      assert true
+    end
+
+    def dup_scenario
+      @scenario.each_with_object(Queue.new){ |e, q| q << e }
+    end
+
+    def new_thread &block
+      Thread.new do
+        Thread.current[:is_subthread] = true
+        catch(:fail) do
+          block.call
+        end
       end
     end
 
-    ASK_CMD = %w[quit q delete del kill undisplay]
+    def multithreaded_test?
+      Thread.current[:is_subthread]
+    end
+
+    ASK_CMD = %w[quit q delete del kill undisplay].freeze
 
     def debug_print msg
       print msg if ENV['RUBY_DEBUG_TEST_DEBUG_MODE']
@@ -68,88 +102,86 @@ module DEBUGGER__
       warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
     end
 
-    def debug_on_local boot_options
+    def debug_on_local boot_options, test_info
       # run test on local mode
-      @mode = 'LOCAL'
+      test_info.mode = 'LOCAL'
       repl_prompt = /\(rdbg\)/
       cmd = "#{RUBY} #{boot_options} #{temp_file_path}"
-      run_test_scenario(cmd, repl_prompt)
+      run_test_scenario cmd, repl_prompt, test_info
     end
 
-    def debug_on_unix_domain_socket repl_prompt = /\(rdbg:remote\)/
-      @mode = 'UNIX DOMAIN SOCKET'
-      socket_path = setup_unix_doman_socket_remote_debuggee
+    def debug_on_unix_domain_socket repl_prompt = /\(rdbg:remote\)/, test_info
+      test_info.mode = 'UNIX DOMAIN SOCKET'
+      socket_path, remote_debuggee_info = setup_unix_doman_socket_remote_debuggee
+      test_info.remote_debuggee_info = remote_debuggee_info
       cmd = "#{RDBG_EXECUTABLE} -A #{socket_path}"
-      run_test_scenario(cmd, repl_prompt)
+      run_test_scenario cmd, repl_prompt, test_info
     end
 
-    def debug_on_tcpip repl_prompt = /\(rdbg:remote\)/
-      @mode = 'TCP/IP'
+    def debug_on_tcpip repl_prompt = /\(rdbg:remote\)/, test_info
+      test_info.mode = 'TCP/IP'
       cmd = "#{RDBG_EXECUTABLE} -A #{RUBY_DEBUG_TEST_PORT}"
-      setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{RUBY_DEBUG_TEST_PORT} -- #{temp_file_path}")
-      run_test_scenario(cmd, repl_prompt)
+      remote_debuggee_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{RUBY_DEBUG_TEST_PORT} -- #{temp_file_path}")
+      test_info.remote_debuggee_info = remote_debuggee_info
+      run_test_scenario cmd, repl_prompt, test_info
     end
 
     TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
-    def run_test_scenario(cmd, repl_prompt)
-      @queue = Queue.new
-      @scenario.call
-
+    def run_test_scenario cmd, repl_prompt, test_info
       PTY.spawn(cmd) do |read, write, pid|
-        @backlog = []
-        @last_backlog = []
+        test_info.backlog = []
+        test_info.last_backlog = []
         begin
           Timeout.timeout(TIMEOUT_SEC) do
             while (line = read.gets)
               debug_print line
-              @backlog.push(line)
-              @last_backlog.push(line)
+              test_info.backlog.push(line)
+              test_info.last_backlog.push(line)
 
               case line.chomp
               when /INTERNAL_INFO:\s(.*)/
-                # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
-                @backlog.pop
-                @last_backlog.pop
+                # INTERNAL_INFO shouldn't be pushed into backlog and last_backlog
+                test_info.backlog.pop
+                test_info.last_backlog.pop
 
-                @internal_info = JSON.parse(Regexp.last_match(1))
-                cmd = @queue.pop
+                test_info.internal_info = JSON.parse(Regexp.last_match(1))
+                cmd = test_info.queue.pop
                 while cmd.is_a?(Proc)
-                  cmd.call
-                  cmd = @queue.pop
+                  cmd.call(test_info)
+                  cmd = test_info.queue.pop
                 end
                 if ASK_CMD.include?(cmd)
                   write.puts(cmd)
-                  cmd = @queue.pop
+                  cmd = test_info.queue.pop
                   if cmd.is_a?(Proc)
                     assertion = cmd
-                    cmd = @queue.pop
+                    cmd = test_info.queue.pop
                   end
                 end
 
                 write.puts(cmd)
-                @last_backlog.clear
-                next # INTERNAL_INFO shouldn't be pushed into @backlog and @last_backlog
+                test_info.last_backlog.clear
               when %r{\[y/n\]}i
-                assertion&.call
+                assertion&.call(test_info)
               when repl_prompt
                 # check if the previous command breaks the debugger before continuing
-                check_error(/REPL ERROR/)
+                check_error(/REPL ERROR/, test_info)
               end
             end
 
-            check_error(/DEBUGGEE Exception/)
-            assert_empty_queue
+            check_error(/DEBUGGEE Exception/, test_info)
+            assert_empty_queue test_info
           end
         # result of `gets` return this exception in some platform
         # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
         rescue Errno::EIO => e
-          check_error(/DEBUGGEE Exception/)
-          assert_empty_queue(exception: e)
+          check_error(/DEBUGGEE Exception/, test_info)
+          assert_empty_queue test_info, exception: e
         rescue Timeout::Error => e
-          assert_block(create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)")) { false }
+          assert_block(create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)", test_info)) { false }
         ensure
-          kill_remote_debuggee
+          kill_remote_debuggee test_info.remote_debuggee_info
           # kill debug console process
           read.close
           write.close
@@ -161,20 +193,20 @@ module DEBUGGER__
 
     private
 
-    def check_error(error)
-      if error_index = @last_backlog.index { |l| l.match?(error) }
-        assert_block(create_message "Debugger terminated because of: #{@last_backlog[error_index..-1].join}" ) { false }
+    def check_error(error, test_info)
+      if error_index = test_info.last_backlog.index { |l| l.match?(error) }
+        assert_block(create_message("Debugger terminated because of: #{test_info.last_backlog[error_index..-1].join}", test_info)) { false }
       end
     end
 
-    def kill_remote_debuggee
-      if defined?(@remote_debuggee_pid) && @remote_debuggee_pid
-        @remote_r.close
-        @remote_w.close
-        Process.kill(:KILL, @remote_debuggee_pid)
-        Process.waitpid(@remote_debuggee_pid)
-        @remote_debuggee_pid = nil
-      end
+    def kill_remote_debuggee remote_debuggee_info
+      return unless remote_debuggee_info
+
+      remote_r, remote_w, remote_debuggee_pid = remote_debuggee_info
+      remote_r.close
+      remote_w.close
+      Process.kill(:KILL, remote_debuggee_pid)
+      Process.waitpid(remote_debuggee_pid)
     end
 
     # use this to start a debug session with the test program
@@ -194,13 +226,14 @@ module DEBUGGER__
 
     def setup_unix_doman_socket_remote_debuggee
       socket_path = DEBUGGER__.create_unix_domain_socket_name
-      setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{socket_path} #{temp_file_path}")
-      socket_path
+      remote_debuggee_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{socket_path} #{temp_file_path}")
+      [socket_path, remote_debuggee_info]
     end
 
     def setup_remote_debuggee(cmd)
-      @remote_r, @remote_w, @remote_debuggee_pid = PTY.spawn(cmd)
-      @remote_r.read(1) # wait for the remote server to boot up
+      remote_r, remote_w, remote_debuggee_pid = PTY.spawn(cmd)
+      remote_r.read(1) # wait for the remote server to boot up
+      [remote_r, remote_w, remote_debuggee_pid]
     end
 
     def inject_lib_to_load_path
@@ -209,13 +242,13 @@ module DEBUGGER__
 
     LINE_NUMBER_REGEX = /^\s*\d+\| ?/
 
-    def assert_empty_queue(exception: nil)
-      message = "Expect all commands/assertions to be executed. Still have #{@queue.length} left."
+    def assert_empty_queue test_info, exception: nil
+      message = "Expect all commands/assertions to be executed. Still have #{test_info.queue.length} left."
       if exception
         message += "\nAssociated exception: #{exception.class} - #{exception.message}" +
                    exception.backtrace.map{|l| "  #{l}\n"}.join
       end
-      assert_block(FailureMessage.new { create_message message }) { @queue.empty? }
+      assert_block(FailureMessage.new { create_message message, test_info }) { test_info.queue.empty? }
     end
 
     def strip_line_num(str)
