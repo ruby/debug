@@ -95,6 +95,49 @@ module DEBUGGER__
     end
   end
 
+  class BreakAtClassMethodsTest < TestCase
+    def program
+      <<~RUBY
+     1| class A
+     2|   def self.bar
+     3|   end
+     4| end
+     5|
+     6| class B < A
+     7| end
+     8|
+     9| class C < A
+    10| end
+    11|
+    12| binding.b
+    13|
+    14| B.bar
+    15| binding.b
+      RUBY
+    end
+
+    def test_debugger_stops_when_target_class_calls_the_parent_method
+      debug_code(program) do
+        type "c"
+        type "b B.bar"
+        type "c"
+        assert_line_text(/Stop by #0  BP - Method  B.bar/)
+        type "c"
+        type "c"
+      end
+    end
+
+    def test_debugger_doesnt_stop_when_other_class_calls_the_parent_method
+      debug_code(program) do
+        type "c"
+        type "b C.bar"
+        type "c"
+        assert_no_line_text(/Stop by #0  BP - Method  C.bar/)
+        type "c"
+      end
+    end
+  end
+
   class BreakAtCMethodsTest < TestCase
     def program
       <<~RUBY
