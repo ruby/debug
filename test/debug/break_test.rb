@@ -138,6 +138,73 @@ module DEBUGGER__
     end
   end
 
+  class BreakAtInstanceMethodsTest < TestCase
+    def program
+      <<~RUBY
+     1|  class A
+     2|    def bar
+     3|    end
+     4|  end
+     5|
+     6|  class B < A
+     7|  end
+     8|
+     9|  class C < A
+    10| end
+    11|
+    12| b = B.new
+    13| c = C.new
+    14|
+    15| binding.b
+    16|
+    17| b.bar
+    18| binding.b
+      RUBY
+    end
+
+    def test_debugger_stops_when_target_class_instance_calls_the_inherited_method
+      debug_code(program) do
+        type "c"
+        type "b B#bar"
+        type "c"
+        assert_line_text(/Stop by #0  BP - Method  B#bar/)
+        type "c"
+        type "c"
+      end
+    end
+
+    def test_debugger_doesnt_stop_when_other_class_instance_calls_the_inherited_method
+      debug_code(program) do
+        type "c"
+        type "b C#bar"
+        type "c"
+        assert_no_line_text(/Stop by #0  BP - Method  C#bar/)
+        type "c"
+      end
+    end
+
+    def test_debugger_stops_when_target_instance_calls_the_inherited_method
+      debug_code(program) do
+        type "c"
+        type "b b.bar"
+        type "c"
+        assert_line_text(/Stop by #0  BP - Method  b.bar/)
+        type "c"
+        type "c"
+      end
+    end
+
+    def test_debugger_doesnt_stop_when_other_instance_calls_the_inherited_method
+      debug_code(program) do
+        type "c"
+        type "b c.bar"
+        type "c"
+        assert_no_line_text(/Stop by #0  BP - Method  b.bar/)
+        type "c"
+      end
+    end
+  end
+
   class BreakAtCMethodsTest < TestCase
     def program
       <<~RUBY
