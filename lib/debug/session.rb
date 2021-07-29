@@ -207,14 +207,13 @@ module DEBUGGER__
         c unless c.empty?
       }.compact
 
-      unless cs.empty?
-        if @preset_command && !@preset_command.commands.empty?
-          @preset_command.commands += cs
-        else
-          @preset_command = PresetCommand.new(cs, name, continue)
-        end
-        ThreadClient.current.on_init name if kick
+      if @preset_command && !@preset_command.commands.empty?
+        @preset_command.commands += cs
+      else
+        @preset_command = PresetCommand.new(cs, name, continue)
       end
+
+      ThreadClient.current.on_init name if kick
     end
 
     def source iseq
