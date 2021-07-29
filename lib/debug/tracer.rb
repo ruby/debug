@@ -56,7 +56,8 @@ module DEBUGGER__
     def skip? tp
       if tp.path.start_with?(__dir__) ||
          tp.path.start_with?('<internal:') ||
-         (@pattern && !tp.path.match?(@pattern) && !tp.method_id.match?(@pattern))
+         (@pattern && !tp.path.match?(@pattern) && !tp.method_id.match?(@pattern)) ||
+         ((paths = CONFIG[:skip_path]) && !paths.empty? && paths.any?{|path| tp.path.match?(path)})
         true
       else
         false
@@ -120,12 +121,22 @@ module DEBUGGER__
       " for #{@obj_inspect}"
     end
 
+    def minfo tp
+      klass = tp.defined_class
+
+      if klass.singleton_class?
+        "#{tp.self}.#{tp.method_id}"
+      else
+        "#{klass}\##{tp.method_id}"
+      end
+    end
+
     def setup
       @tracer = TracePoint.new(:a_call){|tp|
         next if skip?(tp)
 
         if tp.self.object_id == @obj_id
-          out "#{header} object_id:#{@obj_id} is used as a receiver of #{tp.defined_class}\##{tp.method_id} at #{tp.path}:#{tp.lineno}"
+          out "#{header} `#{@obj_inspect}` is used as a receiver of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
         else
           b = tp.binding
           tp.parameters.each{|type, name|
@@ -134,7 +145,7 @@ module DEBUGGER__
               next unless name
 
               if b.local_variable_get(name).object_id == @obj_id
-                out "#{header} `#{@obj_inspect}` is used as a parameter `#{name}` of #{tp.defined_class}\##{tp.method_id} at #{tp.path}:#{tp.lineno}"
+                out "#{header} `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
               end
 
             when :rest
@@ -142,7 +153,8 @@ module DEBUGGER__
               ary = b.local_variable_get(name)
               ary.each{|e|
                 if e.object_id == @obj_id
-                  out "#{header} `#{@obj_inspect}` is used as a parameter in `#{name}` of \##{tp.method_id} at #{tp.path}:#{tp.lineno}"
+                  m = "#{tp.defined_class}\##{tp.method_id}"
+                  out "#{header} `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
                 end
               }
 
@@ -150,14 +162,14 @@ module DEBUGGER__
               next unless name
 
               if b.local_variable_get(name).object_id == @obj_id
-                out "#{header} `#{@obj_inspect}` is used as a parameter `#{name}` of #{tp.defined_class}\##{tp.method_id} at #{tp.path}:#{tp.lineno}"
+                out "#{header} `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
               end
             when :keyrest
               next unless name
               h = b.local_variable_get(name)
               h.each{|k, e|
                 if e.object_id == @obj_id
-                  out "#{header} `#{@obj_inspect}` is used as a parameter in `#{name}` of \##{tp.method_id} at #{tp.path}:#{tp.lineno}"
+                  out "#{header} `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
                 end
               }
             end
