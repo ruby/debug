@@ -203,9 +203,11 @@ module DEBUGGER__
 
     def add_preset_commands name, cmds, kick: true, continue: true
       cs = cmds.map{|c|
-        c = c.strip.gsub(/\A\s*\#.*/, '').strip
-        c unless c.empty?
-      }.compact
+        c.each_line.map{|line|
+          line = line.strip.gsub(/\A\s*\#.*/, '').strip
+          line unless line.empty?
+        }.compact
+      }.flatten.compact
 
       if @preset_command && !@preset_command.commands.empty?
         @preset_command.commands += cs
