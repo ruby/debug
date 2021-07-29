@@ -796,7 +796,7 @@ module DEBUGGER__
           require 'did_you_mean'
           spell_checker = DidYouMean::SpellChecker.new(dictionary: DEBUGGER__.commands)
           correction = spell_checker.correct(line.split(/\s/).first || '')
-          @ui.puts "Did you mean? #{correction.join(' or ')}"
+          @ui.puts "Did you mean? #{correction.join(' or ')}" unless correction.empty?
         rescue LoadError
           # Don't use D
         end
