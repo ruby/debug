@@ -34,6 +34,8 @@ module DEBUGGER__
 
     TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :backlog, :last_backlog, :internal_info)
 
+    MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
+
     # This method will execute both local and remote mode by default.
     def debug_code(program, boot_options: '-r debug/start', remote: true, &block)
       check_line_num!(program)
@@ -47,7 +49,7 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
 
-      if remote && !NO_REMOTE
+      if remote && !NO_REMOTE && MULTITHREADED_TEST
         begin
           th = [new_thread { debug_on_local boot_options, TestInfo.new(dup_scenario) },
                 new_thread { debug_on_unix_domain_socket TestInfo.new(dup_scenario) },
@@ -62,6 +64,10 @@ module DEBUGGER__
           th.each(&:kill)
           flunk e.inspect
         end
+      elsif remote && !NO_REMOTE
+        debug_on_local boot_options, TestInfo.new(dup_scenario)
+        debug_on_unix_domain_socket TestInfo.new(dup_scenario)
+        debug_on_tcpip TestInfo.new(dup_scenario)
       else
         debug_on_local boot_options, TestInfo.new(dup_scenario)
       end
