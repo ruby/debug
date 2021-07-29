@@ -768,9 +768,14 @@ module DEBUGGER__
         when :trace
           case args.shift
           when :pass
-            obj = frame_eval args.shift
-            opt = args.shift
-            event! :result, :trace_pass, obj.object_id, obj.inspect, opt
+            begin
+              obj = frame_eval args.shift, re_raise: true
+              opt = args.shift
+              event! :result, :trace_pass, obj.object_id, obj.inspect, opt
+            rescue => e
+              puts e.message
+              event! :result, nil
+            end
           else
             raise "unreachable"
           end
