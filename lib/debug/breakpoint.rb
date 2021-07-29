@@ -349,6 +349,7 @@ module DEBUGGER__
       @klass = nil
       @method = nil
       @cond = cond
+      @cond_class = nil
       @command = command
       @key = "#{klass_name}#{op}#{method_name}".freeze
 
@@ -356,16 +357,12 @@ module DEBUGGER__
     end
 
     def setup
-      if @cond
-        @tp = TracePoint.new(:call){|tp|
-          next unless safe_eval tp.binding, @cond
-          suspend
-        }
-      else
-        @tp = TracePoint.new(:call){|tp|
-          suspend
-        }
-      end
+      @tp = TracePoint.new(:call){|tp|
+        next if !safe_eval(tp.binding, @cond) if @cond
+        next if @cond_class && !tp.self.kind_of?(@cond_class)
+
+        suspend
+      }
     end
 
     def eval_class_name
@@ -390,27 +387,41 @@ module DEBUGGER__
       try_enable
     end
 
+    def override klass
+      sig_method_name = @sig_method_name
+      klass.prepend Module.new{
+        define_method(sig_method_name) do |*args, **kw|
+          super(*args, **kw)
+        end
+      }
+    end
+
     def try_enable added: false
       eval_class_name
       search_method
 
       begin
         retried = false
+
         @tp.enable(target: @method)
         DEBUGGER__.warn "#{self} is activated." if added
+
+        if @sig_op == '#'
+          @cond_class = @klass if @method.owner != @klass
+        else # '.'
+          @cond_class = @klass.singleton_class if @method.owner != @klass.singleton_class
+        end
 
       rescue ArgumentError
         raise if retried
         retried = true
-        sig_method_name = @sig_method_name
 
         # maybe C method
-        @klass.module_eval do
-          orig_name = sig_method_name + '__orig__'
-          alias_method orig_name, sig_method_name
-          define_method(sig_method_name) do |*args|
-            send(orig_name, *args)
-          end
+        case @sig_op
+        when '.'
+          override @klass.singleton_class
+        when '#'
+          override @klass
         end
 
         # re-collect the method object after the above patch
