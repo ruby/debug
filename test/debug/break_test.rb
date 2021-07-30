@@ -208,9 +208,11 @@ module DEBUGGER__
   class BreakAtCMethodsTest < TestCase
     def program
       <<~RUBY
-        1| a = 1
-        2|
-        3| a.abs
+     1| a = 1
+     2|
+     3| a.abs
+     4| a.div(1)
+     5| a.times { false }
       RUBY
     end
 
@@ -221,6 +223,40 @@ module DEBUGGER__
 
         if RUBY_VERSION.to_f >= 3.0
           assert_line_text('Integer#abs at <internal:')
+        else
+          # it doesn't show any source before Ruby 3.0
+          assert_line_text('<main>')
+        end
+
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_debugger_passes_required_argument_correctly
+      debug_code(program) do
+        type 'b Integer#div'
+        type 'continue'
+
+        if RUBY_VERSION.to_f >= 3.0
+          assert_line_text('Integer#div at')
+        else
+          # it doesn't show any source before Ruby 3.0
+          assert_line_text('<main>')
+        end
+
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_debugger_passes_block_argument_correctly
+      debug_code(program) do
+        type 'b Integer#times'
+        type 'continue'
+
+        if RUBY_VERSION.to_f >= 3.0
+          assert_line_text('Integer#times at')
         else
           # it doesn't show any source before Ruby 3.0
           assert_line_text('<main>')

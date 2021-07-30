@@ -387,13 +387,24 @@ module DEBUGGER__
       try_enable
     end
 
-    def override klass
-      sig_method_name = @sig_method_name
-      klass.prepend Module.new{
-        define_method(sig_method_name) do |*args, **kw, &block|
-          super(*args, **kw, &block)
-        end
-      }
+    if RUBY_VERSION.to_f <= 2.6
+      def override klass
+        sig_method_name = @sig_method_name
+        klass.prepend Module.new{
+          define_method(sig_method_name) do |*args, &block|
+            super(*args, &block)
+          end
+        }
+      end
+    else
+      def override klass
+        sig_method_name = @sig_method_name
+        klass.prepend Module.new{
+          define_method(sig_method_name) do |*args, **kw, &block|
+            super(*args, **kw, &block)
+          end
+        }
+      end
     end
 
     def try_enable added: false
