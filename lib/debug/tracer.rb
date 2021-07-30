@@ -174,7 +174,6 @@ module DEBUGGER__
               ary = b.local_variable_get(name)
               ary.each{|e|
                 if e.object_id == @obj_id
-                  m = "#{tp.defined_class}\##{tp.method_id}"
                   out tp, " `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)}"
                 end
               }
