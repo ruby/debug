@@ -268,6 +268,39 @@ module DEBUGGER__
     end
   end
 
+  class InternalMethodCallTest < TestCase
+    def program
+      <<~RUBY
+     1| result = ""
+     2| [1, 2, 3].each do |i|
+     3|   result += i.to_s
+     4| end
+     5| binding.b
+      RUBY
+    end
+
+    def test_debugger_skips_calls_from_its_internal
+      debug_code(program) do
+        # Array#each is called internally, which should be ignored by the breakpoint
+        type 'b Array#each'
+        type 'continue'
+
+        if RUBY_VERSION.to_f >= 3.0
+          assert_line_text('Array#each at')
+        else
+          # it doesn't show any source before Ruby 3.0
+          assert_line_text('<main>')
+        end
+
+        type 'continue'
+        type 'p result'
+        assert_line_text(/123/)
+
+        type 'continue'
+      end
+    end
+  end
+
   class BreakWithCommandTest < TestCase
     def program
       <<~RUBY

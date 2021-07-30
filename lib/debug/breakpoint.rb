@@ -361,8 +361,15 @@ module DEBUGGER__
         next if !safe_eval(tp.binding, @cond) if @cond
         next if @cond_class && !tp.self.kind_of?(@cond_class)
 
+        caller_location = caller_locations(2, 1).first.to_s
+        next if called_by_debugger(caller_location)
+
         suspend
       }
+    end
+
+    def called_by_debugger(caller_location)
+      caller_location.match?(__dir__) || caller_location.match?(/irb/) # because irb is a dependency
     end
 
     def eval_class_name
