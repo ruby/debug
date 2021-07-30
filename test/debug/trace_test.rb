@@ -104,17 +104,29 @@ module DEBUGGER__
 
   class TracePassTest < TestCase
     def program
-      <<~RUBY
-     1| def foo(...); end
-     2| def bar(a:); end
-     3| def baz(**kw); end
-     4|
-     5| foo(1)
-     6| bar(a: 2)
-     7| baz(b: 3)
-     8|
-     9| binding.b
-      RUBY
+      if RUBY_VERSION >= "2.7"
+        <<~RUBY
+       1| def foo(...); end
+       2| def bar(a:); end
+       3| def baz(**kw); end
+       4|
+       5| foo(1)
+       6| bar(a: 2)
+       7| baz(b: 3)
+       8|
+       9| binding.b
+        RUBY
+      else
+        <<~RUBY
+       1| def bar(a:); end
+       2| def baz(**kw); end
+       3|
+       4| bar(a: 2)
+       5| baz(b: 3)
+       6|
+       7| binding.b
+        RUBY
+      end
     end
 
     def test_not_tracing_anonymous_rest_argument
@@ -125,7 +137,7 @@ module DEBUGGER__
         assert_no_line_text(/trace\/pass/)
         type 'q!'
       end
-    end
+    end if RUBY_VERSION >= "2.7"
 
     def test_tracing_key_argument
       debug_code(program) do
