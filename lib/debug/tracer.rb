@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 module DEBUGGER__
   class Tracer
@@ -168,7 +169,8 @@ module DEBUGGER__
               end
 
             when :rest
-              next unless name
+              next unless name && name.to_s != "*"
+
               ary = b.local_variable_get(name)
               ary.each{|e|
                 if e.object_id == @obj_id

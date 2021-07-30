@@ -101,4 +101,50 @@ module DEBUGGER__
     end
 
   end
+
+  class TracePassTest < TestCase
+    def program
+      <<~RUBY
+     1| def foo(...); end
+     2| def bar(a:); end
+     3| def baz(**kw); end
+     4|
+     5| foo(1)
+     6| bar(a: 2)
+     7| baz(b: 3)
+     8|
+     9| binding.b
+      RUBY
+    end
+
+    def test_not_tracing_anonymous_rest_argument
+      debug_code(program) do
+        type 'trace pass 1'
+        assert_line_text(/Enable PassTracer/)
+        type 'c'
+        assert_no_line_text(/trace\/pass/)
+        type 'q!'
+      end
+    end
+
+    def test_tracing_key_argument
+      debug_code(program) do
+        type 'trace pass 2'
+        assert_line_text(/Enable PassTracer/)
+        type 'c'
+        assert_line_text(/`2` is used as a parameter `a` of Object#bar/)
+        type 'q!'
+      end
+    end
+
+    def test_tracing_keyrest_argument
+      debug_code(program) do
+        type 'trace pass 3'
+        assert_line_text(/Enable PassTracer/)
+        type 'c'
+        assert_line_text(/`3` is used as a parameter in `kw` of Object#baz/)
+        type 'q!'
+      end
+    end
+  end
 end
