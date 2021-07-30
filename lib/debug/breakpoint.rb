@@ -390,8 +390,8 @@ module DEBUGGER__
     def override klass
       sig_method_name = @sig_method_name
       klass.prepend Module.new{
-        define_method(sig_method_name) do |*args, **kw|
-          super(*args, **kw)
+        define_method(sig_method_name) do |*args, **kw, &block|
+          super(*args, **kw, &block)
         end
       }
     end
