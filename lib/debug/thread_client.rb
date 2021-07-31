@@ -438,7 +438,7 @@ module DEBUGGER__
       w = SESSION::width
 
       if mono_info.length >= w
-        info = mono_info[0 .. (w-4)] + '...'
+        info = truncate(mono_info, width: w)
       else
         valstr = colored_inspect(obj, width: 2 ** 30)
         valstr = inspected if valstr.lines.size > 1
@@ -446,6 +446,10 @@ module DEBUGGER__
       end
 
       puts info
+    end
+
+    def truncate(string, width:)
+      string[0 .. (width-4)] + '...'
     end
 
     ### cmd: show edit
@@ -771,7 +775,15 @@ module DEBUGGER__
             begin
               obj = frame_eval args.shift, re_raise: true
               opt = args.shift
-              event! :result, :trace_pass, obj.object_id, obj.inspect, opt
+              obj_inspect = obj.inspect
+
+              width = 50
+
+              if obj_inspect.length >= width
+                obj_inspect = truncate(obj_inspect, width: width)
+              end
+
+              event! :result, :trace_pass, obj.object_id, obj_inspect, opt
             rescue => e
               puts e.message
               event! :result, nil
