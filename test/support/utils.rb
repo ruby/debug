@@ -38,7 +38,7 @@ module DEBUGGER__
 
     # This method will execute both local and remote mode by default.
     def debug_code(program, boot_options: '-r debug/start', remote: true, &block)
-      check_line_num!(program)
+      check_line_num!(program) if ENV['RUBY_DEBUG_TEST_CHECK_LINE_NUM']
 
       write_temp_file(strip_line_num(program))
       @scenario = []

@@ -32,3 +32,5 @@ jobs:
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Run tests
       run: bundle exec rake
+      env:
+        RUBY_DEBUG_TEST_CHECK_LINE_NUM: true
