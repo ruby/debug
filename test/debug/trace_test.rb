@@ -13,6 +13,11 @@ module DEBUGGER__
      5| a = 1
      6| foo(a)
      7| a = nil
+     8| begin
+     9|   raise 'foo'
+    10| rescue
+    11|   nil
+    12| end
       RUBY
     end
 
@@ -66,9 +71,20 @@ module DEBUGGER__
       debug_code(program) do
         type 'b 6'
         type 'trace call'
-        assert_line_text(/Enabble CallTracer/)
+        assert_line_text(/Enable CallTracer/)
         type 'c'
         #assert_line_text /trace\/call/
+        type 'q!'
+      end
+    end
+
+    def test_trace_raise
+      debug_code(program) do
+        type 'b 11'
+        type 'trace raise'
+        assert_line_text(/Enable RaiseTracer/)
+        type 'c'
+        assert_line_text(/trace\/raise.+RuntimeError: foo/)
         type 'q!'
       end
     end

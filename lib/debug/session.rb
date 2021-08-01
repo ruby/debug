@@ -677,6 +677,8 @@ module DEBUGGER__
       #   * Add a line tracer. It indicates line events.
       # * `trace call`
       #   * Add a call tracer. It indicate call/return events.
+      # * `trace raise`
+      #   * Add a raise tracer. It indicates raise events.
       # * `trace pass <expr>`
       #   * Add a pass tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
       # * `trace ... </pattern/>`
@@ -714,7 +716,12 @@ module DEBUGGER__
 
         when /\Acall\z/
           @tracers << t = CallTracer.new(@ui, pattern: pattern, into: into)
-          @ui.puts "Enabble #{t.to_s}"
+          @ui.puts "Enable #{t.to_s}"
+          return :retry
+
+        when /\Araise\z/
+          @tracers << t = RaiseTracer.new(@ui, pattern: pattern, into: into)
+          @ui.puts "Enable #{t.to_s}"
           return :retry
 
         when /\Apass\s+(.+)/

@@ -30,7 +30,7 @@ module DEBUGGER__
     def close
     end
 
-    def header depth = caller.size
+    def header depth
       "DEBUGGER (trace/#{@type}) \#th:#{Thread.current.instance_variable_get(:@__thread_client_id)} \#depth:#{'%-2d'%depth}"
     end
 
@@ -64,11 +64,13 @@ module DEBUGGER__
       end
     end
 
-    def out msg
+    def out tp, msg = nil, depth = caller.size - 1
+      buff = "#{header(depth)}#{msg} at #{tp.path}:#{tp.lineno}"
+
       if false # TODO: Ractor.main?
-        ThreadClient.current.on_trace self.object_id, msg
+        ThreadClient.current.on_trace self.object_id, buff
       else
-        @output.puts msg
+        @output.puts buff
       end
     end
 
@@ -82,7 +84,7 @@ module DEBUGGER__
       @tracer = TracePoint.new(:line){|tp|
         next if skip?(tp)
         # pp tp.object_id, caller(0)
-        out "#{header} at #{tp.path}:#{tp.lineno}"
+        out tp
       }
     end
   end
@@ -94,19 +96,36 @@ module DEBUGGER__
 
         depth = caller.size
         sp = ' ' * depth
-        header = header(depth)
 
         case tp.event
-        when :call, :c_call
-          out "#{header}>#{sp}#{tp.defined_class}\##{tp.method_id} at #{tp.path}:#{tp.lineno}"
-        when :return, :c_return
-          out "#{header}<#{sp}#{tp.defined_class}\##{tp.method_id} at #{tp.path}:#{tp.lineno} (\#=> #{tp.return_value.inspect})"
+        when :call
+          out tp, ">#{sp}#{tp.defined_class}\##{tp.method_id}", depth
+        when :return
+          out tp, "<#{sp}#{tp.defined_class}\##{tp.method_id} \#=> #{tp.return_value.inspect}", depth
+        when :c_call
+          out tp, ">#{sp} #{tp.defined_class}\##{tp.method_id}", depth + 1
+        when :c_return
+          out tp, "<#{sp} #{tp.defined_class}\##{tp.method_id} \#=> #{tp.return_value.inspect}", depth + 1
         when :b_call
-          out "#{header}>#{sp}block at #{tp.path}:#{tp.lineno}"
+          out tp, ">#{sp}block", depth
         when :b_return
-          out "#{header}<#{sp}block at #{tp.path}:#{tp.lineno} (\#=> #{tp.return_value.inspect})"
+          out tp, "<#{sp}block \#=> #{tp.return_value.inspect}", depth
         end
       }
+    end
+  end
+
+  class RaiseTracer < Tracer
+    def setup
+      @tracer = TracePoint.new(:raise) do |tp|
+        next if skip?(tp)
+
+        exc = tp.raised_exception
+
+        out tp, " #{exc.inspect}"
+      rescue Exception => e
+        p e
+      end
     end
   end
 
@@ -136,7 +155,7 @@ module DEBUGGER__
         next if skip?(tp)
 
         if tp.self.object_id == @obj_id
-          out "#{header} `#{@obj_inspect}` is used as a receiver of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
+          out tp, "`#{@obj_inspect}` is used as a receiver of #{minfo(tp)}"
         else
           b = tp.binding
           tp.parameters.each{|type, name|
@@ -145,7 +164,7 @@ module DEBUGGER__
               next unless name
 
               if b.local_variable_get(name).object_id == @obj_id
-                out "#{header} `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
+                out tp, " `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)}"
               end
 
             when :rest
@@ -154,7 +173,7 @@ module DEBUGGER__
               ary.each{|e|
                 if e.object_id == @obj_id
                   m = "#{tp.defined_class}\##{tp.method_id}"
-                  out "#{header} `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
+                  out tp, " `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)}"
                 end
               }
 
@@ -162,14 +181,14 @@ module DEBUGGER__
               next unless name
 
               if b.local_variable_get(name).object_id == @obj_id
-                out "#{header} `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
+                out tp, " `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)}"
               end
             when :keyrest
               next unless name
               h = b.local_variable_get(name)
               h.each{|k, e|
                 if e.object_id == @obj_id
-                  out "#{header} `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)} at #{tp.path}:#{tp.lineno}"
+                  out tp, " `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)}"
                 end
               }
             end
