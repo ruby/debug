@@ -38,8 +38,6 @@ module DEBUGGER__
 
     # This method will execute both local and remote mode by default.
     def debug_code(program, boot_options: '-r debug/start', remote: true, &block)
-      check_line_num!(program)
-
       write_temp_file(strip_line_num(program))
       @scenario = []
       block.call
@@ -71,6 +69,9 @@ module DEBUGGER__
       else
         debug_on_local boot_options, TestInfo.new(dup_scenario)
       end
+
+      check_line_num!(program)
+
       assert true
     end
 
