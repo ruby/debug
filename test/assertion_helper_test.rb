@@ -6,7 +6,7 @@ module DEBUGGER__
   class AssertLineTextTest < TestCase
     def program
       <<~RUBY
-        1| a = 1
+        a = 1
       RUBY
     end
 

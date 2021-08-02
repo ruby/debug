@@ -6,7 +6,7 @@ module DEBUGGER__
   class PseudoTerminalTest < TestCase
     def program
       <<~RUBY
-        1| a = 1
+        a = 1
       RUBY
     end
 
@@ -15,6 +15,14 @@ module DEBUGGER__
         debug_code(program) do
           type 'continue'
           type 'foo'
+        end
+      end
+    end
+
+    def test_the_test_fails_when_the_script_doesnt_have_line_numbers
+      assert_raise_message(/line numbers are required in test script. please update the script with:\n/) do
+        debug_code(program) do
+          type 'continue'
         end
       end
     end
