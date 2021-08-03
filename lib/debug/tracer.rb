@@ -169,7 +169,7 @@ module DEBUGGER__
               end
 
             when :rest
-              next unless name && name.to_s != "*"
+              next unless name && name != :"*"
 
               ary = b.local_variable_get(name)
               ary.each{|e|
