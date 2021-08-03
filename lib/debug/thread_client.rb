@@ -62,6 +62,7 @@ module DEBUGGER__
     end
 
     def initialize id, q_evt, q_cmd, thr = Thread.current
+      @is_management = false
       @id = id
       @thread = thr
       @target_frames = nil
@@ -75,6 +76,14 @@ module DEBUGGER__
       thr.instance_variable_set(:@__thread_client_id, id)
 
       ::DEBUGGER__.info("Thread \##{@id} is created.")
+    end
+
+    def management?
+      @is_management
+    end
+
+    def is_management
+      @is_management = true
     end
 
     def set_mode mode
@@ -134,7 +143,43 @@ module DEBUGGER__
 
     ## events
 
+    def on_thread_begin th
+      return if management?
+
+      event! :thread_begin, th
+      wait_next_action
+    end
+
+    def on_load iseq, eval_src
+      return if management?
+
+      event! :load, iseq, eval_src
+      wait_next_action
+    end
+
+    def on_init name
+      return if management?
+
+      event! :init, name
+      wait_next_action
+    end
+
+    def on_trace trace_id, msg
+      return if management?
+
+      event! :trace, trace_id, msg
+      wait_next_action
+    end
+
+    def on_breakpoint tp, bp
+      return if management?
+
+      on_suspend tp.event, tp, bp: bp
+    end
+
     def on_trap sig
+      return if management?
+
       if self.mode == :wait_next_action
         # raise Interrupt
       else
@@ -143,34 +188,14 @@ module DEBUGGER__
     end
 
     def on_pause
+      return if management?
+
       on_suspend :pause
     end
 
-    def on_thread_begin th
-      event! :thread_begin, th
-      wait_next_action
-    end
-
-    def on_load iseq, eval_src
-      event! :load, iseq, eval_src
-      wait_next_action
-    end
-
-    def on_init name
-      event! :init, name
-      wait_next_action
-    end
-
-    def on_breakpoint tp, bp
-      on_suspend tp.event, tp, bp: bp
-    end
-
-    def on_trace trace_id, msg
-      event! :trace, trace_id, msg
-      wait_next_action
-    end
-
     def on_suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil
+      return if management?
+
       @current_frame_index = 0
 
       if postmortem_frames

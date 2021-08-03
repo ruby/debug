@@ -83,9 +83,7 @@ module DEBUGGER__
       @src_map   = {} # {id => src}
 
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
-        unless @management_threads.include? Thread.current
-          ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
-        end
+        ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
       }
       @tp_load_script.enable
 
@@ -94,15 +92,17 @@ module DEBUGGER__
         session_server_main
       end
 
-      @management_threads = [@session_server]
-      @management_threads << @ui.reader_thread if @ui.respond_to? :reader_thread
-
       setup_threads
 
+      thc = thread_client @session_server
+      thc.is_management
+      if @ui.respond_to?(:reader_thread) && thc = thread_client(@ui.reader_thread)
+        thc.is_management
+      end
+
       @tp_thread_begin = TracePoint.new(:thread_begin){|tp|
-        unless @management_threads.include?(th = Thread.current)
-          ThreadClient.current.on_thread_begin th
-        end
+        th = Thread.current
+        ThreadClient.current.on_thread_begin th
       }
       @tp_thread_begin.enable
     end
@@ -114,7 +114,6 @@ module DEBUGGER__
     def reset_ui ui
       @ui.close
       @ui = ui
-      @management_threads << @ui.reader_thread if @ui.respond_to? :reader_thread
     end
 
     def session_server_main
@@ -1059,17 +1058,15 @@ module DEBUGGER__
       unmanaged = []
 
       list.each{|th|
-        case
-        when th == Thread.current
-          # ignore
-        when @management_threads.include?(th)
-          # ignore
-        when @th_clients.has_key?(th)
-          thcs << @th_clients[th]
+        if thc = @th_clients[th]
+          if !thc.management?
+            thcs << thc
+          end
         else
           unmanaged << th
         end
       }
+
       return thcs.sort_by{|thc| thc.id}, unmanaged
     end
 
@@ -1110,11 +1107,9 @@ module DEBUGGER__
     end
 
     def setup_threads
-      stop_all_threads do
-        Thread.list.each{|th|
-          thread_client_create(th)
-        }
-      end
+      Thread.list.each{|th|
+        thread_client_create(th)
+      }
     end
 
     def on_thread_begin th
@@ -1126,8 +1121,7 @@ module DEBUGGER__
       end
     end
 
-    def thread_client
-      thr = Thread.current
+    def thread_client thr = Thread.current
       if @th_clients.has_key? thr
         @th_clients[thr]
       else
@@ -1141,7 +1135,8 @@ module DEBUGGER__
       if Thread.list.size > 1
         TracePoint.new(:line) do
           th = Thread.current
-          if current == th || @management_threads.include?(th)
+          thc = @th_clients[th]
+          if !thc || thc.management?
             next
           else
             tc = ThreadClient.current
