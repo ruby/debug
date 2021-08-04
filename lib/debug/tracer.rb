@@ -169,7 +169,7 @@ module DEBUGGER__
               end
 
             when :rest
-              next unless name && name != :"*"
+              next if !name || name == :"*"
 
               ary = b.local_variable_get(name)
               ary.each{|e|
@@ -185,7 +185,7 @@ module DEBUGGER__
                 out tp, " `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)}"
               end
             when :keyrest
-              next unless name
+              next if !name || name == :'**'
               h = b.local_variable_get(name)
               h.each{|k, e|
                 if e.object_id == @obj_id
