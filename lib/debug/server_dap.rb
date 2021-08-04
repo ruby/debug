@@ -220,7 +220,7 @@ module DEBUGGER__
 
     ## called by the SESSION thread
 
-    def readline
+    def readline prompt
       @q_msg.pop || 'kill!'
     end
 
