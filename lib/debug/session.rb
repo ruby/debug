@@ -89,7 +89,7 @@ module DEBUGGER__
       @tp_load_script.enable
 
       @session_server = Thread.new do
-        Thread.current.name = 'DEBUGGER__::SESSION@erver'
+        Thread.current.name = 'DEBUGGER__::SESSION@server'
         Thread.current.abort_on_exception = true
         session_server_main
       end
