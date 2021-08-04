@@ -82,6 +82,11 @@ module DEBUGGER__
     end
   end
 
+  if RUBY_VERSION.to_f <= 2.7
+    # workaround for https://bugs.ruby-lang.org/issues/17302
+    TracePoint.new(:line){}.enable{}
+  end
+
   class LineBreakpoint < Breakpoint
     attr_reader :path, :line, :iseq
 
@@ -113,7 +118,6 @@ module DEBUGGER__
           next unless safe_eval tp.binding, @cond
         end
         delete if @oneshot
-
         suspend
       end
     end

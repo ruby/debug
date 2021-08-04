@@ -17,7 +17,7 @@ module DEBUGGER__
 
     include Color
 
-    attr_reader :location, :thread, :mode, :id
+    attr_reader :location, :thread, :id
 
     def assemble_arguments(args)
       args.map do |arg|
@@ -72,7 +72,9 @@ module DEBUGGER__
       @output = []
       @frame_formatter = method(:default_frame_formatter)
       @var_map = {} # { thread_local_var_id => obj } for DAP
-      set_mode nil
+
+      @mode = :waiting
+      set_mode :running
       thr.instance_variable_set(:@__thread_client_id, id)
 
       ::DEBUGGER__.info("Thread \##{@id} is created.")
@@ -87,7 +89,29 @@ module DEBUGGER__
     end
 
     def set_mode mode
+      # STDERR.puts "#{@mode} => #{mode} @ #{caller.inspect}"
+      #pp caller
+
+      # mode transition check
+      case mode
+      when :running
+        raise "#{mode} is given, but #{mode}" unless self.waiting?
+      when :waiting
+        # TODO: there is waiting -> waiting
+        # raise "#{mode} is given, but #{mode}" unless self.running?
+      else
+        raise
+      end
+
       @mode = mode
+    end
+
+    def running?
+      @mode == :running
+    end
+
+    def waiting?
+      @mode == :waiting
     end
 
     def name
@@ -99,7 +123,7 @@ module DEBUGGER__
     end
 
     def inspect
-      "#<DBG:TC #{self.id}:#{self.mode}@#{@thread.backtrace[-1]}>"
+      "#<DBG:TC #{self.id}:#{@mode}@#{@thread.backtrace[-1]}>"
     end
 
     def to_s
@@ -111,7 +135,7 @@ module DEBUGGER__
         str = "(#{@thread.name || @thread.status})@#{@thread.to_s}"
       end
 
-      str += " (not under control)" unless self.mode
+      str += " (not under control)" unless self.waiting?
       str
     end
 
@@ -143,57 +167,48 @@ module DEBUGGER__
 
     ## events
 
-    def on_thread_begin th
+    def wait_reply event_arg
       return if management?
 
-      event! :thread_begin, th
+      set_mode :waiting
+
+      event!(*event_arg)
       wait_next_action
+    end
+
+    def on_thread_begin th
+      wait_reply [:thread_begin, th]
     end
 
     def on_load iseq, eval_src
-      return if management?
-
-      event! :load, iseq, eval_src
-      wait_next_action
+      wait_reply [:load, iseq, eval_src]
     end
 
     def on_init name
-      return if management?
-
-      event! :init, name
-      wait_next_action
+      wait_reply [:init, name]
     end
 
     def on_trace trace_id, msg
-      return if management?
-
-      event! :trace, trace_id, msg
-      wait_next_action
+      wait_reply [:trace, trace_id, msg]
     end
 
     def on_breakpoint tp, bp
-      return if management?
-
-      on_suspend tp.event, tp, bp: bp
+      suspend tp.event, tp, bp: bp
     end
 
     def on_trap sig
-      return if management?
-
-      if self.mode == :wait_next_action
+      if waiting?
         # raise Interrupt
       else
-        on_suspend :trap, sig: sig
+        suspend :trap, sig: sig
       end
     end
 
     def on_pause
-      return if management?
-
-      on_suspend :pause
+      suspend :pause
     end
 
-    def on_suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil
+    def suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil
       return if management?
 
       @current_frame_index = 0
@@ -224,6 +239,8 @@ module DEBUGGER__
         show_src max_lines: (CONFIG[:show_src_lines] || 10)
         show_frames CONFIG[:show_frames] || 2
 
+        set_mode :waiting
+
         if bp
           event! :suspend, :breakpoint, bp.key
         elsif sig
@@ -231,6 +248,8 @@ module DEBUGGER__
         else
           event! :suspend, event
         end
+      else
+        set_mode :waiting
       end
 
       wait_next_action
@@ -261,7 +280,7 @@ module DEBUGGER__
           next if skip_path?(loc_path)
 
           tp.disable
-          on_suspend tp.event, tp
+          suspend tp.event, tp
         }
         @step_tp.enable(target_thread: thread)
       else
@@ -275,7 +294,7 @@ module DEBUGGER__
           next if skip_path?(loc_path)
 
           tp.disable
-          on_suspend tp.event, tp
+          suspend tp.event, tp
         }
         @step_tp.enable
       end
@@ -601,18 +620,26 @@ module DEBUGGER__
     end
 
     def wait_next_action
-      set_mode :wait_next_action
-
+      # assertions
+      raise "@mode is #{@mode}" unless @mode == :waiting
       SESSION.check_forked
 
-      while cmds = @q_cmd.pop
-        # pp [self, cmds: cmds]
+      while true
+        begin
+          set_mode :waiting if @mode != :waiting
+          cmds = @q_cmd.pop
+          # pp [self, cmds: cmds]
+          break unless cmds
+        ensure
+          set_mode :running
+        end
 
         cmd, *args = *cmds
 
         case cmd
         when :continue
           break
+
         when :step
           step_type = args[0]
           case step_type
@@ -655,6 +682,7 @@ module DEBUGGER__
             raise
           end
           break
+
         when :eval
           eval_type, eval_src = *args
 
@@ -767,6 +795,7 @@ module DEBUGGER__
           end
 
           event! :result, nil
+
         when :breakpoint
           case args[0]
           when :method
@@ -816,8 +845,6 @@ module DEBUGGER__
     rescue Exception => e
       pp ["DEBUGGER Exception: #{__FILE__}:#{__LINE__}", e, e.backtrace]
       raise
-    ensure
-      set_mode nil
     end
 
     # copyed from irb

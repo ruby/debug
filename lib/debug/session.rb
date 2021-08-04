@@ -77,6 +77,7 @@ module DEBUGGER__
       @preset_command = nil
       @postmortem_hook = nil
       @postmortem = false
+      @thread_stopper = nil
 
       @frame_map = {} # {id => [threadId, frame_depth]} for DAP
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
@@ -88,6 +89,7 @@ module DEBUGGER__
       @tp_load_script.enable
 
       @session_server = Thread.new do
+        Thread.current.name = 'DEBUGGER__::SESSION@erver'
         Thread.current.abort_on_exception = true
         session_server_main
       end
@@ -116,8 +118,12 @@ module DEBUGGER__
       @ui = ui
     end
 
+    def pop_event
+      @q_evt.pop
+    end
+
     def session_server_main
-      while evt = @q_evt.pop
+      while evt = pop_event
         # varible `@internal_info` is only used for test
         tc, output, ev, @internal_info, *ev_args = evt
         output.each{|str| @ui.puts str}
@@ -125,22 +131,26 @@ module DEBUGGER__
         case ev
         when :init
           wait_command_loop tc
+
         when :load
           iseq, src = ev_args
           on_load iseq, src
           @ui.event :load
           tc << :continue
+
         when :trace
           trace_id, msg = ev_args
           if t = @tracers.find{|t| t.object_id == trace_id}
             t.puts msg
           end
           tc << :continue
+
         when :thread_begin
           th = ev_args.shift
           on_thread_begin th
           @ui.event :thread_begin, th
           tc << :continue
+
         when :suspend
           case ev_args.first
           when :breakpoint
@@ -153,10 +163,12 @@ module DEBUGGER__
           end
 
           if @displays.empty?
+            stop_all_threads
             wait_command_loop tc
           else
             tc << [:eval, :display, @displays]
           end
+
         when :result
           case ev_args.first
           when :try_display
@@ -167,6 +179,8 @@ module DEBUGGER__
                 @ui.puts "canceled: #{@displays.pop}"
               end
             end
+            stop_all_threads
+
           when :method_breakpoint, :watch_breakpoint
             bp = ev_args[1]
             if bp
@@ -186,12 +200,14 @@ module DEBUGGER__
           end
 
           wait_command_loop tc
+
         when :dap_result
           dap_event ev_args # server.rb
           wait_command_loop tc
         end
       end
     ensure
+      @thread_stopper.disable if @thread_stopper
       @tp_load_script.disable
       @tp_thread_begin.disable
       @bps.each{|k, bp| bp.disable}
@@ -231,21 +247,18 @@ module DEBUGGER__
 
     def wait_command_loop tc
       @tc = tc
-      stop_all_threads do
-        loop do
-          case wait_command
-          when :retry
-            # nothing
-          else
-            break
-          end
-        rescue Interrupt
-          @ui.puts "\n^C"
-          retry
+
+      loop do
+        case wait_command
+        when :retry
+          # nothing
+        else
+          break
         end
+      rescue Interrupt
+        @ui.puts "\n^C"
+        retry
       end
-    ensure
-      @tc = nil
     end
 
     def prompt
@@ -311,6 +324,7 @@ module DEBUGGER__
         cancel_auto_continue
         check_postmortem
         @tc << [:step, :in]
+        restart_all_threads
 
       # * `n[ext]`
       #   * Step over. Resume the program until next line.
@@ -318,6 +332,7 @@ module DEBUGGER__
         cancel_auto_continue
         check_postmortem
         @tc << [:step, :next]
+        restart_all_threads
 
       # * `fin[ish]`
       #   * Finish this frame. Resume the program until the current frame is finished.
@@ -325,19 +340,21 @@ module DEBUGGER__
         cancel_auto_continue
         check_postmortem
         @tc << [:step, :finish]
+        restart_all_threads
 
       # * `c[ontinue]`
       #   * Resume the program.
       when 'c', 'continue'
         cancel_auto_continue
         @tc << :continue
+        restart_all_threads
 
       # * `q[uit]` or `Ctrl-D`
       #   * Finish debugger (with the debuggee process on non-remote debugging).
       when 'q', 'quit'
         if ask 'Really quit?'
           @ui.quit arg.to_i
-          @tc << :continue
+          restart_all_threads
         else
           return :retry
         end
@@ -346,7 +363,7 @@ module DEBUGGER__
       #   * Same as q[uit] but without the confirmation prompt.
       when 'q!', 'quit!'
         @ui.quit arg.to_i
-        @tc << :continue
+        restart_all_threads
 
       # * `kill`
       #   * Stop the debuggee process with `Kernal#exit!`.
@@ -1093,7 +1110,7 @@ module DEBUGGER__
       thcs, _unmanaged_ths = update_thread_list
 
       if tc = thcs[n]
-        if tc.mode
+        if tc.waiting?
           @tc = tc
         else
           @ui.puts "#{tc.thread} is not controllable yet."
@@ -1129,34 +1146,50 @@ module DEBUGGER__
       end
     end
 
-    def stop_all_threads
-      current = Thread.current
+    private def thread_stopper
+      @thread_stopper ||= TracePoint.new(:line) do
+        # run on each thread
+        tc = ThreadClient.current
+        next if tc.management?
+        next unless tc.running?
+        next if tc == @tc
 
-      if Thread.list.size > 1
-        TracePoint.new(:line) do
-          th = Thread.current
-          thc = @th_clients[th]
-          if !thc || thc.management?
-            next
-          else
-            tc = ThreadClient.current
-            tc.on_pause
-          end
-        end.enable do
-          yield
-        ensure
-          @th_clients.each{|thr, tc|
-            case thr
-            when current, (@tc && @tc.thread)
-              next
-            else
-              tc << :continue if thr != Thread.current
-            end
-          }
-        end
-      else
-        yield
+        tc.on_pause
       end
+    end
+
+    private def running_thread_clients_count
+      @th_clients.count{|th, tc|
+        next if tc.management?
+        next unless tc.running?
+        true
+      }
+    end
+
+    private def waiting_thread_clients
+      @th_clients.map{|th, tc|
+        next if tc.management?
+        next unless tc.waiting?
+        tc
+      }.compact
+    end
+
+    private def stop_all_threads
+      return if running_thread_clients_count == 0
+
+      stopper = thread_stopper
+      stopper.enable unless stopper.enabled?
+    end
+
+    private def restart_all_threads
+      stopper = thread_stopper
+      stopper.disable if stopper.enabled?
+
+      waiting_thread_clients.each{|tc|
+        next if @tc == tc
+        tc << :continue
+      }
+      @tc = nil
     end
 
     ## event
@@ -1273,8 +1306,12 @@ module DEBUGGER__
       @ui.width
     end
 
+    def active?
+      @session_server.status != nil
+    end
+
     def check_forked
-      unless @session_server.status
+      unless active?
         # TODO: Support it
         raise 'DEBUGGER: stop at forked process is not supported yet.'
       end
@@ -1288,7 +1325,7 @@ module DEBUGGER__
 
     def enter_postmortem_session frames
       @postmortem = true
-      ThreadClient.current.on_suspend :postmortem, postmortem_frames: frames
+      ThreadClient.current.suspend :postmortem, postmortem_frames: frames
     ensure
       @postmortem = false
     end

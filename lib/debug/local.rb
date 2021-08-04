@@ -10,7 +10,9 @@ module DEBUGGER__
 
       unless CONFIG[:no_sigint_hook]
         @prev_handler = trap(:SIGINT){
-          ThreadClient.current.on_trap :SIGINT
+          if SESSION.active?
+            ThreadClient.current.on_trap :SIGINT
+          end
         }
       end
     end
