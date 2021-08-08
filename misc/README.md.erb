@@ -43,9 +43,9 @@ To use a debugger, roughly you will do the following steps:
 2. Run a program with the debugger.
 3. At the breakpoint, enter the debugger console.
 4. Use debug commands.
-    * Query the prgram status (e.g. `p lvar` to see the local variable `lvar`).
+    * Query the program status (e.g. `p lvar` to see the local variable `lvar`).
     * Control program flow (e.g. move to the another line with `step`, to the next line with `next`).
-    * Set another breakpoints (e.g. `catch Exception` to set the breakpoints when `Exception` is raiesd).
+    * Set another breakpoint (e.g. `catch Exception` to set a breakpoint when `Exception` is raised).
     * Change the configuration (e.g. `config set no_color true` to disable coloring).
     * Continue the program (`c` or `continue`) and goto 3.
 
@@ -56,7 +56,7 @@ There are several options for (1) and (2). Please choose your favorite way.
 ### Modify source code as `binding.pry` and `binding.irb`
 
 If you can modify the source code, you can use the debugger by adding `require 'debug'` line at the top of your program and putting `binding.break` method (`binding.b` for short) into lines where you want to stop as breakpoints like `binding.pry` and `binding.irb`.
-After that, you run the program as usuall and you will enter the debug console at breakpoints you inserted.
+After that, you run the program as usual and you will enter the debug console at breakpoints you inserted.
 
 The following example shows the demonstration of `binding.break`.
 
@@ -120,7 +120,7 @@ d => 4
 [1, 2, 3, 4]
 ```
 
-### Invoke the prorgam from the debugger as a traditional debuggers
+### Invoke the program from the debugger as a traditional debuggers
 
 If you don't want to modify the source code, you can set breakpoints with a debug command `break` (`b` for short).
 Using `rdbg` command to launch the program without any modifications, you can run the program with the debugger.
@@ -241,16 +241,16 @@ NOTE: If you want to use bundler (`bundle` command), you need to write `gem debu
 
 ### Using VSCode
 
-Like other langauges, you can use this debugger on the VSCode.
+Like other languages, you can use this debugger on the VSCode.
 
-1. Install [VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg) 
+1. Install [VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg)
 2. Open `.rb` file (e.g. `target.rb`)
 3. Register breakpoints with "Toggle breakpoint" in Run menu (or type F9 key)
 4. Choose "Start debugging" in "Run" menu (or type F5 key)
 5. You will see a dialog "Debug command line" and you can choose your favorite command line your want to run.
-6. Chosed command line is invoked with `rdbg -c` and VSCode shows the details at breakponts.
+6. Chosen command line is invoked with `rdbg -c` and VSCode shows the details at breakpoints.
 
-Plase refer [Debugging in Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging) for operations on VSCode.
+Please refer [Debugging in Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging) for operations on VSCode.
 
 You can configure the extension in `.vscode/launch.json`.
 Please see the extension page for more details.
@@ -282,7 +282,7 @@ DEBUGGER: Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock
 DEBUGGER: wait for debuger connection...
 ```
 
-By deafult, `rdbg --open` uses UNIX domain socket and generates path name automatically (`/home/ko1/.ruby-debug-sock/ruby-debug-ko1-7773` in this case).
+By default, `rdbg --open` uses UNIX domain socket and generates path name automatically (`/home/ko1/.ruby-debug-sock/ruby-debug-ko1-7773` in this case).
 
 You can connect to the debuggee with `rdbg --attach` command (`rdbg -A` for short).
 
@@ -324,7 +324,7 @@ If you can modify the program, you can open debugging port by adding `require 'd
 
 If you don't want to stop the program at the beginning, you can also use `require 'debug/open_nonstop'`.
 Using `debug/open_nonstop` is useful if you want to open a backdoor to the application.
-However, it is also danger because it can become antoher vulnerability.
+However, it is also danger because it can become another vulnerability.
 Please use it carefully.
 
 By default, UNIX domain socket is used for the debugging port. To use TCP/IP, you can set the `RUBY_DEBUG_PORT` environment variable.
@@ -336,7 +336,7 @@ $ RUBY_DEBUG_PORT=12345 ruby target.rb
 ## Configuration
 
 You can configure the debugger's behavior with debug commands and environment variables.
-When the debug session is started, initial scripts are loaded so you can put your favorite configurations in the intial scripts.
+When the debug session is started, initial scripts are loaded so you can put your favorite configurations in the initial scripts.
 
 ### Configuration list
 
@@ -355,7 +355,7 @@ config set no_color true
 
 ### Initial scripts
 
-If there is `~/.rdbgrc`, the file is loaded as an initial scripts which contains debug commands) when the debug session is started. 
+If there is `~/.rdbgrc`, the file is loaded as an initial script (which contains debug commands) when the debug session is started.
 
 * `RUBY_DEBUG_INIT_SCRIPT` environment variable can specify the initial script file.
 * You can specify the initial script with `rdbg -x initial_script` (like gdb's `-x` option).
@@ -411,7 +411,7 @@ Emacs support available.
 
 #### Start by method
 
-After loading `debug/session`, you can start debug session with the following methods. They are convinient if you want to specifies debug configrations in your program.
+After loading `debug/session`, you can start debug session with the following methods. They are convenient if you want to specify debug configurations in your program.
 
 * `DEBUGGER__.start(**kw)`: start debug session with local console.
 * `DEBUGGER__.open(**kw)`: open debug port with configuration (without configurations open with UNIX domain socket)
@@ -442,9 +442,9 @@ def initialzie
 end
 ```
 
-On this case, register a watch breakpont for `@a` and continue to run.
+On this case, register a watch breakpoint for `@a` and continue to run.
 
-If `pre: 'command'` is specified, the debuger suspends the program and run the `command` as a debug command, and keep suspend.
+If `pre: 'command'` is specified, the debugger suspends the program and run the `command` as a debug command, and keep suspend.
 It is useful if you have operations before suspend.
 
 ```
@@ -454,7 +454,7 @@ def foo
 end
 ```
 
-On this case, you can see the result of `bar()` everytime when you stops there.
+On this case, you can see the result of `bar()` every time you stop there.
 
 ## rdbg command help
 
