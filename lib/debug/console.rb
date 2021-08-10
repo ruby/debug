@@ -51,7 +51,7 @@ module DEBUGGER__
 
     rescue LoadError
     begin
-      require 'readline'
+      require 'readline.so'
 
       def readline_setup
         Readline.completion_proc = proc{|given|

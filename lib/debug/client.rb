@@ -13,7 +13,7 @@ module DEBUGGER__
 
   class Client
     begin
-      require 'readline'
+      require 'readline.so'
       def readline
         Readline.readline("\n(rdbg:remote) ", true)
       end
