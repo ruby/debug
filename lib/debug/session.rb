@@ -1307,7 +1307,11 @@ module DEBUGGER__
     end
 
     def active?
-      @session_server.status != nil
+      if @session_server.status
+        true
+      else
+        false
+      end
     end
 
     def check_forked
