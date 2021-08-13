@@ -82,7 +82,7 @@ module DEBUGGER__
     end
 
     def greeting
-      case p g = @sock.gets
+      case g = @sock.gets
       when /^version:\s+(.+)\s+width: (\d+) cookie:\s+(.*)$/
         v, w, c = $1, $2, $3
         # TODO: protocol version
@@ -219,13 +219,9 @@ module DEBUGGER__
         s.puts "input"
         sleep 0.01 until @q_msg
 
-        p 'start_popping!'
-        popped = @q_msg.pop
-        p popped: popped
-        popped
+        @q_msg.pop
       end || 'continue').strip
 
-      p input
       input
     end
 
