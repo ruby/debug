@@ -407,10 +407,16 @@ The `<...>` notation means the argument.
 
 * `s[tep]`
   * Step in. Resume the program until next breakable point.
+* `s[tep] <n>`
+  * Step in, resume the program at `<n>`th breakable point.
 * `n[ext]`
   * Step over. Resume the program until next line.
+* `n[ext] <n>`
+  * Step over, same as `step <n>`.
 * `fin[ish]`
   * Finish this frame. Resume the program until the current frame is finished.
+* `fin[ish] <n>`
+  * Finish frames, same as `step <n>`.
 * `c[ontinue]`
   * Resume the program.
 * `q[uit]` or `Ctrl-D`

@@ -268,7 +268,7 @@ module DEBUGGER__
       SUPPORT_TARGET_THREAD = false
     end
 
-    def step_tp
+    def step_tp iter
       @step_tp.disable if @step_tp
 
       thread = Thread.current
@@ -283,6 +283,7 @@ module DEBUGGER__
           loc = caller_locations(1, 1).first
           loc_path = loc.absolute_path || "!eval:#{loc.path}"
           next if skip_path?(loc_path)
+          next if iter && (iter -= 1) > 0
 
           tp.disable
           suspend tp.event, tp
@@ -299,6 +300,7 @@ module DEBUGGER__
           loc = caller_locations(1, 1).first
           loc_path = loc.absolute_path || "!eval:#{loc.path}"
           next if skip_path?(loc_path)
+          next if iter && (iter -= 1) > 0
 
           tp.disable
           suspend tp.event, tp
@@ -659,9 +661,14 @@ module DEBUGGER__
 
         when :step
           step_type = args[0]
+          iter = args[1]
+
           case step_type
           when :in
-            step_tp{true}
+            step_tp iter do
+              true
+            end
+
           when :next
             frame = @target_frames.first
             path = frame.location.absolute_path || "!eval:#{frame.path}"
@@ -677,7 +684,7 @@ module DEBUGGER__
 
             depth = @target_frames.first.frame_depth
 
-            step_tp{
+            step_tp iter do
               loc = caller_locations(2, 1).first
               loc_path = loc.absolute_path || "!eval:#{loc.path}"
 
@@ -688,13 +695,13 @@ module DEBUGGER__
               (next_line && loc_path == path &&
                (loc_lineno = loc.lineno) > line &&
                loc_lineno <= next_line)
-            }
+            end
           when :finish
             depth = @target_frames.first.frame_depth
-            step_tp{
+            step_tp iter do
               # 3 is debugger's frame count
               DEBUGGER__.frame_depth - 3 < depth
-            }
+            end
           else
             raise
           end

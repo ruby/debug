@@ -345,27 +345,30 @@ module DEBUGGER__
 
       # * `s[tep]`
       #   * Step in. Resume the program until next breakable point.
+      # * `s[tep] <n>`
+      #   * Step in, resume the program at `<n>`th breakable point.
       when 's', 'step'
         cancel_auto_continue
         check_postmortem
-        @tc << [:step, :in]
-        restart_all_threads
+        step_command :in, arg
 
       # * `n[ext]`
       #   * Step over. Resume the program until next line.
+      # * `n[ext] <n>`
+      #   * Step over, same as `step <n>`.
       when 'n', 'next'
         cancel_auto_continue
         check_postmortem
-        @tc << [:step, :next]
-        restart_all_threads
+        step_command :next, arg
 
       # * `fin[ish]`
       #   * Finish this frame. Resume the program until the current frame is finished.
+      # * `fin[ish] <n>`
+      #   * Finish frames, same as `step <n>`.
       when 'fin', 'finish'
         cancel_auto_continue
         check_postmortem
-        @tc << [:step, :finish]
-        restart_all_threads
+        step_command :finish, arg
 
       # * `c[ontinue]`
       #   * Resume the program.
@@ -864,6 +867,20 @@ module DEBUGGER__
       @ui.puts "[REPL ERROR] #{e.inspect}"
       @ui.puts e.backtrace.map{|e| '  ' + e}
       return :retry
+    end
+
+    def step_command type, arg
+      case arg
+      when nil
+        @tc << [:step, type]
+        restart_all_threads
+      when /\A\d+\z/
+        @tc << [:step, type, arg.to_i]
+        restart_all_threads
+      else
+        @ui.puts "Unknown option: #{arg}"
+        :retry
+      end
     end
 
     def config_show key
