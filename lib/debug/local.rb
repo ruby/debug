@@ -27,6 +27,14 @@ module DEBUGGER__
       false
     end
 
+    def activate on_fork: false
+      # Do nothing
+    end
+
+    def deactivate
+      # Do nothing
+    end
+
     def width
       if (w = IO.console_size[1]) == 0 # for tests PTY
         80

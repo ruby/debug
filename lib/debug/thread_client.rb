@@ -80,6 +80,10 @@ module DEBUGGER__
       ::DEBUGGER__.info("Thread \##{@id} is created.")
     end
 
+    def deactivate
+      @step_tp.disable if @step_tp
+    end
+
     def management?
       @is_management
     end
@@ -274,6 +278,7 @@ module DEBUGGER__
           next if SESSION.break? tp.path, tp.lineno
           next if !yield
           next if tp.path.start_with?(__dir__)
+          next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
           loc = caller_locations(1, 1).first
           loc_path = loc.absolute_path || "!eval:#{loc.path}"
@@ -288,6 +293,8 @@ module DEBUGGER__
           next if thread != Thread.current
           next if SESSION.break? tp.path, tp.lineno
           next if !yield
+          next if tp.path.start_with?(__dir__)
+          next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
           loc = caller_locations(1, 1).first
           loc_path = loc.absolute_path || "!eval:#{loc.path}"
@@ -626,7 +633,13 @@ module DEBUGGER__
     def wait_next_action
       # assertions
       raise "@mode is #{@mode}" unless @mode == :waiting
-      SESSION.check_forked
+
+      unless SESSION.active?
+        pp caller
+        set_mode :running
+        return
+      end
+      # SESSION.check_forked
 
       while true
         begin

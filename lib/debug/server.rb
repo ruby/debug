@@ -7,7 +7,7 @@ require_relative 'version'
 module DEBUGGER__
   class UI_ServerBase < UI_Base
     def initialize
-      @sock = nil
+      @sock = @sock_for_fork = nil
       @accept_m = Mutex.new
       @accept_cv = ConditionVariable.new
       @client_addr = nil
@@ -16,11 +16,33 @@ module DEBUGGER__
       @unsent_messages = []
       @width = 80
 
+      activate
+    end
+
+    class Terminate < StandardError
+    end
+
+    def deactivate
+      @reader_thread.raise Terminate
+    end
+
+    def accept
+      if @sock_for_fork
+        begin
+          yield @sock_for_fork, already_connected: true
+        ensure
+          @sock_for_fork.close
+          @sock_for_fork = nil
+        end
+      end
+    end
+
+    def activate on_fork: false
       @reader_thread = Thread.new do
         # An error on this thread should break the system.
         Thread.current.abort_on_exception = true
 
-        accept do |server|
+        accept do |server, already_connected: false|
           DEBUGGER__.warn "Connected."
 
           @accept_m.synchronize{
@@ -37,14 +59,17 @@ module DEBUGGER__
 
             @q_msg = Queue.new
             @q_ans = Queue.new
-          }
+          } unless already_connected
 
           setup_interrupt do
+            pause unless already_connected
             process
           end
 
+        rescue Terminate
+          #
         rescue => e
-          DEBUGGER__.warn "ReaderThreadError: #{e}", :error
+          DEBUGGER__.warn "ReaderThreadError: #{e}"
         ensure
           DEBUGGER__.warn "Disconnected."
           @sock = nil
@@ -57,7 +82,7 @@ module DEBUGGER__
     end
 
     def greeting
-      case g = @sock.gets
+      case p g = @sock.gets
       when /^version:\s+(.+)\s+width: (\d+) cookie:\s+(.*)$/
         v, w, c = $1, $2, $3
         # TODO: protocol version
@@ -84,8 +109,6 @@ module DEBUGGER__
     end
 
     def process
-      pause
-
       while line = @sock.gets
         case line
         when /\Apause/
@@ -127,10 +150,6 @@ module DEBUGGER__
       yield
     ensure
       trap(:SIGINT, prev_handler)
-    end
-
-    def accept
-      raise "NOT IMPLEMENTED ERROR"
     end
 
     attr_reader :reader_thread
@@ -196,11 +215,18 @@ module DEBUGGER__
     end
 
     def readline prompt
-      (sock do |s|
+      input = (sock do |s|
         s.puts "input"
         sleep 0.01 until @q_msg
-        @q_msg.pop
+
+        p 'start_popping!'
+        popped = @q_msg.pop
+        p popped: popped
+        popped
       end || 'continue').strip
+
+      p input
+      input
     end
 
     def pause
@@ -232,17 +258,34 @@ module DEBUGGER__
     end
 
     def accept
-      Socket.tcp_server_sockets @host, @port do |socks|
-        ::DEBUGGER__.warn "Debugger can attach via TCP/IP (#{socks.map{|e| e.local_address.inspect}})"
-        Socket.accept_loop(socks) do |sock, client|
-          @client_addr = client
-          yield sock
+      retry_cnt = 0
+      super # for fork
+
+      begin
+        Socket.tcp_server_sockets @host, @port do |socks|
+          ::DEBUGGER__.warn "Debugger can attach via TCP/IP (#{socks.map{|e| e.local_address.inspect}})"
+          Socket.accept_loop(socks) do |sock, client|
+            @client_addr = client
+            yield @sock_for_fork = sock
+          end
         end
+      rescue Errno::EADDRINUSE
+        if retry_cnt < 10
+          retry_cnt += 1
+          sleep 0.1
+          retry
+        else
+          raise
+        end
+      rescue Terminate
+        # OK
+      rescue => e
+        $stderr.puts e.inspect, e.message
+        pp e.backtrace
+        exit
       end
-    rescue => e
-      $stderr.puts e.message
-      pp e.backtrace
-      exit
+    ensure
+      @sock_for_fork = nil
     end
   end
 
@@ -250,11 +293,14 @@ module DEBUGGER__
     def initialize sock_dir: nil, sock_path: nil
       @sock_path = sock_path
       @sock_dir = sock_dir || DEBUGGER__.unix_domain_socket_dir
+      @sock_for_fork = nil
 
       super()
     end
 
     def accept
+      super # for fork
+
       case
       when @sock_path
       when sp = CONFIG[:sock_path]
@@ -265,10 +311,13 @@ module DEBUGGER__
 
       ::DEBUGGER__.warn "Debugger can attach via UNIX domain socket (#{@sock_path})"
       Socket.unix_server_loop @sock_path do |sock, client|
+        @sock_for_fork = sock
         @client_addr = client
+
         yield sock
       ensure
         sock.close
+        @sock_for_fork = nil
       end
     end
   end

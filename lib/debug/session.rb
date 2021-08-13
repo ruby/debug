@@ -69,7 +69,7 @@ module DEBUGGER__
                 #   [:check, expr] => CheckBreakpoint
       #
       @tracers = []
-      @th_clients = {} # {Thread => ThreadClient}
+      @th_clients = nil # {Thread => ThreadClient}
       @q_evt = Queue.new
       @displays = []
       @tc = nil
@@ -88,6 +88,21 @@ module DEBUGGER__
       }
       @tp_load_script.enable
 
+      activate
+    end
+
+    def active?
+      !@q_evt.closed?
+    end
+
+    def check_forked
+      unless active?
+        # TODO: Support it
+        raise 'DEBUGGER: stop at forked process is not supported yet.'
+      end
+    end
+
+    def activate on_fork: false
       @session_server = Thread.new do
         Thread.current.name = 'DEBUGGER__::SESSION@server'
         Thread.current.abort_on_exception = true
@@ -98,6 +113,13 @@ module DEBUGGER__
 
       thc = thread_client @session_server
       thc.is_management
+
+      if on_fork
+        @tp_thread_begin.disable
+        @tp_thread_begin = nil
+        @ui.activate on_fork: true
+      end
+
       if @ui.respond_to?(:reader_thread) && thc = thread_client(@ui.reader_thread)
         thc.is_management
       end
@@ -109,8 +131,17 @@ module DEBUGGER__
       @tp_thread_begin.enable
     end
 
-    def active?
-      @ui ? true : false
+    def deactivate
+      thread_client.deactivate
+      @thread_stopper.disable if @thread_stopper
+      @tp_load_script.disable
+      @tp_thread_begin.disable
+      @bps.each{|k, bp| bp.disable}
+      @th_clients.each{|th, thc| thc.close}
+      @tracers.each{|t| t.disable}
+      @q_evt.close
+      @ui&.deactivate
+      @ui = nil
     end
 
     def reset_ui ui
@@ -207,13 +238,7 @@ module DEBUGGER__
         end
       end
     ensure
-      @thread_stopper.disable if @thread_stopper
-      @tp_load_script.disable
-      @tp_thread_begin.disable
-      @bps.each{|k, bp| bp.disable}
-      @th_clients.each{|th, thc| thc.close}
-      @tracers.each{|t| t.disable}
-      @ui = nil
+      deactivate
     end
 
     def add_preset_commands name, cmds, kick: true, continue: true
@@ -354,6 +379,7 @@ module DEBUGGER__
       when 'q', 'quit'
         if ask 'Really quit?'
           @ui.quit arg.to_i
+          @tc << :continue
           restart_all_threads
         else
           return :retry
@@ -1124,6 +1150,8 @@ module DEBUGGER__
     end
 
     def setup_threads
+      @th_clients = {}
+
       Thread.list.each{|th|
         thread_client_create(th)
       }
@@ -1304,21 +1332,6 @@ module DEBUGGER__
 
     def width
       @ui.width
-    end
-
-    def active?
-      if @session_server.status
-        true
-      else
-        false
-      end
-    end
-
-    def check_forked
-      unless active?
-        # TODO: Support it
-        raise 'DEBUGGER: stop at forked process is not supported yet.'
-      end
     end
 
     def check_postmortem
@@ -1635,4 +1648,69 @@ module DEBUGGER__
       end
     end
   end
+
+  module ForkInterceptor
+    def fork(&given_block)
+      return super unless defined?(SESSION) && SESSION.active?
+
+      # before fork
+      if CONFIG[:parent_on_fork]
+        parent_hook = -> child_pid {
+          # Do nothing
+        }
+        child_hook = -> {
+          DEBUGGER__.warn "Detaching after fork from child process #{Process.pid}"
+          SESSION.deactivate
+        }
+      else
+        parent_pid = Process.pid
+
+        parent_hook = -> child_pid {
+          DEBUGGER__.warn "Detaching after fork from parent process #{Process.pid}"
+          SESSION.deactivate
+
+          at_exit{
+            trap(:SIGINT, :IGNORE)
+            Process.waitpid(child_pid)
+          }
+        }
+        child_hook = -> {
+          DEBUGGER__.warn "Attaching after process #{parent_pid} fork to child process #{Process.pid}"
+          SESSION.activate on_fork: true
+        }
+      end
+
+      if given_block
+        new_block = proc {
+          # after fork: child
+          child_hook.call
+          given_block.call
+        }
+        pid = super(&new_block)
+        parent_hook.call(pid)
+        pid
+      else
+        if pid = super
+          # after fork: parent
+          parent_hook.call pid
+        else
+          # after fork: child
+          child_hook.call
+        end
+
+        pid
+      end
+    end
+  end
+
+  class ::Object
+    include ForkInterceptor
+  end
+
+  module ::Process
+    class << self
+      prepend ForkInterceptor
+    end
+  end
 end
+
