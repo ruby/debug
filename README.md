@@ -61,7 +61,7 @@ After that, you run the program as usual and you will enter the debug console at
 The following example shows the demonstration of `binding.break`.
 
 ```shell
-$ cat target.rb                        # Sample prgram
+$ cat target.rb                        # Sample program
 require 'debug'
 
 a = 1
@@ -126,7 +126,7 @@ If you don't want to modify the source code, you can set breakpoints with a debu
 Using `rdbg` command to launch the program without any modifications, you can run the program with the debugger.
 
 ```shell
-$ cat target.rb                        # Sample prgram
+$ cat target.rb                        # Sample program
 a = 1
 b = 2
 c = 3
