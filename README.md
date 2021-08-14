@@ -343,7 +343,7 @@ When the debug session is started, initial scripts are loaded so you can put you
 You can configure debugger's behavior with environment variables and `config` command. Each configuration has environment variable and the name which can be specified by `config` command.
 
 ```
-# configulation example
+# configuration example
 config set log_level INFO
 config set no_color true
 ```
