@@ -57,6 +57,7 @@ module DEBUGGER__
     def skip? tp
       if tp.path.start_with?(__dir__) ||
          tp.path.start_with?('<internal:') ||
+         ThreadClient.current.management? ||
          (@pattern && !tp.path.match?(@pattern) && !tp.method_id.match?(@pattern)) ||
          ((paths = CONFIG[:skip_path]) && !paths.empty? && paths.any?{|path| tp.path.match?(path)})
         true
