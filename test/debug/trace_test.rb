@@ -69,11 +69,16 @@ module DEBUGGER__
 
     def test_trace_call
       debug_code(program) do
-        type 'b 6'
+        type 'b 7'
         type 'trace call'
         assert_line_text(/Enable CallTracer/)
         type 'c'
-        #assert_line_text /trace\/call/
+        assert_line_text(
+          [
+            /Object#foo at/,
+            /Object#foo #=> 11/
+          ]
+        )
         type 'q!'
       end
     end
