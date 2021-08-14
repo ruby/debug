@@ -483,7 +483,7 @@ The `<...>` notation means the argument.
 * `edit <file>`
   * Open <file> on the editor.
 * `i[nfo]`
-   * Show information about current frame (local/instance variables and defined consntants).
+   * Show information about current frame (local/instance variables and defined constants).
 * `i[nfo] l[ocal[s]]`
   * Show information about the current frame (local variables)
   * It includes `self` as `%self` and a return value as `%return`.
