@@ -220,7 +220,7 @@ module DEBUGGER__
     def manual_debug_code(program)
       print("[Starting a Debug Session with @#{caller.first}]\n")
       write_temp_file(strip_line_num(program))
-      socket_path = setup_unix_doman_socket_remote_debuggee
+      socket_path, remote_debuggee_info = setup_unix_doman_socket_remote_debuggee
 
       while !File.exist?(socket_path)
         sleep 0.1
@@ -228,7 +228,7 @@ module DEBUGGER__
 
       DEBUGGER__::Client.new([socket_path]).connect
     ensure
-      kill_remote_debuggee
+      kill_remote_debuggee(remote_debuggee_info)
     end
 
     def setup_unix_doman_socket_remote_debuggee
