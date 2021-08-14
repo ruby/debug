@@ -638,7 +638,7 @@ If `do: 'command'` is specified, the debugger suspends the program and run the `
 It is useful if you only want to call a debug command and don't want to stop there.
 
 ```
-def initialzie
+def initialize
   @a = 1
   binding.b do: 'watch @a'
 end
