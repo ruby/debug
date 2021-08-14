@@ -598,7 +598,7 @@ You can start debugging without `rdbg` command by requiring the following librar
 You need to require one of them at the very beginning of the application.
 Using `ruby -r` (for example `ruby -r debug/start target.rb`) is another way to invoke with debugger.
 
-NOTE: Until Ruby 3.0, there is old `lib/debug.rb` standard library. So that if this gem is not installed, or if `Gemfile` missed to list this gem and `bunde exec` is used, you will see the following output:
+NOTE: Until Ruby 3.0, there is old `lib/debug.rb` standard library. So that if this gem is not installed, or if `Gemfile` missed to list this gem and `bundle exec` is used, you will see the following output:
 
 ```shell
 $ ruby -r debug -e0
