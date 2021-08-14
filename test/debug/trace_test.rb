@@ -79,6 +79,9 @@ module DEBUGGER__
             /Object#foo #=> 11/
           ]
         )
+        # tracer should ignore calls from associated libraries
+        # for example, the test implementation relies on 'json' to generate test info, which's calls should be ignored
+        assert_no_line_text(/JSON/)
         type 'q!'
       end
     end
