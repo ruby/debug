@@ -176,7 +176,7 @@ module DEBUGGER__
         until s = @sock
           @accept_m.synchronize{
             unless @sock
-              DEBUGGER__.warn "wait for debuger connection..."
+              DEBUGGER__.warn "wait for debugger connection..."
               @accept_cv.wait(@accept_m)
             end
           }

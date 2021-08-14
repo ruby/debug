@@ -279,7 +279,7 @@ You can run a script with `rdbg --open target.rb` command and run a `target.rb` 
 $ exe/rdbg --open target.rb
 DEBUGGER: Session start (pid: 7773)
 DEBUGGER: Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock/ruby-debug-ko1-7773)
-DEBUGGER: wait for debuger connection...
+DEBUGGER: wait for debugger connection...
 ```
 
 By default, `rdbg --open` uses UNIX domain socket and generates path name automatically (`/home/ko1/.ruby-debug-sock/ruby-debug-ko1-7773` in this case).
