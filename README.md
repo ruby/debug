@@ -265,7 +265,7 @@ You can use this debugger as a remote debugger. For example, it will help the fo
   * Your application uses pipe for STDIN or STDOUT.
 * Your application is running as a daemon and you want to query the running status (checking a backtrace and so on).
 
-You can run your application as a remote debuggee and the remote debugger console can attach to the debugee anytime.
+You can run your application as a remote debuggee and the remote debugger console can attach to the debuggee anytime.
 
 ### Invoke as a remote debuggee
 
@@ -309,7 +309,7 @@ NOTE: If you use `quit` command, only remote console exits and the debuggee prog
 
 If you want to use TCP/IP for the remote debugging, you need to specify the port and host with `--port` like `rdbg --open --port 12345` and it binds to `localhost:12345`.
 
-To connect to the debugeee, you need to specify the port.
+To connect to the debuggee, you need to specify the port.
 
 ```shell
 $ rdbg --attach 12345
