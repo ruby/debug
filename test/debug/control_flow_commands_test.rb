@@ -47,6 +47,22 @@ module DEBUGGER__
       end
     end
 
+    def test_step_with_number_goes_to_the_next_nth_statement
+      debug_code(program) do
+        type 'b 11'
+        type 'c'
+        assert_line_num 11
+        type 's 2'
+        assert_line_num 4
+        type 's 3'
+        assert_line_num 8
+        type 's'
+        assert_line_num 13
+        type 'quit'
+        type 'y'
+      end
+    end
+
     def test_next_goes_to_the_next_line
       debug_code(program) do
         type 'b 11'
@@ -55,6 +71,18 @@ module DEBUGGER__
         type 'n'
         assert_line_num 12
         type 'n'
+        assert_line_num 13
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_next_with_number_goes_to_the_next_nth_line
+      debug_code(program) do
+        type 'b 11'
+        type 'c'
+        assert_line_num 11
+        type 'n 2'
         assert_line_num 13
         type 'quit'
         type 'y'
@@ -84,6 +112,22 @@ module DEBUGGER__
         type 'fin'
         assert_line_num 12
         type 's'
+        assert_line_num 7
+        type 'fin'
+        assert_line_num 13
+        type 'quit'
+        type 'y'
+      end
+    end
+
+    def test_finish_with_number_leaves_the_current_frame_and_advance_n_frames
+      debug_code(program) do
+        type 'b 11'
+        type 'c'
+        assert_line_num 11
+        type 's'
+        assert_line_num 3
+        type 'fin 2'
         assert_line_num 7
         type 'fin'
         assert_line_num 13
