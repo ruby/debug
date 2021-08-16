@@ -17,6 +17,7 @@ module DEBUGGER__
     keep_alloc_site:['RUBY_DEBUG_KEEP_ALLOC_SITE',"CONTROL: Keep allocation site and p, pp shows it (default: false)",   :bool],
     postmortem:     ['RUBY_DEBUG_POSTMORTEM',     "CONTROL: Enable postmortem debug (default: false)",                   :bool],
     parent_on_fork: ['RUBY_DEBUG_PARENT_ON_FORK', "CONTROL: Keep debugging parent process on fork (default: false)",     :bool],
+    sigdump_sig:    ['RUBY_DEBUG_SIGDUMP_SIG',    "CONTROL: Sigdump signal (default: disabled)"],
 
     # boot setting
     nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool],
@@ -91,19 +92,60 @@ module DEBUGGER__
       self.class.instance_variable_set(:@config, conf.freeze)
 
       # Post process
-      case
-      when !old_conf[:keep_alloc_site] && conf[:keep_alloc_site]
-        require 'objspace'
-        ObjectSpace.trace_object_allocations_start
-      when old_conf[:keep_alloc_site] && !conf[:keep_alloc_site]
-        require 'objspace'
-        ObjectSpace.trace_object_allocations_stop
-      else
-        # ignore
+      if_updated old_conf, conf, :keep_alloc_site do |_, new|
+        if new
+          require 'objspace'
+          ObjectSpace.trace_object_allocations_start
+        else
+          ObjectSpace.trace_object_allocations_stop
+        end
       end
 
-      if !old_conf[:postmortem] != !conf[:postmortem]
-        SESSION.postmortem = conf[:postmortem]
+      if_updated old_conf, conf, :postmortem do |_, new_p|
+        SESSION.postmortem = new_p
+      end
+
+      if_updated old_conf, conf, :sigdump_sig do |old_sig, new_sig|
+        setup_sigdump old_sig, new_sig
+      end
+    end
+
+    private def if_updated old_conf, new_conf, key
+      old, new = old_conf[key], new_conf[key]
+      yield old, new if old != new
+    end
+
+    private def enable_sigdump sig
+      @sigdump_sig_prev = trap(sig) do
+        str = []
+        str << "Simple sigdump on #{Process.pid}"
+        Thread.list.each{|th|
+          str << "Thread: #{th}"
+          th.backtrace.each{|loc|
+            str << "  #{loc}"
+          }
+          str << ''
+        }
+
+        STDERR.puts str
+      end
+    end
+
+    private def disable_sigdump old_sig
+      trap(old_sig, @sigdump_sig_prev)
+      @sigdump_sig_prev = nil
+    end
+
+    # emergency simple sigdump.
+    # Use `sigdump` gem for more rich features.
+    private def setup_sigdump old_sig = nil, sig = CONFIG[:sigdump_sig]
+      if !old_sig && sig
+        enable_sigdump sig
+      elsif old_sig && !sig
+        disable_sigdump old_sig
+      elsif old_sig && sig
+        disable_sigdump old_sig
+        enable_sigdump sig
       end
     end
 

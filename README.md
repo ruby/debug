@@ -365,6 +365,7 @@ config set no_color true
   * `RUBY_DEBUG_KEEP_ALLOC_SITE` (`keep_alloc_site`): Keep allocation site and p, pp shows it (default: false)
   * `RUBY_DEBUG_POSTMORTEM` (`postmortem`): Enable postmortem debug (default: false)
   * `RUBY_DEBUG_PARENT_ON_FORK` (`parent_on_fork`): Keep debugging parent process on fork (default: false)
+  * `RUBY_DEBUG_SIGDUMP_SIG` (`sigdump_sig`): Sigdump signal (default: disabled)
 
 * BOOT
   * `RUBY_DEBUG_NONSTOP` (`nonstop`): Nonstop mode
