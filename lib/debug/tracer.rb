@@ -160,16 +160,15 @@ module DEBUGGER__
         else
           b = tp.binding
           tp.parameters.each{|type, name|
-            case type
-            when :req, :opt
-              next unless name
+            next unless name
 
+            case type
+            when :req, :opt, :key, :keyreq
               if b.local_variable_get(name).object_id == @obj_id
                 out tp, " `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)}"
               end
-
             when :rest
-              next if !name || name == :"*"
+              next name == :"*"
 
               ary = b.local_variable_get(name)
               ary.each{|e|
@@ -177,15 +176,8 @@ module DEBUGGER__
                   out tp, " `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)}"
                 end
               }
-
-            when :key, :keyreq
-              next unless name
-
-              if b.local_variable_get(name).object_id == @obj_id
-                out tp, " `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)}"
-              end
             when :keyrest
-              next if !name || name == :'**'
+              next if name == :'**'
               h = b.local_variable_get(name)
               h.each{|k, e|
                 if e.object_id == @obj_id
