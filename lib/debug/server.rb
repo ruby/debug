@@ -66,8 +66,6 @@ module DEBUGGER__
             process
           end
 
-        rescue Terminate
-          #
         rescue => e
           DEBUGGER__.warn "ReaderThreadError: #{e}"
         ensure
@@ -77,7 +75,10 @@ module DEBUGGER__
           @q_msg = nil
           @q_ans.close
           @q_ans = nil
-        end
+        end # accept
+
+      rescue Terminate
+        # ignore
       end
     end
 
