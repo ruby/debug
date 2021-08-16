@@ -49,8 +49,8 @@ module DEBUGGER__
 
     def to_s
       s = "#{@name}#{description} (#{@tracer.enabled? ? 'enabled' : 'disabled'})"
-      s << " with pattern #{@pattern}" if @pattern
-      s << " into: #{@into}" if @into
+      s += " with pattern #{@pattern}" if @pattern
+      s += " into: #{@into}" if @into
       s
     end
 

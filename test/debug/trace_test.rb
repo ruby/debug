@@ -67,25 +67,6 @@ module DEBUGGER__
       end
     end
 
-    def test_trace_call
-      debug_code(program) do
-        type 'b 7'
-        type 'trace call'
-        assert_line_text(/Enable CallTracer/)
-        type 'c'
-        assert_line_text(
-          [
-            /Object#foo at/,
-            /Object#foo #=> 11/
-          ]
-        )
-        # tracer should ignore calls from associated libraries
-        # for example, the test implementation relies on 'json' to generate test info, which's calls should be ignored
-        assert_no_line_text(/JSON/)
-        type 'q!'
-      end
-    end
-
     def test_trace_raise
       debug_code(program) do
         type 'b 11'
@@ -104,6 +85,58 @@ module DEBUGGER__
         assert_line_text(/Enable PassTracer/)
         type 'c'
         assert_line_text(/trace\/pass/)
+        type 'q!'
+      end
+    end
+  end
+
+  class TraceCallTest < TestCase
+    def program
+      <<~RUBY
+     1| def foo
+     2| end
+     3|
+     4| def bar
+     5| end
+     6|
+     7| foo
+     8| bar
+     9|
+    10| binding.b
+      RUBY
+    end
+
+    def test_trace_call_prints_method_calls
+      debug_code(program) do
+        type 'trace call'
+        assert_line_text(/Enable CallTracer/)
+        type 'c'
+        assert_line_text(
+          [
+            /Object#foo at/,
+            /Object#foo #=> nil/,
+            /Object#bar at/,
+            /Object#bar #=> nil/
+          ]
+        )
+        # tracer should ignore calls from associated libraries
+        # for example, the test implementation relies on 'json' to generate test info, which's calls should be ignored
+        assert_no_line_text(/JSON/)
+        type 'q!'
+      end
+    end
+
+    def test_trace_call_with_pattern_filters_output_with_pattern
+      debug_code(program) do
+        type 'trace call /bar/'
+        assert_line_text(/Enable CallTracer/)
+        type 'c'
+        assert_no_line_text(/Object#foo at/)
+        assert_line_text([
+            /Object#bar at/,
+            /Object#bar #=> nil/
+          ]
+        )
         type 'q!'
       end
     end
