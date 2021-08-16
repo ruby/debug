@@ -66,6 +66,8 @@ module DEBUGGER__
             process
           end
 
+        rescue Terminate
+          raise # should catch at outer scope
         rescue => e
           DEBUGGER__.warn "ReaderThreadError: #{e}"
         ensure
