@@ -153,10 +153,10 @@ module DEBUGGER__
         first_l = " 1| #{lines[0]}\n"
         indent_num = 9
         first_l + lines[1..].map.with_index{|l, i|
-          if i < 9
+          if i < 8
             single_digit_line_num_temp(indent_num, i, l)
           else
-            "#{' ' * (indent_num - 1)}#{i + 1}| #{l}"
+            "#{' ' * (indent_num - 1)}#{i + 2}| #{l}"
           end
         }.join("\n")
       else
@@ -167,7 +167,7 @@ module DEBUGGER__
     end
 
     def single_digit_line_num_temp(indent_num, index, line)
-      "#{' ' * indent_num}#{index + 1}| #{line}"
+      "#{' ' * indent_num}#{index + 2}| #{line}"
     end
 
     def content_with_module
