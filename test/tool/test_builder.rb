@@ -149,19 +149,18 @@ module DEBUGGER__
 
     def format_program
       lines = File.read(@debuggee).split("\n")
+      indent_num = 8
       if lines.length > 9
         first_l = " 1| #{lines[0]}\n"
-        indent_num = 9
         first_l + lines[1..].map.with_index{|l, i|
           if i < 8
-            single_digit_line_num_temp(indent_num, i, l)
+            single_digit_line_num_temp(indent_num + 1, i, l)
           else
-            "#{' ' * (indent_num - 1)}#{i + 2}| #{l}"
+            "#{' ' * indent_num}#{i + 2}| #{l}"
           end
         }.join("\n")
       else
         first_l = "1| #{lines[0]}\n"
-        indent_num = 8
         first_l + lines[1..].map.with_index{ |l, i| single_digit_line_num_temp(indent_num, i, l) }.join("\n")
       end
     end
