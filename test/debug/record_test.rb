@@ -34,19 +34,19 @@ module DEBUGGER__
         type 'step back'
         type 'step back'
         assert_line_text([
-          /\[replay\] =>    5\| p a \+= 1/,
+          /\[replay\] =>   5\| p a \+= 1/,
         ])
         type 'step back'
         assert_line_text(/\[replay\] Can not step back more\./)
         type 'step'
         assert_line_num 6
         assert_line_text([
-          /\[replay\] =>    6\| p a \+= 1/,
+          /\[replay\] =>   6\| p a \+= 1/,
         ])
         type 'step'
         assert_line_num 7
         assert_line_text([
-          /\[replay\] =>    7\| binding\.b/,
+          /\[replay\] =>   7\| binding\.b/,
         ])
         type 'record off'
         type 'step'

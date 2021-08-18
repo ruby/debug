@@ -370,11 +370,9 @@ module DEBUGGER__
           frame_line = frame.location.lineno - 1
 
           lines = file_lines.map.with_index do |e, i|
-            if i == frame_line
-              "=> #{'%4d' % (i+1)}| #{e}"
-            else
-              "   #{'%4d' % (i+1)}| #{e}"
-            end
+            cur = i == frame_line ? '=>' : '  '
+            line = colorize_dim('%4d|' % (i+1))
+            "#{cur}#{line} #{e}"
           end
 
           unless start_line
