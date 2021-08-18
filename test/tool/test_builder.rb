@@ -154,18 +154,18 @@ module DEBUGGER__
         first_l = " 1| #{lines[0]}\n"
         first_l + lines[1..].map.with_index{|l, i|
           if i < 8
-            single_digit_line_num_temp(indent_num + 1, i, l)
+            line_num_temp(indent_num + 1, i, l)
           else
-            "#{' ' * indent_num}#{i + 2}| #{l}"
+            line_num_temp(indent_num, i, l)
           end
         }.join("\n")
       else
         first_l = "1| #{lines[0]}\n"
-        first_l + lines[1..].map.with_index{ |l, i| single_digit_line_num_temp(indent_num, i, l) }.join("\n")
+        first_l + lines[1..].map.with_index{ |l, i| line_num_temp(indent_num, i, l) }.join("\n")
       end
     end
 
-    def single_digit_line_num_temp(indent_num, index, line)
+    def line_num_temp(indent_num, index, line)
       "#{' ' * indent_num}#{index + 2}| #{line}"
     end
 
