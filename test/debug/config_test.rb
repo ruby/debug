@@ -7,12 +7,12 @@ module DEBUGGER__
     def program
       <<~RUBY
         1| def foo
-        1|   bar
-        2| end
-        3| def bar
-        4|   p :bar
-        5| end
-        6| foo
+        2|   bar
+        3| end
+        4| def bar
+        5|   p :bar
+        6| end
+        7| foo
       RUBY
     end
 

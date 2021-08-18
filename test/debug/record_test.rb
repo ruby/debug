@@ -7,14 +7,14 @@ module DEBUGGER__
     def program
       <<~RUBY
         1|
-        1| p a  = 1
-        2| p a += 1
-        3| binding.b do: 'record on'
-        4| p a += 1
+        2| p a  = 1
+        3| p a += 1
+        4| binding.b do: 'record on'
         5| p a += 1
-        6| binding.b
-        7| p a += 1
+        6| p a += 1
+        7| binding.b
         8| p a += 1
+        9| p a += 1
       RUBY
     end
     
@@ -65,18 +65,18 @@ module DEBUGGER__
     def program
       <<~RUBY
          1|
-         1| def foo n
-         2|   n += 10
-         3|   bar n + 1
-         4| end
-         5|
-         6| def bar n
-         7|   n += 100
-         8|   p n
-         9| end
-        10|
-        11| foo 10
-        12|
+         2| def foo n
+         3|   n += 10
+         4|   bar n + 1
+         5| end
+         6|
+         7| def bar n
+         8|   n += 100
+         9|   p n
+        10| end
+        11|
+        12| foo 10
+        13|
       RUBY
     end
     
