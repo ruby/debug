@@ -483,7 +483,7 @@ The `<...>` notation means the argument.
 * `edit <file>`
   * Open <file> on the editor.
 * `i[nfo]`
-   * Show information about current frame (local/instance variables and defined consntants).
+   * Show information about current frame (local/instance variables and defined constants).
 * `i[nfo] l[ocal[s]]`
   * Show information about the current frame (local variables)
   * It includes `self` as `%self` and a return value as `%return`.
@@ -687,7 +687,7 @@ Debug console mode:
     -O, --open                       Start remote debugging with opening the network port.
                                      If TCP/IP options are not given,
                                      a UNIX domain socket will be used.
-        --sock-path=SOCK_PATH        UNIX Doman socket path
+        --sock-path=SOCK_PATH        UNIX Domain socket path
         --port=PORT                  Listening TCP/IP port
         --host=HOST                  Listening TCP/IP host
         --cookie=COOKIE              Set a cookie for connection
