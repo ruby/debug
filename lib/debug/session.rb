@@ -795,6 +795,25 @@ module DEBUGGER__
           return :retry
         end
 
+      # Record
+      # * `record`
+      #   * Show recording status.
+      # * `record [on|off]`
+      #   * Start/Stop recording.
+      # * `step back`
+      #   * Start replay. Step back with the last execution log.
+      #   * `s[tep]` does stepping forward with the last log.
+      # * `step reset`
+      #   * Stop replay .
+      when 'record'
+        case arg
+        when nil, 'on', 'off'
+          @tc << [:record, arg&.to_sym]
+        else
+          @ui.puts "unknown command: #{arg}"
+          return :retry
+        end
+
       ### Thread control
 
       # * `th[read]`
@@ -877,6 +896,13 @@ module DEBUGGER__
       when /\A\d+\z/
         @tc << [:step, type, arg.to_i]
         restart_all_threads
+      when /\Aback\z/, /\Areset\z/
+        if type != :in
+          @ui.puts "only `step #{arg}` is supported."
+          :retry
+        else
+          @tc << [:step, arg.to_sym]
+        end
       else
         @ui.puts "Unknown option: #{arg}"
         :retry

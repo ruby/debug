@@ -483,7 +483,7 @@ The `<...>` notation means the argument.
 * `edit <file>`
   * Open <file> on the editor.
 * `i[nfo]`
-   * Show information about current frame (local/instance variables and defined constants).
+   * Show information about current frame (local/instance variables and defined consntants).
 * `i[nfo] l[ocal[s]]`
   * Show information about the current frame (local variables)
   * It includes `self` as `%self` and a return value as `%return`.
@@ -553,6 +553,15 @@ The `<...>` notation means the argument.
   * Disable tracer specified by `<num>` (use `trace` command to check the numbers).
 * `trace off [line|call|pass]`
   * Disable all tracers. If `<type>` is provided, disable specified type tracers.
+* `record`
+  * Show recording status.
+* `record [on|off]`
+  * Start/Stop recording.
+* `step back`
+  * Start replay. Step back with the last execution log.
+  * `s[tep]` does stepping forward with the last log.
+* `step reset`
+  * Stop replay .
 
 ### Thread control
 
@@ -678,7 +687,7 @@ Debug console mode:
     -O, --open                       Start remote debugging with opening the network port.
                                      If TCP/IP options are not given,
                                      a UNIX domain socket will be used.
-        --sock-path=SOCK_PATH        UNIX Domain socket path
+        --sock-path=SOCK_PATH        UNIX Doman socket path
         --port=PORT                  Listening TCP/IP port
         --host=HOST                  Listening TCP/IP host
         --cookie=COOKIE              Set a cookie for connection

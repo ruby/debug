@@ -17,7 +17,7 @@ module DEBUGGER__
 
     include Color
 
-    attr_reader :location, :thread, :id
+    attr_reader :location, :thread, :id, :recorder
 
     def assemble_arguments(args)
       args.map do |arg|
@@ -72,7 +72,7 @@ module DEBUGGER__
       @output = []
       @frame_formatter = method(:default_frame_formatter)
       @var_map = {} # { thread_local_var_id => obj } for DAP
-
+      @recorder = nil
       @mode = :waiting
       set_mode :running
       thr.instance_variable_set(:@__thread_client_id, id)
@@ -144,13 +144,16 @@ module DEBUGGER__
     end
 
     def puts str = ''
+      if @recorder&.replaying?
+        prefix = colorize_dim("[replay] ")
+      end
       case str
       when nil
         @output << "\n"
       when Array
         str.each{|s| puts s}
       else
-        @output << str.chomp + "\n"
+        @output << "#{prefix}#{str.chomp}\n"
       end
     end
 
@@ -212,14 +215,17 @@ module DEBUGGER__
       suspend :pause
     end
 
-    def suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil
+    def suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil, replay_frames: nil
       return if management?
 
       @current_frame_index = 0
 
-      if postmortem_frames
+      case 
+      when postmortem_frames
         @target_frames = postmortem_frames
         @postmortem = true
+      when replay_frames
+        @target_frames = replay_frames
       else
         @target_frames = DEBUGGER__.capture_frames(__dir__)
       end
@@ -257,6 +263,11 @@ module DEBUGGER__
       end
 
       wait_next_action
+    end
+
+    def replay_suspend
+      # @recorder.current_position
+      suspend :replay, replay_frames: @recorder.current_frame
     end
 
     ## control all
@@ -324,7 +335,7 @@ module DEBUGGER__
       begin
         @success_last_eval = false
 
-        b = current_frame.binding
+        b = current_frame.eval_binding
         result = if b
                    f, _l = b.source_location
                    b.eval(src, "(rdbg)/#{f}")
@@ -421,10 +432,10 @@ module DEBUGGER__
       if current_frame&.has_raised_exception
         puts_variable_info "%raised", current_frame.raised_exception, pat
       end
-      if b = current_frame&.binding
-        b.local_variables.sort.each{|loc|
-          value = b.local_variable_get(loc)
-          puts_variable_info loc, value, pat
+
+      if vars = current_frame&.local_variables
+        vars.each{|var, val|
+          puts_variable_info var, val, pat
         }
       end
     end
@@ -579,14 +590,14 @@ module DEBUGGER__
       else
         o = Output.new(@output)
 
-        locals = current_frame.binding.local_variables
+        locals = current_frame&.local_variables
         klass  = (obj.class == Class || obj.class == Module ? obj : obj.class)
 
         o.dump("constants", obj.constants) if obj.respond_to?(:constants)
         outline_method(o, klass, obj)
         o.dump("instance variables", obj.instance_variables)
         o.dump("class variables", klass.class_variables)
-        o.dump("locals", locals)
+        o.dump("locals", locals.keys) if locals
       end
     end
 
@@ -632,7 +643,16 @@ module DEBUGGER__
       end
     end
 
+    class SuspendReplay < Exception
+    end
+
     def wait_next_action
+      wait_next_action_
+    rescue SuspendReplay
+      replay_suspend
+    end
+
+    def wait_next_action_
       # assertions
       raise "@mode is #{@mode}" unless @mode == :waiting
 
@@ -665,8 +685,14 @@ module DEBUGGER__
 
           case step_type
           when :in
-            step_tp iter do
-              true
+            if @recorder&.replaying?
+              @recorder.step_forward
+              raise SuspendReplay
+            else
+              step_tp iter do
+                true
+              end
+              break
             end
 
           when :next
@@ -696,16 +722,37 @@ module DEBUGGER__
                (loc_lineno = loc.lineno) > line &&
                loc_lineno <= next_line)
             end
+            break
+
           when :finish
             depth = @target_frames.first.frame_depth
             step_tp iter do
               # 3 is debugger's frame count
               DEBUGGER__.frame_depth - 3 < depth
             end
+            break
+
+          when :back
+            if @recorder&.can_step_back?
+              unless @recorder.backup_frames
+                @recorder.backup_frames = @target_frames
+              end
+              @recorder.step_back
+              raise SuspendReplay
+            else
+              puts "Can not step back more."
+              event! :result, nil
+            end
+
+          when :reset
+            if @recorder&.replaying?
+              @recorder.step_reset
+              raise SuspendReplay
+            end
+
           else
-            raise
+            raise "unknown: #{type}"
           end
-          break
 
         when :eval
           eval_type, eval_src = *args
@@ -865,6 +912,32 @@ module DEBUGGER__
           else
             raise "unreachable"
           end
+
+        when :record
+          case args[0]
+          when nil
+            # ok
+          when :on
+            # enable recording
+            if !@recorder
+              @recorder = Recorder.new
+              @recorder.enable
+            end
+          when :off
+            if @recorder&.enabled?
+              @recorder.disable
+            end
+          else
+            raise "unknown: #{args.inspect}"
+          end
+
+          if @recorder&.enabled?
+            puts "Recorder for #{Thread.current}: on (#{@recorder.log.size} records)"
+          else
+            puts "Recorder for #{Thread.current}: off"
+          end
+          event! :result, nil
+
         when :dap
           process_dap args
         else
@@ -872,11 +945,106 @@ module DEBUGGER__
         end
       end
 
-    rescue SystemExit
+    rescue SuspendReplay, SystemExit
       raise
     rescue Exception => e
       pp ["DEBUGGER Exception: #{__FILE__}:#{__LINE__}", e, e.backtrace]
       raise
+    end
+
+    class Recorder
+      attr_reader :log, :index
+      attr_accessor :backup_frames
+
+      def initialize
+        @log = []
+        @index = 0
+        @backup_frames = nil
+        thread = Thread.current
+
+        @tp_recorder ||= TracePoint.new(:line){|tp|
+          next unless Thread.current == thread
+          next if tp.path.start_with? __dir__
+          next if tp.path.start_with? '<internal:'
+
+          frames = DEBUGGER__.capture_frames(__dir__)
+          frames.each{|frame|
+            if b = frame.binding
+              frame.binding = nil
+              frame._local_variables = b.local_variables.map{|name|
+                [name, b.local_variable_get(name)]
+              }.to_h
+              frame._callee = b.eval('__callee__')
+            end
+          }
+          @log << frames
+        }
+      end
+
+      def enable
+        unless @tp_recorder.enabled?
+          @log.clear
+          @tp_recorder.enable
+        end
+      end
+
+      def disable
+        if @tp_recorder.enabled?
+          @log.clear
+          @tp_recorder.disable
+        end
+      end
+
+      def enabled?
+        @tp_recorder.enabled?
+      end
+
+      def step_back
+        @index += 1
+      end
+
+      def step_forward
+        @index -= 1
+      end
+
+      def step_reset
+        @index = 0
+        @backup_frames = nil
+      end
+
+      def replaying?
+        @index > 0
+      end
+
+      def can_step_back?
+        log.size > @index
+      end
+
+      def log_index
+        @log.size - @index
+      end
+
+      def current_frame
+        if @index == 0
+          f = @backup_frames
+          @backup_frames = nil
+          f
+        else
+          frames = @log[log_index]
+          frames
+        end
+      end
+
+      # for debugging
+      def current_position
+        puts "INDEX: #{@index}"
+        li = log_index
+        @log.each_with_index{|frame, i|
+          loc = frame.first&.location
+          prefix = i == li ? "=> " : '   '
+          puts "#{prefix} #{loc}"
+        }
+      end
     end
 
     # copyed from irb

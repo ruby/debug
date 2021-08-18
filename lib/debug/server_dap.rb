@@ -37,6 +37,7 @@ module DEBUGGER__
                },
              ],
              supportsExceptionFilterOptions: true,
+             supportsStepBack: true,
 
              ## Will be supported
              # supportsExceptionOptions: true,
@@ -50,7 +51,6 @@ module DEBUGGER__
              # supportsBreakpointLocationsRequest:
 
              ## Possible?
-             # supportsStepBack:
              # supportsRestartFrame:
              # supportsCompletionsRequest:
              # completionTriggerCharacters:
@@ -197,6 +197,12 @@ module DEBUGGER__
         when 'pause'
           send_response req
           Process.kill(:SIGINT, Process.pid)
+        when 'reverseContinue'
+          send_response req,
+                        success: false, message: 'cancelled',
+                        result: "Reverse Continue is not supported. Only \"Step back\" is supported."
+        when 'stepBack'
+          @q_msg << req
 
         ## query
         when 'threads'
@@ -212,6 +218,7 @@ module DEBUGGER__
              'evaluate',
              'source'
           @q_msg << req
+
         else
           raise "Unknown request: #{req.inspect}"
         end
@@ -281,6 +288,13 @@ module DEBUGGER__
 
     def process_dap_request req
       case req['command']
+      when 'stepBack'
+        if @tc.recorder&.can_step_back?
+          @tc << [:step, :back]
+        else
+          fail_response req, message: 'cancelled'
+        end
+
       when 'stackTrace'
         tid = req.dig('arguments', 'threadId')
         if tc = find_tc(tid)
@@ -365,7 +379,6 @@ module DEBUGGER__
         else
           fail_response req, message: 'not found...'
         end
-
         return :retry
       else
         raise "Unknown DAP request: #{req.inspect}"
@@ -457,7 +470,15 @@ module DEBUGGER__
       when :scopes
         fid = args.shift
         frame = @target_frames[fid]
-        lnum = frame.binding ? frame.binding.local_variables.size : 0
+
+        lnum = 
+          if frame.binding
+            frame.binding.local_variables.size
+          elsif vars = frame.local_variables
+            vars.size
+          else
+            0
+          end
 
         event! :dap_result, :scopes, req, scopes: [{
           name: 'Local variables',
@@ -485,6 +506,10 @@ module DEBUGGER__
           vars.unshift variable('%raised', frame.raised_exception) if frame.has_raised_exception
           vars.unshift variable('%return', frame.return_value) if frame.has_return_value
           vars.unshift variable('%self', b.receiver)
+        elsif lvars = frame.local_variables
+          vars = lvars.map{|var, val|
+            variable(var, val)
+          }
         else
           vars = [variable('%self', frame.self)]
           vars.push variable('%raised', frame.raised_exception) if frame.has_raised_exception

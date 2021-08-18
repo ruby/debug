@@ -4,7 +4,9 @@ module DEBUGGER__
   FrameInfo = Struct.new(:location, :self, :binding, :iseq, :class, :frame_depth,
                           :has_return_value, :return_value,
                           :has_raised_exception, :raised_exception,
-                          :show_line)
+                          :show_line,
+                          :_local_variables, :_callee # for recorder
+                        )
 
   # extend FrameInfo with debug.so
   if File.exist? File.join(__dir__, 'debug.so')
@@ -62,7 +64,7 @@ module DEBUGGER__
     end
 
     def frame_type
-      if binding && iseq
+      if self.local_variables && iseq
         if iseq.type == :block
           :block
         elsif callee
@@ -102,17 +104,44 @@ module DEBUGGER__
     end
 
     def callee
-      @callee ||= binding&.eval('__callee__', __FILE__, __LINE__)
+      self._callee ||= self.binding&.eval('__callee__')
     end
 
     def return_str
-      if binding && iseq && has_return_value
+      if self.binding && iseq && has_return_value
         DEBUGGER__.short_inspect(return_value)
       end
     end
 
     def location_str
       "#{pretty_path}:#{location.lineno}"
+    end
+
+    private def make_binding
+      __newb__ = self.self.instance_eval('binding')
+      self.local_variables.each{|var, val|
+        __newb__.local_variable_set(var, val)
+      }
+      __newb__
+    end
+
+    def eval_binding
+      if b = self.binding
+        b
+      elsif self.local_variables
+        make_binding
+      end
+    end
+
+    def local_variables
+      if lvars = self._local_variables
+        lvars
+      elsif b = self.binding
+        lvars = b.local_variables.map{|var|
+          [var, b.local_variable_get(var)]
+        }.to_h
+        self._local_variables = lvars
+      end
     end
 
     private
@@ -123,11 +152,15 @@ module DEBUGGER__
       nil
     end
 
+    private def local_variable_get var
+      local_variables[var]
+    end
+
     def parameters_info(argc)
       vars = iseq.locals[0...argc]
       vars.map{|var|
         begin
-          { name: var, value: DEBUGGER__.short_inspect(binding.local_variable_get(var)) }
+          { name: var, value: DEBUGGER__.short_inspect(local_variable_get(var)) }
         rescue NameError, TypeError
           nil
         end

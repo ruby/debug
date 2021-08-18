@@ -2,6 +2,13 @@
 
 begin
   require 'irb/color'
+
+  module IRB
+    module Color
+      DIM = 2 unless defined? DIM
+    end
+  end
+
   require "irb/color_printer"
 rescue LoadError
   warn "DEBUGGER: can not load newer irb for coloring. Write 'gem \"debug\" in your Gemfile."
@@ -71,6 +78,10 @@ module DEBUGGER__
 
     def colorize_blue(str)
       colorize(str, [:BLUE, :BOLD])
+    end
+
+    def colorize_dim(str)
+      colorize(str, [:DIM])
     end
   end
 end

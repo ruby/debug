@@ -22,7 +22,17 @@ static VALUE rb_cFrameInfo;
 static VALUE
 di_entry(VALUE loc, VALUE self, VALUE binding, VALUE iseq, VALUE klass, VALUE depth)
 {
-    return rb_struct_new(rb_cFrameInfo, loc, self, binding, iseq, klass, depth, Qnil, Qnil, Qnil, Qnil, Qnil);
+    return rb_struct_new(rb_cFrameInfo,
+                         // :location, :self, :binding, :iseq, :class, :frame_depth,
+                         loc, self, binding, iseq, klass, depth,
+                         // :has_return_value, :return_value,
+                         Qnil, Qnil,
+                         // :has_raised_exception, :raised_exception,
+                         Qnil, Qnil,
+                         // :show_line, :local_variables
+                         Qnil,
+                         // :_local_variables, :_callee # for recorder
+                         Qnil, Qnil);
 }
 
 static int
