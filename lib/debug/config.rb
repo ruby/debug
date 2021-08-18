@@ -249,7 +249,7 @@ module DEBUGGER__
                              'a UNIX domain socket will be used.') do
           config[:remote] = true
         end
-        o.on('--sock-path=SOCK_PATH', 'UNIX Doman socket path') do |path|
+        o.on('--sock-path=SOCK_PATH', 'UNIX Domain socket path') do |path|
           config[:sock_path] = path
         end
         o.on('--port=PORT', 'Listening TCP/IP port') do |port|
