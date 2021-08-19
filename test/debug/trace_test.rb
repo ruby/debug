@@ -13,11 +13,6 @@ module DEBUGGER__
      5| a = 1
      6| foo(a)
      7| a = nil
-     8| begin
-     9|   raise 'foo'
-    10| rescue
-    11|   nil
-    12| end
       RUBY
     end
 
@@ -67,9 +62,32 @@ module DEBUGGER__
       end
     end
 
-    def test_trace_raise
+    def test_trace_pass
       debug_code(program) do
-        type 'b 11'
+        type 'b 7'
+        type 'trace pass 1'
+        assert_line_text(/Enable PassTracer/)
+        type 'c'
+        assert_line_text(/trace\/pass/)
+        type 'q!'
+      end
+    end
+  end
+
+  class TraceRaiseTest < TestCase
+    def program
+      <<~RUBY
+     1| begin
+     2|   raise "foo"
+     3| rescue
+     4| end
+     5|
+     6| binding.b
+      RUBY
+    end
+
+    def test_trace_raise_prints_raised_exception
+      debug_code(program) do
         type 'trace raise'
         assert_line_text(/Enable RaiseTracer/)
         type 'c'
@@ -78,13 +96,20 @@ module DEBUGGER__
       end
     end
 
-    def test_trace_pass
+    def test_trace_raise_filters_output_with_file_path
       debug_code(program) do
-        type 'b 7'
-        type 'trace pass 1'
-        assert_line_text(/Enable PassTracer/)
+        type 'trace raise /abc/'
+        assert_line_text(/Enable RaiseTracer/)
         type 'c'
-        assert_line_text(/trace\/pass/)
+        assert_no_line_text(/trace\/raise.+RuntimeError: foo/)
+        type 'q!'
+      end
+
+      debug_code(program) do
+        type 'trace raise /debug/'
+        assert_line_text(/Enable RaiseTracer/)
+        type 'c'
+        assert_line_text(/trace\/raise.+RuntimeError: foo/)
         type 'q!'
       end
     end
@@ -126,7 +151,7 @@ module DEBUGGER__
       end
     end
 
-    def test_trace_call_with_pattern_filters_output_with_pattern
+    def test_trace_call_with_pattern_filters_output_with_method_name
       debug_code(program) do
         type 'trace call /bar/'
         assert_line_text(/Enable CallTracer/)
@@ -141,6 +166,31 @@ module DEBUGGER__
       end
     end
 
+    def test_trace_call_with_pattern_filters_output_with_file_path
+      debug_code(program) do
+        type 'trace call /debug/'
+        assert_line_text(/Enable CallTracer/)
+        type 'c'
+        assert_line_text(
+          [
+            /Object#foo at/,
+            /Object#foo #=> nil/,
+            /Object#bar at/,
+            /Object#bar #=> nil/
+          ]
+        )
+        type 'q!'
+      end
+
+      debug_code(program) do
+        type 'trace call /not_a_path/'
+        assert_line_text(/Enable CallTracer/)
+        type 'c'
+        assert_no_line_text(/Object#foo/)
+        assert_no_line_text(/Object#bar/)
+        type 'q!'
+      end
+    end
   end
 
   class TracePassTest < TestCase
