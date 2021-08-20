@@ -50,25 +50,57 @@ module DEBUGGER__
         type 'q!'
       end
     end
+  end
 
-    def test_trace_line
+  class TraceLineTest < TestCase
+    def program
+      <<~RUBY
+     1| def foo
+     2|   10
+     3| end
+     4|
+     5| def bar
+     6|   1
+     7| end
+     8|
+     9| a = foo + bar
+    10|
+    11| binding.b
+      RUBY
+    end
+
+    def test_trace_line_prints_line_execution
       debug_code(program) do
-        type 'b 6'
         type 'trace line'
-        assert_line_text(/Enable LineTracer/)
+        assert_line_text(/Enable LineTracer \(enabled\)/)
         type 'c'
-        assert_line_text(/trace\/line/)
+        assert_line_text(/DEBUGGER \(trace\/line\)/)
+        assert_line_text([
+          /rb:5/,
+          /rb:9/,
+          /rb:2/,
+          /rb:6/,
+          /rb:11/,
+        ])
         type 'q!'
       end
     end
 
-    def test_trace_pass
+    def test_trace_line_filters_output_with_file_path
       debug_code(program) do
-        type 'b 7'
-        type 'trace pass 1'
-        assert_line_text(/Enable PassTracer/)
+        type 'trace line /debug/'
+        assert_line_text(/Enable LineTracer/)
         type 'c'
-        assert_line_text(/trace\/pass/)
+        assert_line_text(/DEBUGGER \(trace\/line\)/)
+        type 'q!'
+      end
+
+      debug_code(program) do
+        type 'trace line /abc/'
+        assert_line_text(/Enable LineTracer/)
+        type 'c'
+
+        assert_no_line_text(/DEBUGGER \(trace\/line\)/)
         type 'q!'
       end
     end
