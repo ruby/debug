@@ -268,6 +268,32 @@ module DEBUGGER__
     end
   end
 
+  class BreakAtCMethod2Test < TestCase
+    def program
+      <<~RUBY
+        1| binding.b(do: "b Array#each")
+        2|
+        3| result = ""
+        4|
+        5| [1, 2, 3].each do |i|
+        6|   result += i.to_s
+        7| end
+        8|
+        9| binding.b
+      RUBY
+    end
+
+    def test_1629445385
+      debug_code(program) do
+        type 'c'
+        assert_line_num 5
+        type 'c'
+        assert_line_num 9
+        type 'c'
+      end
+    end
+  end
+
   class BreakWithCommandTest < TestCase
     def program
       <<~RUBY

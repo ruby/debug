@@ -349,6 +349,7 @@ module DEBUGGER__
       @sig_op = op
       @sig_method_name = method_name
       @klass_eval_binding = b
+      @override_method = false
 
       @klass = nil
       @method = nil
@@ -364,6 +365,7 @@ module DEBUGGER__
       @tp = TracePoint.new(:call){|tp|
         next if !safe_eval(tp.binding, @cond) if @cond
         next if @cond_class && !tp.self.kind_of?(@cond_class)
+        next if @override_method ? (caller_locations(2, 1).first.to_s.start_with?(__dir__)) : tp.path.start_with?(__dir__)
 
         suspend
       }
@@ -441,6 +443,7 @@ module DEBUGGER__
 
         # re-collect the method object after the above patch
         search_method
+        @override_method = true if @method
         retry
       end
     rescue Exception
