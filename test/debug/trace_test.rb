@@ -281,5 +281,65 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    class TraceCallReceiverTest < TestCase
+      def program
+        <<~RUBY
+         1| class Foo
+         2|   def bar; end
+         3|   def self.baz; end
+         4| end
+         5|
+         6| class Bar < Foo
+         7| end
+         8|
+         9| f = Foo.new
+        10| b = Bar.new
+        11|
+        12| def f.foobar; end
+        13| def b.foobar; end
+        14|
+        15| binding.b
+        16|
+        17|  Foo.baz
+        18|  f.bar
+        19|  f.foobar
+        20|
+        21|  Bar.baz
+        22|  b.bar
+        23|  b.foobar
+        24|
+        25|  binding.b
+        RUBY
+      end
+
+      def test_tracer_prints_correct_method_receiving_messages
+        debug_code(program) do
+          type 'c'
+          type 'trace pass Foo'
+          type 'trace pass f'
+          type 'c'
+          assert_line_text([
+            /`Foo` is used as a receiver of Foo.baz at/,
+            /`#<Foo:.*>` is used as a receiver of Foo#bar at/,
+            /`#<Foo:.*>` is used as a receiver of #<Foo:.*>.foobar/
+          ])
+          type 'c'
+        end
+
+        debug_code(program) do
+          type 'c'
+          type 'trace pass Bar'
+          type 'trace pass b'
+          type 'c'
+          assert_line_text([
+            /`Bar` is used as a receiver of Bar.baz at/,
+            /`#<Bar:.*>` is used as a receiver of Foo#bar at/,
+            /`#<Bar:.*>` is used as a receiver of #<Bar:.*>.foobar/
+          ])
+          type 'c'
+        end
+      end
+    end
   end
 end
