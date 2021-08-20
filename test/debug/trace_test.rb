@@ -314,6 +314,7 @@ module DEBUGGER__
       end
 
       def test_tracer_prints_correct_method_receiving_messages
+
         debug_code(program) do
           type 'c'
           type 'trace pass Foo'
