@@ -2,11 +2,25 @@
 module DEBUGGER__
   class Console
     begin
-      raise LoadError if CONFIG['no_reline'] || true
-
+      raise LoadError if CONFIG[:no_reline]
       require 'reline'
+
+      # reline 0.2.7 or later is required.
+      raise LoadError if Reline::VERSION < '0.2.6'
+
       require_relative 'color'
       include Color
+
+      # 0.2.7 has SIGWINCH issue on non-main thread
+      class ::Reline::LineEditor
+        m = Module.new do
+          def reset(prompt = '', encoding:)
+            super
+            Signal.trap(:SIGWINCH, nil)
+          end
+        end
+        prepend m
+      end
 
       def readline_setup prompt
         commands = DEBUGGER__.commands
@@ -28,19 +42,27 @@ module DEBUGGER__
 
         Reline.output_modifier_proc = -> buff, **kw do
           c, rest = get_command buff
-          if commands.include?(c)
-            colorize(c, [:GREEN, :UNDERLINE]) + (rest ? colorize_code(rest) : '')
+
+          case
+          when commands.include?(c.strip)
+            # [:DIM, :CYAN, :BLUE, :CLEAR, :UNDERLINE, :REVERSE, :RED, :GREEN, :MAGENTA, :BOLD, :YELLOW]
+            cmd = colorize(c.strip, [:CYAN, :UNDERLINE])
+            rest = (rest ? colorize_code(rest) : '') + colorize("    #command", [:DIM])
+            cmd + rest
+          when !rest && /\A\s*[a-z]*\z/ =~ c
+            buff
           else
-            colorize_code(buff)
+            colorize_code(buff.chomp) + colorize("    #ruby", [:DIM])
           end
         end
       end
 
-      def get_command line
-        if /\A([a-z]+)(\s.+)?$/ =~ line.strip
+      private def get_command line
+        case line.chomp
+        when /\A(\s*[a-z]+)(\s.*)?\z$/
           return $1, $2
         else
-          line
+          line.chomp
         end
       end
 

@@ -862,6 +862,8 @@ module DEBUGGER__
 
       ### END
       else
+        @tc << [:eval, :pp, line]
+=begin
         @repl_prev_line = nil
         @ui.puts "unknown command: #{line}"
         begin
@@ -873,6 +875,7 @@ module DEBUGGER__
           # Don't use D
         end
         return :retry
+=end
       end
 
     rescue Interrupt
