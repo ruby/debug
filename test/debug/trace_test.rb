@@ -320,9 +320,9 @@ module DEBUGGER__
           type 'trace pass f'
           type 'c'
           assert_line_text([
-            /`Foo` is used as a receiver of Foo.baz at/,
-            /`#<Foo:.*>` is used as a receiver of Foo#bar at/,
-            /`#<Foo:.*>` is used as a receiver of #<Foo:.*>.foobar/
+            /`Foo` receives .baz \(#<Class:Foo>.baz\) at/,
+            /`#<Foo:.*>` receives #bar \(Foo#bar\) at/,
+            /`#<Foo:.*>` receives .foobar/
           ])
           type 'c'
         end
@@ -333,9 +333,9 @@ module DEBUGGER__
           type 'trace pass b'
           type 'c'
           assert_line_text([
-            /`Bar` is used as a receiver of Bar.baz at/,
-            /`#<Bar:.*>` is used as a receiver of Foo#bar at/,
-            /`#<Bar:.*>` is used as a receiver of #<Bar:.*>.foobar/
+            /`Bar` receives .baz \(#<Class:Foo>.baz\) at/,
+            /`#<Bar:.*>` receives #bar \(Foo#bar\) at/,
+            /`#<Bar:.*>` receives .foobar/
           ])
           type 'c'
         end
