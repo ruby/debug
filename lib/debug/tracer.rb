@@ -157,7 +157,20 @@ module DEBUGGER__
         next if skip?(tp)
 
         if tp.self.object_id == @obj_id
-          out tp, "`#{@obj_inspect}` is used as a receiver of #{minfo(tp)}"
+          klass = tp.defined_class
+          method = tp.method_id
+          method_info =
+            if klass.singleton_class?
+              if tp.self.is_a?(Class)
+                ".#{method} (#{klass}.#{method})"
+              else
+                ".#{method}"
+              end
+            else
+              "##{method} (#{klass}##{method})"
+            end
+
+          out tp, "`#{@obj_inspect}` receives #{method_info}"
         else
           b = tp.binding
           tp.parameters.each{|type, name|
