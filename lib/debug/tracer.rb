@@ -58,18 +58,12 @@ module DEBUGGER__
       if tp.path.start_with?(__dir__) ||
          tp.path.start_with?('<internal:') ||
          ThreadClient.current.management? ||
-         skip_with_pattern?(tp)
+         (@pattern && !tp.path.match?(@pattern) && !tp.method_id&.match?(@pattern)) ||
          ((paths = CONFIG[:skip_path]) && !paths.empty? && paths.any?{|path| tp.path.match?(path)})
         true
       else
         false
       end
-    end
-
-    def skip_with_pattern?(tp)
-      return false unless @pattern
-
-      !tp.path.match?(@pattern) && (!tp.method_id || !tp.method_id.match?(@pattern))
     end
 
     def out tp, msg = nil, depth = caller.size - 1
