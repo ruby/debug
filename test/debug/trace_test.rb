@@ -125,21 +125,30 @@ module DEBUGGER__
   class TraceExceptionTest < TestCase
     def program
       <<~RUBY
-     1| begin
+     1| def foo
      2|   raise "foo"
      3| rescue
      4| end
      5|
-     6| binding.b
+     6| def bar
+     7|   raise "bar"
+     8| rescue
+     9| end
+    10|
+    11| foo
+    12| bar
+    13|
+    14| binding.b
       RUBY
     end
 
-    def test_trace_raise_prints_raised_exception
+    def test_trace_exception_prints_raised_exception
       debug_code(program) do
         type 'trace exception'
         assert_line_text(/Enable ExceptionTracer/)
         type 'c'
         assert_line_text(/trace\/exception.+RuntimeError: foo/)
+        assert_line_text(/trace\/exception.+RuntimeError: bar/)
         type 'q!'
       end
     end
@@ -158,6 +167,18 @@ module DEBUGGER__
         assert_line_text(/Enable ExceptionTracer/)
         type 'c'
         assert_line_text(/trace\/exception.+RuntimeError: foo/)
+        assert_line_text(/trace\/exception.+RuntimeError: bar/)
+        type 'q!'
+      end
+    end
+
+    def test_trace_exception_filters_output_with_exception
+      debug_code(program) do
+        type 'trace exception /foo/'
+        assert_line_text(/Enable ExceptionTracer/)
+        type 'c'
+        assert_line_text(/trace\/exception.+RuntimeError: foo/)
+        assert_no_line_text(/trace\/exception.+RuntimeError: bar/)
         type 'q!'
       end
     end
