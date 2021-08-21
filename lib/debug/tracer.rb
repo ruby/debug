@@ -40,9 +40,6 @@ module DEBUGGER__
       enable
     end
 
-    def close
-    end
-
     def header depth
       "DEBUGGER (trace/#{@type}) \#th:#{Thread.current.instance_variable_get(:@__thread_client_id)} \#depth:#{'%-2d'%depth}"
     end
