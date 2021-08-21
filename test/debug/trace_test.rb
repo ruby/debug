@@ -145,7 +145,7 @@ module DEBUGGER__
     def test_trace_exception_prints_raised_exception
       debug_code(program) do
         type 'trace exception'
-        assert_line_text(/Enable ExceptionTracer/)
+        assert_line_text(/Enable ExceptionTracer \(enabled\)/)
         type 'c'
         assert_line_text(/trace\/exception.+RuntimeError: foo/)
         assert_line_text(/trace\/exception.+RuntimeError: bar/)
@@ -156,6 +156,7 @@ module DEBUGGER__
     def test_trace_exception_filters_output_with_file_path
       debug_code(program) do
         type 'trace exception /abc/'
+        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/abc\//)
         assert_line_text(/Enable ExceptionTracer/)
         type 'c'
         assert_no_line_text(/trace\/exception.+RuntimeError: foo/)
@@ -164,7 +165,7 @@ module DEBUGGER__
 
       debug_code(program) do
         type 'trace exception /debug/'
-        assert_line_text(/Enable ExceptionTracer/)
+        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/debug\//)
         type 'c'
         assert_line_text(/trace\/exception.+RuntimeError: foo/)
         assert_line_text(/trace\/exception.+RuntimeError: bar/)
@@ -175,7 +176,7 @@ module DEBUGGER__
     def test_trace_exception_filters_output_with_exception
       debug_code(program) do
         type 'trace exception /foo/'
-        assert_line_text(/Enable ExceptionTracer/)
+        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/foo\//)
         type 'c'
         assert_line_text(/trace\/exception.+RuntimeError: foo/)
         assert_no_line_text(/trace\/exception.+RuntimeError: bar/)
