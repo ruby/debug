@@ -12,7 +12,11 @@ module DEBUGGER__
     end
 
     def create_message fail_msg, test_info
-      "#{fail_msg} on #{test_info.mode} mode\n[DEBUGGER SESSION LOG]\n> #{test_info.backlog.join('> ')}#{debuggee_backlog test_info}"
+      <<~MSG.chomp
+        [DEBUGGER SESSION LOG]
+        > #{test_info.backlog.join('> ')}#{debuggee_backlog test_info}
+        #{fail_msg} on #{test_info.mode} mode
+      MSG
     end
 
     def debuggee_backlog test_info
