@@ -155,11 +155,13 @@ module DEBUGGER__
 
                 test_info.internal_info = JSON.parse(Regexp.last_match(1))
 
-                cmd = deque test_info
-                while cmd.is_a?(Proc)
+                loop do
+                  cmd = deque(test_info)
+                  break unless cmd.is_a?(Proc)
+
                   cmd.call(test_info)
-                  cmd = deque test_info
                 end
+
                 if ASK_CMD.include?(cmd)
                   write.puts(cmd)
                   cmd = deque test_info
