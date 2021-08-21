@@ -155,22 +155,17 @@ module DEBUGGER__
 
                 test_info.internal_info = JSON.parse(Regexp.last_match(1))
 
-                assert_finish test_info if test_info.queue.empty?
-
-                cmd = test_info.queue.pop
+                cmd = deque test_info
                 while cmd.is_a?(Proc)
                   cmd.call(test_info)
-
-                  assert_finish test_info if test_info.queue.empty?
-
-                  cmd = test_info.queue.pop
+                  cmd = deque test_info
                 end
                 if ASK_CMD.include?(cmd)
                   write.puts(cmd)
-                  cmd = test_info.queue.pop
+                  cmd = deque test_info
                   if cmd.is_a?(Proc)
                     assertion = cmd
-                    cmd = test_info.queue.pop
+                    cmd = deque test_info
                   end
                 end
 
@@ -206,6 +201,11 @@ module DEBUGGER__
     end
 
     private
+
+    def deque test_info
+      assert_finish test_info if test_info.queue.empty?
+      test_info.queue.pop
+    end
 
     def check_error(error, test_info)
       if error_index = test_info.last_backlog.index { |l| l.match?(error) }
