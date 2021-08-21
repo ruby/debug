@@ -257,7 +257,7 @@ module DEBUGGER__
     LINE_NUMBER_REGEX = /^\s*\d+\| ?/
 
     def assert_empty_queue test_info, exception: nil
-      message = "Expect all commands/assertions to be executed. Still have #{test_info.queue.length} left."
+      message = "Expected all commands/assertions to be executed. Still have #{test_info.queue.length} left."
       if exception
         message += "\nAssociated exception: #{exception.class} - #{exception.message}" +
                    exception.backtrace.map{|l| "  #{l}\n"}.join
