@@ -70,12 +70,16 @@ module DEBUGGER__
       if tp.path.start_with?(__dir__) ||
          tp.path.start_with?('<internal:') ||
          ThreadClient.current.management? ||
-         (@pattern && !tp.path.match?(@pattern) && !tp.method_id&.match?(@pattern)) ||
-         skip_path?(tp.path)
+         skip_path?(tp.path) ||
+         skip_with_pattern?(tp)
         true
       else
         false
       end
+    end
+
+    def skip_with_pattern?(tp)
+      @pattern && !tp.path.match?(@pattern)
     end
 
     def out tp, msg = nil, depth = caller.size - 1
@@ -142,6 +146,10 @@ module DEBUGGER__
         end
       }
     end
+
+    def skip_with_pattern?(tp)
+      super && !tp.method_id&.match?(@pattern)
+    end
   end
 
   class ExceptionTracer < Tracer
@@ -155,6 +163,10 @@ module DEBUGGER__
       rescue Exception => e
         p e
       end
+    end
+
+    def skip_with_pattern?(tp)
+      super && !tp.raised_exception.inspect.match?(@pattern)
     end
   end
 
