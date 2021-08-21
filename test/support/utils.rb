@@ -12,14 +12,51 @@ module DEBUGGER__
     end
 
     def create_message fail_msg, test_info
-      <<~MSG.chomp
-        [DEBUGGER SESSION LOG]
-        > #{test_info.backlog.join('> ')}#{debuggee_backlog test_info}
+      debugger_msg = <<~DEBUGGER_MSG.chomp
+        ======================
+        ▼  Debugger Session  ▼
+        ======================
+
+        > #{test_info.backlog.join('> ')}
+
+        ======================
+        ▲  Debugger Session  ▲
+        ======================
+      DEBUGGER_MSG
+
+      debuggee_backlog = collect_debuggee_backlog(test_info)
+      debuggee_msg =
+        if debuggee_backlog && !debuggee_backlog.empty?
+          <<~DEBUGGEE_MSG.chomp
+            ======================
+            ▼  Deguggee Session  ▼
+            ======================
+
+            > #{debuggee_backlog.join('> ')}
+
+            ======================
+            ▲  Debuggee Session  ▲
+            ======================
+          DEBUGGEE_MSG
+        end
+
+      failure_msg = <<~FAILURE_MSG.chomp
+        ===================
+        ▼ Failure Message ▼
+        ===================
+
         #{fail_msg} on #{test_info.mode} mode
+      FAILURE_MSG
+
+      <<~MSG.chomp
+
+        #{debugger_msg}
+        #{debuggee_msg}
+        #{failure_msg}
       MSG
     end
 
-    def debuggee_backlog test_info
+    def collect_debuggee_backlog test_info
       return if test_info.mode == 'LOCAL'
 
       backlog = []
@@ -33,7 +70,7 @@ module DEBUGGER__
         # result of `gets` return Errno::EIO in some platform
         # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
       end
-      "\n[DEBUGGEE SESSION LOG]\n> #{backlog.join('> ')}"
+      backlog
     end
 
     TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :backlog, :last_backlog, :internal_info)
