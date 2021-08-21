@@ -154,9 +154,15 @@ module DEBUGGER__
                 test_info.last_backlog.pop
 
                 test_info.internal_info = JSON.parse(Regexp.last_match(1))
+
+                assert_finish test_info if test_info.queue.empty?
+
                 cmd = test_info.queue.pop
                 while cmd.is_a?(Proc)
                   cmd.call(test_info)
+
+                  assert_finish test_info if test_info.queue.empty?
+
                   cmd = test_info.queue.pop
                 end
                 if ASK_CMD.include?(cmd)
@@ -257,6 +263,10 @@ module DEBUGGER__
                    exception.backtrace.map{|l| "  #{l}\n"}.join
       end
       assert_block(FailureMessage.new { create_message message, test_info }) { test_info.queue.empty? }
+    end
+
+    def assert_finish test_info
+      assert_block(create_message('Expected the debugger program to finish', test_info)) { false }
     end
 
     def strip_line_num(str)
