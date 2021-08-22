@@ -2,6 +2,7 @@
 
 module DEBUGGER__
   class Tracer
+    include SkipPathHelper
     include Color
 
     def colorize(str, color)
@@ -70,7 +71,7 @@ module DEBUGGER__
          tp.path.start_with?('<internal:') ||
          ThreadClient.current.management? ||
          (@pattern && !tp.path.match?(@pattern) && !tp.method_id&.match?(@pattern)) ||
-         ((paths = CONFIG[:skip_path]) && !paths.empty? && paths.any?{|path| tp.path.match?(path)})
+         skip_path?(tp.path)
         true
       else
         false

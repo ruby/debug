@@ -7,6 +7,17 @@ require_relative 'frame_info'
 require_relative 'color'
 
 module DEBUGGER__
+  module SkipPathHelper
+    def skip_path?(path)
+      (skip_path = CONFIG[:skip_path]) && skip_path.any?{|skip_path| path.match?(skip_path)}
+    end
+
+    def skip_location?(loc)
+      loc_path = loc.absolute_path || "!eval:#{loc.path}"
+      skip_path?(loc_path)
+    end
+  end
+
   class ThreadClient
     def self.current
       Thread.current[:DEBUGGER__ThreadClient] || begin
@@ -16,6 +27,7 @@ module DEBUGGER__
     end
 
     include Color
+    include SkipPathHelper
 
     attr_reader :location, :thread, :id, :recorder
 
@@ -291,8 +303,7 @@ module DEBUGGER__
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
           loc = caller_locations(1, 1).first
-          loc_path = loc.absolute_path || "!eval:#{loc.path}"
-          next if skip_path?(loc_path)
+          next if skip_location?(loc)
           next if iter && (iter -= 1) > 0
 
           tp.disable
@@ -308,8 +319,7 @@ module DEBUGGER__
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
           loc = caller_locations(1, 1).first
-          loc_path = loc.absolute_path || "!eval:#{loc.path}"
-          next if skip_path?(loc_path)
+          next if skip_location?(loc)
           next if iter && (iter -= 1) > 0
 
           tp.disable
@@ -317,10 +327,6 @@ module DEBUGGER__
         }
         @step_tp.enable
       end
-    end
-
-    def skip_path?(path)
-      CONFIG[:skip_path] && CONFIG[:skip_path].any? { |skip_path| path.match?(skip_path) }
     end
 
     ## cmd helpers
