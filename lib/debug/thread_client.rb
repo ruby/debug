@@ -961,6 +961,8 @@ module DEBUGGER__
       attr_reader :log, :index
       attr_accessor :backup_frames
 
+      include SkipPathHelper
+
       def initialize
         @log = []
         @index = 0
@@ -971,6 +973,8 @@ module DEBUGGER__
           next unless Thread.current == thread
           next if tp.path.start_with? __dir__
           next if tp.path.start_with? '<internal:'
+          loc = caller_locations(1, 1).first
+          next if skip_location?(loc)
 
           frames = DEBUGGER__.capture_frames(__dir__)
           frames.each{|frame|

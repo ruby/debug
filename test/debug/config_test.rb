@@ -222,6 +222,27 @@ module DEBUGGER__
     ensure
       File.unlink(lib_file)
     end
+
+    def test_skip_path_skip_recording_the_frames
+      lib_file = write_lib_temp_file
+      debug_code(program(lib_file)) do
+        type 'record on'
+        type 'c'
+        type 'record'
+        assert_line_text(/6 records/)
+        type 's back'
+        type 's back'
+        type 's back'
+        type 's back'
+        type 's back'
+        assert_line_text(/foo \+ lib_m2/)
+        assert_no_line_text(/def lib_m1/)
+
+        type 'c'
+      end
+    ensure
+      File.unlink(lib_file)
+    end
   end
 
   class ConfigKeepAllocSiteTest < TestCase
