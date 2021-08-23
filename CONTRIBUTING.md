@@ -131,70 +131,70 @@ module DEBUGGER__
     def program
       <<~RUBY
         1| module Foo
-        1|   class Bar
-        2|     def self.a
-        3|       "hello"
-        4|     end
-        5|   end
-        6|   Bar.a
-        7|   bar = Bar.new
-        8| end
+        2|   class Bar
+        3|     def self.a
+        4|       "hello"
+        5|     end
+        6|   end
+        7|   Bar.a
+        8|   bar = Bar.new
+        9| end
       RUBY
     end
     
-    def test_foo
+    def test_1629720194
       debug_code(program) do
         type 's'
         assert_line_num 2
         assert_line_text([
-          /[1, 9] in .*/,
-          /      1| module Foo/,
-          /=>    2|   class Bar/,
-          /      3|     def self.a/,
-          /      4|       "hello"/,
-          /      5|     end/,
-          /      6|   end/,
-          /      7|   Bar.a/,
-          /      8|   bar = Bar.new/,
-          /      9| end/,
-          /=>#0	<module:Foo> at .*/,
-          /  #1	<main> at .*/
+          /\[1, 9\] in .*/,
+          /     1\| module Foo/,
+          /=>   2\|   class Bar/,
+          /     3\|     def self\.a/,
+          /     4\|       "hello"/,
+          /     5\|     end/,
+          /     6\|   end/,
+          /     7\|   Bar\.a/,
+          /     8\|   bar = Bar\.new/,
+          /     9\| end/,
+          /=>\#0\t<module:Foo> at .*/,
+          /  \#1\t<main> at .*/
         ])
         type 'n'
         assert_line_num 3
         assert_line_text([
-          /[1, 9] in .*/,
-          /      1| module Foo/,
-          /      2|   class Bar/,
-          /=>    3|     def self.a/,
-          /      4|       "hello"/,
-          /      5|     end/,
-          /      6|   end/,
-          /      7|   Bar.a/,
-          /      8|   bar = Bar.new/,
-          /      9| end/,
-          /=>#0	<class:Bar> at .*/,
-          /  #1	<module:Foo> at .*/,
-          /  #2	<main> at .*/
+          /\[1, 9\] in .*/,
+          /     1\| module Foo/,
+          /     2\|   class Bar/,
+          /=>   3\|     def self\.a/,
+          /     4\|       "hello"/,
+          /     5\|     end/,
+          /     6\|   end/,
+          /     7\|   Bar\.a/,
+          /     8\|   bar = Bar\.new/,
+          /     9\| end/,
+          /=>\#0\t<class:Bar> at .*/,
+          /  \#1\t<module:Foo> at .*/,
+          /  \# and 1 frames \(use `bt' command for all frames\)/
         ])
         type 'b 7'
-        assert_line_text(//)
+        assert_line_text(/\#0  BP \- Line  .*/)
         type 'c'
         assert_line_num 7
         assert_line_text([
-          /[2, 9] in .*/,
-          /      2|   class Bar/,
-          /      3|     def self.a/,
-          /      4|       "hello"/,
-          /      5|     end/,
-          /      6|   end/,
-          /=>    7|   Bar.a/,
-          /      8|   bar = Bar.new/,
-          /      9| end/,
-          /=>#0	<module:Foo> at .*/,
-          /  #1	<main> at .*/,
+          /\[2, 9\] in .*/,
+          /     2\|   class Bar/,
+          /     3\|     def self\.a/,
+          /     4\|       "hello"/,
+          /     5\|     end/,
+          /     6\|   end/,
+          /=>   7\|   Bar\.a/,
+          /     8\|   bar = Bar\.new/,
+          /     9\| end/,
+          /=>\#0\t<module:Foo> at .*/,
+          /  \#1\t<main> at .*/,
           //,
-          /Stop by #0  BP - Line  .*/
+          /Stop by \#0  BP \- Line  .*/
         ])
         type 'q!'
       end
