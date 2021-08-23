@@ -76,6 +76,7 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
       ENV['RUBY_DEBUG_TEST_ASSERT_AS_STRING'] ||= 'false'
       ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] ||= 'true'
+      ENV['RUBY_DEBUG_NO_RELINE'] = 'true'
 
       PTY.spawn("#{RUBY} -r debug/start #{@debuggee}") do |read, write, _|
         @backlog = []
