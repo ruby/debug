@@ -49,75 +49,75 @@ $ bin/gentest target.rb
 #### 3. Debugger will be executed. You can type any debug commands.
 ```shell
 $ bin/gentest target.rb
+DEBUGGER: Session start (pid: 11139)
 [1, 9] in ~/workspace/debug/target.rb
-=>    1| module Foo
-      2|   class Bar
-      3|     def self.a
-      4|       "hello"
-      5|     end
-      6|   end
-      7|   Bar.a
-      8|   bar = Bar.new
-      9| end
+=>   1| module Foo
+     2|   class Bar
+     3|     def self.a
+     4|       "hello"
+     5|     end
+     6|   end
+     7|   Bar.a
+     8|   bar = Bar.new
+     9| end
 =>#0	<main> at ~/workspace/debug/target.rb:1
 INTERNAL_INFO: {"location":"~/workspace/debug/target.rb:1","line":1}
-
 (rdbg)s
  s
 [1, 9] in ~/workspace/debug/target.rb
-      1| module Foo
-=>    2|   class Bar
-      3|     def self.a
-      4|       "hello"
-      5|     end
-      6|   end
-      7|   Bar.a
-      8|   bar = Bar.new
-      9| end
+     1| module Foo
+=>   2|   class Bar
+     3|     def self.a
+     4|       "hello"
+     5|     end
+     6|   end
+     7|   Bar.a
+     8|   bar = Bar.new
+     9| end
 =>#0	<module:Foo> at ~/workspace/debug/target.rb:2
   #1	<main> at ~/workspace/debug/target.rb:1
 INTERNAL_INFO: {"location":"~/workspace/debug/target.rb:2","line":2}
-
 (rdbg)n
  n
 [1, 9] in ~/workspace/debug/target.rb
-      1| module Foo
-      2|   class Bar
-=>    3|     def self.a
-      4|       "hello"
-      5|     end
-      6|   end
-      7|   Bar.a
-      8|   bar = Bar.new
-      9| end
+     1| module Foo
+     2|   class Bar
+=>   3|     def self.a
+     4|       "hello"
+     5|     end
+     6|   end
+     7|   Bar.a
+     8|   bar = Bar.new
+     9| end
 =>#0	<class:Bar> at ~/workspace/debug/target.rb:3
   #1	<module:Foo> at ~/workspace/debug/target.rb:2
-  #2	<main> at ~/workspace/debug/target.rb:1
+  # and 1 frames (use `bt' command for all frames)
 INTERNAL_INFO: {"location":"~/workspace/debug/target.rb:3","line":3}
-
 (rdbg)b 7
  b 7
+#0  BP - Line  /Users/naotto/workspace/debug/target.rb:7 (line)
 INTERNAL_INFO: {"location":"~/workspace/debug/target.rb:3","line":3}
-
 (rdbg)c
  c
 [2, 9] in ~/workspace/debug/target.rb
-      2|   class Bar
-      3|     def self.a
-      4|       "hello"
-      5|     end
-      6|   end
-=>    7|   Bar.a
-      8|   bar = Bar.new
-      9| end
+     2|   class Bar
+     3|     def self.a
+     4|       "hello"
+     5|     end
+     6|   end
+=>   7|   Bar.a
+     8|   bar = Bar.new
+     9| end
 =>#0	<module:Foo> at ~/workspace/debug/target.rb:7
   #1	<main> at ~/workspace/debug/target.rb:1
 
 Stop by #0  BP - Line  /Users/naotto/workspace/debug/target.rb:7 (line)
 INTERNAL_INFO: {"location":"~/workspace/debug/target.rb:7","line":7}
-
 (rdbg)q!
  q!
+created: /Users/naotto/workspace/debug/test/tool/../debug/foo_test.rb
+    class: FooTest
+    method: test_1629720194
 ```
 #### 4. The test file will be created as `test/debug/foo_test.rb`.
 If the file already exists, **only method** will be added to it.
