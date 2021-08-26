@@ -103,15 +103,15 @@ module DEBUGGER__
         when :call
           out tp, ">#{sp}#{tp.defined_class}\##{tp.method_id}", depth
         when :return
-          out tp, "<#{sp}#{tp.defined_class}\##{tp.method_id} \#=> #{tp.return_value.inspect}", depth
+          out tp, "<#{sp}#{tp.defined_class}\##{tp.method_id} \#=> #{DEBUGGER__.short_inspect(tp.return_value)}", depth
         when :c_call
           out tp, ">#{sp} #{tp.defined_class}\##{tp.method_id}", depth + 1
         when :c_return
-          out tp, "<#{sp} #{tp.defined_class}\##{tp.method_id} \#=> #{tp.return_value.inspect}", depth + 1
+          out tp, "<#{sp} #{tp.defined_class}\##{tp.method_id} \#=> #{DEBUGGER__.short_inspect(tp.return_value)}", depth + 1
         when :b_call
           out tp, ">#{sp}block", depth
         when :b_return
-          out tp, "<#{sp}block \#=> #{tp.return_value.inspect}", depth
+          out tp, "<#{sp}block \#=> #{DEBUGGER__.short_inspect(tp.return_value)}", depth
         end
       }
     end
