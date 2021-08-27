@@ -139,7 +139,7 @@ module DEBUGGER__
 
         exc = tp.raised_exception
 
-        out tp, " #{exc.inspect}"
+        out tp, " #{colorize_magenta(exc.inspect)}"
       rescue Exception => e
         p e
       end
