@@ -219,7 +219,7 @@ module DEBUGGER__
 
       @current_frame_index = 0
 
-      case 
+      case
       when postmortem_frames
         @target_frames = postmortem_frames
         @postmortem = true

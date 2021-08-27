@@ -68,7 +68,8 @@ module DEBUGGER__
     end
 
     def out tp, msg = nil, depth = caller.size - 1
-      buff = "#{header(depth)}#{msg} at #{tp.path}:#{tp.lineno}"
+      location_str = colorize("#{tp.path}:#{tp.lineno}", [:GREEN])
+      buff = "#{header(depth)}#{msg} at #{location_str}"
 
       if false # TODO: Ractor.main?
         ThreadClient.current.on_trace self.object_id, buff
