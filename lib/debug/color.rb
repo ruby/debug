@@ -80,6 +80,10 @@ module DEBUGGER__
       colorize(str, [:BLUE, :BOLD])
     end
 
+    def colorize_magenta(str)
+      colorize(str, [:MAGENTA, :BOLD])
+    end
+
     def colorize_dim(str)
       colorize(str, [:DIM])
     end
