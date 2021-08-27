@@ -2,6 +2,7 @@
 
 module DEBUGGER__
   class Tracer
+    include Color
     attr_reader :type
 
     def initialize ui, pattern: nil, into: nil
@@ -79,6 +80,16 @@ module DEBUGGER__
     def puts msg
       @output.puts msg
     end
+
+    def minfo tp
+      klass = tp.defined_class
+
+      if klass.singleton_class?
+        "#{tp.self}.#{tp.method_id}"
+      else
+        "#{klass}\##{tp.method_id}"
+      end
+    end
   end
 
   class LineTracer < Tracer
@@ -99,19 +110,23 @@ module DEBUGGER__
         depth = caller.size
         sp = ' ' * depth
 
+        call_identifier_str =
+          if tp.defined_class
+            minfo(tp)
+          else
+            "block"
+          end
+
+        call_identifier_str = colorize_blue(call_identifier_str)
+
         case tp.event
-        when :call
-          out tp, ">#{sp}#{tp.defined_class}\##{tp.method_id}", depth
-        when :return
-          out tp, "<#{sp}#{tp.defined_class}\##{tp.method_id} \#=> #{DEBUGGER__.short_inspect(tp.return_value)}", depth
-        when :c_call
-          out tp, ">#{sp} #{tp.defined_class}\##{tp.method_id}", depth + 1
-        when :c_return
-          out tp, "<#{sp} #{tp.defined_class}\##{tp.method_id} \#=> #{DEBUGGER__.short_inspect(tp.return_value)}", depth + 1
-        when :b_call
-          out tp, ">#{sp}block", depth
-        when :b_return
-          out tp, "<#{sp}block \#=> #{DEBUGGER__.short_inspect(tp.return_value)}", depth
+        when :call, :c_call, :b_call
+          depth += 1 if tp.event == :c_call
+          out tp, ">#{sp}#{call_identifier_str}", depth
+        when :return, :c_return, :b_return
+          depth += 1 if tp.event == :c_return
+          return_str = colorize_magenta(DEBUGGER__.short_inspect(tp.return_value))
+          out tp, "<#{sp}#{call_identifier_str} #=> #{return_str}", depth
         end
       }
     end
@@ -140,16 +155,6 @@ module DEBUGGER__
 
     def description
       " for #{@obj_inspect}"
-    end
-
-    def minfo tp
-      klass = tp.defined_class
-
-      if klass.singleton_class?
-        "#{tp.self}.#{tp.method_id}"
-      else
-        "#{klass}\##{tp.method_id}"
-      end
     end
 
     def setup
