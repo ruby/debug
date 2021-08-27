@@ -149,7 +149,7 @@ module DEBUGGER__
   class PassTracer < Tracer
     def initialize ui, obj_id, obj_inspect, **kw
       @obj_id = obj_id
-      @obj_inspect = obj_inspect
+      @obj_inspect = colorize_magenta(obj_inspect)
       super(ui, **kw)
     end
 
@@ -175,16 +175,20 @@ module DEBUGGER__
               "##{method} (#{klass}##{method})"
             end
 
-          out tp, "`#{@obj_inspect}` receives #{method_info}"
+          out tp, " #{@obj_inspect} receives #{colorize_blue(method_info)}"
         else
           b = tp.binding
+          method_info = colorize_blue(minfo(tp))
+
           tp.parameters.each{|type, name|
             next unless name
+
+            colorized_name = colorize_cyan(name)
 
             case type
             when :req, :opt, :key, :keyreq
               if b.local_variable_get(name).object_id == @obj_id
-                out tp, " `#{@obj_inspect}` is used as a parameter `#{name}` of #{minfo(tp)}"
+                out tp, " #{@obj_inspect} is used as a parameter #{colorized_name} of #{method_info}"
               end
             when :rest
               next name == :"*"
@@ -192,7 +196,7 @@ module DEBUGGER__
               ary = b.local_variable_get(name)
               ary.each{|e|
                 if e.object_id == @obj_id
-                  out tp, " `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)}"
+                  out tp, " #{@obj_inspect} is used as a parameter in #{colorized_name} of #{method_info}"
                 end
               }
             when :keyrest
@@ -200,7 +204,7 @@ module DEBUGGER__
               h = b.local_variable_get(name)
               h.each{|k, e|
                 if e.object_id == @obj_id
-                  out tp, " `#{@obj_inspect}` is used as a parameter in `#{name}` of #{minfo(tp)}"
+                  out tp, " #{@obj_inspect} is used as a parameter in #{colorized_name} of #{method_info}"
                 end
               }
             end
