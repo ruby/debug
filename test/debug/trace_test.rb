@@ -282,7 +282,7 @@ module DEBUGGER__
         type 'trace pass 2'
         assert_line_text(/Enable PassTracer/)
         type 'c'
-        assert_line_text(/`2` is used as a parameter `a` of Object#bar/)
+        assert_line_text(/2 is used as a parameter a of Object#bar/)
         type 'q!'
       end
     end
@@ -292,7 +292,7 @@ module DEBUGGER__
         type 'trace pass 3'
         assert_line_text(/Enable PassTracer/)
         type 'c'
-        assert_line_text(/`3` is used as a parameter in `kw` of Object#baz/)
+        assert_line_text(/3 is used as a parameter in kw of Object#baz/)
         type 'q!'
       end
     end
@@ -335,9 +335,9 @@ module DEBUGGER__
           type 'trace pass f'
           type 'c'
           assert_line_text([
-            /`Foo` receives .baz \(#<Class:Foo>.baz\) at/,
-            /`#<Foo:.*>` receives #bar \(Foo#bar\) at/,
-            /`#<Foo:.*>` receives .foobar/
+            /Foo receives .baz \(#<Class:Foo>.baz\) at/,
+            /#<Foo:.*> receives #bar \(Foo#bar\) at/,
+            /#<Foo:.*> receives .foobar/
           ])
           type 'c'
         end
@@ -348,9 +348,9 @@ module DEBUGGER__
           type 'trace pass b'
           type 'c'
           assert_line_text([
-            /`Bar` receives .baz \(#<Class:Foo>.baz\) at/,
-            /`#<Bar:.*>` receives #bar \(Foo#bar\) at/,
-            /`#<Bar:.*>` receives .foobar/
+            /Bar receives .baz \(#<Class:Foo>.baz\) at/,
+            /#<Bar:.*> receives #bar \(Foo#bar\) at/,
+            /#<Bar:.*> receives .foobar/
           ])
           type 'c'
         end
