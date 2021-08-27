@@ -54,8 +54,7 @@ module DEBUGGER__
       result = "#{call_identifier_str} at #{location_str}"
 
       if return_str = frame.return_str
-        return_str = colorize(frame.return_str, [:MAGENTA, :BOLD])
-        result += " #=> #{return_str}"
+        result += " #=> #{colorize_magenta(frame.return_str)}"
       end
 
       result
