@@ -510,7 +510,9 @@ module DEBUGGER__
     end
 
     def truncate(string, width:)
-      string[0 .. (width-4)] + '...'
+      str = string[0 .. (width-4)] + '...'
+      str += ">" if str.start_with?("#<")
+      str
     end
 
     ### cmd: show edit
