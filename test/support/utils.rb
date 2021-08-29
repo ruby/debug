@@ -111,7 +111,6 @@ module DEBUGGER__
     end
 
     def debug_on_local boot_options, test_info
-      # run test on local mode
       test_info.mode = 'LOCAL'
       repl_prompt = /\(rdbg\)/
       cmd = "#{RUBY} #{boot_options} #{temp_file_path}"
