@@ -50,6 +50,21 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_trace_with_into
+      into_file = Tempfile.create(%w[tracer_into .rb])
+
+      debug_code(program) do
+        type "trace call into: #{into_file.path}"
+        type 'c'
+      end
+
+      traces = into_file.read
+      assert_match(/Object#foo at/, traces)
+      assert_match(/Object#foo #=> 11/, traces)
+    ensure
+      File.unlink(into_file) if into_file
+    end
   end
 
   class TraceLineTest < TestCase
