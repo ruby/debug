@@ -236,10 +236,13 @@ module DEBUGGER__
   class CatchBreakpoint < Breakpoint
     attr_reader :last_exc
 
-    def initialize pat
+    def initialize pat, cond, command: nil
       @pat = pat.freeze
       @key = [:catch, @pat].freeze
       @last_exc = nil
+
+      @cond = cond
+      @command = command
 
       super()
     end
@@ -248,6 +251,7 @@ module DEBUGGER__
       @tp = TracePoint.new(:raise){|tp|
         exc = tp.raised_exception
         next if SystemExit === exc
+        next if !safe_eval(tp.binding, @cond) if @cond
         should_suspend = false
 
         exc.class.ancestors.each{|cls|
