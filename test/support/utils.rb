@@ -24,9 +24,8 @@ module DEBUGGER__
         ======================
       DEBUGGER_MSG
 
-      debuggee_backlog = collect_debuggee_backlog(test_info)
       debuggee_msg =
-        if debuggee_backlog && !debuggee_backlog.empty?
+        if test_info.mode != 'LOCAL' && debuggee_backlog = collect_debuggee_backlog(test_info)
           <<~DEBUGGEE_MSG.chomp
             ======================
             ▼  Deguggee Session  ▼
@@ -57,9 +56,10 @@ module DEBUGGER__
     end
 
     def collect_debuggee_backlog test_info
-      return if test_info.mode == 'LOCAL'
-
       backlog = []
+
+      return backlog if test_info.mode == 'LOCAL'
+
       begin
         Timeout.timeout(TIMEOUT_SEC) do
           while (line = test_info.remote_debuggee_info[0].gets)
