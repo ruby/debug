@@ -1124,14 +1124,14 @@ module DEBUGGER__
 
       case expr[:sig]
       when /\A(\d+)\z/
-        add_line_breakpoint @tc.location.path, $1.to_i, cond: expr[:if], command: cmd
+        add_line_breakpoint @tc.location.path, $1.to_i, cond: cond, command: cmd
       when /\A(.+)[:\s+](\d+)\z/
-        add_line_breakpoint $1, $2.to_i, cond: expr[:if], command: cmd
+        add_line_breakpoint $1, $2.to_i, cond: cond, command: cmd
       when /\A(.+)([\.\#])(.+)\z/
-        @tc << [:breakpoint, :method, $1, $2, $3, expr[:if], cmd]
+        @tc << [:breakpoint, :method, $1, $2, $3, cond, cmd]
         return :noretry
       when nil
-        add_check_breakpoint expr[:if]
+        add_check_breakpoint cond
       else
         @ui.puts "Unknown breakpoint format: #{arg}"
         @ui.puts
