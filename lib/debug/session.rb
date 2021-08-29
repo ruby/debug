@@ -1312,7 +1312,7 @@ module DEBUGGER__
       cond = expr[:if]
       cmd = ['catch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
 
-      bp = CatchBreakpoint.new(expr[:sig], cond, command: cmd)
+      bp = CatchBreakpoint.new(expr[:sig], cond: cond, command: cmd)
       add_breakpoint bp
     end
 

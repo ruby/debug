@@ -236,7 +236,7 @@ module DEBUGGER__
   class CatchBreakpoint < Breakpoint
     attr_reader :last_exc
 
-    def initialize pat, cond, command: nil
+    def initialize pat, cond: nil, command: nil
       @pat = pat.freeze
       @key = [:catch, @pat].freeze
       @last_exc = nil
@@ -348,7 +348,7 @@ module DEBUGGER__
   class MethodBreakpoint < Breakpoint
     attr_reader :sig_method_name, :method
 
-    def initialize b, klass_name, op, method_name, cond, command: nil
+    def initialize b, klass_name, op, method_name, cond: nil, command: nil
       @sig_klass_name = klass_name
       @sig_op = op
       @sig_method_name = method_name
