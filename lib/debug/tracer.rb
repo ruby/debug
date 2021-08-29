@@ -3,6 +3,16 @@
 module DEBUGGER__
   class Tracer
     include Color
+
+    def colorize(str, color)
+      # don't colorize trace sent into a file
+      if @into
+        str
+      else
+        super
+      end
+    end
+
     attr_reader :type
 
     def initialize ui, pattern: nil, into: nil
@@ -150,12 +160,16 @@ module DEBUGGER__
   class PassTracer < Tracer
     def initialize ui, obj_id, obj_inspect, **kw
       @obj_id = obj_id
-      @obj_inspect = colorize_magenta(obj_inspect)
+      @obj_inspect = obj_inspect
       super(ui, **kw)
     end
 
     def description
       " for #{@obj_inspect}"
+    end
+
+    def colorized_obj_inspect
+      colorize_magenta(@obj_inspect)
     end
 
     def setup
@@ -176,7 +190,7 @@ module DEBUGGER__
               "##{method} (#{klass}##{method})"
             end
 
-          out tp, " #{@obj_inspect} receives #{colorize_blue(method_info)}"
+          out tp, " #{colorized_obj_inspect} receives #{colorize_blue(method_info)}"
         else
           b = tp.binding
           method_info = colorize_blue(minfo(tp))
@@ -189,7 +203,7 @@ module DEBUGGER__
             case type
             when :req, :opt, :key, :keyreq
               if b.local_variable_get(name).object_id == @obj_id
-                out tp, " #{@obj_inspect} is used as a parameter #{colorized_name} of #{method_info}"
+                out tp, " #{colorized_obj_inspect} is used as a parameter #{colorized_name} of #{method_info}"
               end
             when :rest
               next name == :"*"
@@ -197,7 +211,7 @@ module DEBUGGER__
               ary = b.local_variable_get(name)
               ary.each{|e|
                 if e.object_id == @obj_id
-                  out tp, " #{@obj_inspect} is used as a parameter in #{colorized_name} of #{method_info}"
+                  out tp, " #{colorized_obj_inspect} is used as a parameter in #{colorized_name} of #{method_info}"
                 end
               }
             when :keyrest
@@ -205,7 +219,7 @@ module DEBUGGER__
               h = b.local_variable_get(name)
               h.each{|k, e|
                 if e.object_id == @obj_id
-                  out tp, " #{@obj_inspect} is used as a parameter in #{colorized_name} of #{method_info}"
+                  out tp, " #{colorized_obj_inspect} is used as a parameter in #{colorized_name} of #{method_info}"
                 end
               }
             end
