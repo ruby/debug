@@ -9,7 +9,8 @@ module DEBUGGER__
       1| a = 1
       2| b = 2
       3|
-      4| 1/0
+      4| 1/0 rescue nil
+      5| binding.b
       RUBY
     end
 
@@ -41,14 +42,46 @@ module DEBUGGER__
       end
     end
 
+    def test_catch_works_with_command
+      debug_code(program) do
+        type 'catch ZeroDivisionError pre: p "1234"'
+        assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
+        type 'continue'
+        assert_line_text(/1234/)
+        type 'continue'
+        type 'continue'
+      end
+
+      debug_code(program) do
+        type 'catch ZeroDivisionError do: p "1234"'
+        assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
+        type 'continue'
+        assert_line_text(/1234/)
+        type 'continue'
+      end
+    end
+
+    def test_catch_works_with_condition
+      debug_code(program) do
+        type 'catch ZeroDivisionError if: a == 2 do: p "1234"'
+        assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
+        type 'continue'
+        assert_no_line_text(/1234/)
+        type 'continue'
+      end
+    end
+
     def test_debugger_rejects_duplicated_catch_bp
       debug_code(program) do
         type 'catch ZeroDivisionError'
         type 'catch ZeroDivisionError'
         assert_line_text(/duplicated breakpoint:/)
         type 'continue'
-        assert_line_text('Integer#/')
+
+        assert_line_text('Integer#/') # stopped by catch
         type 'continue'
+
+        type 'continue' # exit the final binding.b
       end
     end
   end

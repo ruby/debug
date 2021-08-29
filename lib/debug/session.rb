@@ -1308,7 +1308,11 @@ module DEBUGGER__
     end
 
     def add_catch_breakpoint arg
-      bp = CatchBreakpoint.new(arg)
+      expr = parse_break arg.strip
+      cond = expr[:if]
+      cmd = ['catch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
+
+      bp = CatchBreakpoint.new(expr[:sig], cond, command: cmd)
       add_breakpoint bp
     end
 
