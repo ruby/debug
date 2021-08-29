@@ -220,7 +220,7 @@ module DEBUGGER__
 
       @current_frame_index = 0
 
-      case 
+      case
       when postmortem_frames
         @target_frames = postmortem_frames
         @postmortem = true
@@ -624,7 +624,7 @@ module DEBUGGER__
       case args.first
       when :method
         klass_name, op, method_name, cond, cmd = args[1..]
-        bp = MethodBreakpoint.new(current_frame.binding, klass_name, op, method_name, cond, command: cmd)
+        bp = MethodBreakpoint.new(current_frame.binding, klass_name, op, method_name, cond: cond, command: cmd)
         begin
           bp.enable
         rescue Exception => e
