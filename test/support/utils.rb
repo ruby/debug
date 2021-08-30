@@ -13,15 +13,11 @@ module DEBUGGER__
 
     def create_message fail_msg, test_info
       debugger_msg = <<~DEBUGGER_MSG.chomp
-        ======================
-        ▼  Debugger Session  ▼
-        ======================
+        --------------------
+        | Debugger Session |
+        --------------------
 
         > #{test_info.backlog.join('> ')}
-
-        ======================
-        ▲  Debugger Session  ▲
-        ======================
       DEBUGGER_MSG
 
       debuggee_msg =
@@ -29,30 +25,27 @@ module DEBUGGER__
           debuggee_backlog = collect_debuggee_backlog(test_info)
 
           <<~DEBUGGEE_MSG.chomp
-            ======================
-            ▼  Debuggee Session  ▼
-            ======================
+            --------------------
+            | Debuggee Session |
+            --------------------
 
             > #{debuggee_backlog.join('> ')}
-
-            ======================
-            ▲  Debuggee Session  ▲
-            ======================
           DEBUGGEE_MSG
         end
 
       failure_msg = <<~FAILURE_MSG.chomp
-        ===================
-        ▼ Failure Message ▼
-        ===================
+        -------------------
+        | Failure Message |
+        -------------------
 
         #{fail_msg} on #{test_info.mode} mode
       FAILURE_MSG
 
       <<~MSG.chomp
-
         #{debugger_msg}
+
         #{debuggee_msg}
+
         #{failure_msg}
       MSG
     end
