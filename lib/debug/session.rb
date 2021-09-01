@@ -95,6 +95,10 @@ module DEBUGGER__
       !@q_evt.closed?
     end
 
+    def break? file, line
+      @bps.has_key? [file, line]
+    end
+
     def check_forked
       unless active?
         # TODO: Support it
@@ -1055,6 +1059,8 @@ module DEBUGGER__
       exit!
     end
 
+    # breakpoint management
+
     def iterate_bps
       deleted_bps = []
       i = 0
@@ -1085,20 +1091,12 @@ module DEBUGGER__
       nil
     end
 
-    def delete_breakpoint arg = nil
-      case arg
-      when nil
-        @bps.each{|key, bp| bp.delete}
-        @bps.clear
-      else
-        del_bp = nil
-        iterate_bps{|key, bp, i| del_bp = bp if i == arg}
-        if del_bp
-          del_bp.delete
-          @bps.delete del_bp.key
-          return [arg, del_bp]
-        end
-      end
+    def rehash_bps
+      bps = @bps.values
+      @bps.clear
+      bps.each{|bp|
+        add_breakpoint bp
+      }
     end
 
     BREAK_KEYWORDS = %w(if: do: pre:).freeze
@@ -1137,6 +1135,59 @@ module DEBUGGER__
         @ui.puts
         show_help 'b'
       end
+    end
+
+    def add_breakpoint bp
+      # don't repeat commands that add breakpoints
+      @repl_prev_line = nil
+
+      if @bps.has_key? bp.key
+        unless bp.duplicable?
+          @ui.puts "duplicated breakpoint: #{bp}"
+          bp.disable
+        end
+      else
+        @bps[bp.key] = bp
+      end
+    end
+
+    def delete_breakpoint arg = nil
+      case arg
+      when nil
+        @bps.each{|key, bp| bp.delete}
+        @bps.clear
+      else
+        del_bp = nil
+        iterate_bps{|key, bp, i| del_bp = bp if i == arg}
+        if del_bp
+          del_bp.delete
+          @bps.delete del_bp.key
+          return [arg, del_bp]
+        end
+      end
+    end
+
+    def add_catch_breakpoint arg
+      expr = parse_break arg.strip
+      cond = expr[:if]
+      cmd = ['catch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
+
+      bp = CatchBreakpoint.new(expr[:sig], cond: cond, command: cmd)
+      add_breakpoint bp
+    end
+
+    def add_check_breakpoint expr
+      bp = CheckBreakpoint.new(expr)
+      add_breakpoint bp
+    end
+
+    def add_line_breakpoint file, line, **kw
+      file = resolve_path(file)
+      bp = LineBreakpoint.new(file, line, **kw)
+
+      add_breakpoint bp
+    rescue Errno::ENOENT => e
+      @ui.puts e.message
     end
 
     # threads
@@ -1279,46 +1330,12 @@ module DEBUGGER__
       end
     end
 
-    # breakpoint management
-
-    def add_breakpoint bp
-      # don't repeat commands that add breakpoints
-      @repl_prev_line = nil
-
-      if @bps.has_key? bp.key
-        unless bp.duplicable?
-          @ui.puts "duplicated breakpoint: #{bp}"
-          bp.disable
-        end
-      else
-        @bps[bp.key] = bp
+    def pending_line_breakpoints
+      @bps.find_all do |key, bp|
+        LineBreakpoint === bp && !bp.iseq
+      end.each do |key, bp|
+        yield bp
       end
-    end
-
-    def rehash_bps
-      bps = @bps.values
-      @bps.clear
-      bps.each{|bp|
-        add_breakpoint bp
-      }
-    end
-
-    def break? file, line
-      @bps.has_key? [file, line]
-    end
-
-    def add_catch_breakpoint arg
-      expr = parse_break arg.strip
-      cond = expr[:if]
-      cmd = ['catch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
-
-      bp = CatchBreakpoint.new(expr[:sig], cond: cond, command: cmd)
-      add_breakpoint bp
-    end
-
-    def add_check_breakpoint expr
-      bp = CheckBreakpoint.new(expr)
-      add_breakpoint bp
     end
 
     def resolve_path file
@@ -1337,23 +1354,6 @@ module DEBUGGER__
       end
 
       raise
-    end
-
-    def add_line_breakpoint file, line, **kw
-      file = resolve_path(file)
-      bp = LineBreakpoint.new(file, line, **kw)
-
-      add_breakpoint bp
-    rescue Errno::ENOENT => e
-      @ui.puts e.message
-    end
-
-    def pending_line_breakpoints
-      @bps.find_all do |key, bp|
-        LineBreakpoint === bp && !bp.iseq
-      end.each do |key, bp|
-        yield bp
-      end
     end
 
     def method_added tp
