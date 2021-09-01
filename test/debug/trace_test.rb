@@ -54,12 +54,13 @@ module DEBUGGER__
     def test_trace_with_into
       into_file = Tempfile.create(%w[tracer_into .rb])
 
-      debug_code(program) do
+      debug_code(program, remote: false) do
         type "trace call into: #{into_file.path}"
         type 'c'
       end
 
       traces = into_file.read
+      assert_match(/PID:\d+ CallTracer/, traces)
       assert_match(/Object#foo at/, traces)
       assert_match(/Object#foo #=> 11/, traces)
     ensure
