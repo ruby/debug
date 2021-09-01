@@ -482,7 +482,7 @@ module DEBUGGER__
         check_postmortem
 
         if arg
-          bp = add_catch_breakpoint arg
+          bp = repl_add_catch_breakpoint arg
           show_bps bp if bp
         else
           show_bps
@@ -1167,7 +1167,7 @@ module DEBUGGER__
       end
     end
 
-    def add_catch_breakpoint arg
+    def repl_add_catch_breakpoint arg
       expr = parse_break arg.strip
       cond = expr[:if]
       cmd = ['catch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
