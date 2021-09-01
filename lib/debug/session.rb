@@ -1323,18 +1323,14 @@ module DEBUGGER__
       DEBUGGER__.info "Load #{iseq.absolute_path || iseq.path}"
       @sr.add iseq, src
 
-      pending_line_breakpoints do |bp|
+      pending_line_breakpoints = @bps.find_all do |key, bp|
+        LineBreakpoint === bp && !bp.iseq
+      end
+
+      pending_line_breakpoints.each do |_key, bp|
         if bp.path == (iseq.absolute_path || iseq.path)
           bp.try_activate
         end
-      end
-    end
-
-    def pending_line_breakpoints
-      @bps.find_all do |key, bp|
-        LineBreakpoint === bp && !bp.iseq
-      end.each do |key, bp|
-        yield bp
       end
     end
 
