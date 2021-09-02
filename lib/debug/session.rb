@@ -95,7 +95,7 @@ module DEBUGGER__
       !@q_evt.closed?
     end
 
-    def break? file, line
+    def break_at? file, line
       @bps.has_key? [file, line]
     end
 

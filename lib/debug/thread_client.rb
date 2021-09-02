@@ -297,7 +297,7 @@ module DEBUGGER__
 
       if SUPPORT_TARGET_THREAD
         @step_tp = TracePoint.new(:line, :b_return, :return){|tp|
-          next if SESSION.break? tp.path, tp.lineno
+          next if SESSION.break_at? tp.path, tp.lineno
           next if !yield
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
@@ -313,7 +313,7 @@ module DEBUGGER__
       else
         @step_tp = TracePoint.new(:line, :b_return, :return){|tp|
           next if thread != Thread.current
-          next if SESSION.break? tp.path, tp.lineno
+          next if SESSION.break_at? tp.path, tp.lineno
           next if !yield
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
