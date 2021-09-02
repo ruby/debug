@@ -191,7 +191,7 @@ module DEBUGGER__
 
                 loop do
                   cmd = deque(test_info)
-                  break unless cmd.is_a?(Proc)
+                  break if cmd.is_a?(String)
 
                   cmd.call(test_info)
                 end
@@ -239,7 +239,6 @@ module DEBUGGER__
     private
 
     def deque test_info
-      assert_finish test_info if test_info.queue.empty?
       test_info.queue.pop
     end
 
@@ -298,11 +297,16 @@ module DEBUGGER__
         message += "\nAssociated exception: #{exception.class} - #{exception.message}" +
                    exception.backtrace.map{|l| "  #{l}\n"}.join
       end
-      assert_block(FailureMessage.new { create_message message, test_info }) { test_info.queue.empty? }
-    end
+      assert_block(FailureMessage.new { create_message message, test_info }) do
+        return true if test_info.queue.empty?
 
-    def assert_finish test_info
-      assert_block(create_message('Expected the debugger program to finish', test_info)) { false }
+        case test_info.queue.pop.to_s
+        when /flunk_finish/
+          true
+        else
+          false
+        end
+      end
     end
 
     def strip_line_num(str)
