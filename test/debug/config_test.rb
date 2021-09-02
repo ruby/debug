@@ -190,91 +190,87 @@ module DEBUGGER__
       File.unlink t if t
     end
 
-    def test_skip_path_skip_frames_that_match_the_path
+    def debug_code
       with_tempfile do |lib_file|
-        debug_code(program(lib_file)) do
-          type "config set skip_path /#{TEMPFILE_BASENAME}/"
-          type 'b 9'
-          type 'continue'
-          type 's'
+        super program(lib_file)
+      end
+    end
 
-          # skip definition of lib_m1
-          assert_line_text(/foo \+ lib_m2/)
-          assert_no_line_text(/def lib_m1/)
+    def test_skip_path_skip_frames_that_match_the_path
+      debug_code do
+        type "config set skip_path /#{TEMPFILE_BASENAME}/"
+        type 'b 9'
+        type 'continue'
+        type 's'
 
-          # don't display frame that matches skip_path
-          assert_line_text([
-            /#0\s+block in <main> at/,
-            /#2\s+<main> at/
-          ])
-          assert_no_line_text(/#1/)
-          type 'c'
+        # skip definition of lib_m1
+        assert_line_text(/foo \+ lib_m2/)
+        assert_no_line_text(/def lib_m1/)
 
-          # make sure the debugger and program can proceed normally
-          type 'p "result: #{result.to_s}"'
-          assert_line_text(/result: 3/)
+        # don't display frame that matches skip_path
+        assert_line_text([
+          /#0\s+block in <main> at/,
+          /#2\s+<main> at/
+        ])
+        assert_no_line_text(/#1/)
+        type 'c'
 
-          type 'c'
-        end
+        # make sure the debugger and program can proceed normally
+        type 'p "result: #{result.to_s}"'
+        assert_line_text(/result: 3/)
+
+        type 'c'
       end
     end
 
     def test_skip_path_skip_tracer_output
-      with_tempfile do |lib_file|
-        debug_code(program(lib_file)) do
-          type "config set skip_path /#{TEMPFILE_BASENAME}/"
-          type 'trace line'
-          type 'c'
+      debug_code do
+        type "config set skip_path /#{TEMPFILE_BASENAME}/"
+        type 'trace line'
+        type 'c'
 
-          assert_no_line_text(/#{TEMPFILE_BASENAME}.*\.rb/)
+        assert_no_line_text(/#{TEMPFILE_BASENAME}.*\.rb/)
 
-          type 'c'
-        end
+        type 'c'
       end
     end
 
     def test_skip_path_skip_recording_the_frames
-      with_tempfile do |lib_file|
-        debug_code(program(lib_file)) do
-          type "config set skip_path /#{TEMPFILE_BASENAME}/"
-          type 'record on'
-          type 'c'
-          type 'record'
-          assert_line_text(/5 records/)
-          type 's back'
-          type 's back'
-          type 's back'
-          type 's back'
-          type 's back'
-          assert_line_text(/foo \+ lib_m2/)
-          assert_no_line_text(/def lib_m1/)
+      debug_code do
+        type "config set skip_path /#{TEMPFILE_BASENAME}/"
+        type 'record on'
+        type 'c'
+        type 'record'
+        assert_line_text(/5 records/)
+        type 's back'
+        type 's back'
+        type 's back'
+        type 's back'
+        type 's back'
+        assert_line_text(/foo \+ lib_m2/)
+        assert_no_line_text(/def lib_m1/)
 
-          type 'c'
-        end
+        type 'c'
       end
     end
 
     def test_skip_path_skip_catch_breakpoint
       # without skip_path
-      with_tempfile do |lib_file|
-        debug_code(program(lib_file)) do
-          type 'catch RuntimeError'
-          type 'c'
-          assert_line_text(/RuntimeError/)
-          type 'c'
-          type 'c'
-        end
+      debug_code do
+        type 'catch RuntimeError'
+        type 'c'
+        assert_line_text(/RuntimeError/)
+        type 'c'
+        type 'c'
       end
 
       # with skip_path
-      with_tempfile do |lib_file|
-        debug_code(program(lib_file)) do
-          type "config set skip_path /#{TEMPFILE_BASENAME}/"
-          type 'catch RuntimeError'
-          type 'c'
-          assert_no_line_text(/RuntimeError/)
-          type 'c'
-        end
+      debug_code do
+        type "config set skip_path /#{TEMPFILE_BASENAME}/"
+        type 'catch RuntimeError'
+        type 'c'
+        assert_no_line_text(/RuntimeError/)
+        type 'c'
       end
     end
   end
