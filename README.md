@@ -542,10 +542,10 @@ The `<...>` notation means the argument.
   * Add a line tracer. It indicates line events.
 * `trace call`
   * Add a call tracer. It indicate call/return events.
-* `trace raise`
-  * Add a raise tracer. It indicates raise events.
-* `trace pass <expr>`
-  * Add a pass tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
+* `trace exception`
+  * Add an exception tracer. It indicates raising exceptions.
+* `trace object <expr>`
+  * Add an object tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
 * `trace ... </pattern/>`
   * Indicates only matched events to `</pattern/>` (RegExp).
 * `trace ... into: <file>`

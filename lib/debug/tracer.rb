@@ -144,7 +144,7 @@ module DEBUGGER__
     end
   end
 
-  class RaiseTracer < Tracer
+  class ExceptionTracer < Tracer
     def setup
       @tracer = TracePoint.new(:raise) do |tp|
         next if skip?(tp)
@@ -158,7 +158,7 @@ module DEBUGGER__
     end
   end
 
-  class PassTracer < Tracer
+  class ObjectTracer < Tracer
     def initialize ui, obj_id, obj_inspect, **kw
       @obj_id = obj_id
       @obj_inspect = obj_inspect

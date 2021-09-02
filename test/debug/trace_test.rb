@@ -122,7 +122,7 @@ module DEBUGGER__
     end
   end
 
-  class TraceRaiseTest < TestCase
+  class TraceExceptionTest < TestCase
     def program
       <<~RUBY
      1| begin
@@ -136,28 +136,28 @@ module DEBUGGER__
 
     def test_trace_raise_prints_raised_exception
       debug_code(program) do
-        type 'trace raise'
-        assert_line_text(/Enable RaiseTracer/)
+        type 'trace exception'
+        assert_line_text(/Enable ExceptionTracer/)
         type 'c'
-        assert_line_text(/trace\/raise.+RuntimeError: foo/)
+        assert_line_text(/trace\/exception.+RuntimeError: foo/)
         type 'q!'
       end
     end
 
-    def test_trace_raise_filters_output_with_file_path
+    def test_trace_exception_filters_output_with_file_path
       debug_code(program) do
-        type 'trace raise /abc/'
-        assert_line_text(/Enable RaiseTracer/)
+        type 'trace exception /abc/'
+        assert_line_text(/Enable ExceptionTracer/)
         type 'c'
-        assert_no_line_text(/trace\/raise.+RuntimeError: foo/)
+        assert_no_line_text(/trace\/exception.+RuntimeError: foo/)
         type 'q!'
       end
 
       debug_code(program) do
-        type 'trace raise /debug/'
-        assert_line_text(/Enable RaiseTracer/)
+        type 'trace exception /debug/'
+        assert_line_text(/Enable ExceptionTracer/)
         type 'c'
-        assert_line_text(/trace\/raise.+RuntimeError: foo/)
+        assert_line_text(/trace\/exception.+RuntimeError: foo/)
         type 'q!'
       end
     end
@@ -241,7 +241,7 @@ module DEBUGGER__
     end
   end
 
-  class TracePassTest < TestCase
+  class TraceObjectTest < TestCase
     def program
       if RUBY_VERSION >= "2.7"
         <<~RUBY
@@ -270,18 +270,18 @@ module DEBUGGER__
 
     def test_not_tracing_anonymous_rest_argument
       debug_code(program) do
-        type 'trace pass 1'
-        assert_line_text(/Enable PassTracer/)
+        type 'trace object 1'
+        assert_line_text(/Enable ObjectTracer/)
         type 'c'
-        assert_no_line_text(/trace\/pass/)
+        assert_no_line_text(/trace\/object/)
         type 'q!'
       end
     end if RUBY_VERSION >= "2.7"
 
     def test_tracing_key_argument
       debug_code(program) do
-        type 'trace pass 2'
-        assert_line_text(/Enable PassTracer/)
+        type 'trace object 2'
+        assert_line_text(/Enable ObjectTracer/)
         type 'c'
         assert_line_text(/2 is used as a parameter a of Object#bar/)
         type 'q!'
@@ -290,8 +290,8 @@ module DEBUGGER__
 
     def test_tracing_keyrest_argument
       debug_code(program) do
-        type 'trace pass 3'
-        assert_line_text(/Enable PassTracer/)
+        type 'trace object 3'
+        assert_line_text(/Enable ObjectTracer/)
         type 'c'
         assert_line_text(/3 is used as a parameter in kw of Object#baz/)
         type 'q!'
@@ -332,8 +332,8 @@ module DEBUGGER__
       def test_tracer_prints_correct_method_receiving_messages
         debug_code(program) do
           type 'c'
-          type 'trace pass Foo'
-          type 'trace pass f'
+          type 'trace object Foo'
+          type 'trace object f'
           type 'c'
           assert_line_text([
             /Foo receives .baz \(#<Class:Foo>.baz\) at/,
@@ -345,8 +345,8 @@ module DEBUGGER__
 
         debug_code(program) do
           type 'c'
-          type 'trace pass Bar'
-          type 'trace pass b'
+          type 'trace object Bar'
+          type 'trace object b'
           type 'c'
           assert_line_text([
             /Bar receives .baz \(#<Class:Foo>.baz\) at/,

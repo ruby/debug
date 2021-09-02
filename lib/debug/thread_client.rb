@@ -897,7 +897,7 @@ module DEBUGGER__
 
         when :trace
           case args.shift
-          when :pass
+          when :object
             begin
               obj = frame_eval args.shift, re_raise: true
               opt = args.shift

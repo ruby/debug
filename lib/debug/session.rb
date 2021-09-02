@@ -228,7 +228,7 @@ module DEBUGGER__
             obj_id = ev_args[1]
             obj_inspect = ev_args[2]
             opt = ev_args[3]
-            @tracers << t = PassTracer.new(@ui, obj_id, obj_inspect, **opt)
+            @tracers << t = ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
             @ui.puts "Enable #{t.to_s}"
           else
             # ignore
@@ -726,10 +726,10 @@ module DEBUGGER__
       #   * Add a line tracer. It indicates line events.
       # * `trace call`
       #   * Add a call tracer. It indicate call/return events.
-      # * `trace raise`
-      #   * Add a raise tracer. It indicates raise events.
-      # * `trace pass <expr>`
-      #   * Add a pass tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
+      # * `trace exception`
+      #   * Add an exception tracer. It indicates raising exceptions.
+      # * `trace object <expr>`
+      #   * Add an object tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
       # * `trace ... </pattern/>`
       #   * Indicates only matched events to `</pattern/>` (RegExp).
       # * `trace ... into: <file>`
@@ -768,13 +768,13 @@ module DEBUGGER__
           @ui.puts "Enable #{t.to_s}"
           return :retry
 
-        when /\Araise\z/
-          @tracers << t = RaiseTracer.new(@ui, pattern: pattern, into: into)
+        when /\Aexception\z/
+          @tracers << t = ExceptionTracer.new(@ui, pattern: pattern, into: into)
           @ui.puts "Enable #{t.to_s}"
           return :retry
 
-        when /\Apass\s+(.+)/
-          @tc << [:trace, :pass, $1.strip, {pattern: pattern, into: into}]
+        when /\Aobject\s+(.+)/
+          @tc << [:trace, :object, $1.strip, {pattern: pattern, into: into}]
 
         when /\Aoff\s+(\d+)\z/
           if t = @tracers[$1.to_i]
@@ -785,7 +785,7 @@ module DEBUGGER__
           end
           return :retry
 
-        when /\Aoff(\s+(line|call|type))?\z/
+        when /\Aoff(\s+(line|call|exception|object))?\z/
           @tracers.each{|t|
             if $2.nil? || t.type == $2
               t.disable
