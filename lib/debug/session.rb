@@ -1013,52 +1013,6 @@ module DEBUGGER__
       end
     end
 
-    def msig klass, receiver
-      if klass.singleton_class?
-        "#{receiver}."
-      else
-        "#{klass}#"
-      end
-    end
-
-    def pretty_tp tp
-      loc = "#{tp.path}:#{tp.lineno}"
-      level = caller.size
-
-      info =
-      case tp.event
-      when :line
-        "line at #{loc}"
-      when :call, :c_call
-        klass = tp.defined_class
-        "#{tp.event} #{msig(klass, tp.self)}#{tp.method_id} at #{loc}"
-      when :return, :c_return
-        klass = tp.defined_class
-        "#{tp.event} #{msig(klass, tp.self)}#{tp.method_id} => #{tp.return_value.inspect} at #{loc}"
-      when :b_call
-        "b_call at #{loc}"
-      when :b_return
-        "b_return => #{tp.return_value} at #{loc}"
-      when :class
-        "class #{tp.self} at #{loc}"
-      when :end
-        "class #{tp.self} end at #{loc}"
-      else
-        "#{tp.event} at #{loc}"
-      end
-
-      case tp.event
-      when :call, :b_call, :return, :b_return, :class, :end
-        level -= 1
-      end
-
-      "Tracing:#{' ' * level} #{info}"
-    rescue => e
-      p e
-      pp e.backtrace
-      exit!
-    end
-
     # breakpoint management
 
     def iterate_bps
