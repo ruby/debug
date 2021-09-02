@@ -64,7 +64,7 @@ module DEBUGGER__
       assert_match(/Object#foo at/, traces)
       assert_match(/Object#foo #=> 11/, traces)
     ensure
-      File.unlink(into_file) if into_file
+      File.unlink into_file if into_file
     end
   end
 

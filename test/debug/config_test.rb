@@ -153,16 +153,18 @@ module DEBUGGER__
         end
 
         begin
-          raise "should not break on catch breakpont"
+          raise "raised in lib_file"
         rescue => e
           # rescue
         end
       RUBY
     end
 
+    TEMPFILE_BASENAME = __FILE__.hash.abs.to_s(16)
+
     def program(lib_file)
       <<~RUBY
-     1| DEBUGGER__::CONFIG[:skip_path] = [/library/]
+     1|
      2|
      3| load "#{lib_file.path}"
      4|
@@ -178,85 +180,101 @@ module DEBUGGER__
       RUBY
     end
 
-    def write_lib_temp_file
-      Tempfile.create(%w[library .rb]).tap do |f|
+    def with_tempfile
+      t = Tempfile.create([TEMPFILE_BASENAME, '.rb']).tap do |f|
         f.write(lib_file)
         f.close
       end
+      yield t
+    ensure
+      File.unlink t if t
     end
 
     def test_skip_path_skip_frames_that_match_the_path
-      lib_file = write_lib_temp_file
-      debug_code(program(lib_file)) do
-        type 'b 9'
-        type 'continue'
-        type 's'
+      with_tempfile do |lib_file|
+        debug_code(program(lib_file)) do
+          type "config set skip_path /#{TEMPFILE_BASENAME}/"
+          type 'b 9'
+          type 'continue'
+          type 's'
 
-        # skip definition of lib_m1
-        assert_line_text(/foo \+ lib_m2/)
-        assert_no_line_text(/def lib_m1/)
+          # skip definition of lib_m1
+          assert_line_text(/foo \+ lib_m2/)
+          assert_no_line_text(/def lib_m1/)
 
-        # don't display frame that matches skip_path
-        assert_line_text([
-          /#0\s+block in <main> at/,
-          /#2\s+<main> at/
-        ])
-        assert_no_line_text(/#1/)
+          # don't display frame that matches skip_path
+          assert_line_text([
+            /#0\s+block in <main> at/,
+            /#2\s+<main> at/
+          ])
+          assert_no_line_text(/#1/)
+          type 'c'
 
-        type 'c'
+          # make sure the debugger and program can proceed normally
+          type 'p "result: #{result.to_s}"'
+          assert_line_text(/result: 3/)
 
-        # make sure the debugger and program can proceed normally
-        type 'p "result: #{result.to_s}"'
-        assert_line_text(/result: 3/)
-
-        type 'c'
+          type 'c'
+        end
       end
-    ensure
-      File.unlink(lib_file)
     end
 
     def test_skip_path_skip_tracer_output
-      lib_file = write_lib_temp_file
-      debug_code(program(lib_file)) do
-        type 'trace line'
-        type 'c'
+      with_tempfile do |lib_file|
+        debug_code(program(lib_file)) do
+          type "config set skip_path /#{TEMPFILE_BASENAME}/"
+          type 'trace line'
+          type 'c'
 
-        assert_no_line_text(/library.*\.rb/)
+          assert_no_line_text(/#{TEMPFILE_BASENAME}.*\.rb/)
 
-        type 'c'
+          type 'c'
+        end
       end
-    ensure
-      File.unlink(lib_file)
     end
 
     def test_skip_path_skip_recording_the_frames
-      lib_file = write_lib_temp_file
-      debug_code(program(lib_file)) do
-        type 'record on'
-        type 'c'
-        type 'record'
-        assert_line_text(/6 records/)
-        type 's back'
-        type 's back'
-        type 's back'
-        type 's back'
-        type 's back'
-        assert_line_text(/foo \+ lib_m2/)
-        assert_no_line_text(/def lib_m1/)
+      with_tempfile do |lib_file|
+        debug_code(program(lib_file)) do
+          type "config set skip_path /#{TEMPFILE_BASENAME}/"
+          type 'record on'
+          type 'c'
+          type 'record'
+          assert_line_text(/5 records/)
+          type 's back'
+          type 's back'
+          type 's back'
+          type 's back'
+          type 's back'
+          assert_line_text(/foo \+ lib_m2/)
+          assert_no_line_text(/def lib_m1/)
 
-        type 'c'
+          type 'c'
+        end
       end
-    ensure
-      File.unlink(lib_file)
     end
 
     def test_skip_path_skip_catch_breakpoint
-      lib_file = write_lib_temp_file
-      debug_code(program(lib_file)) do
-        type 'catch RuntimeError'
-        type 'c'
-        assert_no_line_text(/should not break on catch breakpont/)
-        type 'c'
+      # without skip_path
+      with_tempfile do |lib_file|
+        debug_code(program(lib_file)) do
+          type 'catch RuntimeError'
+          type 'c'
+          assert_line_text(/RuntimeError/)
+          type 'c'
+          type 'c'
+        end
+      end
+
+      # with skip_path
+      with_tempfile do |lib_file|
+        debug_code(program(lib_file)) do
+          type "config set skip_path /#{TEMPFILE_BASENAME}/"
+          type 'catch RuntimeError'
+          type 'c'
+          assert_no_line_text(/RuntimeError/)
+          type 'c'
+        end
       end
     end
   end
