@@ -1592,7 +1592,7 @@ module DEBUGGER__
   def self.parse_help
     helps = Hash.new{|h, k| h[k] = []}
     desc = cat = nil
-    cmds = []
+    cmds = Hash.new
 
     File.read(__FILE__).each_line do |line|
       case line
@@ -1605,7 +1605,10 @@ module DEBUGGER__
         ws = $1.split(/,\s*/).map{|e| e.gsub('\'', '')}
         helps[cat] << [ws, desc]
         desc = nil
-        cmds.concat ws
+        max_w = ws.max_by{|w| w.length}
+        ws.each{|w|
+          cmds[w] = max_w
+        }
       when /\A\s+# (\s*\*.+)/
         if desc
           desc << "\n" + $1

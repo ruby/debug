@@ -24,6 +24,7 @@ module DEBUGGER__
 
       def readline_setup prompt
         commands = DEBUGGER__.commands
+
         Reline.completion_proc = -> given do
           buff = Reline.line_buffer
           Reline.completion_append_character= ' '
@@ -36,7 +37,7 @@ module DEBUGGER__
             end
             files
           else
-            commands.grep(/\A#{given}/)
+            commands.keys.grep(/\A#{given}/)
           end
         end
 
@@ -44,15 +45,22 @@ module DEBUGGER__
           c, rest = get_command buff
 
           case
-          when commands.include?(c.strip)
+          when commands.keys.include?(c = c.strip)
             # [:DIM, :CYAN, :BLUE, :CLEAR, :UNDERLINE, :REVERSE, :RED, :GREEN, :MAGENTA, :BOLD, :YELLOW]
             cmd = colorize(c.strip, [:CYAN, :UNDERLINE])
-            rest = (rest ? colorize_code(rest) : '') + colorize("    #command", [:DIM])
+
+            if commands[c] == c
+              rprompt = colorize("    # command", [:DIM])
+            else
+              rprompt = colorize("    # #{commands[c]} command", [:DIM])
+            end
+
+            rest = (rest ? colorize_code(rest) : '') + rprompt
             cmd + rest
           when !rest && /\A\s*[a-z]*\z/ =~ c
             buff
           else
-            colorize_code(buff.chomp) + colorize("    #ruby", [:DIM])
+            colorize_code(buff.chomp) + colorize("    # ruby", [:DIM])
           end
         end
       end
@@ -88,7 +96,7 @@ module DEBUGGER__
             end
             files
           else
-            DEBUGGER__.commands.grep(/\A#{given}/)
+            DEBUGGER__.commands.keys.grep(/\A#{given}/)
           end
         }
       end
