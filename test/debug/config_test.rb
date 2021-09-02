@@ -151,6 +151,12 @@ module DEBUGGER__
         def lib_m2
           2
         end
+
+        begin
+          raise "should not break on catch breakpont"
+        rescue => e
+          # rescue
+        end
       RUBY
     end
 
@@ -242,6 +248,16 @@ module DEBUGGER__
       end
     ensure
       File.unlink(lib_file)
+    end
+
+    def test_skip_path_skip_catch_breakpoint
+      lib_file = write_lib_temp_file
+      debug_code(program(lib_file)) do
+        type 'catch RuntimeError'
+        type 'c'
+        assert_no_line_text(/should not break on catch breakpont/)
+        type 'c'
+      end
     end
   end
 

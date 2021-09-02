@@ -235,6 +235,7 @@ module DEBUGGER__
 
   class CatchBreakpoint < Breakpoint
     attr_reader :last_exc
+    include SkipPathHelper
 
     def initialize pat, cond: nil, command: nil
       @pat = pat.freeze
@@ -249,6 +250,7 @@ module DEBUGGER__
 
     def setup
       @tp = TracePoint.new(:raise){|tp|
+        next if skip_path?(tp.path)
         exc = tp.raised_exception
         next if SystemExit === exc
         next if !safe_eval(tp.binding, @cond) if @cond
