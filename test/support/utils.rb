@@ -195,19 +195,30 @@ module DEBUGGER__
                   cmd.call(test_info)
                 end
 
+                assertion = []
                 if ASK_CMD.include?(cmd)
                   write.puts(cmd)
-                  cmd = deque test_info
-                  if cmd.is_a?(Proc)
-                    assertion = cmd
+
+                  loop do
                     cmd = deque test_info
+
+                    case cmd.to_s
+                    when /Proc/
+                      assertion.push cmd
+                    when /flunk_finish/
+                      cmd.call test_info
+                    else
+                      break
+                    end
                   end
                 end
 
                 write.puts(cmd)
                 test_info.last_backlog.clear
               when %r{\[y/n\]}i
-                assertion&.call(test_info)
+                assertion.each do |a|
+                  a.call test_info
+                end
               when repl_prompt
                 # check if the previous command breaks the debugger before continuing
                 check_error(/REPL ERROR/, test_info)
