@@ -5,6 +5,7 @@ require 'io/console/size'
 
 require_relative 'config'
 require_relative 'version'
+require_relative 'console'
 
 # $VERBOSE = true
 
@@ -12,20 +13,10 @@ module DEBUGGER__
   class CommandLineOptionError < Exception; end
 
   class Client
-    begin
-      require 'readline.so'
-      def readline
-        Readline.readline("\n(rdbg:remote) ", true)
-      end
-    rescue LoadError
-      def readline
-        print "\n(rdbg:remote) "
-        gets
-      end
-    end
-
     def initialize argv
       return util(argv) if String === argv
+
+      @console = Console.new
 
       case argv.size
       when 0
@@ -51,6 +42,10 @@ module DEBUGGER__
       @width_changed = false
 
       send "version: #{VERSION} width: #{@width} cookie: #{CONFIG[:cookie]}"
+    end
+
+    def readline
+      @console.readline "(rdbg:remote) "
     end
 
     def util name

@@ -364,4 +364,59 @@ module DEBUGGER__
   def self.create_unix_domain_socket_name(base_dir = unix_domain_socket_dir)
     create_unix_domain_socket_name_prefix(base_dir) + "-#{Process.pid}"
   end
+
+  ## Help
+
+  def self.parse_help
+    helps = Hash.new{|h, k| h[k] = []}
+    desc = cat = nil
+    cmds = Hash.new
+
+    File.read(File.join(__dir__, 'session.rb')).each_line do |line|
+      case line
+      when /\A\s*### (.+)/
+        cat = $1
+        break if $1 == 'END'
+      when /\A      when (.+)/
+        next unless cat
+        next unless desc
+        ws = $1.split(/,\s*/).map{|e| e.gsub('\'', '')}
+        helps[cat] << [ws, desc]
+        desc = nil
+        max_w = ws.max_by{|w| w.length}
+        ws.each{|w|
+          cmds[w] = max_w
+        }
+      when /\A\s+# (\s*\*.+)/
+        if desc
+          desc << "\n" + $1
+        else
+          desc = $1
+        end
+      end
+    end
+    @commands = cmds
+    @helps = helps
+  end
+
+  def self.helps
+    (defined?(@helps) && @helps) || parse_help
+  end
+
+  def self.commands
+    (defined?(@commands) && @commands) || (parse_help; @commands)
+  end
+
+  def self.help
+    r = []
+    self.helps.each{|cat, cmds|
+      r << "### #{cat}"
+      r << ''
+      cmds.each{|ws, desc|
+        r << desc
+      }
+      r << ''
+    }
+    r.join("\n")
+  end
 end
