@@ -192,7 +192,7 @@ module DEBUGGER__
                 is_ask_cmd = false
 
                 loop do
-                  cmd = deque test_info
+                  cmd = test_info.queue.pop
 
                   case cmd.to_s
                   when /Proc/
@@ -245,10 +245,6 @@ module DEBUGGER__
     end
 
     private
-
-    def deque test_info
-      test_info.queue.pop
-    end
 
     def check_error(error, test_info)
       if error_index = test_info.last_backlog.index { |l| l.match?(error) }
