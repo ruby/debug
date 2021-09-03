@@ -15,6 +15,7 @@ module DEBUGGER__
         type 'q'
         assert_line_text(/Really quit\? \[Y\/n\]/)
         type 'y'
+        assert_finish
       end
     end
 
@@ -24,12 +25,14 @@ module DEBUGGER__
         assert_line_text(/Really quit\? \[Y\/n\]/)
         type 'n'
         type 'q!'
+        assert_finish
       end
     end
 
     def test_quit_with_exclamation_mark_quits_immediately_debugger_process
       debug_code(program) do
         type 'q!'
+        assert_finish
       end
     end
   end
