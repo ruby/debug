@@ -3,6 +3,7 @@
 require 'pty'
 require 'timeout'
 require 'json'
+require 'rbconfig'
 require_relative "../../lib/debug/client"
 
 module DEBUGGER__
@@ -133,7 +134,7 @@ module DEBUGGER__
       print msg if ENV['RUBY_DEBUG_TEST_DEBUG_MODE']
     end
 
-    RDBG_EXECUTABLE = "#{__dir__}/../../exe/rdbg"
+    RDBG_EXECUTABLE = "#{RbConfig.ruby} #{__dir__}/../../exe/rdbg"
     RUBY = RbConfig.ruby
     RUBY_DEBUG_TEST_PORT = '12345'
 
