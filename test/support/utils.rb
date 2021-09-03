@@ -187,29 +187,26 @@ module DEBUGGER__
                 test_info.last_backlog.pop
 
                 test_info.internal_info = JSON.parse(Regexp.last_match(1))
+                assertion = []
+                is_ask_cmd = false
 
                 loop do
-                  cmd = deque(test_info)
-                  break if cmd.is_a?(String)
+                  cmd = deque test_info
 
-                  cmd.call(test_info)
-                end
-
-                assertion = []
-                if ASK_CMD.include?(cmd)
-                  write.puts(cmd)
-
-                  loop do
-                    cmd = deque test_info
-
-                    case cmd.to_s
-                    when /Proc/
+                  case cmd.to_s
+                  when /Proc/
+                    if is_ask_cmd
                       assertion.push cmd
-                    when /flunk_finish/
-                      cmd.call test_info
                     else
-                      break
+                      cmd.call test_info
                     end
+                  when /flunk_finish/
+                    cmd.call test_info
+                  when *ASK_CMD
+                    write.puts cmd
+                    is_ask_cmd = true
+                  else
+                    break
                   end
                 end
 
