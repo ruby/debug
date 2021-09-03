@@ -33,7 +33,7 @@ or specify `-Ipath/to/debug/lib` in `RUBYOPT` or each ruby command-line option, 
 If you use Bundler, write the following line to your Gemfile.
 
 ```
-gem "debug", ">= 1.0.0.beta"
+gem "debug", ">= 1.0.0.rc"
 ```
 
 # HOW TO USE
@@ -583,6 +583,8 @@ The `<...>` notation means the argument.
   * Append `<val>` to `<name>` if it is an array.
 * `config unset <name>`
   * Set <name> to default.
+* `source <file>`
+  * Evaluate lines in `<file>` as debug commands.
 
 ### Help
 
