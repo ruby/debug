@@ -1373,6 +1373,8 @@ module DEBUGGER__
           at_exit{
             @postmortem_hook.disable
             if CONFIG[:postmortem] && (exc = $!) != nil
+              exc = exc.cause while exc.cause
+
               begin
                 @ui.puts "Enter postmortem mode with #{exc.inspect}"
                 @ui.puts exc.backtrace.map{|e| '  ' + e}
