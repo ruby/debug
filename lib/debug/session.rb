@@ -850,6 +850,21 @@ module DEBUGGER__
         config_command arg
         return :retry
 
+      # * `source <file>`
+      #   * Evaluate lines in `<file>` as debug commands.
+      when 'source'
+        if arg
+          begin
+            cmds = File.readlines(path = File.expand_path(arg))
+            add_preset_commands path, cmds, kick: true, continue: false
+          rescue Errno::ENOENT
+            @ui.puts "File not found: #{arg}"
+          end
+        else
+          show_help 'source'
+        end
+        return :retry
+
       ### Help
 
       # * `h[elp]`
