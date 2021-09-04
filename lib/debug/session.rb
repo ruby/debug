@@ -303,7 +303,9 @@ module DEBUGGER__
         if @preset_command.commands.empty?
           if @preset_command.auto_continue
             @preset_command = nil
+
             @tc << :continue
+            restart_all_threads
             return
           else
             @preset_command = nil
