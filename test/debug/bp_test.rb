@@ -101,5 +101,30 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    class ThreadManagementTest < TestCase
+      def program
+        <<~RUBY
+         1| Thread.new do
+         2|   binding.b(do: "p 'foo' + 'bar'")
+         3| end.join
+         4|
+         5| Thread.new do
+         6|   binding.b(do: "p 'bar' + 'baz'")
+         7| end.join
+         8|
+         9| binding.b
+        RUBY
+      end
+
+      def test_debugger_auto_continues_across_threads
+        debug_code(program) do
+          type 'continue'
+          assert_line_text(/foobar/)
+          assert_line_text(/barbaz/)
+          type 'continue'
+        end
+      end
+    end
   end
 end
