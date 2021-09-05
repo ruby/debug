@@ -337,6 +337,11 @@ module DEBUGGER__
     end
 
     def frame_eval src, re_raise: false
+      if src == "_ex_"
+        @success_last_eval = true
+        return current_frame.raised_exception
+      end
+
       begin
         @success_last_eval = false
 

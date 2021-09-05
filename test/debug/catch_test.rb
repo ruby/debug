@@ -3,7 +3,7 @@
 require_relative '../support/test_case'
 
 module DEBUGGER__
-  class BasicCatchTest < TestCase
+  class CFrameCatchTest < TestCase
     def program
       <<~RUBY
       1| a = 1
@@ -71,17 +71,35 @@ module DEBUGGER__
       end
     end
 
-    def test_debugger_rejects_duplicated_catch_bp
+    def test_debugger_allows_accessing_last_exception_with__ex__expression
       debug_code(program) do
         type 'catch ZeroDivisionError'
-        type 'catch ZeroDivisionError'
-        assert_line_text(/duplicated breakpoint:/)
         type 'continue'
 
-        assert_line_text('Integer#/') # stopped by catch
+        type '_ex_'
+        assert_line_text(/#<ZeroDivisionError: divided by 0>/)
         type 'continue'
 
-        type 'continue' # exit the final binding.b
+        type 'continue'
+      end
+    end
+  end
+
+  class RubyFrameCatchTest < TestCase
+    def program
+      <<~RUBY
+       1| raise "foo"
+      RUBY
+    end
+
+    def test_debugger_allows_accessing_last_exception_with__ex__expression
+      debug_code(program) do
+        type 'catch RuntimeError'
+        type 'continue'
+
+        type '_ex_'
+        assert_line_text(/#<RuntimeError: foo>/)
+        type 'continue'
       end
     end
   end
