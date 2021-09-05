@@ -34,5 +34,20 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_eval_provides_helpful_message_when_called_without_expression
+      debug_code(program) do
+        type 'e'
+
+        assert_line_text(
+          [
+            /eval error: you must provide an expression for the e\[val\] command/,
+            /to evaluate variables named 'e' or 'eval', please use 'pp <var>' instead/
+          ]
+        )
+
+        type 'q!'
+      end
+    end
   end
 end

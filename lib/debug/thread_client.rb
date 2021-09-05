@@ -778,7 +778,12 @@ module DEBUGGER__
               puts "allocated at #{alloc_path}:#{ObjectSpace.allocation_sourceline(result)}"
             end
           when :call
-            result = frame_eval(eval_src)
+            if eval_src.nil?
+              puts "eval error: you must provide an expression for the e[val] command"
+              puts "to evaluate variables named 'e' or 'eval', please use 'pp <var>' instead"
+            else
+              result = frame_eval(eval_src)
+            end
           when :display, :try_display
             failed_results = []
             eval_src.each_with_index{|src, i|
