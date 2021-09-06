@@ -1145,6 +1145,11 @@ module DEBUGGER__
       add_bp bp
     end
 
+    def add_catch_breakpoint pat
+      bp = CatchBreakpoint.new(pat)
+      add_bp bp
+    end
+
     def add_check_breakpoint expr
       bp = CheckBreakpoint.new(expr)
       add_bp bp
