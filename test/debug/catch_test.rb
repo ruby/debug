@@ -78,6 +78,14 @@ module DEBUGGER__
 
         type '_ex_'
         assert_line_text(/#<ZeroDivisionError: divided by 0>/)
+        type '_ex_.backtrace'
+
+        assert_line_text(
+          [
+            /.*\.rb:4:in `\/'/,
+            /.*\.rb:4:in `<main>'/
+          ]
+        )
         type 'continue'
 
         type 'continue'
@@ -99,6 +107,9 @@ module DEBUGGER__
 
         type '_ex_'
         assert_line_text(/#<RuntimeError: foo>/)
+
+        type '_ex_.backtrace'
+        assert_line_text(/\[.*:in `<main>'"\]/)
         type 'continue'
       end
     end

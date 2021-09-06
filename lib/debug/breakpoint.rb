@@ -263,7 +263,12 @@ module DEBUGGER__
             break
           end
         }
-        suspend if should_suspend
+        begin
+          prev, Thread.current[:DEBUGGER__last_exception] = Thread.current[:DEBUGGER__last_exception], @last_exc
+          suspend
+        ensure
+          Thread.current[:DEBUGGER__last_exception] = prev
+        end if should_suspend
       }
     end
 
@@ -467,3 +472,8 @@ module DEBUGGER__
     end
   end
 end
+
+def _ex_
+  Thread.current[:DEBUGGER__last_exception]
+end
+
