@@ -356,7 +356,7 @@ module DEBUGGER__
 
         puts "eval error: #{e}"
 
-        e.backtrace_locations.each do |loc|
+        e.backtrace_locations&.each do |loc|
           break if loc.path == __FILE__
           puts "  #{loc}"
         end
