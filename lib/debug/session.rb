@@ -707,7 +707,13 @@ module DEBUGGER__
       # * `e[val] <expr>`
       #   * Evaluate `<expr>` on the current frame.
       when 'e', 'eval', 'call'
-        @tc << [:eval, :call, arg]
+        if arg == nil || arg.empty?
+          show_help 'eval'
+          @ui.puts "\nTo evaluate the variable `#{cmd}`, use `pp #{cmd}` instead."
+          return :retry
+        else
+          @tc << [:eval, :call, arg]
+        end
 
       # * `irb`
       #   * Invoke `irb` on the current frame.
