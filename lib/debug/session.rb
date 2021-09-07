@@ -889,20 +889,7 @@ module DEBUGGER__
 
       ### END
       else
-        @tc << [:eval, :pp, line]
-=begin
-        @repl_prev_line = nil
-        @ui.puts "unknown command: #{line}"
-        begin
-          require 'did_you_mean'
-          spell_checker = DidYouMean::SpellChecker.new(dictionary: DEBUGGER__.commands)
-          correction = spell_checker.correct(line.split(/\s/).first || '')
-          @ui.puts "Did you mean? #{correction.join(' or ')}" unless correction.empty?
-        rescue LoadError
-          # Don't use D
-        end
-        return :retry
-=end
+        eval_line(line)
       end
 
     rescue Interrupt
@@ -916,6 +903,10 @@ module DEBUGGER__
       @ui.puts "[REPL ERROR] #{e.inspect}"
       @ui.puts e.backtrace.map{|e| '  ' + e}
       return :retry
+    end
+
+    def eval_line(line)
+      @tc << [:eval, :pp, line]
     end
 
     def step_command type, arg
