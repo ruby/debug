@@ -9,7 +9,7 @@ when :start
 
   libpath = File.join(File.expand_path(File.dirname(__dir__)), 'lib/debug')
   start_mode = config[:remote] ? "open" : 'start'
-  cmd = config[:command] ? ARGV.shift : RbConfig.ruby
+  cmd = config[:command] ? ARGV.shift : (ENV['RUBY'] || RbConfig.ruby)
 
   env = ::DEBUGGER__::Config.config_to_env_hash(config)
   env['RUBYOPT'] = "-r #{libpath}/#{start_mode}"

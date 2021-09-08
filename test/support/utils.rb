@@ -134,8 +134,8 @@ module DEBUGGER__
       print msg if ENV['RUBY_DEBUG_TEST_DEBUG_MODE']
     end
 
-    RDBG_EXECUTABLE = "#{RbConfig.ruby} #{__dir__}/../../exe/rdbg"
-    RUBY = RbConfig.ruby
+    RUBY = ENV['RUBY'] || RbConfig.ruby
+    RDBG_EXECUTABLE = "#{RUBY} #{__dir__}/../../exe/rdbg"
     RUBY_DEBUG_TEST_PORT = '12345'
 
     nr = ENV['RUBY_DEBUG_TEST_NO_REMOTE']
