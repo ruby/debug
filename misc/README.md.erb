@@ -44,7 +44,8 @@ To use a debugger, roughly you will do the following steps:
 2. Run a program with the debugger.
 3. At the breakpoint, enter the debugger console.
 4. Use debug commands.
-    * [Query the program status](#evaluate) (e.g. `p lvar` to see the local variable `lvar`).
+    * [Evaluate Ruby expressions](#evaluate) (e.g. `p lvar` to see the local variable `lvar`).
+    * [Query the program status](#information) (e.g. `info` to see information about the current frame).
     * [Control program flow](#control-flow) (e.g. move to the another line with `step`, to the next line with `next`).
     * [Set another breakpoint](#breakpoint) (e.g. `catch Exception` to set a breakpoint that'll be triggered when `Exception` is raised).
     * [Change the configuration](#configuration-1) (e.g. `config set no_color true` to disable coloring).
