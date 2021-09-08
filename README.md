@@ -48,6 +48,7 @@ To use a debugger, roughly you will do the following steps:
     * [Query the program status](#information) (e.g. `info` to see information about the current frame).
     * [Control program flow](#control-flow) (e.g. move to the another line with `step`, to the next line with `next`).
     * [Set another breakpoint](#breakpoint) (e.g. `catch Exception` to set a breakpoint that'll be triggered when `Exception` is raised).
+    * [Activate tracing in your program](#trace) (e.g. `trace call` to trace method calls).
     * [Change the configuration](#configuration-1) (e.g. `config set no_color true` to disable coloring).
     * Continue the program (`c` or `continue`) and goto 3.
 
