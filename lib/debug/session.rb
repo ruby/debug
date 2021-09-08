@@ -704,9 +704,9 @@ module DEBUGGER__
       when 'pp'
         @tc << [:eval, :pp, arg.to_s]
 
-      # * `e[val] <expr>`
+      # * `eval <expr>`
       #   * Evaluate `<expr>` on the current frame.
-      when 'e', 'eval', 'call'
+      when 'eval', 'call'
         if arg == nil || arg.empty?
           show_help 'eval'
           @ui.puts "\nTo evaluate the variable `#{cmd}`, use `pp #{cmd}` instead."

@@ -397,6 +397,9 @@ If there are `~/.rdbgrc.rb` is available, it is also loaded as a ruby script at 
 
 On the debug console, you can use the following debug commands.
 
+There are additional features:
+
+* If the input line is not recognized as a debug command, the sentence will be evaluated as Ruby expression and the result will be printed with `pp` method. So that the input `foo.bar` is same as `pp foo.bar`.
 * `Enter` repeats the last command (useful when repeating `step`s).
 * `Ctrl-D` is equal to `quit` command.
 * [debug command compare sheet - Google Sheets](https://docs.google.com/spreadsheets/d/1TlmmUDsvwK4sSIyoMv-io52BUUz__R5wpu-ComXlsw0/edit?usp=sharing)
@@ -529,7 +532,7 @@ The `<...>` notation means the argument.
   * Evaluate like `p <expr>` on the current frame.
 * `pp <expr>`
   * Evaluate like `pp <expr>` on the current frame.
-* `e[val] <expr>`
+* `eval <expr>`
   * Evaluate `<expr>` on the current frame.
 * `irb`
   * Invoke `irb` on the current frame.
