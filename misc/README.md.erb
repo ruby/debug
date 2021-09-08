@@ -54,12 +54,12 @@ To use a debugger, roughly you will do the following steps:
 
 There are several options for (1) and (2). Please choose your favorite way.
 
-### Modify source code similar to `binding.pry` and `binding.irb`
+### Modify source code with [`binding.break`](#bindingbreak-method) (similar to `binding.pry` or `binding.irb`)
 
-If you can modify the source code, you can use the debugger by adding `require 'debug'` line at the top of your program and putting `binding.break` method (`binding.b` for short) into lines where you want to stop as breakpoints like `binding.pry` and `binding.irb`.
+If you can modify the source code, you can use the debugger by adding `require 'debug'` line at the top of your program and putting [`binding.break`](#bindingbreak-method) method (`binding.b` for short) into lines where you want to stop as breakpoints like `binding.pry` and `binding.irb`.
 After that, you run the program as usual and you will enter the debug console at breakpoints you inserted.
 
-The following example shows the demonstration of `binding.break`.
+The following example shows the demonstration of [`binding.break`](#bindingbreak-method).
 
 ```shell
 $ cat target.rb                        # Sample program
