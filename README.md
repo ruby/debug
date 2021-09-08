@@ -399,8 +399,10 @@ On the debug console, you can use the following debug commands.
 
 There are additional features:
 
-* If the input line is not recognized as a debug command, the sentence will be evaluated as Ruby expression and the result will be printed with `pp` method. So that the input `foo.bar` is same as `pp foo.bar`.
-* `Enter` repeats the last command (useful when repeating `step`s).
+* `<expr>` is almost same as `pp <expr>`.
+  * If the input `<expr>` is *not* recognized as a debug command, the line will be evaluated as a Ruby expression and the result will be printed with `pp` method. So that the input `foo.bar` is same as `pp foo.bar`.
+  * If `<expr>` is recognized as a debug command, of course it is not evaluated as a Ruby expression, but is executed as debug command. For example, you can not evaluate such single letter local variables `i`, `b`, `n`, `c` because they are single letter debug commands. Use `p i` instead.
+* `Enter` without any input repeats the last command (useful when repeating `step`s).
 * `Ctrl-D` is equal to `quit` command.
 * [debug command compare sheet - Google Sheets](https://docs.google.com/spreadsheets/d/1TlmmUDsvwK4sSIyoMv-io52BUUz__R5wpu-ComXlsw0/edit?usp=sharing)
 
