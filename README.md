@@ -25,7 +25,7 @@ New debug.rb has several advantages:
 # Installation
 
 ```
-$ gem install debug --pre
+$ gem install debug
 ```
 
 or specify `-Ipath/to/debug/lib` in `RUBYOPT` or each ruby command-line option, especially for debug this gem development.
@@ -33,7 +33,7 @@ or specify `-Ipath/to/debug/lib` in `RUBYOPT` or each ruby command-line option, 
 If you use Bundler, write the following line to your Gemfile.
 
 ```
-gem "debug", ">= 1.0.0.rc"
+gem "debug", ">= 1.0.0"
 ```
 
 # HOW TO USE
