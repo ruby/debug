@@ -44,10 +44,10 @@ To use a debugger, roughly you will do the following steps:
 2. Run a program with the debugger.
 3. At the breakpoint, enter the debugger console.
 4. Use debug commands.
-    * Query the program status (e.g. `p lvar` to see the local variable `lvar`).
-    * Control program flow (e.g. move to the another line with `step`, to the next line with `next`).
-    * Set another breakpoint (e.g. `catch Exception` to set a breakpoint when `Exception` is raised).
-    * Change the configuration (e.g. `config set no_color true` to disable coloring).
+    * [Query the program status](#evaluate) (e.g. `p lvar` to see the local variable `lvar`).
+    * [Control program flow](#control-flow) (e.g. move to the another line with `step`, to the next line with `next`).
+    * [Set another breakpoint](#breakpoint) (e.g. `catch Exception` to set a breakpoint that'll be triggered when `Exception` is raised).
+    * [Change the configuration](#configuration-1) (e.g. `config set no_color true` to disable coloring).
     * Continue the program (`c` or `continue`) and goto 3.
 
 ## Invoke with the debugger
