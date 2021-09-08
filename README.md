@@ -8,7 +8,7 @@ This debug.rb is replacement of traditional lib/debug.rb standard library which 
 New debug.rb has several advantages:
 
 * Fast: No performance penalty on non-stepping mode and non-breakpoints.
-* Remote debugging: Support remote debugging natively.
+* [Remote debugging](#remote-debugging): Support remote debugging natively.
   * UNIX domain socket
   * TCP/IP
   * VSCode/DAP integration ([VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg))
