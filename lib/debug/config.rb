@@ -372,7 +372,7 @@ module DEBUGGER__
     desc = cat = nil
     cmds = Hash.new
 
-    File.read(File.join(__dir__, 'session.rb')).each_line do |line|
+    File.read(File.join(__dir__, 'session.rb'), encoding: Encoding::UTF_8).each_line do |line|
       case line
       when /\A\s*### (.+)/
         cat = $1
