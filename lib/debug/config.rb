@@ -1,6 +1,14 @@
 # frozen_string_literal: true
 
 module DEBUGGER__
+  LOG_LEVELS = {
+    UNKNOWN: 0,
+    FATAL:   1,
+    ERROR:   2,
+    WARN:    3,
+    INFO:    4,
+  }.freeze
+
   CONFIG_SET = {
     # UI setting
     log_level:      ['RUBY_DEBUG_LOG_LEVEL',      "UI: Log level same as Logger (default: WARN)",                   :loglevel],

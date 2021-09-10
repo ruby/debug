@@ -303,4 +303,42 @@ module DEBUGGER__
       end
     end
   end
+
+  class LogLevelTest < TestCase
+    def program
+      <<~RUBY
+      1| a = 1
+      RUBY
+    end
+
+    def test_debugger_takes_log_level_config_from_env_var
+      # default WARN level doesn't report threads creation
+      debug_code(program, remote: false) do
+        type 'Thread.new {}.join'
+        assert_no_line_text(/Thread #\d+ is created/)
+        type 'c'
+      end
+
+      ENV["RUBY_DEBUG_LOG_LEVEL"] = "INFO"
+      debug_code(program, remote: false) do
+        type 'Thread.new {}.join'
+        assert_line_text(/DEBUGGER \(INFO\): Thread #\d+ is created/)
+        type 'c'
+      end
+    ensure
+      ENV["RUBY_DEBUG_LOG_LEVEL"] = nil
+    end
+
+    def test_debugger_takes_log_level_config_from_config_option
+      # default WARN level doesn't report threads creation
+      debug_code(program, remote: false) do
+        type 'Thread.new {}.join'
+        assert_no_line_text(/Thread #\d+ is created/)
+        type 'config set log_level INFO'
+        type 'Thread.new {}.join'
+        assert_line_text(/DEBUGGER \(INFO\): Thread #\d+ is created/)
+        type 'c'
+      end
+    end
+  end
 end

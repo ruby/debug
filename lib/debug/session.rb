@@ -1599,14 +1599,6 @@ module DEBUGGER__
     end
   end
 
-  LOG_LEVELS = {
-    UNKNOWN: 0,
-    FATAL:   1,
-    ERROR:   2,
-    WARN:    3,
-    INFO:    4,
-  }.freeze
-
   def self.warn msg
     log :WARN, msg
   end
