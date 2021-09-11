@@ -24,7 +24,7 @@ module DEBUGGER__
           /show_src_lines = \(default\)/,
           /show_frames = \(default\)/
         ])
-        # only show this configuratio
+        # only show this configuration
         type 'config show_frames'
         assert_line_text([
           /show_frames = \(default\)/
