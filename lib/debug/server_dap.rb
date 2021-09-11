@@ -153,8 +153,8 @@ module DEBUGGER__
         when 'setFunctionBreakpoints'
           send_response req
         when 'setExceptionBreakpoints'
-          filters = args.dig('filterOptions').map{|bp_info|
-            case bp_info.dig('filterId')
+          process_filter = ->(filter_id) {
+            case filter_id
             when 'any'
               bp = SESSION.add_catch_breakpoint 'Exception'
             when 'RuntimeError'
@@ -163,10 +163,19 @@ module DEBUGGER__
               bp = nil
             end
             {
-              verifiled: bp ? true : false,
+              verified: bp ? true : false,
               message: bp.inspect,
             }
           }
+
+          filters = args.fetch('filters').map {|filter_id|
+            process_filter.call(filter_id)
+          }
+
+          filters += args.fetch('filterOptions', {}).map{|bp_info|
+            process_filter.call(bp_info.dig('filterId'))
+          }
+
           send_response req, breakpoints: filters
         when 'configurationDone'
           send_response req
