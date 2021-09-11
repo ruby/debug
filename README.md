@@ -355,7 +355,7 @@ config set no_color true
   * `RUBY_DEBUG_LOG_LEVEL` (`log_level`): Log level same as Logger (default: WARN)
   * `RUBY_DEBUG_SHOW_SRC_LINES` (`show_src_lines`): Show n lines source code on breakpoint (default: 10 lines)
   * `RUBY_DEBUG_SHOW_FRAMES` (`show_frames`): Show n frames on breakpoint (default: 2 frames)
-  * `RUBY_DEBUG_USE_SHORT_PATH` (`use_short_path`): Show shoten PATH (like $(Gem)/foo.rb)
+  * `RUBY_DEBUG_USE_SHORT_PATH` (`use_short_path`): Show shorten PATH (like $(Gem)/foo.rb)
   * `RUBY_DEBUG_NO_COLOR` (`no_color`): Do not use colorize (default: false)
   * `RUBY_DEBUG_NO_SIGINT_HOOK` (`no_sigint_hook`): Do not suspend on SIGINT (default: false)
   * `RUBY_DEBUG_NO_RELINE` (`no_reline`): Do not use Reline library (default: false)

@@ -159,7 +159,7 @@ module DEBUGGER__
 
     def session_server_main
       while evt = pop_event
-        # varible `@internal_info` is only used for test
+        # variable `@internal_info` is only used for test
         tc, output, ev, @internal_info, *ev_args = evt
         output.each{|str| @ui.puts str}
 
@@ -598,7 +598,7 @@ module DEBUGGER__
       #   * Show information about the current frame (local variables)
       #   * It includes `self` as `%self` and a return value as `%return`.
       # * `i[nfo] i[var[s]]` or `i[nfo] instance`
-      #   * Show information about insttance variables about `self`.
+      #   * Show information about instance variables about `self`.
       # * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
       #   * Show information about accessible constants except toplevel constants.
       # * `i[nfo] g[lobal[s]]`
