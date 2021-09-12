@@ -1,8 +1,5 @@
 ﻿# frozen_string_literal: true
 
-# skip to load debugger for bundle exec
-return if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
-
 require_relative 'config'
 require_relative 'thread_client'
 require_relative 'source_repository'
@@ -1511,6 +1508,8 @@ module DEBUGGER__
         # require 'debug/start' or 'debug'
         add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
       else
+        # avoid starting debugger inside bin/bundle
+        return if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
         # -r
         add_line_breakpoint $0, 0, oneshot: true, hook_call: false
       end
