@@ -354,7 +354,7 @@ module DEBUGGER__
               fail_response req
             end
           else
-            raise "Uknown type: #{ref.inspect}"
+            raise "Unknown type: #{ref.inspect}"
           end
         else
           fail_response req
@@ -471,7 +471,7 @@ module DEBUGGER__
         fid = args.shift
         frame = @target_frames[fid]
 
-        lnum = 
+        lnum =
           if frame.binding
             frame.binding.local_variables.size
           elsif vars = frame.local_variables
@@ -580,7 +580,7 @@ module DEBUGGER__
         end
         event! :dap_result, :evaluate, req, tid: self.id, **evaluate_result(result)
       else
-        raise "Unkown req: #{args.inspect}"
+        raise "Unknown req: #{args.inspect}"
       end
     end
 
