@@ -3,7 +3,7 @@
 ## Basic functionality
 
 * Support Ractors
-* Signal (SIGINT) trap handling
+* Signal (SIGINT) trap handling 
 
 ## UI
 
@@ -12,6 +12,7 @@
 * Interactive record & play debugging
 * irb integration
 * Web browser integrated UI
+* History file
 
 ## Debug command
 
