@@ -1540,14 +1540,8 @@ module DEBUGGER__
 
   class << self
     define_method :initialize_session do |ui|
-      DEBUGGER__.warn "Session start (pid: #{Process.pid})"
-
+      DEBUGGER__.info "Session start (pid: #{Process.pid})"
       ::DEBUGGER__.const_set(:SESSION, Session.new(ui))
-
-      # default breakpoints
-
-      # ::DEBUGGER__.add_catch_breakpoint 'RuntimeError'
-
       load_rc
     end
   end
