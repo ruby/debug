@@ -15,7 +15,7 @@ Rake::ExtensionTask.new("debug") do |ext|
   ext.lib_dir = "lib/debug"
 end
 
-task :default => [:clobber, :compile, :test, 'README.md']
+task :default => [:clobber, :compile, 'README.md', :test]
 
 file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
                      'exe/rdbg', 'misc/README.md.erb'] do
