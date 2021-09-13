@@ -216,7 +216,7 @@ module DEBUGGER__
                 out tp, " #{colorized_obj_inspect} is used as a parameter #{colorized_name} of #{method_info}"
               end
             when :rest
-              next name == :"*"
+              next if name == :"*"
 
               ary = b.local_variable_get(name)
               ary.each{|e|
