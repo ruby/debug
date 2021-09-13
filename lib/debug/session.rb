@@ -1,7 +1,21 @@
 ﻿# frozen_string_literal: true
 
 # skip to load debugger for bundle exec
-return if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
+
+if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
+  trace_var(:$0) do |file|
+    trace_var(:$0, nil)
+    if /-r (#{__dir__}\S+)/ =~ ENV['RUBYOPT']
+      lib = $1
+      $LOADED_FEATURES.delete_if{|path| path.start_with?(__dir__)}
+      ENV['RUBY_DEBUG_INITIAL_SUSPEND_PATH'] = file
+      require lib
+      ENV['RUBY_DEBUG_INITIAL_SUSPEND_PATH'] = nil
+    end
+  end
+
+  return
+end
 
 require_relative 'config'
 require_relative 'thread_client'
@@ -1507,7 +1521,10 @@ module DEBUGGER__
 
   def self.setup_initial_suspend
     if !CONFIG[:nonstop]
-      if loc = ::DEBUGGER__.require_location
+      case
+      when path = ENV['RUBY_DEBUG_INITIAL_SUSPEND_PATH']
+        add_line_breakpoint path, 0, oneshot: true, hook_call: false
+      when loc = ::DEBUGGER__.require_location
         # require 'debug/start' or 'debug'
         add_line_breakpoint loc.absolute_path, loc.lineno + 1, oneshot: true, hook_call: false
       else
