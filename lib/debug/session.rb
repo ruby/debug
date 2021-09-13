@@ -1548,21 +1548,6 @@ module DEBUGGER__
 
       # ::DEBUGGER__.add_catch_breakpoint 'RuntimeError'
 
-      Binding.module_eval do
-        def break pre: nil, do: nil
-          return unless SESSION.active?
-
-          if pre || (do_expr = binding.local_variable_get(:do))
-            cmds = ['binding.break', pre, do_expr]
-          end
-
-          ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, command: cmds
-          true
-        end
-        alias b break
-        # alias bp break
-      end
-
       load_rc
     end
   end
@@ -1707,3 +1692,31 @@ module DEBUGGER__
   end
 end
 
+class Binding
+  def break pre: nil, do: nil
+    return if !defined?(::DEBUGGER__::SESSION) || !::DEBUGGER__::SESSION.active?
+
+    if pre || (do_expr = binding.local_variable_get(:do))
+      cmds = ['binding.break', pre, do_expr]
+    end
+
+    ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, command: cmds
+    self
+  end
+  alias b break
+end
+
+module Kernel
+  if RUBY_VERSION >= '2.7.0'
+    eval <<~RUBY, binding, __FILE__, __LINE__
+      def debugger(...)
+        binding.break(...)
+      end
+    RUBY
+  else
+    def debugger pre: nil, do: nil
+      b = binding
+      b.break pre: pre, do: b.local_variable_get(:do)
+    end
+  end
+end
