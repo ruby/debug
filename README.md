@@ -494,7 +494,7 @@ The `<...>` notation means the argument.
   * Show information about the current frame (local variables)
   * It includes `self` as `%self` and a return value as `%return`.
 * `i[nfo] i[var[s]]` or `i[nfo] instance`
-  * Show information about insttance variables about `self`.
+  * Show information about instance variables about `self`.
 * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
   * Show information about accessible constants except toplevel constants.
 * `i[nfo] g[lobal[s]]`
