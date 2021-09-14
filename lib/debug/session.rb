@@ -1643,7 +1643,18 @@ module DEBUGGER__
 
           at_exit{
             trap(:SIGINT, :IGNORE)
-            Process.waitpid(child_pid) if Process.pid == parent_pid
+
+            # only check child process from its parent
+            if Process.pid == parent_pid
+              begin
+                # sending a null signal to see if the child is still alive
+                Process.kill(0, child_pid)
+                # if the child is still alive, wait for it
+                Process.waitpid(child_pid)
+              rescue Errno::ESRCH
+                # if the child process has died, do nothing
+              end
+            end
           }
         }
         child_hook = -> {
