@@ -122,6 +122,11 @@ Init_debug(void)
 {
     rb_mDebugger = rb_const_get(rb_cObject, rb_intern("DEBUGGER__"));
     rb_cFrameInfo = rb_const_get(rb_mDebugger, rb_intern("FrameInfo"));
+
+    // Debugger and FrameInfo were defined in Ruby. We need to register them
+    // as mark objects so they are automatically pinned.
+    rb_gc_register_mark_object(rb_mDebugger);
+    rb_gc_register_mark_object(rb_cFrameInfo);
     rb_define_singleton_method(rb_mDebugger, "capture_frames", capture_frames, 1);
     rb_define_singleton_method(rb_mDebugger, "frame_depth", frame_depth, 0);
     rb_define_singleton_method(rb_mDebugger, "create_method_added_tracker", create_method_added_tracker, 0);
