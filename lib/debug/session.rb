@@ -1643,7 +1643,7 @@ module DEBUGGER__
 
           at_exit{
             trap(:SIGINT, :IGNORE)
-            Process.waitpid(child_pid)
+            Process.waitpid(child_pid) if Process.pid == parent_pid
           }
         }
         child_hook = -> {
