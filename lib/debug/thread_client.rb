@@ -115,7 +115,7 @@ module DEBUGGER__
         # TODO: there is waiting -> waiting
         # raise "#{mode} is given, but #{mode}" unless self.running?
       else
-        raise
+        raise "unknown mode: #{mode}"
       end
 
       @mode = mode
