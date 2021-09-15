@@ -1697,8 +1697,8 @@ module DEBUGGER__
   end
 end
 
-class Binding
-  def break pre: nil, do: nil
+module Kernel
+  def debugger pre: nil, do: nil
     return if !defined?(::DEBUGGER__::SESSION) || !::DEBUGGER__::SESSION.active?
 
     if pre || (do_expr = binding.local_variable_get(:do))
@@ -1708,20 +1708,10 @@ class Binding
     ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, command: cmds
     self
   end
-  alias b break
 end
 
-module Kernel
-  if RUBY_VERSION >= '2.7.0'
-    eval <<~RUBY, binding, __FILE__, __LINE__
-      def debugger(...)
-        binding.break(...)
-      end
-    RUBY
-  else
-    def debugger pre: nil, do: nil
-      b = binding
-      b.break pre: pre, do: b.local_variable_get(:do)
-    end
-  end
+class Binding
+  alias break debugger
+  alias b debugger
 end
+
