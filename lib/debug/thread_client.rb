@@ -659,7 +659,7 @@ module DEBUGGER__
 
     def wait_next_action_
       # assertions
-      raise "@mode is #{@mode}" unless @mode == :waiting
+      raise "@mode is #{@mode}" if !waiting?
 
       unless SESSION.active?
         pp caller
@@ -670,7 +670,7 @@ module DEBUGGER__
 
       while true
         begin
-          set_mode :waiting if @mode != :waiting
+          set_mode :waiting if !waiting?
           cmds = @q_cmd.pop
           # pp [self, cmds: cmds]
           break unless cmds
