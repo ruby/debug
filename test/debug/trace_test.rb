@@ -102,6 +102,25 @@ module DEBUGGER__
       end
     end
 
+    def test_debugger_rejects_duplicated_tracer
+      debug_code(program) do
+        type 'trace line'
+        assert_line_text(/Enable LineTracer \(enabled\)/)
+        type 'trace line'
+        assert_line_text(/Duplicated tracer: LineTracer \(disabled\)/)
+        type 'c'
+        assert_line_text(/DEBUGGER \(trace\/line\)/)
+        assert_line_text([
+          /rb:5/,
+          /rb:9/,
+          /rb:2/,
+          /rb:6/,
+          /rb:11/,
+        ])
+        type 'q!'
+      end
+    end
+
     def test_trace_line_filters_output_with_file_path
       debug_code(program) do
         type 'trace line /debug/'
@@ -149,6 +168,41 @@ module DEBUGGER__
         type 'c'
         assert_line_text(/trace\/exception.+RuntimeError: foo/)
         assert_line_text(/trace\/exception.+RuntimeError: bar/)
+        type 'q!'
+      end
+    end
+
+    def test_debugger_rejects_duplicated_tracer
+      debug_code(program) do
+        type 'trace exception'
+        assert_line_text(/Enable ExceptionTracer \(enabled\)/)
+        type 'trace exception'
+        assert_line_text(/Duplicated tracer: ExceptionTracer \(disabled\)/)
+        type 'c'
+        assert_line_text(
+          [
+            /trace\/exception.+RuntimeError: foo/,
+            /trace\/exception.+RuntimeError: bar/
+          ]
+        )
+        type 'q!'
+      end
+    end
+
+    def test_debugger_accepts_multiple_exception_tracers_with_different_patterns
+      debug_code(program) do
+        type 'trace exception /foo/'
+        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/foo\//)
+        type 'trace exception /bar/'
+        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/bar\//)
+        assert_no_line_text(/Duplicated tracer: ExceptionTracer/)
+        type 'c'
+        assert_line_text(
+          [
+            /trace\/exception.+RuntimeError: foo/,
+            /trace\/exception.+RuntimeError: bar/
+          ]
+        )
         type 'q!'
       end
     end
@@ -217,6 +271,45 @@ module DEBUGGER__
         # tracer should ignore calls from associated libraries
         # for example, the test implementation relies on 'json' to generate test info, which's calls should be ignored
         assert_no_line_text(/JSON/)
+        type 'q!'
+      end
+    end
+
+    def test_debugger_rejects_duplicated_tracer
+      debug_code(program) do
+        type 'trace call'
+        assert_line_text(/Enable CallTracer/)
+        type 'trace call'
+        assert_line_text(/Duplicated tracer: CallTracer \(disabled\)/)
+        type 'c'
+        assert_line_text(
+          [
+            /Object#foo at/,
+            /Object#foo #=> nil/,
+            /Object#bar at/,
+            /Object#bar #=> nil/
+          ]
+        )
+        type 'q!'
+      end
+    end
+
+    def test_debugger_accepts_multiple_call_tracers_with_different_patterns
+      debug_code(program) do
+        type 'trace call /foo/'
+        assert_line_text(/Enable CallTracer \(enabled\) with pattern \/foo\//)
+        type 'trace call /bar/'
+        assert_line_text(/Enable CallTracer \(enabled\) with pattern \/bar\//)
+        assert_no_line_text(/Duplicated tracer: CallTracer \(disabled\)/)
+        type 'c'
+        assert_line_text(
+          [
+            /Object#foo at/,
+            /Object#foo #=> nil/,
+            /Object#bar at/,
+            /Object#bar #=> nil/
+          ]
+        )
         type 'q!'
       end
     end
@@ -306,6 +399,25 @@ module DEBUGGER__
         assert_line_text(/Enable ObjectTracer/)
         type 'c'
         assert_line_text(/2 is used as a parameter a of Object#bar/)
+        type 'q!'
+      end
+    end
+
+    def test_debugger_rejects_duplicated_tracer
+      debug_code(program) do
+        type 'trace object 2'
+        assert_line_text(/Enable ObjectTracer for 2 \(enabled\)/)
+        type 'trace object 2'
+        assert_line_text(/Duplicated tracer: ObjectTracer for 2 \(disabled\)/)
+        type 'trace object 3'
+        assert_line_text(/Enable ObjectTracer for 3 \(enabled\)/)
+        type 'c'
+        assert_line_text(
+          [
+            /2 is used as a parameter a of Object#bar/,
+            /3 is used as a parameter in kw of Object#baz/
+          ]
+        )
         type 'q!'
       end
     end

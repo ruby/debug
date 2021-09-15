@@ -86,7 +86,7 @@ module DEBUGGER__
                 #   [:watch, ivar] => WatchIVarBreakpoint
                 #   [:check, expr] => CheckBreakpoint
       #
-      @tracers = []
+      @tracers = {}
       @th_clients = nil # {Thread => ThreadClient}
       @q_evt = Queue.new
       @displays = []
@@ -153,7 +153,7 @@ module DEBUGGER__
       @tp_thread_begin.disable
       @bps.each{|k, bp| bp.disable}
       @th_clients.each{|th, thc| thc.close}
-      @tracers.each{|t| t.disable}
+      @tracers.values.each{|t| t.disable}
       @q_evt.close
       @ui&.deactivate
       @ui = nil
@@ -186,7 +186,7 @@ module DEBUGGER__
 
         when :trace
           trace_id, msg = ev_args
-          if t = @tracers.find{|t| t.object_id == trace_id}
+          if t = @tracers.values.find{|t| t.object_id == trace_id}
             t.puts msg
           end
           tc << :continue
@@ -241,7 +241,6 @@ module DEBUGGER__
             opt = ev_args[3]
             t = ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
             add_tracer(t)
-            @ui.puts "Enable #{t.to_s}"
           else
             # ignore
           end
@@ -772,7 +771,7 @@ module DEBUGGER__
         case arg
         when nil
           @ui.puts 'Tracers:'
-          @tracers.each_with_index{|t, i|
+          @tracers.values.each_with_index{|t, i|
             @ui.puts "* \##{i} #{t}"
           }
           @ui.puts
@@ -781,26 +780,23 @@ module DEBUGGER__
         when /\Aline\z/
           t = LineTracer.new(@ui, pattern: pattern, into: into)
           add_tracer(t)
-          @ui.puts "Enable #{t.to_s}"
           return :retry
 
         when /\Acall\z/
           t = CallTracer.new(@ui, pattern: pattern, into: into)
           add_tracer(t)
-          @ui.puts "Enable #{t.to_s}"
           return :retry
 
         when /\Aexception\z/
           t = ExceptionTracer.new(@ui, pattern: pattern, into: into)
           add_tracer(t)
-          @ui.puts "Enable #{t.to_s}"
           return :retry
 
         when /\Aobject\s+(.+)/
           @tc << [:trace, :object, $1.strip, {pattern: pattern, into: into}]
 
         when /\Aoff\s+(\d+)\z/
-          if t = @tracers[$1.to_i]
+          if t = @tracers.values[$1.to_i]
             t.disable
             @ui.puts "Disable #{t.to_s}"
           else
@@ -809,7 +805,7 @@ module DEBUGGER__
           return :retry
 
         when /\Aoff(\s+(line|call|exception|object))?\z/
-          @tracers.each{|t|
+          @tracers.values.each{|t|
             if $2.nil? || t.type == $2
               t.disable
               @ui.puts "Disable #{t.to_s}"
@@ -1188,10 +1184,17 @@ module DEBUGGER__
     end
 
     # tracers
+
     def add_tracer tracer
       # don't repeat commands that add tracers
       @repl_prev_line = nil
-      @tracers << tracer
+      if @tracers.has_key? tracer.key
+        tracer.disable
+        @ui.puts "Duplicated tracer: #{tracer}"
+      else
+        @tracers[tracer.key] = tracer
+        @ui.puts "Enable #{tracer}"
+      end
     end
 
     # threads
