@@ -239,7 +239,8 @@ module DEBUGGER__
             obj_id = ev_args[1]
             obj_inspect = ev_args[2]
             opt = ev_args[3]
-            @tracers << t = ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
+            t = ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
+            add_tracer(t)
             @ui.puts "Enable #{t.to_s}"
           else
             # ignore
@@ -778,17 +779,20 @@ module DEBUGGER__
           return :retry
 
         when /\Aline\z/
-          @tracers << t = LineTracer.new(@ui, pattern: pattern, into: into)
+          t = LineTracer.new(@ui, pattern: pattern, into: into)
+          add_tracer(t)
           @ui.puts "Enable #{t.to_s}"
           return :retry
 
         when /\Acall\z/
-          @tracers << t = CallTracer.new(@ui, pattern: pattern, into: into)
+          t = CallTracer.new(@ui, pattern: pattern, into: into)
+          add_tracer(t)
           @ui.puts "Enable #{t.to_s}"
           return :retry
 
         when /\Aexception\z/
-          @tracers << t = ExceptionTracer.new(@ui, pattern: pattern, into: into)
+          t = ExceptionTracer.new(@ui, pattern: pattern, into: into)
+          add_tracer(t)
           @ui.puts "Enable #{t.to_s}"
           return :retry
 
@@ -1181,6 +1185,13 @@ module DEBUGGER__
       add_bp bp
     rescue Errno::ENOENT => e
       @ui.puts e.message
+    end
+
+    # tracers
+    def add_tracer tracer
+      # don't repeat commands that add tracers
+      @repl_prev_line = nil
+      @tracers << tracer
     end
 
     # threads
