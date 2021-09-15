@@ -666,7 +666,6 @@ module DEBUGGER__
         set_mode :running
         return
       end
-      # SESSION.check_forked
 
       while true
         begin
