@@ -117,13 +117,6 @@ module DEBUGGER__
       @bps.has_key? [file, line]
     end
 
-    def check_forked
-      unless active?
-        # TODO: Support it
-        raise 'DEBUGGER: stop at forked process is not supported yet.'
-      end
-    end
-
     def activate on_fork: false
       @session_server = Thread.new do
         Thread.current.name = 'DEBUGGER__::SESSION@server'
