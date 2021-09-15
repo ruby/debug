@@ -14,7 +14,7 @@ module DEBUGGER__
       end
     end
 
-    attr_reader :type
+    attr_reader :type, :key
 
     def initialize ui, pattern: nil, into: nil
       if /\ADEBUGGER__::(([A-Z][a-z]+?)[A-Z][a-z]+)/ =~ self.class.name
@@ -36,6 +36,8 @@ module DEBUGGER__
       else
         @output = ui
       end
+
+      @key = [@type, @pattern, @into].freeze
 
       enable
     end
@@ -172,6 +174,7 @@ module DEBUGGER__
       @obj_id = obj_id
       @obj_inspect = obj_inspect
       super(ui, **kw)
+      @key = [@type, @obj_id, @pattern, @into].freeze
     end
 
     def description
