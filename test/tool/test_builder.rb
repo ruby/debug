@@ -193,7 +193,7 @@ module DEBUGGER__
       if File.exist?(path)
         File.open(path, 'r') do |f|
           lines = f.read
-          @content = lines.split("\n")[..-3].join("\n") + "\n#{content}  end\nend\n" if lines.include? @class
+          @content = lines.split("\n")[0..-3].join("\n") + "\n#{content}  end\nend\n" if lines.include? @class
         end
       end
       if @content
