@@ -97,6 +97,8 @@ module DEBUGGER__
     end
 
     def minfo tp
+      return "{block}" if tp.event == :b_call
+
       klass = tp.defined_class
 
       if klass.singleton_class?
