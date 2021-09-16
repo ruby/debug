@@ -201,7 +201,7 @@ module DEBUGGER__
             end
 
           out tp, " #{colorized_obj_inspect} receives #{colorize_blue(method_info)}"
-        else
+        elsif !tp.parameters.empty?
           b = tp.binding
           method_info = colorize_blue(minfo(tp))
 
