@@ -320,6 +320,47 @@ module DEBUGGER__
       end
     end
 
+    def test_top_level_block_doesnt_break_tracer
+      program = <<~RUBY
+     1| tap do
+     2|   puts(1)
+     3| end
+     4|
+     5| binding.b
+      RUBY
+
+      debug_code(program) do
+        type 'trace object 1'
+        assert_line_text(/Enable ObjectTracer/)
+        type 'c'
+        assert_line_text(/1 receives #to_s \(Integer#to_s\)/)
+        type 'c'
+      end
+    end
+
+    def test_block_doesnt_break_tracer
+      program = <<~RUBY
+     1| def foo
+     2|   yield(1)
+     3| end
+     4|
+     5| foo do |int|
+     6|   puts(int)
+     7| end
+     8|
+     9| binding.b
+      RUBY
+
+      debug_code(program) do
+        type 'trace object 1'
+        assert_line_text(/Enable ObjectTracer/)
+        type 'c'
+        assert_line_text(/1 is used as a parameter int of \{block\}/)
+        assert_line_text(/1 receives #to_s \(Integer#to_s\)/)
+        type 'c'
+      end
+    end
+
     class TraceCallReceiverTest < TestCase
       def program
         <<~RUBY
