@@ -7,32 +7,27 @@ module DEBUGGER__
   class UI_LocalConsole < UI_Base
     def initialize
       @console = Console.new
-
-      unless CONFIG[:no_sigint_hook]
-        @prev_handler = trap(:SIGINT){
-          if SESSION.active?
-            ThreadClient.current.on_trap :SIGINT
-          end
-        }
-      end
-    end
-
-    def close
-      if @prev_handler
-        trap(:SIGINT, @prev_handler)
-      end
     end
 
     def remote?
       false
     end
 
-    def activate on_fork: false
-      # Do nothing
+    def activate session, on_fork: false
+      unless CONFIG[:no_sigint_hook]
+        prev_handler = trap(:SIGINT){
+          if session.active?
+            ThreadClient.current.on_trap :SIGINT
+          end
+        }
+        session.intercept_trap_sigint_start prev_handler
+      end
     end
 
     def deactivate
-      # Do nothing
+      if SESSION.intercept_trap_sigint?
+        trap(:SIGINT, SESSION.intercepted_sigint_cmd)
+      end
     end
 
     def width
@@ -76,15 +71,17 @@ module DEBUGGER__
     end
 
     def setup_interrupt
-      current_thread = Thread.current # should be session_server thread
+      SESSION.intercept_trap_sigint false do
+        current_thread = Thread.current # should be session_server thread
 
-      prev_handler = trap(:INT){
-        current_thread.raise Interrupt
-      }
+        prev_handler = trap(:INT){
+          current_thread.raise Interrupt
+        }
 
-      yield
-    ensure
-      trap(:INT, prev_handler)
+        yield
+      ensure
+        trap(:INT, prev_handler)
+      end
     end
   end
 end
