@@ -248,8 +248,7 @@ module DEBUGGER__
             obj_id = ev_args[1]
             obj_inspect = ev_args[2]
             opt = ev_args[3]
-            t = ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
-            add_tracer(t)
+            add_tracer ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
           else
             # ignore
           end
@@ -810,18 +809,15 @@ module DEBUGGER__
           return :retry
 
         when /\Aline\z/
-          t = LineTracer.new(@ui, pattern: pattern, into: into)
-          add_tracer(t)
+          add_tracer LineTracer.new(@ui, pattern: pattern, into: into)
           return :retry
 
         when /\Acall\z/
-          t = CallTracer.new(@ui, pattern: pattern, into: into)
-          add_tracer(t)
+          add_tracer CallTracer.new(@ui, pattern: pattern, into: into)
           return :retry
 
         when /\Aexception\z/
-          t = ExceptionTracer.new(@ui, pattern: pattern, into: into)
-          add_tracer(t)
+          add_tracer ExceptionTracer.new(@ui, pattern: pattern, into: into)
           return :retry
 
         when /\Aobject\s+(.+)/
