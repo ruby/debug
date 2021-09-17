@@ -467,7 +467,7 @@ module DEBUGGER__
         type 'trace object 1'
         assert_line_text(/Enable ObjectTracer/)
         type 'c'
-        assert_line_text(/1 is used as a parameter int of \{block\}/)
+        assert_line_text(/1 is used as a parameter int of block\{\}/)
         assert_line_text(/1 receives #to_s \(Integer#to_s\)/)
         type 'c'
       end
