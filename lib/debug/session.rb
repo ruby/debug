@@ -1421,7 +1421,10 @@ module DEBUGGER__
       end
     end
 
-    def enter_postmortem_session frames
+    def enter_postmortem_session exc
+      return unless exc.instance_variable_defined? :@__debugger_postmortem_frames
+
+      frames = exc.instance_variable_get(:@__debugger_postmortem_frames)
       @postmortem = true
       ThreadClient.current.suspend :postmortem, postmortem_frames: frames
     ensure
@@ -1434,7 +1437,7 @@ module DEBUGGER__
           @postmortem_hook = TracePoint.new(:raise){|tp|
             exc = tp.raised_exception
             frames = DEBUGGER__.capture_frames(__dir__)
-            exc.instance_variable_set(:@postmortem_frames, frames)
+            exc.instance_variable_set(:@__debugger_postmortem_frames, frames)
           }
           at_exit{
             @postmortem_hook.disable
@@ -1446,7 +1449,7 @@ module DEBUGGER__
                 @ui.puts exc.backtrace.map{|e| '  ' + e}
                 @ui.puts "\n"
 
-                enter_postmortem_session exc.instance_variable_get(:@postmortem_frames)
+                enter_postmortem_session exc
               rescue SystemExit
                 exit!
               rescue Exception => e
