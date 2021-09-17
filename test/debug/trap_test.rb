@@ -17,10 +17,10 @@ module DEBUGGER__
         type 'b 3'
         type 'c'
         assert_line_num 2
-        assert_line_text /is registerred as SIGINT handler/
+        assert_line_text(/is registerred as SIGINT handler/)
         type 'sigint'
         assert_line_num 3
-        assert_line_text /SIGINT/
+        assert_line_text(/SIGINT/)
         type 'c'
       end
     end
