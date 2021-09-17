@@ -436,6 +436,9 @@ The `<...>` notation means the argument.
   * Stop the debuggee process with `Kernal#exit!`.
 * `kill!`
   * Same as kill but without the confirmation prompt.
+* `sigint`
+  * Execute SIGINT handler registerred by the debuggee.
+  * Note that this command should be used just after stop by `SIGINT`.
 
 ### Breakpoint
 

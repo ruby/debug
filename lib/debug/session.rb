@@ -96,6 +96,8 @@ module DEBUGGER__
       @postmortem_hook = nil
       @postmortem = false
       @thread_stopper = nil
+      @intercept_trap_sigint = false
+      @intercepted_sigint_cmd = 'DEFAULT'
 
       @frame_map = {} # {id => [threadId, frame_depth]} for DAP
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
@@ -132,7 +134,9 @@ module DEBUGGER__
       if on_fork
         @tp_thread_begin.disable
         @tp_thread_begin = nil
-        @ui.activate on_fork: true
+        @ui.activate self, on_fork: true
+      else
+        @ui.activate self, on_fork: false
       end
 
       if @ui.respond_to?(:reader_thread) && thc = thread_client(@ui.reader_thread)
@@ -160,7 +164,7 @@ module DEBUGGER__
     end
 
     def reset_ui ui
-      @ui.close
+      @ui.deactivate
       @ui = ui
     end
 
@@ -203,7 +207,12 @@ module DEBUGGER__
             bp, i = bp_index ev_args[1]
             @ui.event :suspend_bp, i, bp
           when :trap
-            @ui.event :suspend_trap, ev_args[1]
+            @ui.event :suspend_trap, sig = ev_args[1]
+
+            if sig == :SIGINT && (@intercepted_sigint_cmd.kind_of?(Proc) || @intercepted_sigint_cmd.kind_of?(String))
+              @ui.puts "#{@intercepted_sigint_cmd.inspect} is registerred as SIGINT handler."
+              @ui.puts "`sigint` command execute it."
+            end
           else
             @ui.event :suspended
           end
@@ -424,6 +433,29 @@ module DEBUGGER__
       #   * Same as kill but without the confirmation prompt.
       when 'kill!'
         exit! (arg || 1).to_i
+
+      # * `sigint`
+      #   * Execute SIGINT handler registerred by the debuggee.
+      #   * Note that this command should be used just after stop by `SIGINT`.
+      when 'sigint'
+        begin
+          case cmd = @intercepted_sigint_cmd
+          when nil, 'IGNORE', :IGNORE, 'DEFAULT', :DEFAULT
+            # ignore
+          when String
+            eval(cmd)
+          when Proc
+            cmd.call
+          end
+
+          @tc << :continue
+          restart_all_threads
+
+        rescue Exception => e
+          @ui.puts "Exception: #{e}"
+          @ui.puts e.backtrace.map{|line| "  #{e}"}
+          return :retry
+        end
 
       ### Breakpoint
 
@@ -1438,6 +1470,30 @@ module DEBUGGER__
         end
       end
     end
+
+    def save_int_trap cmd
+      prev, @intercepted_sigint_cmd = @intercepted_sigint_cmd, cmd
+      prev
+    end
+
+    attr_reader :intercepted_sigint_cmd
+
+    def intercept_trap_sigint?
+      @intercept_trap_sigint
+    end
+
+    def intercept_trap_sigint flag, &b
+      prev = @intercept_trap_sigint
+      @intercept_trap_sigint = flag
+      yield
+    ensure
+      @intercept_trap_sigint = prev
+    end
+
+    def intercept_trap_sigint_start prev
+      @intercept_trap_sigint = true
+      @intercepted_sigint_cmd = prev
+    end
   end
 
   class UI_Base
@@ -1447,6 +1503,7 @@ module DEBUGGER__
         i, bp = *args
         puts "\nStop by \##{i} #{bp}" if bp
       when :suspend_trap
+        sig = args.first
         puts "\nStop by #{args.first}"
       end
     end
@@ -1700,6 +1757,29 @@ module DEBUGGER__
   module ::Process
     class << self
       prepend ForkInterceptor
+    end
+  end
+
+  module TrapInterceptor
+    def trap sig, *command, &command_proc
+      case sig&.to_sym
+      when :INT, :SIGINT
+        if defined?(SESSION) && SESSION.active? && SESSION.intercept_trap_sigint?
+          return SESSION.save_int_trap(command.empty? ? command_proc : command.first)
+        end
+      end
+
+      super
+    end
+
+    class ::Object
+      include TrapInterceptor
+    end
+
+    module ::Signal
+      class << self
+        prepend TrapInterceptor
+      end
     end
   end
 end

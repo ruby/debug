@@ -15,8 +15,6 @@ module DEBUGGER__
       @q_ans = nil
       @unsent_messages = []
       @width = 80
-
-      activate
     end
 
     class Terminate < StandardError
@@ -37,7 +35,7 @@ module DEBUGGER__
       end
     end
 
-    def activate on_fork: false
+    def activate session, on_fork: false
       @reader_thread = Thread.new do
         # An error on this thread should break the system.
         Thread.current.abort_on_exception = true
@@ -138,9 +136,9 @@ module DEBUGGER__
     end
 
     def setup_interrupt
-      prev_handler = trap(:SIGINT) do
+      prev_handler = trap(:SIGURG) do
         # $stderr.puts "trapped SIGINT"
-        ThreadClient.current.on_trap :SIGINT
+        ThreadClient.current.on_trap :SIGURG
 
         case prev_handler
         when Proc
@@ -150,9 +148,12 @@ module DEBUGGER__
         end
       end
 
+      if prev_handler != "SYSTEM_DEFAULT"
+        DEBUGGER__.warn "SIGURG handler is overriddend by the debugger."
+      end
       yield
     ensure
-      trap(:SIGINT, prev_handler)
+      trap(:SIGURG, prev_handler)
     end
 
     attr_reader :reader_thread
@@ -230,7 +231,7 @@ module DEBUGGER__
 
     def pause
       # $stderr.puts "DEBUG: pause request"
-      Process.kill(:SIGINT, Process.pid)
+      Process.kill(:SIGURG, Process.pid)
     end
 
     def quit n
