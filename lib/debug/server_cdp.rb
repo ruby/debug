@@ -222,18 +222,18 @@ module DEBUGGER__
   end
 
   class Session
-    def process_protocol_request req
+    def process_protocol_request req, tc
       case req['method']
       when 'Debugger.stepOver', 'Debugger.stepInto', 'Debugger.stepOut', 'Debugger.resume', 'Debugger.getScriptSource'
-        @tc << [:cdp, :backtrace, req]
+        tc << [:cdp, :backtrace, req]
       when 'Debugger.evaluateOnCallFrame'
         expr = req.dig('params', 'expression')
-        @tc << [:cdp, :evaluate, req, expr]
+        tc << [:cdp, :evaluate, req, expr]
       when 'Runtime.getProperties'
         oid = req.dig('params', 'objectId')
         case oid
         when /(\d?):local/
-          @tc << [:cdp, :properties, req, $1.to_i]
+          tc << [:cdp, :properties, req, $1.to_i]
         when /\d?:script/
           # TODO: Support a script type
           @ui.respond req

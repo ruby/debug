@@ -309,11 +309,11 @@ module DEBUGGER__
       return :retry
     end
 
-    def process_protocol_request req
+    def process_protocol_request req, tc
       case req['command']
       when 'stepBack'
-        if @tc.recorder&.can_step_back?
-          @tc << [:step, :back]
+        if tc.recorder&.can_step_back?
+          tc << [:step, :back]
         else
           fail_response req, message: 'cancelled'
         end
