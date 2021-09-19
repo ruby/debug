@@ -90,7 +90,6 @@ module DEBUGGER__
       @th_clients = nil # {Thread => ThreadClient}
       @q_evt = Queue.new
       @displays = []
-      @tc = nil
       @tc_id = 0
       @preset_command = nil
       @postmortem_hook = nil
@@ -218,7 +217,7 @@ module DEBUGGER__
           end
 
           if @displays.empty?
-            stop_all_threads(@tc)
+            stop_all_threads(tc)
             wait_command_loop tc
           else
             tc << [:eval, :display, @displays]
@@ -294,12 +293,13 @@ module DEBUGGER__
     end
 
     def wait_command_loop tc
-      @tc = tc
-
       loop do
-        case wait_command
+        return_value = wait_command(tc)
+        case return_value
         when :retry
           # nothing
+        when ThreadClient
+          tc = return_value
         else
           break
         end
@@ -317,14 +317,14 @@ module DEBUGGER__
       end
     end
 
-    def wait_command
+    def wait_command(current_tc)
       if @preset_command
         if @preset_command.commands.empty?
           if @preset_command.auto_continue
             @preset_command = nil
 
-            @tc << :continue
-            restart_all_threads(@tc)
+            current_tc << :continue
+            restart_all_threads(current_tc)
             return
           else
             @preset_command = nil
@@ -341,15 +341,15 @@ module DEBUGGER__
 
       case line
       when String
-        process_command line
+        process_command line, current_tc
       when Hash
-        process_dap_request line # defined in server.rb
+        process_dap_request line, current_tc # defined in server.rb
       else
         raise "unexpected input: #{line.inspect}"
       end
     end
 
-    def process_command line
+    def process_command line, tc
       if line.empty?
         if @repl_prev_line
           line = @repl_prev_line
@@ -375,7 +375,7 @@ module DEBUGGER__
       when 's', 'step'
         cancel_auto_continue
         check_postmortem
-        step_command :in, arg
+        step_command :in, arg, tc
 
       # * `n[ext]`
       #   * Step over. Resume the program until next line.
@@ -384,7 +384,7 @@ module DEBUGGER__
       when 'n', 'next'
         cancel_auto_continue
         check_postmortem
-        step_command :next, arg
+        step_command :next, arg, tc
 
       # * `fin[ish]`
       #   * Finish this frame. Resume the program until the current frame is finished.
@@ -393,22 +393,22 @@ module DEBUGGER__
       when 'fin', 'finish'
         cancel_auto_continue
         check_postmortem
-        step_command :finish, arg
+        step_command :finish, arg, tc
 
       # * `c[ontinue]`
       #   * Resume the program.
       when 'c', 'continue'
         cancel_auto_continue
-        @tc << :continue
-        restart_all_threads(@tc)
+        tc << :continue
+        restart_all_threads(tc)
 
       # * `q[uit]` or `Ctrl-D`
       #   * Finish debugger (with the debuggee process on non-remote debugging).
       when 'q', 'quit'
         if ask 'Really quit?'
           @ui.quit arg.to_i
-          @tc << :continue
-          restart_all_threads(@tc)
+          tc << :continue
+          restart_all_threads(tc)
         else
           return :retry
         end
@@ -417,7 +417,7 @@ module DEBUGGER__
       #   * Same as q[uit] but without the confirmation prompt.
       when 'q!', 'quit!'
         @ui.quit arg.to_i
-        restart_all_threads(@tc)
+        restart_all_threads(tc)
 
       # * `kill`
       #   * Stop the debuggee process with `Kernal#exit!`.
@@ -447,8 +447,8 @@ module DEBUGGER__
             cmd.call
           end
 
-          @tc << :continue
-          restart_all_threads(@tc)
+          tc << :continue
+          restart_all_threads(tc)
 
         rescue Exception => e
           @ui.puts "Exception: #{e}"
@@ -484,7 +484,7 @@ module DEBUGGER__
           show_bps
           return :retry
         else
-          case bp = repl_add_breakpoint(@tc, arg)
+          case bp = repl_add_breakpoint(tc, arg)
           when :noretry
           when nil
             return :retry
@@ -512,7 +512,7 @@ module DEBUGGER__
         end
 
         vimsrc = File.join(__dir__, 'bp.vim')
-        system("vim -R -S #{vimsrc} #{@tc.location.path}")
+        system("vim -R -S #{vimsrc} #{tc.location.path}")
 
         if File.exist?(".rdb_breakpoints.json")
           pp JSON.load(File.read(".rdb_breakpoints.json"))
@@ -540,7 +540,7 @@ module DEBUGGER__
         check_postmortem
 
         if arg && arg.match?(/\A@\w+/)
-          @tc << [:breakpoint, :watch, arg]
+          tc << [:breakpoint, :watch, arg]
         else
           show_bps
           return :retry
@@ -581,15 +581,15 @@ module DEBUGGER__
       when 'bt', 'backtrace'
         case arg
         when /\A(\d+)\z/
-          @tc << [:show, :backtrace, arg.to_i, nil]
+          tc << [:show, :backtrace, arg.to_i, nil]
         when /\A\/(.*)\/\z/
           pattern = $1
-          @tc << [:show, :backtrace, nil, Regexp.compile(pattern)]
+          tc << [:show, :backtrace, nil, Regexp.compile(pattern)]
         when /\A(\d+)\s+\/(.*)\/\z/
           max, pattern = $1, $2
-          @tc << [:show, :backtrace, max.to_i, Regexp.compile(pattern)]
+          tc << [:show, :backtrace, max.to_i, Regexp.compile(pattern)]
         else
-          @tc << [:show, :backtrace, nil, nil]
+          tc << [:show, :backtrace, nil, nil]
         end
 
       # * `l[ist]`
@@ -602,13 +602,13 @@ module DEBUGGER__
       when 'l', 'list'
         case arg ? arg.strip : nil
         when /\A(\d+)\z/
-          @tc << [:show, :list, {start_line: arg.to_i - 1}]
+          tc << [:show, :list, {start_line: arg.to_i - 1}]
         when /\A-\z/
-          @tc << [:show, :list, {dir: -1}]
+          tc << [:show, :list, {dir: -1}]
         when /\A(\d+)-(\d+)\z/
-          @tc << [:show, :list, {start_line: $1.to_i - 1, end_line: $2.to_i}]
+          tc << [:show, :list, {start_line: $1.to_i - 1, end_line: $2.to_i}]
         when nil
-          @tc << [:show, :list]
+          tc << [:show, :list]
         else
           @ui.puts "Can not handle list argument: #{arg}"
           return :retry
@@ -632,7 +632,7 @@ module DEBUGGER__
           return :retry
         end
 
-        @tc << [:show, :edit, arg]
+        tc << [:show, :edit, arg]
 
       # * `i[nfo]`
       #    * Show information about current frame (local/instance variables and defined constants).
@@ -659,17 +659,17 @@ module DEBUGGER__
 
         case sub
         when nil
-          @tc << [:show, :default, pat] # something useful
+          tc << [:show, :default, pat] # something useful
         when 'l', /^locals?/
-          @tc << [:show, :locals, pat]
+          tc << [:show, :locals, pat]
         when 'i', /^ivars?/i, /^instance[_ ]variables?/i
-          @tc << [:show, :ivars, pat]
+          tc << [:show, :ivars, pat]
         when 'c', /^consts?/i, /^constants?/i
-          @tc << [:show, :consts, pat]
+          tc << [:show, :consts, pat]
         when 'g', /^globals?/i, /^global[_ ]variables?/i
-          @tc << [:show, :globals, pat]
+          tc << [:show, :globals, pat]
         when 'th', /threads?/
-          thread_list(@tc)
+          thread_list(tc)
           return :retry
         else
           @ui.puts "unrecognized argument for info command: #{arg}"
@@ -683,7 +683,7 @@ module DEBUGGER__
       #   * Show you available methods and instance variables of the given object.
       #   * If the object is a class/module, it also lists its constants.
       when 'outline', 'o', 'ls'
-        @tc << [:show, :outline, arg]
+        tc << [:show, :outline, arg]
 
       # * `display`
       #   * Show display setting.
@@ -692,9 +692,9 @@ module DEBUGGER__
       when 'display'
         if arg && !arg.empty?
           @displays << arg
-          @tc << [:eval, :try_display, @displays]
+          tc << [:eval, :try_display, @displays]
         else
-          @tc << [:eval, :display, @displays]
+          tc << [:eval, :display, @displays]
         end
 
       # * `undisplay`
@@ -707,7 +707,7 @@ module DEBUGGER__
           if @displays[n = $1.to_i]
             @displays.delete_at n
           end
-          @tc << [:eval, :display, @displays]
+          tc << [:eval, :display, @displays]
         when nil
           if ask "clear all?", 'N'
             @displays.clear
@@ -722,29 +722,29 @@ module DEBUGGER__
       # * `f[rame] <framenum>`
       #   * Specify a current frame. Evaluation are run on specified frame.
       when 'frame', 'f'
-        @tc << [:frame, :set, arg]
+        tc << [:frame, :set, arg]
 
       # * `up`
       #   * Specify the upper frame.
       when 'up'
-        @tc << [:frame, :up]
+        tc << [:frame, :up]
 
       # * `down`
       #   * Specify the lower frame.
       when 'down'
-        @tc << [:frame, :down]
+        tc << [:frame, :down]
 
       ### Evaluate
 
       # * `p <expr>`
       #   * Evaluate like `p <expr>` on the current frame.
       when 'p'
-        @tc << [:eval, :p, arg.to_s]
+        tc << [:eval, :p, arg.to_s]
 
       # * `pp <expr>`
       #   * Evaluate like `pp <expr>` on the current frame.
       when 'pp'
-        @tc << [:eval, :pp, arg.to_s]
+        tc << [:eval, :pp, arg.to_s]
 
       # * `eval <expr>`
       #   * Evaluate `<expr>` on the current frame.
@@ -754,7 +754,7 @@ module DEBUGGER__
           @ui.puts "\nTo evaluate the variable `#{cmd}`, use `pp #{cmd}` instead."
           return :retry
         else
-          @tc << [:eval, :call, arg]
+          tc << [:eval, :call, arg]
         end
 
       # * `irb`
@@ -764,7 +764,7 @@ module DEBUGGER__
           @ui.puts "not supported on the remote console."
           return :retry
         end
-        @tc << [:eval, :call, 'binding.irb']
+        tc << [:eval, :call, 'binding.irb']
 
         # don't repeat irb command
         @repl_prev_line = nil
@@ -821,7 +821,7 @@ module DEBUGGER__
           return :retry
 
         when /\Aobject\s+(.+)/
-          @tc << [:trace, :object, $1.strip, {pattern: pattern, into: into}]
+          tc << [:trace, :object, $1.strip, {pattern: pattern, into: into}]
 
         when /\Aoff\s+(\d+)\z/
           if t = @tracers.values[$1.to_i]
@@ -859,7 +859,7 @@ module DEBUGGER__
       when 'record'
         case arg
         when nil, 'on', 'off'
-          @tc << [:record, arg&.to_sym]
+          tc << [:record, arg&.to_sym]
         else
           @ui.puts "unknown command: #{arg}"
           return :retry
@@ -874,10 +874,11 @@ module DEBUGGER__
       when 'th', 'thread'
         case arg
         when nil, 'list', 'l'
-          thread_list(@tc)
+          thread_list(tc)
         when /(\d+)/
-          thread_switch $1.to_i
-          thread_list(@tc)
+          new_tc = thread_switch $1.to_i
+          thread_list(new_tc)
+          return new_tc
         else
           @ui.puts "unknown thread command: #{arg}"
         end
@@ -929,7 +930,7 @@ module DEBUGGER__
 
       ### END
       else
-        @tc << [:eval, :pp, line]
+        tc << [:eval, :pp, line]
 =begin
         @repl_prev_line = nil
         @ui.puts "unknown command: #{line}"
@@ -958,20 +959,20 @@ module DEBUGGER__
       return :retry
     end
 
-    def step_command type, arg
+    def step_command type, arg, tc
       case arg
       when nil
-        @tc << [:step, type]
-        restart_all_threads(@tc)
+        tc << [:step, type]
+        restart_all_threads(tc)
       when /\A\d+\z/
-        @tc << [:step, type, arg.to_i]
-        restart_all_threads(@tc)
+        tc << [:step, type, arg.to_i]
+        restart_all_threads(tc)
       when /\Aback\z/, /\Areset\z/
         if type != :in
           @ui.puts "only `step #{arg}` is supported."
           :retry
         else
-          @tc << [:step, arg.to_sym]
+          tc << [:step, arg.to_sym]
         end
       else
         @ui.puts "Unknown option: #{arg}"
@@ -1270,7 +1271,7 @@ module DEBUGGER__
 
       if tc = thcs[n]
         if tc.waiting?
-          @tc = tc
+          return tc
         else
           @ui.puts "#{tc.thread} is not controllable yet."
         end
@@ -1349,7 +1350,6 @@ module DEBUGGER__
         next if current_tc == tc
         tc << :continue
       }
-      @tc = nil
     end
 
     ## event
