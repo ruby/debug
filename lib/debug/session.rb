@@ -232,7 +232,7 @@ module DEBUGGER__
           end
 
           if @displays.empty?
-            stop_all_threads
+            stop_all_threads(@tc)
             wait_command_loop tc
           else
             tc << [:eval, :display, @displays]
@@ -248,7 +248,7 @@ module DEBUGGER__
                 @ui.puts "canceled: #{@displays.pop}"
               end
             end
-            stop_all_threads
+            stop_all_threads(tc)
 
           when :method_breakpoint, :watch_breakpoint
             bp = ev_args[1]
@@ -341,7 +341,7 @@ module DEBUGGER__
             @preset_command = nil
 
             @tc << :continue
-            restart_all_threads
+            restart_all_threads(@tc)
             return
           else
             @preset_command = nil
@@ -417,7 +417,7 @@ module DEBUGGER__
       when 'c', 'continue'
         cancel_auto_continue
         @tc << :continue
-        restart_all_threads
+        restart_all_threads(@tc)
 
       # * `q[uit]` or `Ctrl-D`
       #   * Finish debugger (with the debuggee process on non-remote debugging).
@@ -425,7 +425,7 @@ module DEBUGGER__
         if ask 'Really quit?'
           @ui.quit arg.to_i
           @tc << :continue
-          restart_all_threads
+          restart_all_threads(@tc)
         else
           return :retry
         end
@@ -435,7 +435,7 @@ module DEBUGGER__
       when 'q!', 'quit!'
         @ui.quit arg.to_i
         @tc << :continue
-        restart_all_threads
+        restart_all_threads(@tc)
 
       # * `kill`
       #   * Stop the debuggee process with `Kernal#exit!`.
@@ -466,7 +466,7 @@ module DEBUGGER__
           end
 
           @tc << :continue
-          restart_all_threads
+          restart_all_threads(@tc)
 
         rescue Exception => e
           @ui.puts "Exception: #{e}"
@@ -502,7 +502,7 @@ module DEBUGGER__
           show_bps
           return :retry
         else
-          case bp = repl_add_breakpoint(arg)
+          case bp = repl_add_breakpoint(@tc, arg)
           when :noretry
           when nil
             return :retry
@@ -687,7 +687,7 @@ module DEBUGGER__
         when 'g', /^globals?/i, /^global[_ ]variables?/i
           @tc << [:show, :globals, pat]
         when 'th', /threads?/
-          thread_list
+          thread_list(@tc)
           return :retry
         else
           @ui.puts "unrecognized argument for info command: #{arg}"
@@ -892,9 +892,10 @@ module DEBUGGER__
       when 'th', 'thread'
         case arg
         when nil, 'list', 'l'
-          thread_list
+          thread_list(@tc)
         when /(\d+)/
           thread_switch $1.to_i
+          thread_list(@tc)
         else
           @ui.puts "unknown thread command: #{arg}"
         end
@@ -1085,10 +1086,10 @@ module DEBUGGER__
       case arg
       when nil
         @tc << [:step, type]
-        restart_all_threads
+        restart_all_threads(@tc)
       when /\A\d+\z/
         @tc << [:step, type, arg.to_i]
-        restart_all_threads
+        restart_all_threads(@tc)
       when /\Aback\z/, /\Areset\z/
         if type != :in
           @ui.puts "only `step #{arg}` is supported."
@@ -1285,18 +1286,18 @@ module DEBUGGER__
       expr.transform_values{|v| v.join(' ')}
     end
 
-    def repl_add_breakpoint arg
+    def repl_add_breakpoint current_tc, arg
       expr = parse_break arg.strip
       cond = expr[:if]
       cmd = ['break', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
 
       case expr[:sig]
       when /\A(\d+)\z/
-        add_line_breakpoint @tc.location.path, $1.to_i, cond: cond, command: cmd
+        add_line_breakpoint current_tc.location.path, $1.to_i, cond: cond, command: cmd
       when /\A(.+)[:\s+](\d+)\z/
         add_line_breakpoint $1, $2.to_i, cond: cond, command: cmd
       when /\A(.+)([\.\#])(.+)\z/
-        @tc << [:breakpoint, :method, $1, $2, $3, cond, cmd]
+        current_tc << [:breakpoint, :method, $1, $2, $3, cond, cmd]
         return :noretry
       when nil
         add_check_breakpoint cond
@@ -1369,10 +1370,10 @@ module DEBUGGER__
       return thcs.sort_by{|thc| thc.id}, unmanaged
     end
 
-    def thread_list
+    def thread_list(current_tc)
       thcs, unmanaged_ths = update_thread_list
       thcs.each_with_index{|thc, i|
-        @ui.puts "#{@tc == thc ? "--> " : "    "}\##{i} #{thc}"
+        @ui.puts "#{current_tc == thc ? "--> " : "    "}\##{i} #{thc}"
       }
 
       if !unmanaged_ths.empty?
@@ -1398,7 +1399,6 @@ module DEBUGGER__
           @ui.puts "#{tc.thread} is not controllable yet."
         end
       end
-      thread_list
     end
 
     def setup_threads
@@ -1446,13 +1446,13 @@ module DEBUGGER__
       end
     end
 
-    private def thread_stopper
+    private def thread_stopper(current_tc)
       @thread_stopper ||= TracePoint.new(:line) do
         # run on each thread
         tc = ThreadClient.current
         next if tc.management?
         next unless tc.running?
-        next if tc == @tc
+        next if tc == current_tc
 
         tc.on_pause
       end
@@ -1474,19 +1474,19 @@ module DEBUGGER__
       }.compact
     end
 
-    private def stop_all_threads
+    private def stop_all_threads(current_tc)
       return if running_thread_clients_count == 0
 
-      stopper = thread_stopper
+      stopper = thread_stopper(current_tc)
       stopper.enable unless stopper.enabled?
     end
 
-    private def restart_all_threads
-      stopper = thread_stopper
+    private def restart_all_threads(current_tc)
+      stopper = thread_stopper(current_tc)
       stopper.disable if stopper.enabled?
 
       waiting_thread_clients.each{|tc|
-        next if @tc == tc
+        next if current_tc == tc
         tc << :continue
       }
       @tc = nil
