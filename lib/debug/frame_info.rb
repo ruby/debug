@@ -27,6 +27,7 @@ module DEBUGGER__
     end
 
     def pretty_path
+      return '#<none>' unless path = self.path
       use_short_path = CONFIG[:use_short_path]
 
       case

@@ -372,6 +372,7 @@ config set no_color true
 
 * BOOT
   * `RUBY_DEBUG_NONSTOP` (`nonstop`): Nonstop mode
+  * `RUBY_DEBUG_STOP_AT_LOAD` (`stop_at_load`): Stop at just loading location
   * `RUBY_DEBUG_INIT_SCRIPT` (`init_script`): debug command script path loaded at first stop
   * `RUBY_DEBUG_COMMANDS` (`commands`): debug commands invoked at first stop. commands should be separated by ';;'
   * `RUBY_DEBUG_NO_RC` (`no_rc`): ignore loading ~/.rdbgrc(.rb)
@@ -731,6 +732,7 @@ Attach mode:
 Other options:
     -h, --help                       Print help
         --util=NAME                  Utility mode (used by tools)
+        --stop-at-load               Stop immediately when the debugging feature is loaded.
 
 NOTE
   All messages communicated between a debugger and a debuggee are *NOT* encrypted.
