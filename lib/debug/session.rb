@@ -120,9 +120,10 @@ module DEBUGGER__
     end
 
     def activate on_fork: false
+      @tp_thread_begin&.disable
+      @tp_thread_begin = nil
+
       if on_fork
-        @tp_thread_begin&.disable
-        @tp_thread_begin = nil
         @ui.activate self, on_fork: true
       else
         @ui.activate self, on_fork: false
@@ -143,7 +144,7 @@ module DEBUGGER__
         end
 
         @tp_thread_begin = TracePoint.new(:thread_begin) do |tp|
-          ask_thread_client
+          thread_client
         end
         @tp_thread_begin.enable
 
@@ -1305,10 +1306,9 @@ module DEBUGGER__
       @th_clients[th] = ThreadClient.new((@tc_id += 1), @q_evt, Queue.new, th)
     end
 
-    private def ask_thread_client
+    private def ask_thread_client th = Thread.current
       # TODO: Ractor support
       q2 = Queue.new
-      th = Thread.current
       # tc, output, ev, @internal_info, *ev_args = evt
       @q_evt << [nil, [], :thread_begin, nil, th, q2]
       q2.pop
@@ -1321,7 +1321,11 @@ module DEBUGGER__
       if @th_clients.has_key? th
         @th_clients[th]
       else
-        ask_thread_begin th
+        if Thread.current == @session_server
+          thread_client_create th
+        else
+          ask_thread_client th
+        end
       end
     end
 
