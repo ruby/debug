@@ -1771,20 +1771,6 @@ module DEBUGGER__
     end
   end
 
-  module ::Kernel
-    prepend ForkInterceptor
-
-    class << self
-      prepend ForkInterceptor
-    end
-  end
-
-  module ::Process
-    class << self
-      prepend ForkInterceptor
-    end
-  end
-
   module TrapInterceptor
     def trap sig, *command, &command_proc
       case sig&.to_sym
@@ -1796,19 +1782,36 @@ module DEBUGGER__
 
       super
     end
+  end
 
+  if RUBY_VERSION >= '3.0.0'
     module ::Kernel
+      prepend ForkInterceptor
       prepend TrapInterceptor
-
-      class << self
-        include TrapInterceptor
-      end
     end
+  else
+    class ::Object
+      include ForkInterceptor
+      include TrapInterceptor
+    end
+  end
 
-    module ::Signal
-      class << self
-        prepend TrapInterceptor
-      end
+  module ::Kernel
+    class << self
+      prepend ForkInterceptor
+      prepend TrapInterceptor
+    end
+  end
+
+  module ::Process
+    class << self
+      prepend ForkInterceptor
+    end
+  end
+
+  module ::Signal
+    class << self
+      prepend TrapInterceptor
     end
   end
 end
