@@ -120,34 +120,39 @@ module DEBUGGER__
     end
 
     def activate on_fork: false
-      @session_server = Thread.new do
-        Thread.current.name = 'DEBUGGER__::SESSION@server'
-        Thread.current.abort_on_exception = true
-        session_server_main
-      end
-
-      setup_threads
-
-      thc = thread_client @session_server
-      thc.is_management
-
       if on_fork
-        @tp_thread_begin.disable
+        @tp_thread_begin&.disable
         @tp_thread_begin = nil
         @ui.activate self, on_fork: true
       else
         @ui.activate self, on_fork: false
       end
 
-      if @ui.respond_to?(:reader_thread) && thc = thread_client(@ui.reader_thread)
+      q = Queue.new
+      @session_server = Thread.new do
+        Thread.current.name = 'DEBUGGER__::SESSION@server'
+        Thread.current.abort_on_exception = true
+
+        # Thread management
+        setup_threads
+        thc = thread_client Thread.current
         thc.is_management
+
+        if @ui.respond_to?(:reader_thread) && thc = thread_client(@ui.reader_thread)
+          thc.is_management
+        end
+
+        @tp_thread_begin = TracePoint.new(:thread_begin) do |tp|
+          ask_thread_client
+        end
+        @tp_thread_begin.enable
+
+        # session start
+        q << true
+        session_server_main
       end
 
-      @tp_thread_begin = TracePoint.new(:thread_begin){|tp|
-        th = Thread.current
-        ThreadClient.current.on_thread_begin th
-      }
-      @tp_thread_begin.enable
+      q.pop
     end
 
     def deactivate
@@ -179,6 +184,13 @@ module DEBUGGER__
         output.each{|str| @ui.puts str}
 
         case ev
+
+        when :thread_begin # special event, tc is nil
+          th = ev_args.shift
+          q = ev_args.shift
+          on_thread_begin th
+          q << true
+
         when :init
           wait_command_loop tc
 
@@ -193,12 +205,6 @@ module DEBUGGER__
           if t = @tracers.values.find{|t| t.object_id == trace_id}
             t.puts msg
           end
-          tc << :continue
-
-        when :thread_begin
-          th = ev_args.shift
-          on_thread_begin th
-          @ui.event :thread_begin, th
           tc << :continue
 
         when :suspend
@@ -1277,10 +1283,6 @@ module DEBUGGER__
       thread_list
     end
 
-    def thread_client_create th
-      @th_clients[th] = ThreadClient.new((@tc_id += 1), @q_evt, Queue.new, th)
-    end
-
     def setup_threads
       @th_clients = {}
 
@@ -1291,18 +1293,35 @@ module DEBUGGER__
 
     def on_thread_begin th
       if @th_clients.has_key? th
-        # OK
-      else
         # TODO: NG?
+      else
         thread_client_create th
       end
     end
 
-    def thread_client thr = Thread.current
-      if @th_clients.has_key? thr
-        @th_clients[thr]
+    private def thread_client_create th
+      # TODO: Ractor support
+      raise "Only session_server can create thread_client" unless Thread.current == @session_server
+      @th_clients[th] = ThreadClient.new((@tc_id += 1), @q_evt, Queue.new, th)
+    end
+
+    private def ask_thread_client
+      # TODO: Ractor support
+      q2 = Queue.new
+      th = Thread.current
+      # tc, output, ev, @internal_info, *ev_args = evt
+      @q_evt << [nil, [], :thread_begin, nil, th, q2]
+      q2.pop
+
+      @th_clients[th] or raise "unexpected error"
+    end
+
+    # can be called by other threads
+    def thread_client th = Thread.current
+      if @th_clients.has_key? th
+        @th_clients[th]
       else
-        @th_clients[thr] = thread_client_create(thr)
+        ask_thread_begin th
       end
     end
 

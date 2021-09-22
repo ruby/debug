@@ -20,9 +20,11 @@ module DEBUGGER__
 
   class ThreadClient
     def self.current
-      Thread.current[:DEBUGGER__ThreadClient] || begin
-        tc = ::DEBUGGER__::SESSION.thread_client
-        Thread.current[:DEBUGGER__ThreadClient] = tc
+      if thc = Thread.current[:DEBUGGER__ThreadClient]
+        thc
+      else
+        thc = SESSION.thread_client
+        Thread.current[:DEBUGGER__ThreadClient] = thc
       end
     end
 
@@ -196,10 +198,6 @@ module DEBUGGER__
 
       event!(*event_arg)
       wait_next_action
-    end
-
-    def on_thread_begin th
-      wait_reply [:thread_begin, th]
     end
 
     def on_load iseq, eval_src
