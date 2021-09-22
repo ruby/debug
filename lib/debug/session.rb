@@ -1752,8 +1752,12 @@ module DEBUGGER__
     end
   end
 
-  class ::Object
-    include ForkInterceptor
+  module ::Kernel
+    prepend ForkInterceptor
+
+    class << self
+      prepend ForkInterceptor
+    end
   end
 
   module ::Process
@@ -1774,8 +1778,12 @@ module DEBUGGER__
       super
     end
 
-    class ::Object
-      include TrapInterceptor
+    module ::Kernel
+      prepend TrapInterceptor
+
+      class << self
+        include TrapInterceptor
+      end
     end
 
     module ::Signal
