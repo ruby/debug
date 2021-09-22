@@ -339,6 +339,11 @@ module DEBUGGER__
     end
 
     def frame_eval src, re_raise: false
+      if src == "_ex_"
+        @success_last_eval = true
+        return current_frame.raised_exception
+      end
+
       begin
         @success_last_eval = false
 
@@ -435,7 +440,7 @@ module DEBUGGER__
         puts_variable_info '%return', current_frame.return_value, pat
       end
       if current_frame&.has_raised_exception
-        puts_variable_info "%raised", current_frame.raised_exception, pat
+        puts_variable_info "_ex_", current_frame.raised_exception, pat
       end
 
       if vars = current_frame&.local_variables
