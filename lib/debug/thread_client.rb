@@ -138,7 +138,11 @@ module DEBUGGER__
     end
 
     def inspect
-      "#<DBG:TC #{self.id}:#{@mode}@#{@thread.backtrace[-1]}>"
+      if bt = @thread.backtrace
+        "#<DBG:TC #{self.id}:#{@mode}@#{bt[-1]}>"
+      else # bt can be nil
+        "#<DBG:TC #{self.id}:#{@mode}>"
+      end
     end
 
     def to_s
