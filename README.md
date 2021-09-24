@@ -12,7 +12,7 @@ New debug.rb has several advantages:
   * UNIX domain socket
   * TCP/IP
   * VSCode/DAP integration ([VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg))
-* Extensible: application can introduce debugging support with several ways:
+* Extensible: application can introduce debugging support in several ways:
   * By `rdbg` command
   * By loading libraries with `-r` command line option
   * By calling Ruby's method explicitly
