@@ -6,7 +6,7 @@ module DEBUGGER__
       require 'reline'
 
       # reline 0.2.7 or later is required.
-      raise LoadError if Reline::VERSION < '0.2.6'
+      raise LoadError if Reline::VERSION < '0.2.7'
 
       require_relative 'color'
       include Color
