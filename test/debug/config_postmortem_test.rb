@@ -29,7 +29,7 @@ module DEBUGGER__
         type 'step'
         assert_line_text(/Can not use this command on postmortem mode/)
         type 'c'
-        # assert_line_text(/unhandled exception/)
+        assert_finish
       end
     end
 
@@ -46,7 +46,7 @@ module DEBUGGER__
         type 'step'
         assert_line_text(/Can not use this command on postmortem mode/)
         type 'c'
-        # assert_line_text(/unhandled exception/)
+        assert_finish
       end
     ensure
       ENV["RUBY_DEBUG_POSTMORTEM"] = nil
