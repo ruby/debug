@@ -103,6 +103,7 @@ module DEBUGGER__
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
       @src_map   = {} # {id => src}
 
+      @tp_thread_begin = nil
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
         ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
       }
@@ -1527,7 +1528,6 @@ module DEBUGGER__
         i, bp = *args
         puts "\nStop by \##{i} #{bp}" if bp
       when :suspend_trap
-        sig = args.first
         puts "\nStop by #{args.first}"
       end
     end
@@ -1616,7 +1616,6 @@ module DEBUGGER__
       case
       when CONFIG[:stop_at_load]
         add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, hook_call: false
-        a = 1
       when path = ENV['RUBY_DEBUG_INITIAL_SUSPEND_PATH']
         add_line_breakpoint path, 0, oneshot: true, hook_call: false
       when loc = ::DEBUGGER__.require_location
