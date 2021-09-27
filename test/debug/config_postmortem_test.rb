@@ -32,6 +32,25 @@ module DEBUGGER__
         # assert_line_text(/unhandled exception/)
       end
     end
+
+    def test_env_var_postmortem
+      ENV["RUBY_DEBUG_POSTMORTEM"] = "true"
+      debug_code(program) do
+        type 'c'
+        assert_line_text(/Enter postmortem mode with RuntimeError/)
+        type 'p x'
+        assert_line_text(/=> 4/)
+        type 'up'
+        type 'p y'
+        assert_line_text(/=> 1/)
+        type 'step'
+        assert_line_text(/Can not use this command on postmortem mode/)
+        type 'c'
+        # assert_line_text(/unhandled exception/)
+      end
+    ensure
+      ENV["RUBY_DEBUG_POSTMORTEM"] = nil
+    end
   end
 
   class CustomPostmortemTest < TestCase

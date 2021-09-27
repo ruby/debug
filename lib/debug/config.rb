@@ -111,7 +111,9 @@ module DEBUGGER__
       end
 
       if_updated old_conf, conf, :postmortem do |_, new_p|
-        SESSION.postmortem = new_p
+        if defined?(SESSION)
+          SESSION.postmortem = new_p
+        end
       end
 
       if_updated old_conf, conf, :sigdump_sig do |old_sig, new_sig|
