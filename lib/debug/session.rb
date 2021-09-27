@@ -109,6 +109,8 @@ module DEBUGGER__
       @tp_load_script.enable
 
       activate
+
+      self.postmortem = CONFIG[:postmortem]
     end
 
     def active?
