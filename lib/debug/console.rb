@@ -11,6 +11,14 @@ module DEBUGGER__
       require_relative 'color'
       include Color
 
+      begin
+        prev = trap(:SIGWINCH, nil)
+        trap(:SIGWINCH, prev)
+        SIGWINCH_SUPPORTED = true
+      rescue ArgumentError
+        SIGWINCH_SUPPORTED = false
+      end
+
       # 0.2.7 has SIGWINCH issue on non-main thread
       class ::Reline::LineEditor
         m = Module.new do
@@ -20,7 +28,7 @@ module DEBUGGER__
           end
         end
         prepend m
-      end
+      end if SIGWINCH_SUPPORTED
 
       def readline_setup prompt
         commands = DEBUGGER__.commands
