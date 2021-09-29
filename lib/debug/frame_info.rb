@@ -138,10 +138,9 @@ module DEBUGGER__
       if lvars = self._local_variables
         lvars
       elsif b = self.binding
-        lvars = b.local_variables.map{|var|
+        b.local_variables.map{|var|
           [var, b.local_variable_get(var)]
         }.to_h
-        self._local_variables = lvars
       end
     end
 

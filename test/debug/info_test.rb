@@ -56,6 +56,20 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_info_print_modified_locals
+      debug_code program do
+        type 'b 4'
+        type 'c'
+        type 'info'
+        assert_line_text(/a = 1\b/)
+        type 'a = 128'
+        type 'info'
+        assert_line_text(/a = 128\b/)
+        type 'c'
+        assert_finish
+      end
+    end
   end
 
   class InfoThreadsTest < TestCase
