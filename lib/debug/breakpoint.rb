@@ -288,6 +288,7 @@ module DEBUGGER__
       @tp = TracePoint.new(:line){|tp|
         next if tp.path.start_with? __dir__
         next if tp.path.start_with? '<internal:'
+        next if ThreadClient.current.management?
 
         if safe_eval tp.binding, @expr
           suspend

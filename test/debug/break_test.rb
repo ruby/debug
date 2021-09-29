@@ -441,6 +441,7 @@ module DEBUGGER__
         20|   bar.b(1)
         21|   Baz.c
         22| end
+        23| a = nil
       RUBY
     end
 
@@ -485,6 +486,18 @@ module DEBUGGER__
         assert_line_num 8
         type 'quit'
         type 'y'
+      end
+    end
+
+    def test_conditional_breakpoint_shows_error
+      # TODO: error message on remote debugging
+      debug_code program, remote: false do
+        type 'break if: xyzzy'
+        type 'b 23'
+        type 'c'
+        assert_line_text(/EVAL ERROR/)
+        type 'c'
+        assert_finish
       end
     end
 
