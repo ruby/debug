@@ -342,7 +342,8 @@ module DEBUGGER__
       begin
         @success_last_eval = false
 
-        b = current_frame.eval_binding
+        b = current_frame&.eval_binding || TOPLEVEL_BINDING
+
         result = if b
                    f, _l = b.source_location
                    b.eval(src, "(rdbg)/#{f}")
