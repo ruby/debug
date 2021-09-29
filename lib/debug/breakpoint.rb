@@ -430,17 +430,24 @@ module DEBUGGER__
         if @sig_op == '#'
           @cond_class = @klass if @method.owner != @klass
         else # '.'
-          @cond_class = @klass.singleton_class if @method.owner != @klass.singleton_class
+          begin
+            @cond_class = @klass.singleton_class if @method.owner != @klass.singleton_class
+          rescue TypeError
+          end
         end
 
-      rescue ArgumentError
+      rescue ArgumentError => e
         raise if retried
         retried = true
 
         # maybe C method
         case @sig_op
         when '.'
-          override @klass.singleton_class
+          begin
+            override @klass.singleton_class
+          rescue TypeError
+            override @klass.class
+          end
         when '#'
           override @klass
         end
@@ -450,7 +457,7 @@ module DEBUGGER__
         @override_method = true if @method
         retry
       end
-    rescue Exception
+    rescue Exception => e
       raise unless added
     end
 
@@ -460,7 +467,8 @@ module DEBUGGER__
 
     def to_s
       if @method
-        "#{generate_label("Method")} #{sig} at #{@method.source_location.join(':')}"
+        loc = @method.source_location || []
+        "#{generate_label("Method")} #{sig} at #{loc.join(':')}"
       else
         "#{generate_label("Method (pending)")} #{sig}"
       end + super
