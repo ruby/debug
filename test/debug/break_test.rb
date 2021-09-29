@@ -266,6 +266,16 @@ module DEBUGGER__
         type 'y'
       end
     end
+
+    def test_break_C_method_with_singleton_method
+      debug_code program do
+        type 'b 1.abs'
+        type 'c'
+        assert_line_text(/:3\b/)
+        type 'c'
+        assert_finish
+      end
+    end
   end
 
   class BreakAtCMethod2Test < TestCase
