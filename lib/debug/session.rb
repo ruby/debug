@@ -1,4 +1,4 @@
-﻿# frozen_string_literal: true
+# frozen_string_literal: true
 
 # skip to load debugger for bundle exec
 
@@ -355,7 +355,7 @@ module DEBUGGER__
       when String
         process_command line
       when Hash
-        process_dap_request line # defined in server.rb
+        process_protocol_request line # defined in server.rb
       else
         raise "unexpected input: #{line.inspect}"
       end

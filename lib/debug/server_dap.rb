@@ -309,7 +309,7 @@ module DEBUGGER__
       return :retry
     end
 
-    def process_dap_request req
+    def process_protocol_request req
       case req['command']
       when 'stepBack'
         if @tc.recorder&.can_step_back?
