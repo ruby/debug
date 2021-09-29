@@ -19,7 +19,7 @@ module DEBUGGER__
     if defined? IRB::Color.colorize
       def colorize str, color
         if !CONFIG[:no_color]
-          IRB::Color.colorize str, color
+          IRB::Color.colorize str, color, colorable: true
         else
           str
         end
@@ -64,7 +64,7 @@ module DEBUGGER__
 
     if defined? IRB::Color.colorize_code
       def colorize_code code
-        IRB::Color.colorize_code(code)
+        IRB::Color.colorize_code(code, colorable: true)
       end
     else
       def colorize_code code
