@@ -1616,6 +1616,7 @@ module DEBUGGER__
       case
       when CONFIG[:stop_at_load]
         add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, hook_call: false
+        nil # stop here
       when path = ENV['RUBY_DEBUG_INITIAL_SUSPEND_PATH']
         add_line_breakpoint path, 0, oneshot: true, hook_call: false
       when loc = ::DEBUGGER__.require_location
