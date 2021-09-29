@@ -781,6 +781,13 @@ module DEBUGGER__
             end
           when :call
             result = frame_eval(eval_src)
+          when :irb
+            begin
+              result = frame_eval('binding.irb')
+            ensure
+              # workaround: https://github.com/ruby/debug/issues/308
+              Reline.prompt_proc = nil if defined? Reline
+            end
           when :display, :try_display
             failed_results = []
             eval_src.each_with_index{|src, i|

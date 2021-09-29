@@ -774,7 +774,7 @@ module DEBUGGER__
           @ui.puts "not supported on the remote console."
           return :retry
         end
-        @tc << [:eval, :call, 'binding.irb']
+        @tc << [:eval, :irb]
 
         # don't repeat irb command
         @repl_prev_line = nil
