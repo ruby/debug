@@ -224,9 +224,13 @@ module DEBUGGER__
         sleep 0.01 until @q_msg
 
         @q_msg.pop
-      end || 'continue').strip
+      end || 'continue')
 
-      input
+      if input.is_a?(String)
+        input.strip
+      else
+        input
+      end
     end
 
     def pause
