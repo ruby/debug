@@ -182,7 +182,7 @@ module DEBUGGER__
           @q_msg << 'continue'
         when 'attach'
           send_response req
-          Process.kill(:SIGINT, Process.pid)
+          Process.kill(:SIGURG, Process.pid)
         when 'disconnect'
           send_response req
           @q_msg << 'continue'
@@ -205,7 +205,7 @@ module DEBUGGER__
           exit
         when 'pause'
           send_response req
-          Process.kill(:SIGINT, Process.pid)
+          Process.kill(:SIGURG, Process.pid)
         when 'reverseContinue'
           send_response req,
                         success: false, message: 'cancelled',
