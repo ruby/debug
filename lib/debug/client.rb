@@ -13,9 +13,37 @@ module DEBUGGER__
   class CommandLineOptionError < Exception; end
 
   class Client
-    def initialize argv
-      return util(argv) if String === argv
+    class << self
+      def util name
+        case name
+        when 'gen-sockpath'
+          puts DEBUGGER__.create_unix_domain_socket_name
+        when 'list-socks'
+          cleanup_unix_domain_sockets
+          puts list_connections
+        else
+          raise "Unknown utility: #{name}"
+        end
+      end
 
+      def cleanup_unix_domain_sockets
+        Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*') do |file|
+          if /(\d+)$/ =~ file
+            begin
+              Process.kill(0, $1.to_i)
+            rescue Errno::ESRCH
+              File.unlink(file)
+            end
+          end
+        end
+      end
+
+      def list_connections
+        Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*')
+      end
+    end
+
+    def initialize argv
       @console = Console.new
 
       case argv.size
@@ -48,34 +76,6 @@ module DEBUGGER__
       @console.readline "(rdbg:remote) "
     end
 
-    def util name
-      case name
-      when 'gen-sockpath'
-        puts DEBUGGER__.create_unix_domain_socket_name
-      when 'list-socks'
-        cleanup_unix_domain_sockets
-        puts list_connections
-      else
-        raise "Unknown utility: #{name}"
-      end
-    end
-
-    def cleanup_unix_domain_sockets
-      Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*') do |file|
-        if /(\d+)$/ =~ file
-          begin
-            Process.kill(0, $1.to_i)
-          rescue Errno::ESRCH
-            File.unlink(file)
-          end
-        end
-      end
-    end
-
-    def list_connections
-      Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*')
-    end
-
     def connect_unix name = nil
       if name
         if File.exist? name
@@ -84,8 +84,9 @@ module DEBUGGER__
           @s = Socket.unix(File.join(DEBUGGER__.unix_domain_socket_dir, name))
         end
       else
-        cleanup_unix_domain_sockets
-        files = list_connections
+        Client.cleanup_unix_domain_sockets
+        files = Client.list_connections
+
         case files.size
         when 0
           $stderr.puts "No debug session is available."
