@@ -9,14 +9,14 @@ end
 
 begin
   require "rake/extensiontask"
+  task :build => :compile
+
+  Rake::ExtensionTask.new("debug") do |ext|
+    ext.lib_dir = "lib/debug"
+  end
 rescue LoadError
 end
 
-task :build => :compile
-
-Rake::ExtensionTask.new("debug") do |ext|
-  ext.lib_dir = "lib/debug"
-end
 
 task :default => [:clobber, :compile, 'README.md', :test]
 
