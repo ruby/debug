@@ -9,10 +9,10 @@ module DEBUGGER__
                         )
 
   # extend FrameInfo with debug.so
-  if File.exist? File.join(__dir__, 'debug.so')
+  begin
     require_relative 'debug.so'
-  else
-    require_relative 'debug'
+  rescue LoadError
+    require 'debug/debug.so'
   end
 
   class FrameInfo
