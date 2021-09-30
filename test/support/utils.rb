@@ -72,11 +72,11 @@ module DEBUGGER__
     MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
     # This method will execute both local and remote mode by default.
-    def debug_code(program, boot_options: '-r debug/start', remote: true, &test_steps)
+    def debug_code(program, remote: true, &test_steps)
       prepare_test_environment(program, test_steps) do
         if remote && !NO_REMOTE && MULTITHREADED_TEST
           begin
-            th = [new_thread { debug_on_local boot_options, TestInfo.new(dup_scenario) },
+            th = [new_thread { debug_on_local TestInfo.new(dup_scenario) },
                   new_thread { debug_on_unix_domain_socket TestInfo.new(dup_scenario) },
                   new_thread { debug_on_tcpip TestInfo.new(dup_scenario) }]
             th.each do |t|
@@ -90,11 +90,11 @@ module DEBUGGER__
             flunk e.inspect
           end
         elsif remote && !NO_REMOTE
-          debug_on_local boot_options, TestInfo.new(dup_scenario)
+          debug_on_local TestInfo.new(dup_scenario)
           debug_on_unix_domain_socket TestInfo.new(dup_scenario)
           debug_on_tcpip TestInfo.new(dup_scenario)
         else
-          debug_on_local boot_options, TestInfo.new(dup_scenario)
+          debug_on_local TestInfo.new(dup_scenario)
         end
       end
     end
@@ -143,10 +143,10 @@ module DEBUGGER__
       warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
     end
 
-    def debug_on_local boot_options, test_info
+    def debug_on_local test_info
       test_info.mode = 'LOCAL'
       repl_prompt = /\(rdbg\)/
-      cmd = "#{RUBY} #{boot_options} #{temp_file_path}"
+      cmd = "#{RUBY} -r debug/start #{temp_file_path}"
       run_test_scenario cmd, repl_prompt, test_info
     end
 
