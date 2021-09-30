@@ -17,9 +17,25 @@ end
 module DEBUGGER__
   module Color
     if defined? IRB::Color.colorize
+      begin
+        IRB::Color.colorize('', [:DIM], colorable: true)
+        SUPPORT_COLORABLE_OPTION = true
+      rescue ArgumentError
+      end
+
+      if defined? SUPPORT_COLORABLE_OPTION
+        def irb_colorize str, color
+          IRB::Color.colorize str, color, colorable: true
+        end
+      else
+        def irb_colorize str, color
+          IRB::Color.colorize str, color
+        end
+      end
+
       def colorize str, color
         if !CONFIG[:no_color]
-          IRB::Color.colorize str, color, colorable: true
+          irb_colorize str, color
         else
           str
         end
@@ -63,8 +79,14 @@ module DEBUGGER__
     end
 
     if defined? IRB::Color.colorize_code
-      def colorize_code code
-        IRB::Color.colorize_code(code, colorable: true)
+      if SUPPORT_COLORABLE_OPTION
+        def colorize_code code
+          IRB::Color.colorize_code(code, colorable: true)
+        end
+      else
+        def colorize_code code
+          IRB::Color.colorize_code(code)
+        end
       end
     else
       def colorize_code code
