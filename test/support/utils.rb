@@ -72,44 +72,41 @@ module DEBUGGER__
     MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
     # This method will execute both local and remote mode by default.
-    def debug_code(program, boot_options: '-r debug/start', remote: true, &block)
-      write_temp_file(strip_line_num(program))
-      @scenario = []
-      block.call
-      @scenario.freeze
-      inject_lib_to_load_path
-
-      ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
-      ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
-      ENV['RUBY_DEBUG_NO_RELINE'] = 'true'
-      ENV['RUBY_DEBUG_HISTORY_FILE'] = ''
-
-      if remote && !NO_REMOTE && MULTITHREADED_TEST
-        begin
-          th = [new_thread { debug_on_local boot_options, TestInfo.new(dup_scenario) },
-                new_thread { debug_on_unix_domain_socket TestInfo.new(dup_scenario) },
-                new_thread { debug_on_tcpip TestInfo.new(dup_scenario) }]
-          th.each do |t|
-            if fail_msg = t.join.value
-              th.each(&:kill)
-              flunk fail_msg
+    def debug_code(program, boot_options: '-r debug/start', remote: true, &test_steps)
+      prepare_test_environment(program, test_steps) do
+        if remote && !NO_REMOTE && MULTITHREADED_TEST
+          begin
+            th = [new_thread { debug_on_local boot_options, TestInfo.new(dup_scenario) },
+                  new_thread { debug_on_unix_domain_socket TestInfo.new(dup_scenario) },
+                  new_thread { debug_on_tcpip TestInfo.new(dup_scenario) }]
+            th.each do |t|
+              if fail_msg = t.join.value
+                th.each(&:kill)
+                flunk fail_msg
+              end
             end
+          rescue => e
+            th.each(&:kill)
+            flunk e.inspect
           end
-        rescue => e
-          th.each(&:kill)
-          flunk e.inspect
+        elsif remote && !NO_REMOTE
+          debug_on_local boot_options, TestInfo.new(dup_scenario)
+          debug_on_unix_domain_socket TestInfo.new(dup_scenario)
+          debug_on_tcpip TestInfo.new(dup_scenario)
+        else
+          debug_on_local boot_options, TestInfo.new(dup_scenario)
         end
-      elsif remote && !NO_REMOTE
-        debug_on_local boot_options, TestInfo.new(dup_scenario)
-        debug_on_unix_domain_socket TestInfo.new(dup_scenario)
-        debug_on_tcpip TestInfo.new(dup_scenario)
-      else
-        debug_on_local boot_options, TestInfo.new(dup_scenario)
       end
+    end
 
-      check_line_num!(program)
-
-      assert true
+    def execute_without_debugger(program, &test_steps)
+      prepare_test_environment(program, test_steps) do
+        test_info = TestInfo.new(dup_scenario)
+        test_info.mode = 'LOCAL'
+        repl_prompt = /\(rdbg\)/
+        cmd = "#{RUBY} #{temp_file_path}"
+        run_test_scenario cmd, repl_prompt, test_info
+      end
     end
 
     def dup_scenario
@@ -167,6 +164,25 @@ module DEBUGGER__
       remote_debuggee_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{RUBY_DEBUG_TEST_PORT} -- #{temp_file_path}")
       test_info.remote_debuggee_info = remote_debuggee_info
       run_test_scenario cmd, repl_prompt, test_info
+    end
+
+    def prepare_test_environment(program, test_steps, &block)
+      write_temp_file(strip_line_num(program))
+      @scenario = []
+      test_steps.call
+      @scenario.freeze
+      inject_lib_to_load_path
+
+      ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
+      ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
+      ENV['RUBY_DEBUG_NO_RELINE'] = 'true'
+      ENV['RUBY_DEBUG_HISTORY_FILE'] = ''
+
+      block.call
+
+      check_line_num!(program)
+
+      assert true
     end
 
     TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
