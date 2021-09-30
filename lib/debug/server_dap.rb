@@ -256,7 +256,7 @@ module DEBUGGER__
     def event type, *args
       case type
       when :suspend_bp
-        _i, bp = *args
+        _i, bp, tid = *args
         if bp.kind_of?(CatchBreakpoint)
           reason = 'exception'
           text = bp.description
@@ -268,24 +268,26 @@ module DEBUGGER__
         send_event 'stopped', reason: reason,
                               description: text,
                               text: text,
-                              threadId: 1,
+                              threadId: tid,
                               allThreadsStopped: true
       when :suspend_trap
+        _sig, tid = *args
         send_event 'stopped', reason: 'pause',
-                              threadId: 1,
+                              threadId: tid,
                               allThreadsStopped: true
       when :suspended
+        tid, = *args
         send_event 'stopped', reason: 'step',
-                              threadId: 1,
+                              threadId: tid,
                               allThreadsStopped: true
       end
     end
   end
 
   class Session
-    def find_tc id
+    def find_waiting_tc id
       @th_clients.each{|th, tc|
-        return tc if tc.id == id
+        return tc if tc.id == id && tc.waiting?
       }
       return nil
     end
@@ -306,7 +308,7 @@ module DEBUGGER__
 
       when 'stackTrace'
         tid = req.dig('arguments', 'threadId')
-        if tc = find_tc(tid)
+        if tc = find_waiting_tc(tid)
           tc << [:dap, :backtrace, req]
         else
           fail_response req
@@ -315,7 +317,7 @@ module DEBUGGER__
         frame_id = req.dig('arguments', 'frameId')
         if @frame_map[frame_id]
           tid, fid = @frame_map[frame_id]
-          if tc = find_tc(tid)
+          if tc = find_waiting_tc(tid)
             tc << [:dap, :scopes, req, fid]
           else
             fail_response req
@@ -348,7 +350,7 @@ module DEBUGGER__
             frame_id = ref[1]
             tid, fid = @frame_map[frame_id]
 
-            if tc = find_tc(tid)
+            if tc = find_waiting_tc(tid)
               tc << [:dap, :scope, req, fid]
             else
               fail_response req
@@ -357,7 +359,7 @@ module DEBUGGER__
           when :variable
             tid, vid = ref[1], ref[2]
 
-            if tc = find_tc(tid)
+            if tc = find_waiting_tc(tid)
               tc << [:dap, :variable, req, vid]
             else
               fail_response req
@@ -373,7 +375,7 @@ module DEBUGGER__
         if @frame_map[frame_id]
           tid, fid = @frame_map[frame_id]
           expr = req.dig('arguments', 'expression')
-          if tc = find_tc(tid)
+          if tc = find_waiting_tc(tid)
             tc << [:dap, :evaluate, req, fid, expr]
           else
             fail_response req
