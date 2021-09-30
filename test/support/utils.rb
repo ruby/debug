@@ -146,7 +146,7 @@ module DEBUGGER__
     def debug_on_local test_info
       test_info.mode = 'LOCAL'
       repl_prompt = /\(rdbg\)/
-      cmd = "#{RUBY} -r debug/start #{temp_file_path}"
+      cmd = "#{RDBG_EXECUTABLE} #{temp_file_path}"
       run_test_scenario cmd, repl_prompt, test_info
     end
 
