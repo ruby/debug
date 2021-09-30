@@ -313,7 +313,7 @@ module DEBUGGER__
 
         o.on('--util=NAME', 'Utility mode (used by tools)') do |name|
           require_relative 'client'
-          Client.new(name)
+          Client.util(name)
           exit
         end
 
