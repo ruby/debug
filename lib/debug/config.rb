@@ -40,6 +40,7 @@ module DEBUGGER__
     sock_path:      ['RUBY_DEBUG_SOCK_PATH', "REMOTE: UNIX Domain Socket remote debugging: socket path"],
     sock_dir:       ['RUBY_DEBUG_SOCK_DIR',  "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
     cookie:         ['RUBY_DEBUG_COOKIE',    "REMOTE: Cookie for negotiation"],
+    chrome:         ['RUBY_DEBUG_CHROME',    "REMOTE: Chrome DevTools remote debugging"],
   }.freeze
 
   CONFIG_MAP = CONFIG_SET.map{|k, (ev, desc)| [k, ev]}.to_h.freeze

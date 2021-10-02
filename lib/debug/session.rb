@@ -105,6 +105,8 @@ module DEBUGGER__
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
       @src_map   = {} # {id => src}
 
+      @script_paths = [File.absolute_path($0)] # for CDP
+
       @tp_thread_begin = nil
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
         ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
@@ -269,6 +271,9 @@ module DEBUGGER__
 
         when :dap_result
           dap_event ev_args # server.rb
+          wait_command_loop tc
+        when :cdp_result
+          cdp_event ev_args
           wait_command_loop tc
         end
       end
@@ -941,6 +946,8 @@ module DEBUGGER__
           repl_open_tcp nil, $1.to_i
         when 'vscode'
           repl_open_vscode
+        when 'chrome'
+          repl_open_chrome
         else
           raise "Unknown arg: #{arg}"
         end
@@ -1001,8 +1008,8 @@ module DEBUGGER__
       @tp_thread_begin.enable
     end
 
-    def repl_open_tcp host, port
-      DEBUGGER__.open_tcp host: host, port: port, nonstop: true
+    def repl_open_tcp host, port, **kw
+      DEBUGGER__.open_tcp host: host, port: port, nonstop: true, **kw
       repl_open_setup
     end
 
@@ -1052,6 +1059,11 @@ module DEBUGGER__
           MESSAGE
         end
       end
+    end
+
+    def repl_open_chrome
+      port = CONFIG[:port] || 0
+      repl_open_tcp nil, port, chrome: true
     end
 
     def step_command type, arg
