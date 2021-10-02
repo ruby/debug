@@ -222,7 +222,7 @@ module DEBUGGER__
   end
 
   class Session
-    def process_request req
+    def process_protocol_request req
       case req['method']
       when 'Debugger.stepOver', 'Debugger.stepInto', 'Debugger.stepOut', 'Debugger.resume', 'Debugger.getScriptSource'
         @tc << [:cdp, :backtrace, req]
