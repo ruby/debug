@@ -12,6 +12,7 @@ New debug.rb has several advantages:
   * UNIX domain socket
   * TCP/IP
   * VSCode/DAP integration ([VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg))
+  * Chrome DevTools
 * Extensible: application can introduce debugging support with several ways:
   * By `rdbg` command
   * By loading libraries with `-r` command line option
@@ -336,6 +337,34 @@ By default, UNIX domain socket is used for the debugging port. To use TCP/IP, yo
 $ RUBY_DEBUG_PORT=12345 ruby target.rb
 ```
 
+### Using Chrome DevTools
+
+You can debug with Chrome DevTools by using remote debugger.
+
+1. Run with `rdbg` and enter `open chrome`.
+2. Enter the URL which is outputted in the terminal in Google Chrome.
+In the following example, open `devtools://devtools/bundled/inspector.html?ws=127.0.0.1:65124`.
+
+```terminal
+$ rdbg target.rb
+[1, 4] in target.rb
+=>   1| a=1
+     2| b=1
+     3| c=1
+     4| d=1
+=>#0	<main> at target.rb:1
+(rdbg) open chrome    # command
+DEBUGGER: wait for debugger connection...
+DEBUGGER: Debugger can attach via TCP/IP (["#<Addrinfo: 127.0.0.1:65124 TCP>"])
+DEBUGGER: Enter the following URL in Chrome:
+
+devtools://devtools/bundled/inspector.html?ws=127.0.0.1:65124
+```
+
+3. Click the `Sources` plane.
+
+For more information about how to use Chrome debugging, you might want to read [here](https://developer.chrome.com/docs/devtools/)
+
 ## Configuration
 
 You can configure the debugger's behavior with debug commands and environment variables.
@@ -385,6 +414,7 @@ config set no_color true
   * `RUBY_DEBUG_SOCK_PATH` (`sock_path`): UNIX Domain Socket remote debugging: socket path
   * `RUBY_DEBUG_SOCK_DIR` (`sock_dir`): UNIX Domain Socket remote debugging: socket directory
   * `RUBY_DEBUG_COOKIE` (`cookie`): Cookie for negotiation
+  * `RUBY_DEBUG_CHROME` (`chrome`): Chrome DevTools remote debugging
 
 ### Initial scripts
 
