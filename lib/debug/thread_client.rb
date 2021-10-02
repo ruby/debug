@@ -953,6 +953,8 @@ module DEBUGGER__
 
         when :dap
           process_dap args
+        when :cdp
+          process_cdp args
         else
           raise [cmd, *args].inspect
         end

@@ -51,7 +51,7 @@ module DEBUGGER__
 
             # flush unsent messages
             @unsent_messages.each{|m|
-              @sock.puts m
+              @sock.puts m unless CONFIG[:chrome]
             }
             @unsent_messages.clear
 
@@ -104,6 +104,11 @@ module DEBUGGER__
         raise unless @sock.read(2) == "\r\n"
         self.extend(UI_DAP)
         dap_setup @sock.read($1.to_i)
+      when /^GET \/ HTTP\/1.1/
+        require_relative 'server_cdp'
+
+        self.extend(UI_CDP)
+        handshake
       else
         raise "Greeting message error: #{g}"
       end
@@ -220,7 +225,7 @@ module DEBUGGER__
 
     def readline prompt
       input = (sock do |s|
-        s.puts "input"
+        s.puts "input" unless CONFIG[:chrome]
         sleep 0.01 until @q_msg
 
         @q_msg.pop
@@ -268,6 +273,11 @@ module DEBUGGER__
       begin
         Socket.tcp_server_sockets @host, @port do |socks|
           ::DEBUGGER__.warn "Debugger can attach via TCP/IP (#{socks.map{|e| e.local_address.inspect}})"
+          if CONFIG[:chrome]
+            @addr = socks[0].local_address.inspect_sockaddr if CONFIG[:chrome] # Change this part if `socks` are multiple.
+            DEBUGGER__.warn "Enter the following URL in Chrome:\n\n" \
+                              + "devtools://devtools/bundled/inspector.html?ws=#{@addr}"
+          end
           Socket.accept_loop(socks) do |sock, client|
             @client_addr = client
             yield @sock_for_fork = sock
