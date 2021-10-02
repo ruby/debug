@@ -437,7 +437,7 @@ module DEBUGGER__
           end
         end
 
-      rescue ArgumentError => e
+      rescue ArgumentError
         raise if retried
         retried = true
 
@@ -458,7 +458,7 @@ module DEBUGGER__
         @override_method = true if @method
         retry
       end
-    rescue Exception => e
+    rescue Exception
       raise unless added
     end
 
