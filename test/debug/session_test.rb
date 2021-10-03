@@ -16,53 +16,60 @@ module DEBUGGER__
       RUBY
     end
 
-    def test_session_starts_manually
-      run_ruby(program) do
-        assert_line_num(5)
-        type 'quit'
-        type 'y'
-      end
-    end
-
-    def test_later_breakpoint_fires_correctly
+    def test_debugger_session_starts_correctly
       run_ruby(program) do
         assert_line_num(5)
         type 'c'
         assert_line_num(6)
-        type 'quit'
-        type 'y'
+        type 'c'
+        assert_finish
       end
     end
   end
 
-  class RequireStartTest < TestCase
-    def program
-      <<~RUBY
-       1| a = 1
-       2| b = 2
-       3| require "debug/start"
-       4|
-       5| c = 3
-       6| binding.break
-       7| "foo"
-      RUBY
-    end
+  class RequireStartTest
+    class OptionRequireTest < TestCase
+      def program
+        <<~RUBY
+         1| a = 1
+         2| b = 2
+         3| binding.break
+         4| "foo"
+        RUBY
+      end
 
-    def test_session_starts_manually
-      run_ruby(program) do
-        assert_line_num(5)
-        type 'quit'
-        type 'y'
+      def test_debugger_session_starts_correctly
+        run_ruby(program, options: "-r debug/start") do
+          assert_line_num(1)
+          type 'c'
+          assert_line_num(3)
+          type 'c'
+          assert_finish
+        end
       end
     end
 
-    def test_later_breakpoint_fires_correctly
-      run_ruby(program) do
-        assert_line_num(5)
-        type 'c'
-        assert_line_num(6)
-        type 'quit'
-        type 'y'
+    class CodeRequireTest < TestCase
+      def program
+        <<~RUBY
+         1| a = 1
+         2| b = 2
+         3| require "debug/start"
+         4|
+         5| c = 3
+         6| binding.break
+         7| "foo"
+        RUBY
+      end
+
+      def test_debugger_session_starts_correctly
+        run_ruby(program) do
+          assert_line_num(5)
+          type 'c'
+          assert_line_num(6)
+          type 'c'
+          assert_finish
+        end
       end
     end
   end

@@ -107,12 +107,12 @@ module DEBUGGER__
       end
     end
 
-    def run_ruby(program, &test_steps)
+    def run_ruby(program, options: nil, &test_steps)
       prepare_test_environment(program, test_steps) do
         test_info = TestInfo.new(dup_scenario)
         test_info.mode = 'LOCAL'
         repl_prompt = /\(rdbg\)/
-        cmd = "#{RUBY} #{temp_file_path}"
+        cmd = "#{RUBY} #{options} #{temp_file_path}"
         run_test_scenario cmd, repl_prompt, test_info
       end
     end
