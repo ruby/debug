@@ -145,10 +145,16 @@ module DEBUGGER__
       warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
     end
 
+    RUBY_COMMAND = ['', '-r debug/start']
+
     def debug_on_local boot_options, test_info
+      if RUBY_COMMAND.include? boot_options
+        cmd = "#{RUBY} #{boot_options} #{temp_file_path}"
+      else
+        cmd = "#{RDBG_EXECUTABLE} #{boot_options} #{temp_file_path}"
+      end
       test_info.mode = 'LOCAL'
       repl_prompt = /\(rdbg\)/
-      cmd = "#{RUBY} #{boot_options} #{temp_file_path}"
       run_test_scenario cmd, repl_prompt, test_info
     end
 
