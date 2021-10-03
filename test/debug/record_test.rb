@@ -17,7 +17,7 @@ module DEBUGGER__
         9| p a += 1
       RUBY
     end
-    
+
     def test_step_back_at_first
       debug_code(program) do
         type 'step back'
@@ -79,7 +79,7 @@ module DEBUGGER__
         13|
       RUBY
     end
-    
+
     def test_1629263892
       debug_code(program) do
         type 'b 9'
