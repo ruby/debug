@@ -50,11 +50,7 @@ module DEBUGGER__
       when 0
         connect_unix
       when 1
-        case arg = argv.shift
-        when /-h/, /--help/
-          help
-          exit
-        when /\A\d+\z/
+        if /\A\d+\z/ =~ (arg = argv.shift.strip)
           connect_tcp nil, arg.to_i
         else
           connect_unix arg
