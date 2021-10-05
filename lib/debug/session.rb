@@ -23,9 +23,12 @@ require_relative 'source_repository'
 require_relative 'breakpoint'
 require_relative 'tracer'
 
-# To prevent loading old lib/debug.rb in Ruby 2.6 to 3.0
-$LOADED_FEATURES << 'debug.rb'
-require 'debug' # invalidate the $LOADED_FEATURE cache
+if RUBY_VERSION < '3.1.0'
+  # To prevent loading old lib/debug.rb in Ruby 2.6 to 3.0
+  $LOADED_FEATURES << 'debug.rb'
+  $LOADED_FEATURES << File.expand_path(File.join(__dir__, '..', 'debug.rb'))
+  require 'debug' # invalidate the $LOADED_FEATURE cache
+end
 
 require 'json' if ENV['RUBY_DEBUG_TEST_MODE']
 
