@@ -352,9 +352,26 @@ module DEBUGGER__
   ## Unix domain socket configuration
 
   def self.unix_domain_socket_dir
+    require 'tmpdir'
+
     case
     when path = CONFIG[:sock_dir]
     when path = ENV['XDG_RUNTIME_DIR']
+    when tmpdir = Dir.tmpdir
+      path = File.join(tmpdir, "ruby-debug-sock-#{Process.uid}")
+
+      if File.exist?(path)
+        fs = File.stat(path)
+        unless (dir_uid = fs.uid) == (uid = Process.uid)
+          raise "#{path} uid is #{dir_uid}, but Process.uid is #{uid}"
+        end
+        unless (dir_mode = fs.mode) == 040700 # 4: dir, 7:rwx
+          raise "#{path}'s mode is #{dir_mode.to_s(8)} (should be 040700)"
+        end
+      else
+        d = Dir.mktmpdir
+        File.rename(d, path)
+      end
     when home = ENV['HOME']
       path = File.join(home, '.ruby-debug-sock')
 
