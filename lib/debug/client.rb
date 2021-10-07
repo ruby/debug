@@ -21,6 +21,18 @@ module DEBUGGER__
         when 'list-socks'
           cleanup_unix_domain_sockets
           puts list_connections
+        when 'init'
+          if ARGV.shift == '-'
+            puts <<~EOS
+            export RUBYOPT="-r #{__dir__}/prelude $(RUBYOPT)"
+            EOS
+          else
+            puts <<~EOS
+            # add the following lines in your .bash_profile
+
+            eval "$(rdbg init -)"
+            EOS
+          end
         else
           raise "Unknown utility: #{name}"
         end
