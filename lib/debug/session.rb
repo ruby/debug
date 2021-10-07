@@ -17,6 +17,7 @@ if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
   return
 end
 
+require_relative 'frame_info'
 require_relative 'config'
 require_relative 'thread_client'
 require_relative 'source_repository'
