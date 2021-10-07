@@ -1825,14 +1825,14 @@ module DEBUGGER__
 end
 
 module Kernel
-  def debugger pre: nil, do: nil
+  def debugger pre: nil, do: nil, up_level: 0
     return if !defined?(::DEBUGGER__::SESSION) || !::DEBUGGER__::SESSION.active?
 
     if pre || (do_expr = binding.local_variable_get(:do))
       cmds = ['binding.break', pre, do_expr]
     end
 
-    ::DEBUGGER__.add_line_breakpoint __FILE__, __LINE__ + 1, oneshot: true, command: cmds
+    loc = caller_locations(up_level, 1).first; ::DEBUGGER__.add_line_breakpoint loc.path, loc.lineno + 1, oneshot: true, command: cmds
     self
   end
 end
