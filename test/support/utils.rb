@@ -72,6 +72,10 @@ module DEBUGGER__
     MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
     def debug_code(program, ruby: nil, rdbg: nil, remote: true, &test_steps)
+      if ruby && rdbg
+        raise "a test can only be ran with either `ruby` or `rdbg` command, not both"
+      end
+
       if ruby
         run_ruby(program, options: ruby, &test_steps)
       else
