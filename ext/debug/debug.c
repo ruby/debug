@@ -2,7 +2,7 @@
 #include "ruby/ruby.h"
 #include "ruby/debug.h"
 #include "ruby/encoding.h"
-
+#include "debug_version.h"
 //
 static VALUE rb_mDebugger;
 
@@ -130,5 +130,6 @@ Init_debug(void)
     rb_define_singleton_method(rb_mDebugger, "capture_frames", capture_frames, 1);
     rb_define_singleton_method(rb_mDebugger, "frame_depth", frame_depth, 0);
     rb_define_singleton_method(rb_mDebugger, "create_method_added_tracker", create_method_added_tracker, 0);
+    rb_define_const(rb_mDebugger, "SO_VERSION", rb_str_new2(RUBY_DEBUG_VERSION));
     Init_iseq_collector();
 }
