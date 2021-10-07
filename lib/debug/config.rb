@@ -79,7 +79,7 @@ module DEBUGGER__
     end
 
     def append_config key, val
-      conf = self.config.dup
+      conf = config.dup
 
       if CONFIG_SET[key]
         if CONFIG_SET[key][2] == :path
