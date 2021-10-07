@@ -3,7 +3,6 @@
 require 'objspace'
 require 'pp'
 
-require_relative 'frame_info'
 require_relative 'color'
 
 module DEBUGGER__
