@@ -18,7 +18,7 @@ module DEBUGGER__
         | Debugger Session |
         --------------------
 
-        > #{test_info.backlog.join('> ')}
+        > #{test_info.debugger_backlog.join('> ')}
       DEBUGGER_MSG
 
       debuggee_msg =
@@ -67,7 +67,7 @@ module DEBUGGER__
       backlog
     end
 
-    TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :backlog, :last_backlog, :internal_info)
+    TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :debugger_backlog, :last_backlog, :internal_info)
 
     MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
@@ -172,19 +172,19 @@ module DEBUGGER__
 
     def run_test_scenario cmd, repl_prompt, test_info
       PTY.spawn(cmd) do |read, write, pid|
-        test_info.backlog = []
+        test_info.debugger_backlog = []
         test_info.last_backlog = []
         begin
           Timeout.timeout(TIMEOUT_SEC) do
             while (line = read.gets)
               debug_print line
-              test_info.backlog.push(line)
+              test_info.debugger_backlog.push(line)
               test_info.last_backlog.push(line)
 
               case line.chomp
               when /INTERNAL_INFO:\s(.*)/
-                # INTERNAL_INFO shouldn't be pushed into backlog and last_backlog
-                test_info.backlog.pop
+                # INTERNAL_INFO shouldn't be pushed into debugger_backlog and last_backlog
+                test_info.debugger_backlog.pop
                 test_info.last_backlog.pop
 
                 test_info.internal_info = JSON.parse(Regexp.last_match(1))
