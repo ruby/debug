@@ -26,5 +26,12 @@ module DEBUGGER__
         end
       end
     end
+
+    def test_the_test_work_when_debuggee_outputs_many_lines
+      debug_code ' 1| 200.times{|i| p i}' do
+        type 'c'
+        assert_finish
+      end
+    end
   end
 end
