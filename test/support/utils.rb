@@ -23,14 +23,13 @@ module DEBUGGER__
 
       debuggee_msg =
         if test_info.mode != 'LOCAL'
-          debuggee_backlog = collect_debuggee_backlog(test_info)
 
           <<~DEBUGGEE_MSG.chomp
             --------------------
             | Debuggee Session |
             --------------------
 
-            > #{debuggee_backlog.join('> ')}
+            > #{test_info.debuggee_backlog.join('> ')}
           DEBUGGEE_MSG
         end
 
@@ -52,22 +51,15 @@ module DEBUGGER__
     end
 
     def collect_debuggee_backlog test_info
-      backlog = []
-
-      begin
-        Timeout.timeout(TIMEOUT_SEC) do
-          while (line = test_info.remote_debuggee_info[0].gets)
-            backlog << line
-          end
-        end
-      rescue Timeout::Error, Errno::EIO
-        # result of `gets` return Errno::EIO in some platform
-        # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
+      while line = test_info.remote_debuggee_info[0].read_nonblock(4096)
+        test_info.debuggee_backlog.push(line)
+        sleep(0.1)
       end
-      backlog
+    rescue IO::WaitReadable, EOFError
+      # The `read_nonblock` method occurs IO::WaitReadable if I/O stream has no data.
     end
 
-    TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :debugger_backlog, :debugger_last_backlog, :internal_info)
+    TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :debugger_backlog, :debugger_last_backlog, :debuggee_backlog, :internal_info)
 
     MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
@@ -172,6 +164,7 @@ module DEBUGGER__
 
     def run_test_scenario cmd, repl_prompt, test_info
       PTY.spawn(cmd) do |read, write, pid|
+        test_info.debuggee_backlog = []
         test_info.debugger_backlog = []
         test_info.debugger_last_backlog = []
         begin
@@ -218,6 +211,7 @@ module DEBUGGER__
                   a.call test_info
                 end
               when repl_prompt
+                collect_debuggee_backlog(test_info) if test_info.remote_debuggee_info
                 # check if the previous command breaks the debugger before continuing
                 check_error(/REPL ERROR/, test_info)
               end
