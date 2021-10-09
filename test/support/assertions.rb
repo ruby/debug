@@ -14,7 +14,7 @@ module DEBUGGER__
 
     def assert_line_text(text)
       @scenario.push(Proc.new { |test_info|
-        result = collect_recent_backlog(test_info.last_backlog)
+        result = collect_recent_backlog(test_info.debugger_last_backlog)
 
         expected =
           case text
@@ -43,7 +43,7 @@ module DEBUGGER__
 
     def assert_no_line_text(text)
       @scenario.push(Proc.new { |test_info|
-        result = collect_recent_backlog(test_info.last_backlog)
+        result = collect_recent_backlog(test_info.debugger_last_backlog)
         if text.is_a?(String)
           expected = Regexp.escape(text)
         else
@@ -73,8 +73,8 @@ module DEBUGGER__
 
     private
 
-    def collect_recent_backlog(last_backlog)
-      last_backlog[1..].join
+    def collect_recent_backlog(debugger_last_backlog)
+      debugger_last_backlog[1..].join
     end
 
     def flunk_finish test_info

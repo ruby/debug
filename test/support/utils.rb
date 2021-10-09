@@ -67,7 +67,7 @@ module DEBUGGER__
       backlog
     end
 
-    TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :debugger_backlog, :last_backlog, :internal_info)
+    TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :debugger_backlog, :debugger_last_backlog, :internal_info)
 
     MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
@@ -173,19 +173,19 @@ module DEBUGGER__
     def run_test_scenario cmd, repl_prompt, test_info
       PTY.spawn(cmd) do |read, write, pid|
         test_info.debugger_backlog = []
-        test_info.last_backlog = []
+        test_info.debugger_last_backlog = []
         begin
           Timeout.timeout(TIMEOUT_SEC) do
             while (line = read.gets)
               debug_print line
               test_info.debugger_backlog.push(line)
-              test_info.last_backlog.push(line)
+              test_info.debugger_last_backlog.push(line)
 
               case line.chomp
               when /INTERNAL_INFO:\s(.*)/
-                # INTERNAL_INFO shouldn't be pushed into debugger_backlog and last_backlog
+                # INTERNAL_INFO shouldn't be pushed into debugger_backlog and debugger_last_backlog
                 test_info.debugger_backlog.pop
-                test_info.last_backlog.pop
+                test_info.debugger_last_backlog.pop
 
                 test_info.internal_info = JSON.parse(Regexp.last_match(1))
                 assertion = []
@@ -212,7 +212,7 @@ module DEBUGGER__
                 end
 
                 write.puts(cmd)
-                test_info.last_backlog.clear
+                test_info.debugger_last_backlog.clear
               when %r{\[y/n\]}i
                 assertion.each do |a|
                   a.call test_info
@@ -247,8 +247,8 @@ module DEBUGGER__
     private
 
     def check_error(error, test_info)
-      if error_index = test_info.last_backlog.index { |l| l.match?(error) }
-        assert_block(create_message("Debugger terminated because of: #{test_info.last_backlog[error_index..-1].join}", test_info)) { false }
+      if error_index = test_info.debugger_last_backlog.index { |l| l.match?(error) }
+        assert_block(create_message("Debugger terminated because of: #{test_info.debugger_last_backlog[error_index..-1].join}", test_info)) { false }
       end
     end
 
