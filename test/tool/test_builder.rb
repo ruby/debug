@@ -9,7 +9,8 @@ module DEBUGGER__
   class TestBuilder
     def initialize(target, m, c)
       @target_path = File.absolute_path(target[0])
-      m = "test_#{Time.now.to_i}" if m.nil?
+      @current_time = Time.now.to_i
+      m = "test_#{@current_time}" if m.nil?
       @method = m
       c = 'FooTest' if c.nil?
       c_upcase = c.sub(/(^[a-z])/) { Regexp.last_match(1).upcase }
@@ -138,7 +139,7 @@ module DEBUGGER__
     end
 
     def create_scenario
-      <<-TEST
+      <<-TEST.chomp
 
     def #{@method}
       debug_code(program) do
@@ -148,8 +149,23 @@ module DEBUGGER__
       TEST
     end
 
+    def create_scenario_and_program
+      <<-TEST.chomp
+
+  class #{@class}#{@current_time} < TestCase
+    def program
+      <<~RUBY
+        #{format_program}
+      RUBY
+    end
+    #{create_scenario}
+  end
+      TEST
+    end
+
     def format_program
-      lines = File.read(@target_path).split("\n")
+      src = @target_src || File.read(@target_path)
+      lines = src.split("\n")
       indent_num = 8
       if lines.length > 9
         first_l = " 1| #{lines[0]}\n"
@@ -177,22 +193,25 @@ module DEBUGGER__
         require_relative '../support/test_case'
 
         module DEBUGGER__
-          class #{@class} < TestCase
-            def program
-              <<~RUBY
-                #{format_program}
-              RUBY
-            end
-            #{create_scenario}  end
+          #{create_scenario_and_program}
         end
       TEST
+    end
+
+    def make_content
+      @target_src = File.read(@target_path)
+      target = @target_src.gsub(/\r|\n|\s/, '')
+      @inserted_src.scan(/<<~RUBY(.*?)RUBY/m).each do |p|
+        return create_scenario + "\n  end" if p[0].gsub(/\r|\n|\s|\d+\|/, '') == target
+      end
+      "  end" + create_scenario_and_program
     end
 
     def create_file
       path = "#{__dir__}/../debug/#{@class.sub(/(?i:t)est/, '').downcase}_test.rb"
       if File.exist?(path)
-        lines = File.read(path)
-        content = lines.split("\n")[0..-3].join("\n") + "\n#{create_scenario}  end\nend\n" if lines.include? @class
+        @inserted_src = File.read(path)
+        content = @inserted_src.split("\n")[0..-3].join("\n") + "\n#{make_content}\nend\n" if @inserted_src.include? @class
       end
       if content
         puts "appended: #{path}"
