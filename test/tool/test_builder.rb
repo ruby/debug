@@ -8,7 +8,7 @@ require 'json'
 module DEBUGGER__
   class TestBuilder
     def initialize(target, m, c)
-      @debuggee = File.absolute_path(target[0])
+      @target_path = File.absolute_path(target[0])
       m = "test_#{Time.now.to_i}" if m.nil?
       @method = m
       c = 'FooTest' if c.nil?
@@ -63,7 +63,7 @@ module DEBUGGER__
 
     def generate_pattern(line)
       line.slice!("\e[?2004l\r")
-      file_name = File.basename(@debuggee, '.rb')
+      file_name = File.basename(@target_path, '.rb')
       escaped_line = Regexp.escape(line.chomp).gsub(/\\\s/, ' ')
       escaped_line.sub(%r{~.*#{file_name}.*|/Users/.*#{file_name}.*}, '.*')
     end
@@ -78,7 +78,7 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] ||= 'true'
       ENV['RUBY_DEBUG_NO_RELINE'] = 'true'
 
-      PTY.spawn("#{RUBY} -r debug/start #{@debuggee}") do |read, write, _|
+      PTY.spawn("#{RUBY} -r debug/start #{@target_path}") do |read, write, _|
         @backlog = []
         @last_backlog = []
         @scenario = []
@@ -120,7 +120,7 @@ module DEBUGGER__
       rescue Errno::EIO => e
         p e
       end
-      exit if @backlog.empty? || @backlog[0].match?(/LoadError/)  # @debuggee is empty or doesn't exist
+      exit if @backlog.empty? || @backlog[0].match?(/LoadError/)  # @target_path is empty or doesn't exist
     end
 
     def write_user_input(write, default)
@@ -149,7 +149,7 @@ module DEBUGGER__
     end
 
     def format_program
-      lines = File.read(@debuggee).split("\n")
+      lines = File.read(@target_path).split("\n")
       indent_num = 8
       if lines.length > 9
         first_l = " 1| #{lines[0]}\n"
