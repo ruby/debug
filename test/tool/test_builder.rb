@@ -191,21 +191,19 @@ module DEBUGGER__
     def create_file
       path = "#{__dir__}/../debug/#{@class.sub(/(?i:t)est/, '').downcase}_test.rb"
       if File.exist?(path)
-        File.open(path, 'r') do |f|
-          lines = f.read
-          @content = lines.split("\n")[0..-3].join("\n") + "\n#{create_scenario}  end\nend\n" if lines.include? @class
-        end
+        lines = File.read(path)
+        content = lines.split("\n")[0..-3].join("\n") + "\n#{create_scenario}  end\nend\n" if lines.include? @class
       end
-      if @content
+      if content
         puts "appended: #{path}"
       else
-        @content = content_with_module
+        content = content_with_module
         puts "created: #{path}"
         puts "    class: #{@class}"
       end
       puts "    method: #{@method}"
 
-      File.write(path, @content)
+      File.write(path, content)
     end
 
     def remove_temp_file
