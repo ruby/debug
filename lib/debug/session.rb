@@ -1521,6 +1521,12 @@ module DEBUGGER__
       @intercept_trap_sigint = true
       @intercepted_sigint_cmd = prev
     end
+
+    def intercept_trap_sigint_end
+      @intercept_trap_sigint = false
+      prev, @intercepted_sigint_cmd = @intercepted_sigint_cmd, nil
+      prev
+    end
   end
 
   class UI_Base

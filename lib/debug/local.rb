@@ -26,7 +26,8 @@ module DEBUGGER__
 
     def deactivate
       if SESSION.intercept_trap_sigint?
-        trap(:SIGINT, SESSION.intercepted_sigint_cmd)
+        prev = SESSION.intercept_trap_sigint_end
+        trap(:SIGINT, prev)
       end
     end
 
