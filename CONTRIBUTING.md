@@ -207,16 +207,14 @@ end
 You can get more information about `gentest` here.
 
 The default method name is `test_foo` and the class name is `FooTest`. The file name will be `[Lowercase letters with "Test" removed from the class name]_test.rb`.
-```shell
-# run without any options(test method name will be `test_foo`, class name will be `FooTest`, file name will be `foo_test.rb`)
-$ bin/gentest target.rb
-# specify the class name(test method name will be `test_foo`, class name will be `StepTest`, file name will be `step_test.rb`)
-$ bin/gentest target.rb -c StepTest
-# specify the method name(test method name will be `test_step`, class name will be `FooTest`, file name will be `foo_test.rb`)
-$ bin/gentest target.rb -m test_step
-# specify class name and method name(test method name will be `test_step`, class name will be `StepTest`, file name will be `step_test.rb`.)
-$ bin/gentest target.rb -c StepTest -m test_step
-```
+The following table shows examples of the gentest options.
+
+| Command | Description | File | Class | Method |
+| --- | --- | --- | --- | --- |
+| `$ bin/gentest target.rb` | Run without any options | `foo_test.rb` | `FooTest` | `test_#{some integer numbers}` |
+| `$ bin/gentest target.rb -c step` | Specify the class name | `step_test.rb` | `StepTest` | `test_#{some integer numbers}` |
+| `$ bin/gentest target.rb -m test_step` | Specify the method name | `foo_test.rb` | `FooTest` | `test_step` |
+| `$ bin/gentest target.rb -c step -m test_step` | Specify the class name and the method name | `step_test.rb` | `StepTest` | `test_step` |
 
 ## To Update README
 
