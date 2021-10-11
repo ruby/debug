@@ -206,7 +206,7 @@ end
 #### gentest options
 You can get more information about `gentest` here.
 
-The default method name is `test_foo` and the class name is `FooTest`. The file name will be `[Lowercase letters with "Test" removed from the class name]_test.rb`.
+The default method name is `test_#{some integer numbers}`, the class name is `FooTest`, and the file name will be `foo_test.rb`.
 The following table shows examples of the gentest options.
 
 | Command | Description | File | Class | Method |
