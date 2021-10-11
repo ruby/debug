@@ -958,7 +958,7 @@ module DEBUGGER__
         end
       end
 
-    rescue SuspendReplay, SystemExit
+    rescue SuspendReplay, SystemExit, Interrupt
       raise
     rescue Exception => e
       pp ["DEBUGGER Exception: #{__FILE__}:#{__LINE__}", e, e.backtrace]
