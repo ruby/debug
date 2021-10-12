@@ -596,6 +596,13 @@ The `<...>` notation means the argument.
   * Set <name> to default.
 * `source <file>`
   * Evaluate lines in `<file>` as debug commands.
+* `open`
+  * open UNIX domain debugger port.
+  * Note that `open` command is EXPERIMENTAL.
+* `open [<host>:]<port>`
+  * open TCP/IP debugger port with given `[<host>:]<port>`.
+* `open vscode`
+  * open debugger port for VSCode and launch VSCode if available.
 
 ### Help
 
