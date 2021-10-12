@@ -924,6 +924,29 @@ module DEBUGGER__
         end
         return :retry
 
+      # * `open`
+      #   * open UNIX domain debugger port.
+      #   * Note that `open` command is EXPERIMENTAL.
+      # * `open [<host>:]<port>`
+      #   * open TCP/IP debugger port with given `[<host>:]<port>`.
+      # * `open vscode`
+      #   * open debugger port for VSCode and launch VSCode if available.
+      when 'open'
+        case arg&.downcase
+        when '', nil
+          repl_open_unix
+        when /\A(.+):(\d+)\z/
+          repl_open_tcp $1, $2.to_i
+        when /\A(\d+)z/
+          repl_open_tcp nil, $1.to_i
+        when 'vscode'
+          repl_open_vscode
+        else
+          raise "Unknown arg: #{arg}"
+        end
+
+        return :retry
+
       ### Help
 
       # * `h[elp]`
@@ -967,6 +990,68 @@ module DEBUGGER__
       @ui.puts "[REPL ERROR] #{e.inspect}"
       @ui.puts e.backtrace.map{|e| '  ' + e}
       return :retry
+    end
+
+    def repl_open_setup
+      @tp_thread_begin.disable
+      @ui.activate self
+      if @ui.respond_to?(:reader_thread) && thc = thread_client(@ui.reader_thread)
+        thc.is_management
+      end
+      @tp_thread_begin.enable
+    end
+
+    def repl_open_tcp host, port
+      DEBUGGER__.open_tcp host: host, port: port, nonstop: true
+      repl_open_setup
+    end
+
+    def repl_open_unix
+      DEBUGGER__.open_unix nonstop: true
+      repl_open_setup
+    end
+
+    def repl_open_vscode
+      repl_open_unix
+      require 'tmpdir'
+
+      dir = Dir.mktmpdir("ruby-debug-vscode-")
+      Dir.chdir(dir) do
+        Dir.mkdir('.vscode')
+        open('README.rb', 'w'){|f| f.puts"# placeholder"}
+        open('.vscode/launch.json', 'w'){|f|
+          f.puts <<~JSON
+          {
+            "version": "0.2.0",
+            "configurations": [
+            {
+              "type": "rdbg",
+              "name": "Attach with rdbg",
+              "request": "attach",
+              "rdbgPath": "/home/ko1/src/rb/ruby-debug/exe/rdbg", // TODO
+              "debugPort": #{},
+              "autoAttach": true,
+              "showProtocolLog": true,
+            }
+            ]
+          }
+          JSON
+        }
+      end
+
+      cmdline = "code #{dir}/ #{dir}/README.rb"
+      begin
+        STDERR.puts "Launching: #{cmdline}"
+        unless p system(cmdline)
+          STDERR.puts <<~MESSAGE
+          ##
+          ## modify and type the following command-line on your terminal.
+          ##
+          #{cmdline}
+          
+          MESSAGE
+        end
+      end
     end
 
     def step_command type, arg
