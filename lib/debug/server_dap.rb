@@ -82,8 +82,7 @@ module DEBUGGER__
       str = JSON.dump(kw)
       $stderr.puts "[<] #{str}" if SHOW_PROTOCOL
       # STDERR.puts "[STDERR] [<] #{str}"
-      @sock.print header = "Content-Length: #{str.size}\r\n\r\n"
-      @sock.write str
+      @sock.write "Content-Length: #{str.size}\r\n\r\n#{str}"
     end
 
     def send_response req, success: true, **kw
