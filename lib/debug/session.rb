@@ -925,12 +925,12 @@ module DEBUGGER__
         return :retry
 
       # * `open`
-      #   * open UNIX domain debugger port.
+      #   * open debuggee port on UNIX domain socket and wait for attaching.
       #   * Note that `open` command is EXPERIMENTAL.
       # * `open [<host>:]<port>`
-      #   * open TCP/IP debugger port with given `[<host>:]<port>`.
+      #   * open debuggee port on TCP/IP with given `[<host>:]<port>` and wait for attaching.
       # * `open vscode`
-      #   * open debugger port for VSCode and launch VSCode if available.
+      #   * open debuggee port for VSCode and launch VSCode if available.
       when 'open'
         case arg&.downcase
         when '', nil
