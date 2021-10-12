@@ -43,6 +43,7 @@ module DEBUGGER__
           if /(\d+)$/ =~ file
             begin
               Process.kill(0, $1.to_i)
+            rescue Errno::EPERM
             rescue Errno::ESRCH
               File.unlink(file)
             end
