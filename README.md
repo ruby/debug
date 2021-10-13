@@ -376,6 +376,8 @@ config set no_color true
   * `RUBY_DEBUG_INIT_SCRIPT` (`init_script`): debug command script path loaded at first stop
   * `RUBY_DEBUG_COMMANDS` (`commands`): debug commands invoked at first stop. commands should be separated by ';;'
   * `RUBY_DEBUG_NO_RC` (`no_rc`): ignore loading ~/.rdbgrc(.rb)
+  * `RUBY_DEBUG_HISTORY_FILE` (`history_file`): history file (default: ~/.rdbg_history)
+  * `RUBY_DEBUG_SAVE_HISTORY` (`save_history`): maximum save history lines (default: 10,000)
 
 * REMOTE
   * `RUBY_DEBUG_PORT` (`port`): TCP/IP remote debugging: port

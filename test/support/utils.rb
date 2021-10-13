@@ -82,6 +82,7 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
       ENV['RUBY_DEBUG_NO_RELINE'] = 'true'
+      ENV['RUBY_DEBUG_HISTORY_FILE'] = ''
 
       if remote && !NO_REMOTE && MULTITHREADED_TEST
         begin
