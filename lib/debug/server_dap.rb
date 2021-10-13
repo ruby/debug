@@ -136,6 +136,11 @@ module DEBUGGER__
         ## boot/configuration
         when 'launch'
           send_response req
+          @is_attach = false
+        when 'attach'
+          send_response req
+          Process.kill(:SIGURG, Process.pid)
+          @is_attach = true
         when 'setBreakpoints'
           path = args.dig('source', 'path')
           bp_args = args['breakpoints']
@@ -178,10 +183,14 @@ module DEBUGGER__
           send_response req, breakpoints: filters
         when 'configurationDone'
           send_response req
-          @q_msg << 'continue'
-        when 'attach'
-          send_response req
-          Process.kill(:SIGURG, Process.pid)
+          if defined? @is_attach && @is_attach
+            @q_msg << 'p'
+            send_event 'stopped', reason: 'pause',
+                                  threadId: 1,
+                                  allThreadsStopped: true
+          else
+            @q_msg << 'continue'
+          end
         when 'disconnect'
           send_response req
           @q_msg << 'continue'
