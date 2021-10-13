@@ -87,40 +87,95 @@ module DEBUGGER__
         Reline.readmultiline(prompt, true){ true }
       end
 
+      def history
+        Reline::HISTORY
+      end
+
     rescue LoadError
-    begin
-      require 'readline.so'
+      begin
+        require 'readline.so'
 
-      def readline_setup
-        Readline.completion_proc = proc{|given|
-          buff = Readline.line_buffer
-          Readline.completion_append_character= ' '
+        def readline_setup
+          Readline.completion_proc = proc{|given|
+            buff = Readline.line_buffer
+            Readline.completion_append_character= ' '
 
-          if /\s/ =~ buff # second parameters
-            given = File.expand_path(given + 'a').sub(/a\z/, '')
-            files = Dir.glob(given + '*')
-            if files.size == 1 && File.directory?(files.first)
-              Readline.completion_append_character= '/'
+            if /\s/ =~ buff # second parameters
+              given = File.expand_path(given + 'a').sub(/a\z/, '')
+              files = Dir.glob(given + '*')
+              if files.size == 1 && File.directory?(files.first)
+                Readline.completion_append_character= '/'
+              end
+              files
+            else
+              DEBUGGER__.commands.keys.grep(/\A#{given}/)
             end
-            files
-          else
-            DEBUGGER__.commands.keys.grep(/\A#{given}/)
-          end
-        }
-      end
+          }
+        end
 
-      def readline prompt
-        readline_setup
-        Readline.readline(prompt, true)
-      end
+        def readline prompt
+          readline_setup
+          Readline.readline(prompt, true)
+        end
 
-    rescue LoadError
-      def readline prompt
-        print prompt
-        gets
+        def history
+          Readline::HISTORY
+        end
+
+      rescue LoadError
+        def readline prompt
+          print prompt
+          gets
+        end
+
+        def history
+          nil
+        end
       end
     end
+
+    def history_file
+      CONFIG[:history_file] || File.expand_path("~/.rdbg_history")
     end
-  end
+
+    FH = "# Today's OMIKUJI: "
+
+    def read_history_file
+      if history && File.exists?(path = history_file)
+        f = (['', 'DAI-', 'CHU-', 'SHO-'].map{|e| e+'KICHI'}+['KYO']).sample
+        ["#{FH}#{f}".dup] + File.readlines(path)
+      else
+        []
+      end
+    end
+
+    def initialize
+      @init_history_lines = load_history
+
+      at_exit{
+        added_records = history.to_a[@init_history_lines .. -1]
+        path = history_file
+        max = CONFIG[:save_history] || 10_000
+
+        if !added_records.empty? && !path.empty?
+          orig_records = read_history_file
+          open(history_file, 'w'){|f|
+            (orig_records + added_records).last(max).each{|line|
+              if !line.start_with?(FH) && !line.strip.empty?
+                f.puts line.strip
+              end
+            }
+          }
+        end
+      } if history
+    end
+
+    def load_history
+      read_history_file.count{|line|
+        line.strip!
+        history << line unless line.empty?
+      }
+    end
+  end # class Console
 end
 
