@@ -192,8 +192,12 @@ module DEBUGGER__
             @q_msg << 'continue'
           end
         when 'disconnect'
+          if args.fetch("terminateDebuggee", false)
+            @q_msg << 'kill!'
+          else
+            @q_msg << 'continue'
+          end
           send_response req
-          @q_msg << 'continue'
 
         ## control
         when 'continue'

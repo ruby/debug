@@ -429,6 +429,7 @@ module DEBUGGER__
       #   * Same as q[uit] but without the confirmation prompt.
       when 'q!', 'quit!'
         @ui.quit arg.to_i
+        @tc << :continue
         restart_all_threads
 
       # * `kill`
