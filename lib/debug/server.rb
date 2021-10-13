@@ -290,6 +290,8 @@ module DEBUGGER__
   end
 
   class UI_UnixDomainServer < UI_ServerBase
+    attr_reader :sock_path
+
     def initialize sock_dir: nil, sock_path: nil
       @sock_path = sock_path
       @sock_dir = sock_dir || DEBUGGER__.unix_domain_socket_dir

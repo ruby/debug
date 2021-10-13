@@ -1013,43 +1013,57 @@ module DEBUGGER__
     end
 
     def repl_open_vscode
-      repl_open_unix
       require 'tmpdir'
+      require 'json'
 
+      repl_open_unix
       dir = Dir.mktmpdir("ruby-debug-vscode-")
+      at_exit{
+        require 'fileutils'
+        p dir
+        FileUtils.rm_rf dir
+      }
       Dir.chdir(dir) do
         Dir.mkdir('.vscode')
-        open('README.rb', 'w'){|f| f.puts"# placeholder"}
+        open('README.rb', 'w'){|f|
+          f.puts <<~MSG
+          # Wait for starting the attaching to the Ruby process
+          # This file will be removed at the end of the debuggee process.
+          MSG
+        }
         open('.vscode/launch.json', 'w'){|f|
-          f.puts <<~JSON
-          {
-            "version": "0.2.0",
-            "configurations": [
+          f.puts JSON.pretty_generate({
+            version: '0.2.0',
+            configurations: [
             {
-              "type": "rdbg",
-              "name": "Attach with rdbg",
-              "request": "attach",
-              "rdbgPath": "/home/ko1/src/rb/ruby-debug/exe/rdbg", // TODO
-              "debugPort": #{},
-              "autoAttach": true,
-              "showProtocolLog": true,
+              type: "rdbg",
+              name: "Attach with rdbg",
+              request: "attach",
+              rdbgPath: File.expand_path('../../exe/rdbg', __dir__),
+              debugPort: @ui.sock_path,
+              autoAttach: true,
             }
             ]
-          }
-          JSON
+          })
         }
       end
 
       cmdline = "code #{dir}/ #{dir}/README.rb"
+      ssh_cmdline = "code --remote ssh-remote+[SSH hostname] #{dir}/ #{dir}/README.rb"
+
       begin
         STDERR.puts "Launching: #{cmdline}"
-        unless p system(cmdline)
+        env = ENV.delete_if{|k, h| /RUBY/ =~ k}.to_h
+
+        unless system(env, cmdline)
           STDERR.puts <<~MESSAGE
           ##
-          ## modify and type the following command-line on your terminal.
+          ## type the following command-line on your terminal (with modification if you need).
           ##
           #{cmdline}
-          
+
+          # If your application is running on a SSH remote host, please try:
+          # #{ssh_cmdline}
           MESSAGE
         end
       end
