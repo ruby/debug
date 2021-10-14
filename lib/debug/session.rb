@@ -941,14 +941,17 @@ module DEBUGGER__
         case arg&.downcase
         when '', nil
           repl_open_unix
+        when 'vscode'
+          repl_open_vscode
         when /\A(.+):(\d+)\z/
           repl_open_tcp $1, $2.to_i
         when /\A(\d+)z/
           repl_open_tcp nil, $1.to_i
-        when 'vscode'
-          repl_open_vscode
-        when 'chrome'
-          repl_open_chrome
+        when 'tcp'
+          repl_open_tcp CONFIG[:host], (CONFIG[:port] || 0)
+        when 'chrome', 'cdp'
+          CONFIG[:open_frontend] = 'chrome'
+          repl_open_tcp CONFIG[:host], (CONFIG[:port] || 0)
         else
           raise "Unknown arg: #{arg}"
         end
@@ -1020,65 +1023,8 @@ module DEBUGGER__
     end
 
     def repl_open_vscode
-      require 'tmpdir'
-      require 'json'
-
+      CONFIG[:open_frontend] = 'vscode'
       repl_open_unix
-      dir = Dir.mktmpdir("ruby-debug-vscode-")
-      at_exit{
-        require 'fileutils'
-        p dir
-        FileUtils.rm_rf dir
-      }
-      Dir.chdir(dir) do
-        Dir.mkdir('.vscode')
-        open('README.rb', 'w'){|f|
-          f.puts <<~MSG
-          # Wait for starting the attaching to the Ruby process
-          # This file will be removed at the end of the debuggee process.
-          MSG
-        }
-        open('.vscode/launch.json', 'w'){|f|
-          f.puts JSON.pretty_generate({
-            version: '0.2.0',
-            configurations: [
-            {
-              type: "rdbg",
-              name: "Attach with rdbg",
-              request: "attach",
-              rdbgPath: File.expand_path('../../exe/rdbg', __dir__),
-              debugPort: @ui.sock_path,
-              autoAttach: true,
-            }
-            ]
-          })
-        }
-      end
-
-      cmdline = "code #{dir}/ #{dir}/README.rb"
-      ssh_cmdline = "code --remote ssh-remote+[SSH hostname] #{dir}/ #{dir}/README.rb"
-
-      begin
-        STDERR.puts "Launching: #{cmdline}"
-        env = ENV.delete_if{|k, h| /RUBY/ =~ k}.to_h
-
-        unless system(env, cmdline)
-          STDERR.puts <<~MESSAGE
-          ##
-          ## type the following command-line on your terminal (with modification if you need).
-          ##
-          #{cmdline}
-
-          # If your application is running on a SSH remote host, please try:
-          # #{ssh_cmdline}
-          MESSAGE
-        end
-      end
-    end
-
-    def repl_open_chrome
-      port = CONFIG[:port] || 0
-      repl_open_tcp nil, port, open: 'chrome'
     end
 
     def step_command type, arg
@@ -1696,8 +1642,8 @@ module DEBUGGER__
   def self.open host: nil, port: CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false, **kw
     CONFIG.set_config(**kw)
 
-    if port
-      open_tcp host: host, port: port, nonstop: nonstop
+    if port || CONFIG[:open_frontend] == 'chrome'
+      open_tcp host: host, port: (port || 0), nonstop: nonstop
     else
       open_unix sock_path: sock_path, sock_dir: sock_dir, nonstop: nonstop
     end

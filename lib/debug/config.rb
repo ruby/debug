@@ -37,12 +37,12 @@ module DEBUGGER__
     save_history:   ['RUBY_DEBUG_SAVE_HISTORY',"BOOT: maximum save history lines (default: 10,000)"],
 
     # remote setting
-    port:           ['RUBY_DEBUG_PORT',      "REMOTE: TCP/IP remote debugging: port"],
-    host:           ['RUBY_DEBUG_HOST',      "REMOTE: TCP/IP remote debugging: host (localhost if not given)"],
-    sock_path:      ['RUBY_DEBUG_SOCK_PATH', "REMOTE: UNIX Domain Socket remote debugging: socket path"],
-    sock_dir:       ['RUBY_DEBUG_SOCK_DIR',  "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
-    cookie:         ['RUBY_DEBUG_COOKIE',    "REMOTE: Cookie for negotiation"],
-    open:           ['RUBY_DEBUG_OPEN',      "REMOTE: Remote debugging: external debugging tool such as Chrome"],
+    port:           ['RUBY_DEBUG_PORT',         "REMOTE: TCP/IP remote debugging: port"],
+    host:           ['RUBY_DEBUG_HOST',         "REMOTE: TCP/IP remote debugging: host (localhost if not given)"],
+    sock_path:      ['RUBY_DEBUG_SOCK_PATH',    "REMOTE: UNIX Domain Socket remote debugging: socket path"],
+    sock_dir:       ['RUBY_DEBUG_SOCK_DIR',     "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
+    cookie:         ['RUBY_DEBUG_COOKIE',       "REMOTE: Cookie for negotiation"],
+    open_frontend:  ['RUBY_DEBUG_OPEN_FRONTEND',"REMOTE: frontend used by open command (vscode, chrome, default: rdbg)."],
   }.freeze
 
   CONFIG_MAP = CONFIG_SET.map{|k, (ev, desc)| [k, ev]}.to_h.freeze
@@ -58,6 +58,10 @@ module DEBUGGER__
       end
 
       update self.class.parse_argv(argv)
+    end
+
+    def inspect
+      config.inspect
     end
 
     def [](key)
@@ -258,15 +262,12 @@ module DEBUGGER__
 
         o.separator ''
 
-        o.on('-O=[OPENEE]', '--open=[OPENEE]', 'Start remote debugging with opening the network port.',
-                                                'Accept connecting to an external debugging tool if OPENEE are given.',
-                                                'If TCP/IP options are not given,',
-                                                'a UNIX domain socket will be used.',) do |o|
-        if openee = o&.downcase
-          config[:open] = openee
-          config[:port] ||= 0
-        end
-        config[:remote] = true
+        o.on('-O', '--open=[FRONTEND]', 'Start remote debugging with opening the network port.',
+                                        'If TCP/IP options are not given, a UNIX domain socket will be used.',
+                                        'If FRONTEND is given, prepare for the FRONTEND.',
+                                        'Now rdbg, vscode and chrome is supported.') do |f|
+          config[:remote] = true
+          config[:open_frontend] = f.downcase if f
         end
         o.on('--sock-path=SOCK_PATH', 'UNIX Domain socket path') do |path|
           config[:sock_path] = path
@@ -294,7 +295,7 @@ module DEBUGGER__
         o.separator "  '#{rdbg} -O target.rb foo bar'             starts and accepts attaching with UNIX domain socket."
         o.separator "  '#{rdbg} -O --port 1234 target.rb foo bar' starts accepts attaching with TCP/IP localhost:1234."
         o.separator "  '#{rdbg} -O --port 1234 -- -r foo -e bar'  starts accepts attaching with TCP/IP localhost:1234."
-        o.separator "  '#{rdbg} target.rb -O chrome --port 1234'  starts and accepts connecting to Chrome Devtools with localhost:1234 "
+        o.separator "  '#{rdbg} target.rb -O chrome --port 1234'  starts and accepts connecting from Chrome Devtools with localhost:1234."
 
         o.separator ''
         o.separator 'Attach mode:'

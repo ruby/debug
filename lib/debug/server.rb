@@ -5,7 +5,6 @@ require_relative 'config'
 require_relative 'version'
 
 module DEBUGGER__
-  IS_CHROME = CONFIG[:open] == 'chrome'
   class UI_ServerBase < UI_Base
     def initialize
       @sock = @sock_for_fork = nil
@@ -16,6 +15,7 @@ module DEBUGGER__
       @q_ans = nil
       @unsent_messages = []
       @width = 80
+      @repl = true
     end
 
     class Terminate < StandardError
@@ -52,8 +52,8 @@ module DEBUGGER__
 
             # flush unsent messages
             @unsent_messages.each{|m|
-              @sock.puts m unless IS_CHROME
-            }
+              @sock.puts m
+            } if @repl
             @unsent_messages.clear
 
             @q_msg = Queue.new
@@ -69,6 +69,7 @@ module DEBUGGER__
           raise # should catch at outer scope
         rescue => e
           DEBUGGER__.warn "ReaderThreadError: #{e}"
+          pp e.backtrace
         ensure
           DEBUGGER__.warn "Disconnected."
           @sock = nil
@@ -104,12 +105,14 @@ module DEBUGGER__
 
         raise unless @sock.read(2) == "\r\n"
         self.extend(UI_DAP)
+        @repl = false
         dap_setup @sock.read($1.to_i)
       when /^GET \/ HTTP\/1.1/
         require_relative 'server_cdp'
 
         self.extend(UI_CDP)
-        handshake
+        @repl = false
+        cdp_handshake
       else
         raise "Greeting message error: #{g}"
       end
@@ -226,9 +229,8 @@ module DEBUGGER__
 
     def readline prompt
       input = (sock do |s|
-        s.puts "input" unless IS_CHROME
+        s.puts "input" if @repl
         sleep 0.01 until @q_msg
-
         @q_msg.pop
       end || 'continue')
 
@@ -254,6 +256,7 @@ module DEBUGGER__
 
   class UI_TcpServer < UI_ServerBase
     def initialize host: nil, port: nil
+      @addr = nil
       @host = host || CONFIG[:host] || '127.0.0.1'
       @port = port || begin
         port_str = CONFIG[:port] || raise("Specify listening port by RUBY_DEBUG_PORT environment variable.")
@@ -273,12 +276,24 @@ module DEBUGGER__
 
       begin
         Socket.tcp_server_sockets @host, @port do |socks|
-          ::DEBUGGER__.warn "Debugger can attach via TCP/IP (#{socks.map{|e| e.local_address.inspect}})"
-          if IS_CHROME
-            @addr = socks[0].local_address.inspect_sockaddr # Change this part if `socks` are multiple.
-            DEBUGGER__.warn "Enter the following URL in Chrome:\n\n" \
-                              + "devtools://devtools/bundled/inspector.html?ws=#{@addr}"
-          end
+          addr = socks[0].local_address.inspect_sockaddr # Change this part if `socks` are multiple.
+          rdbg = File.expand_path('../../exe/rdbg', __dir__)
+
+          DEBUGGER__.warn "Debugger can attach via TCP/IP (#{addr})"
+          DEBUGGER__.info <<~EOS
+          With rdbg, use the following command line:
+          #
+          #   #{rdbg} --attach #{addr.split(':').join(' ')}
+          #
+          EOS
+
+          DEBUGGER__.warn <<~EOS if CONFIG[:open_frontend] == 'chrome'
+          With Chrome browser, type the following URL in the address-bar:
+          
+             devtools://devtools/bundled/inspector.html?ws=#{addr}
+          
+          EOS
+
           Socket.accept_loop(socks) do |sock, client|
             @client_addr = client
             yield @sock_for_fork = sock
@@ -305,14 +320,70 @@ module DEBUGGER__
   end
 
   class UI_UnixDomainServer < UI_ServerBase
-    attr_reader :sock_path
-
     def initialize sock_dir: nil, sock_path: nil
       @sock_path = sock_path
       @sock_dir = sock_dir || DEBUGGER__.unix_domain_socket_dir
       @sock_for_fork = nil
 
       super()
+    end
+
+    def vscode_setup
+      require 'tmpdir'
+      require 'json'
+      require 'fileutils'
+
+      dir = Dir.mktmpdir("ruby-debug-vscode-")
+      at_exit{
+        FileUtils.rm_rf dir
+      }
+      Dir.chdir(dir) do
+        Dir.mkdir('.vscode')
+        open('README.rb', 'w'){|f|
+          f.puts <<~MSG
+          # Wait for starting the attaching to the Ruby process
+          # This file will be removed at the end of the debuggee process.
+          #
+          # Note that vscode-rdbg extension is needed. Please install if you don't have.
+          MSG
+        }
+        open('.vscode/launch.json', 'w'){|f|
+          f.puts JSON.pretty_generate({
+            version: '0.2.0',
+            configurations: [
+            {
+              type: "rdbg",
+              name: "Attach with rdbg",
+              request: "attach",
+              rdbgPath: File.expand_path('../../exe/rdbg', __dir__),
+              debugPort: @sock_path,
+              autoAttach: true,
+            }
+            ]
+          })
+        }
+      end
+
+      cmds = ['code', "#{dir}/", "#{dir}/README.rb"]
+      cmdline = cmds.join(' ')
+      ssh_cmdline = "code --remote ssh-remote+[SSH hostname] #{dir}/ #{dir}/README.rb"
+
+      STDERR.puts "Launching: #{cmdline}"
+      env = ENV.delete_if{|k, h| /RUBY/ =~ k}.to_h
+
+      unless system(env, *cmds)
+        DEBUGGER__.warn <<~MESSAGE
+        Can not invoke the command.
+        Use the command-line on your terminal (with modification if you need).
+
+          #{cmdline}
+
+        If your application is running on a SSH remote host, please try:
+
+          #{ssh_cmdline}
+
+        MESSAGE
+      end
     end
 
     def accept
@@ -327,6 +398,8 @@ module DEBUGGER__
       end
 
       ::DEBUGGER__.warn "Debugger can attach via UNIX domain socket (#{@sock_path})"
+      vscode_setup if CONFIG[:open_frontend] == 'vscode'
+
       Socket.unix_server_loop @sock_path do |sock, client|
         @sock_for_fork = sock
         @client_addr = client

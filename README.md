@@ -11,8 +11,9 @@ New debug.rb has several advantages:
 * [Remote debugging](#remote-debugging): Support remote debugging natively.
   * UNIX domain socket
   * TCP/IP
-  * VSCode/DAP integration ([VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg))
-  * Chrome DevTools
+  * Integeration with rich debugger frontend
+    * VSCode/DAP ([VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg))
+    * Chrome DevTools
 * Extensible: application can introduce debugging support with several ways:
   * By `rdbg` command
   * By loading libraries with `-r` command line option
@@ -337,32 +338,104 @@ By default, UNIX domain socket is used for the debugging port. To use TCP/IP, yo
 $ RUBY_DEBUG_PORT=12345 ruby target.rb
 ```
 
-### Using Chrome DevTools
+### Integration with external debugger frontend
 
-You can debug with Chrome DevTools by using remote debugger.
+You can attach with external debuger frontend with VSCode and Chrome.
 
-1. Run with `rdbg` and enter `open chrome`.
-If you want to run it from the command line, you can use `rdbg --open=chrome`.
-2. Enter the URL which is outputted in the terminal in Google Chrome.
-In the following example, open `devtools://devtools/bundled/inspector.html?ws=127.0.0.1:65124`.
-
-```terminal
-$ rdbg target.rb
-[1, 4] in target.rb
-=>   1| a=1
-     2| b=1
-     3| c=1
-     4| d=1
-=>#0	<main> at target.rb:1
-(rdbg) open chrome    # command
-DEBUGGER: wait for debugger connection...
-DEBUGGER: Debugger can attach via TCP/IP (["#<Addrinfo: 127.0.0.1:65124 TCP>"])
-DEBUGGER: Enter the following URL in Chrome:
-
-devtools://devtools/bundled/inspector.html?ws=127.0.0.1:65124
+```
+$ rdbg --open=[frontend] target.rb
 ```
 
-3. Click the `Sources` plane.
+will open a debug port and `[frontned]` can attache to the port.
+
+Also `open` command allows opening the debug port.
+
+#### VSCode integration
+
+If you don't run a debuggee Ruby process on VSCode, you can attach with VSCode later with the fowllowing steps.
+
+`rdbg --open=vscode` opens the debug port and tries to invoke the VSCode (`code` command).
+
+```
+$ rdbg --open=vscode target.rb
+DEBUGGER: Debugger can attach via UNIX domain socket (/tmp/ruby-debug-sock-1000/ruby-debug-ko1-27706)
+DEBUGGER: wait for debugger connection...
+Launching: code /tmp/ruby-debug-vscode-20211014-27706-gd7e85/ /tmp/ruby-debug-vscode-20211014-27706-gd7e85/README.rb
+DEBUGGER: Connected.
+```
+
+And it tris to invoke the new VSCode window and VSCode starts attaching to the debuggee Ruby program automatically.
+
+You can also use `open vscode` command in REPL.
+
+```
+$ rdbg target.rb
+[1, 8] in target.rb
+     1|
+=>   2| p a = 1
+     3| p b = 2
+     4| p c = 3
+     5| p d = 4
+     6| p e = 5
+     7|
+     8| __END__
+=>#0    <main> at target.rb:2
+(rdbg) open vscode    # command
+DEBUGGER: wait for debugger connection...
+DEBUGGER: Debugger can attach via UNIX domain socket (/tmp/ruby-debug-sock-1000/ruby-debug-ko1-28337)
+Launching: code /tmp/ruby-debug-vscode-20211014-28337-kg9dm/ /tmp/ruby-debug-vscode-20211014-28337-kg9dm/README.rb
+DEBUGGER: Connected.
+```
+
+If the machine which runs the Ruby process doesn't have a `code` command, the following message will be shown:
+
+```
+$ rdbg target.rb
+[1, 8] in target.rb
+     1|
+=>   2| p a = 1
+     3| p b = 2
+     4| p c = 3
+     5| p d = 4
+     6| p e = 5
+     7|
+     8| __END__
+=>#0    <main> at target.rb:2
+(rdbg) open vscode    # command
+DEBUGGER: wait for debugger connection...
+DEBUGGER: Debugger can attach via UNIX domain socket (/tmp/ruby-debug-sock-1000/ruby-debug-ko1-28991)
+Launching: code /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/ /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/README.rb
+DEBUGGER: Can not invoke the command.
+##
+## type the following command-line on your terminal (with modification if you need).
+##
+code /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/ /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/README.rb
+
+# If your application is running on a SSH remote host, please try:
+# code --remote ssh-remote+[SSH hostname] /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/ /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/README.rb
+```
+
+and try to use proposed commands.
+
+Note that you can attach with `rdbg --attach` and continue REPL debugging.
+
+#### Chrome DevTool integration
+
+With `rdbg --open=chrome` command will shows the following message.
+
+```
+$ rdbg target.rb --open=chrome
+DEBUGGER: Debugger can attach via TCP/IP (127.0.0.1:43633)
+DEBUGGER: With Chrome browser, type the following URL in the address-bar:
+
+   devtools://devtools/bundled/inspector.html?ws=127.0.0.1:43633
+
+DEBUGGER: wait for debugger connection...
+```
+
+Type `devtools://devtools/bundled/inspector.html?ws=127.0.0.1:43633` in the address-bar on Chrome browser, and you can continue the debugging with chrome browser.
+
+Also `open chrome` command works like `open vscode`.
 
 For more information about how to use Chrome debugging, you might want to read [here](https://developer.chrome.com/docs/devtools/)
 
@@ -415,7 +488,7 @@ config set no_color true
   * `RUBY_DEBUG_SOCK_PATH` (`sock_path`): UNIX Domain Socket remote debugging: socket path
   * `RUBY_DEBUG_SOCK_DIR` (`sock_dir`): UNIX Domain Socket remote debugging: socket directory
   * `RUBY_DEBUG_COOKIE` (`cookie`): Cookie for negotiation
-  * `RUBY_DEBUG_OPEN` (`open`): Remote debugging: external debugging tool such as Chrome
+  * `RUBY_DEBUG_OPEN_FRONTEND` (`open_frontend`): frontend used by open command (vscode, chrome, default: rdbg).
 
 ### Initial scripts
 
@@ -738,10 +811,10 @@ Debug console mode:
                                      The first argument should be a command name in $PATH.
                                      Example: 'rdbg -c bundle exec rake test'
 
-    -O, --open=[OPENEE]              Start remote debugging with opening the network port.
-                                     Accept connecting to an external debugging tool if OPENEE are given.
-                                     If TCP/IP options are not given,
-                                     a UNIX domain socket will be used.
+    -O, --open=[FRONTEND]            Start remote debugging with opening the network port.
+                                     If TCP/IP options are not given, a UNIX domain socket will be used.
+                                     If FRONTEND is given, prepare for the FRONTEND.
+                                     Now rdbg, vscode and chrome is supported.
         --sock-path=SOCK_PATH        UNIX Domain socket path
         --port=PORT                  Listening TCP/IP port
         --host=HOST                  Listening TCP/IP host
@@ -757,7 +830,7 @@ Debug console mode:
   'rdbg -O target.rb foo bar'             starts and accepts attaching with UNIX domain socket.
   'rdbg -O --port 1234 target.rb foo bar' starts accepts attaching with TCP/IP localhost:1234.
   'rdbg -O --port 1234 -- -r foo -e bar'  starts accepts attaching with TCP/IP localhost:1234.
-  'rdbg target.rb -O chrome --port 1234'  starts and accepts connecting to Chrome Devtools with localhost:1234 
+  'rdbg target.rb -O chrome --port 1234'  starts and accepts connecting from Chrome Devtools with localhost:1234.
 
 Attach mode:
     -A, --attach                     Attach to debuggee process.

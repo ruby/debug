@@ -9,7 +9,7 @@ module DEBUGGER__
   module UI_CDP
     SHOW_PROTOCOL = ENV['RUBY_DEBUG_CDP_SHOW_PROTOCOL'] == '1'
 
-    def handshake
+    def cdp_handshake
       CONFIG.set_config no_color: true
 
       req = @sock.readpartial 4096
