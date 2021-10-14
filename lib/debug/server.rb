@@ -5,6 +5,7 @@ require_relative 'config'
 require_relative 'version'
 
 module DEBUGGER__
+  IS_CHROME = CONFIG[:open] == 'chrome'
   class UI_ServerBase < UI_Base
     def initialize
       @sock = @sock_for_fork = nil
@@ -51,7 +52,7 @@ module DEBUGGER__
 
             # flush unsent messages
             @unsent_messages.each{|m|
-              @sock.puts m unless CONFIG[:chrome]
+              @sock.puts m unless IS_CHROME
             }
             @unsent_messages.clear
 
@@ -225,7 +226,7 @@ module DEBUGGER__
 
     def readline prompt
       input = (sock do |s|
-        s.puts "input" unless CONFIG[:chrome]
+        s.puts "input" unless IS_CHROME
         sleep 0.01 until @q_msg
 
         @q_msg.pop
@@ -273,8 +274,8 @@ module DEBUGGER__
       begin
         Socket.tcp_server_sockets @host, @port do |socks|
           ::DEBUGGER__.warn "Debugger can attach via TCP/IP (#{socks.map{|e| e.local_address.inspect}})"
-          if CONFIG[:chrome]
-            @addr = socks[0].local_address.inspect_sockaddr if CONFIG[:chrome] # Change this part if `socks` are multiple.
+          if IS_CHROME
+            @addr = socks[0].local_address.inspect_sockaddr # Change this part if `socks` are multiple.
             DEBUGGER__.warn "Enter the following URL in Chrome:\n\n" \
                               + "devtools://devtools/bundled/inspector.html?ws=#{@addr}"
           end

@@ -1078,7 +1078,7 @@ module DEBUGGER__
 
     def repl_open_chrome
       port = CONFIG[:port] || 0
-      repl_open_tcp nil, port, chrome: true
+      repl_open_tcp nil, port, open: 'chrome'
     end
 
     def step_command type, arg

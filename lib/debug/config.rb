@@ -42,7 +42,7 @@ module DEBUGGER__
     sock_path:      ['RUBY_DEBUG_SOCK_PATH', "REMOTE: UNIX Domain Socket remote debugging: socket path"],
     sock_dir:       ['RUBY_DEBUG_SOCK_DIR',  "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
     cookie:         ['RUBY_DEBUG_COOKIE',    "REMOTE: Cookie for negotiation"],
-    chrome:         ['RUBY_DEBUG_CHROME',    "REMOTE: Chrome DevTools remote debugging"],
+    open:           ['RUBY_DEBUG_OPEN',      "REMOTE: Remote debugging: external debugging tool such as Chrome"],
   }.freeze
 
   CONFIG_MAP = CONFIG_SET.map{|k, (ev, desc)| [k, ev]}.to_h.freeze
@@ -258,10 +258,15 @@ module DEBUGGER__
 
         o.separator ''
 
-        o.on('-O', '--open', 'Start remote debugging with opening the network port.',
-                             'If TCP/IP options are not given,',
-                             'a UNIX domain socket will be used.') do
-          config[:remote] = true
+        o.on('-O=[OPENEE]', '--open=[OPENEE]', 'Start remote debugging with opening the network port.',
+                                                'Accept connecting to an external debugging tool if OPENEE are given.',
+                                                'If TCP/IP options are not given,',
+                                                'a UNIX domain socket will be used.',) do |o|
+        if openee = o&.downcase
+          config[:open] = openee
+          config[:port] ||= 0
+        end
+        config[:remote] = true
         end
         o.on('--sock-path=SOCK_PATH', 'UNIX Domain socket path') do |path|
           config[:sock_path] = path
@@ -289,6 +294,7 @@ module DEBUGGER__
         o.separator "  '#{rdbg} -O target.rb foo bar'             starts and accepts attaching with UNIX domain socket."
         o.separator "  '#{rdbg} -O --port 1234 target.rb foo bar' starts accepts attaching with TCP/IP localhost:1234."
         o.separator "  '#{rdbg} -O --port 1234 -- -r foo -e bar'  starts accepts attaching with TCP/IP localhost:1234."
+        o.separator "  '#{rdbg} target.rb -O chrome --port 1234'  starts and accepts connecting to Chrome Devtools with localhost:1234 "
 
         o.separator ''
         o.separator 'Attach mode:'
