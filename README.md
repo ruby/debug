@@ -342,6 +342,7 @@ $ RUBY_DEBUG_PORT=12345 ruby target.rb
 You can debug with Chrome DevTools by using remote debugger.
 
 1. Run with `rdbg` and enter `open chrome`.
+If you want to run it from the command line, you can use `rdbg --open=chrome`.
 2. Enter the URL which is outputted in the terminal in Google Chrome.
 In the following example, open `devtools://devtools/bundled/inspector.html?ws=127.0.0.1:65124`.
 
@@ -412,7 +413,7 @@ config set no_color true
   * `RUBY_DEBUG_SOCK_PATH` (`sock_path`): UNIX Domain Socket remote debugging: socket path
   * `RUBY_DEBUG_SOCK_DIR` (`sock_dir`): UNIX Domain Socket remote debugging: socket directory
   * `RUBY_DEBUG_COOKIE` (`cookie`): Cookie for negotiation
-  * `RUBY_DEBUG_CHROME` (`chrome`): Chrome DevTools remote debugging
+  * `RUBY_DEBUG_OPEN` (`open`): Remote debugging: external debugging tool such as Chrome
 
 ### Initial scripts
 
@@ -735,7 +736,8 @@ Debug console mode:
                                      The first argument should be a command name in $PATH.
                                      Example: 'rdbg -c bundle exec rake test'
 
-    -O, --open                       Start remote debugging with opening the network port.
+    -O, --open=[OPENEE]              Start remote debugging with opening the network port.
+                                     Accept connecting to an external debugging tool if OPENEE are given.
                                      If TCP/IP options are not given,
                                      a UNIX domain socket will be used.
         --sock-path=SOCK_PATH        UNIX Domain socket path
@@ -753,6 +755,7 @@ Debug console mode:
   'rdbg -O target.rb foo bar'             starts and accepts attaching with UNIX domain socket.
   'rdbg -O --port 1234 target.rb foo bar' starts accepts attaching with TCP/IP localhost:1234.
   'rdbg -O --port 1234 -- -r foo -e bar'  starts accepts attaching with TCP/IP localhost:1234.
+  'rdbg target.rb -O chrome --port 1234'  starts and accepts connecting to Chrome Devtools with localhost:1234 
 
 Attach mode:
     -A, --attach                     Attach to debuggee process.
