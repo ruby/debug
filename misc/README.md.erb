@@ -390,29 +390,19 @@ DEBUGGER: Connected.
 If the machine which runs the Ruby process doesn't have a `code` command, the following message will be shown:
 
 ```
-$ rdbg target.rb
-[1, 8] in target.rb
-     1|
-=>   2| p a = 1
-     3| p b = 2
-     4| p c = 3
-     5| p d = 4
-     6| p e = 5
-     7|
-     8| __END__
-=>#0    <main> at target.rb:2
-(rdbg) open vscode    # command
+(rdbg) open vscode
 DEBUGGER: wait for debugger connection...
-DEBUGGER: Debugger can attach via UNIX domain socket (/tmp/ruby-debug-sock-1000/ruby-debug-ko1-28991)
-Launching: code /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/ /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/README.rb
+DEBUGGER: Debugger can attach via UNIX domain socket (/tmp/ruby-debug-sock-1000/ruby-debug-ko1-455)
+Launching: code /tmp/ruby-debug-vscode-20211014-455-gtjpwi/ /tmp/ruby-debug-vscode-20211014-455-gtjpwi/README.rb
 DEBUGGER: Can not invoke the command.
-##
-## type the following command-line on your terminal (with modification if you need).
-##
-code /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/ /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/README.rb
+Use the command-line on your terminal (with modification if you need).
 
-# If your application is running on a SSH remote host, please try:
-# code --remote ssh-remote+[SSH hostname] /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/ /tmp/ruby-debug-vscode-20211014-28991-5cjxuo/README.rb
+  code /tmp/ruby-debug-vscode-20211014-455-gtjpwi/ /tmp/ruby-debug-vscode-20211014-455-gtjpwi/README.rb
+
+If your application is running on a SSH remote host, please try:
+
+  code --remote ssh-remote+[SSH hostname] /tmp/ruby-debug-vscode-20211014-455-gtjpwi/ /tmp/ruby-debug-vscode-20211014-455-gtjpwi/README.rb
+
 ```
 
 and try to use proposed commands.
