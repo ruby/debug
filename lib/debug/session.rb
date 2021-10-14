@@ -937,6 +937,8 @@ module DEBUGGER__
       #   * open debuggee port on TCP/IP with given `[<host>:]<port>` and wait for attaching.
       # * `open vscode`
       #   * open debuggee port for VSCode and launch VSCode if available.
+      # * `open chrome`
+      #   * open debuggee port for Chrome and wait for attaching.
       when 'open'
         case arg&.downcase
         when '', nil
