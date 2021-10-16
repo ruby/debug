@@ -14,7 +14,7 @@ module DEBUGGER__
         @sock = s
       end
 
-      def cdp_handshake
+      def handshake
         CONFIG.set_config no_color: true
   
         req = @sock.readpartial 4096
