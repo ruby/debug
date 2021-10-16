@@ -253,7 +253,7 @@ module DEBUGGER__
       when :backtrace
         result[:callFrames].each do |frame|
           s_id = frame.dig(:location, :scriptId)
-          unless @script_paths.include? s_id
+          if File.exist?(s_id) && !@script_paths.include?(s_id)
             src = File.read(s_id)
             @ui.fire_event 'Debugger.scriptParsed',
                             scriptId: s_id,
@@ -286,11 +286,13 @@ module DEBUGGER__
       when :backtrace
         event! :cdp_result, :backtrace, req, {
           callFrames: @target_frames.map.with_index{|frame, i|
-            if frame.realpath.match /<internal:(.*)>/
+            path = frame.realpath || frame.path
+            if path.match /<internal:(.*)>/
               abs = $1
             else
-              abs = frame.realpath
+              abs = path
             end
+
             local_scope = {
               callFrameId: SecureRandom.hex(16),
               functionName: frame.name,
