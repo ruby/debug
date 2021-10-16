@@ -9,63 +9,51 @@ module DEBUGGER__
   module UI_CDP
     SHOW_PROTOCOL = ENV['RUBY_DEBUG_CDP_SHOW_PROTOCOL'] == '1'
 
-    def cdp_handshake
-      CONFIG.set_config no_color: true
-
-      req = @sock.readpartial 4096
-      $stderr.puts '[>]' + req if SHOW_PROTOCOL
-
-      if req.match /^Sec-WebSocket-Key: (.*)\r\n/
-        accept = Base64.strict_encode64 Digest::SHA1.digest "#{$1}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-        @sock.print "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: #{accept}\r\n\r\n"
-      else
-        "Unknown request: #{req}"
-      end
-    end
-
-    def send_response req, **res
-      if res.empty?
-        send id: req['id'], result: {}
-      else
-        send id: req['id'], result: res
-      end
-    end
-
-    def send_event method, **params
-      if params.empty?
-        send method: method, params: {}
-      else
-        send method: method, params: params
-      end
-    end
-
-    def send **msg
-      msg = JSON.generate(msg)
-      frame = []
-      fin = 0b10000000
-      opcode = 0b00000001
-      frame << fin + opcode
-
-      mask = 0b00000000 # A server must not mask any frames in a WebSocket Protocol.
-      bytesize = msg.bytesize
-      if bytesize < 126
-        payload_len = bytesize
-      elsif bytesize < 2 ** 16
-        payload_len = 0b01111110
-        ex_payload_len = [bytesize].pack('n*').bytes
-      else
-        payload_len = 0b01111111
-        ex_payload_len = [bytesize].pack('Q>').bytes
+    class WebSocket
+      def initialize s
+        @sock = s
       end
 
-      frame << mask + payload_len
-      frame.push *ex_payload_len if ex_payload_len
-      frame.push *msg.bytes
-      @sock.print frame.pack 'c*'
-    end
+      def cdp_handshake
+        CONFIG.set_config no_color: true
+  
+        req = @sock.readpartial 4096
+        $stderr.puts '[>]' + req if SHOW_PROTOCOL
+  
+        if req.match /^Sec-WebSocket-Key: (.*)\r\n/
+          accept = Base64.strict_encode64 Digest::SHA1.digest "#{$1}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+          @sock.print "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: #{accept}\r\n\r\n"
+        else
+          "Unknown request: #{req}"
+        end
+      end
 
-    def process
-      loop do
+      def send **msg
+        msg = JSON.generate(msg)
+        frame = []
+        fin = 0b10000000
+        opcode = 0b00000001
+        frame << fin + opcode
+  
+        mask = 0b00000000 # A server must not mask any frames in a WebSocket Protocol.
+        bytesize = msg.bytesize
+        if bytesize < 126
+          payload_len = bytesize
+        elsif bytesize < 2 ** 16
+          payload_len = 0b01111110
+          ex_payload_len = [bytesize].pack('n*').bytes
+        else
+          payload_len = 0b01111111
+          ex_payload_len = [bytesize].pack('Q>').bytes
+        end
+  
+        frame << mask + payload_len
+        frame.push *ex_payload_len if ex_payload_len
+        frame.push *msg.bytes
+        @sock.print frame.pack 'c*'
+      end
+
+      def extract_data
         first_group = @sock.getbyte
         fin = first_group & 0b10000000 != 128
         raise 'Unsupported' if fin
@@ -88,8 +76,29 @@ module DEBUGGER__
           masked = @sock.getbyte
           unmasked << (masked ^ masking_key[n % 4])
         end
-        req = JSON.parse unmasked.pack 'c*'
+        JSON.parse unmasked.pack 'c*'
+      end
+    end
 
+    def send_response req, **res
+      if res.empty?
+        @web_sock.send id: req['id'], result: {}
+      else
+        @web_sock.send id: req['id'], result: res
+      end
+    end
+
+    def send_event method, **params
+      if params.empty?
+        @web_sock.send method: method, params: {}
+      else
+        @web_sock.send method: method, params: params
+      end
+    end
+
+    def process
+      loop do
+        req = @web_sock.extract_data
         $stderr.puts '[>]' + req.inspect if SHOW_PROTOCOL
         bps = []
 
