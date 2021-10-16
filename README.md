@@ -11,7 +11,7 @@ New debug.rb has several advantages:
 * [Remote debugging](#remote-debugging): Support remote debugging natively.
   * UNIX domain socket
   * TCP/IP
-  * Integeration with rich debugger frontend
+  * Integration with rich debugger frontend
     * VSCode/DAP ([VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg))
     * Chrome DevTools
 * Extensible: application can introduce debugging support with several ways:
@@ -340,7 +340,7 @@ $ RUBY_DEBUG_PORT=12345 ruby target.rb
 
 ### Integration with external debugger frontend
 
-You can attach with external debuger frontend with VSCode and Chrome.
+You can attach with external debugger frontend with VSCode and Chrome.
 
 ```
 $ rdbg --open=[frontend] target.rb
@@ -352,7 +352,7 @@ Also `open` command allows opening the debug port.
 
 #### VSCode integration
 
-If you don't run a debuggee Ruby process on VSCode, you can attach with VSCode later with the fowllowing steps.
+If you don't run a debuggee Ruby process on VSCode, you can attach with VSCode later with the following steps.
 
 `rdbg --open=vscode` opens the debug port and tries to invoke the VSCode (`code` command).
 
@@ -364,7 +364,7 @@ Launching: code /tmp/ruby-debug-vscode-20211014-27706-gd7e85/ /tmp/ruby-debug-vs
 DEBUGGER: Connected.
 ```
 
-And it tris to invoke the new VSCode window and VSCode starts attaching to the debuggee Ruby program automatically.
+And it tries to invoke the new VSCode window and VSCode starts attaching to the debuggee Ruby program automatically.
 
 You can also use `open vscode` command in REPL.
 
