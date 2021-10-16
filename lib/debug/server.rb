@@ -113,7 +113,7 @@ module DEBUGGER__
         self.extend(UI_CDP)
         @repl = false
         @web_sock = UI_CDP::WebSocket.new(@sock)
-        @web_sock.cdp_handshake
+        @web_sock.handshake
       else
         raise "Greeting message error: #{g}"
       end
