@@ -112,6 +112,8 @@ module DEBUGGER__
 
         self.extend(UI_CDP)
         @repl = false
+        CONFIG.set_config no_color: true
+
         @web_sock = UI_CDP::WebSocket.new(@sock)
         @web_sock.handshake
       else
