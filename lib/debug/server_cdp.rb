@@ -14,9 +14,7 @@ module DEBUGGER__
         @sock = s
       end
 
-      def handshake
-        CONFIG.set_config no_color: true
-  
+      def handshake  
         req = @sock.readpartial 4096
         $stderr.puts '[>]' + req if SHOW_PROTOCOL
   
