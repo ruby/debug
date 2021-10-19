@@ -43,6 +43,7 @@ module DEBUGGER__
     sock_dir:       ['RUBY_DEBUG_SOCK_DIR',     "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
     cookie:         ['RUBY_DEBUG_COOKIE',       "REMOTE: Cookie for negotiation"],
     open_frontend:  ['RUBY_DEBUG_OPEN_FRONTEND',"REMOTE: frontend used by open command (vscode, chrome, default: rdbg)."],
+    chrome_path:    ['RUBY_DEBUG_CHROME_PATH',  "REMOTE: Platform dependent path of Chrome (For more information, See [here](https://github.com/ruby/debug/pull/334/files#diff-5fc3d0a901379a95bc111b86cf0090b03f857edfd0b99a0c1537e26735698453R55-R64))"],
 
     # obsolete
     parent_on_fork: ['RUBY_DEBUG_PARENT_ON_FORK', "OBSOLETE: Keep debugging parent process on fork (default: false)",     :bool],
