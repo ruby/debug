@@ -5,10 +5,157 @@ require 'digest/sha1'
 require 'base64'
 require 'securerandom'
 require 'stringio'
+require 'open3'
+require 'tmpdir'
 
 module DEBUGGER__
   module UI_CDP
     SHOW_PROTOCOL = ENV['RUBY_DEBUG_CDP_SHOW_PROTOCOL'] == '1'
+
+    class << self
+      def setup_chrome addr
+        port, path, pid = run_new_chrome
+        begin
+          s = Socket.tcp '127.0.0.1', port
+        rescue Errno::ECONNREFUSED
+          return
+        end
+
+        ws_client = WebSocketClient.new(s)
+        ws_client.handshake port, path
+        ws_client.send id: 1, method: 'Target.getTargets'
+
+        3.times do
+          res = ws_client.extract_data
+          case
+          when res['id'] == 1 && target_info = res.dig('result', 'targetInfos')
+            page = target_info.find{|t| t['type'] == 'page'}
+            ws_client.send id: 2, method: 'Target.attachToTarget',
+                          params: {
+                            targetId: page['targetId'],
+                            flatten: true
+                          }
+          when res['id'] == 2
+            s_id = res.dig('result', 'sessionId')
+            sleep 0.1
+            ws_client.send sessionId: s_id, id: 1,
+                          method: 'Page.navigate',
+                          params: {
+                            url: "devtools://devtools/bundled/inspector.html?ws=#{addr}"
+                          }
+          end
+        end
+        pid
+      end
+
+      def get_chrome_path
+        return CONFIG[:chrome_path] if CONFIG[:chrome_path]
+
+        # The process to check OS is based on `selenium` project.
+        case RbConfig::CONFIG['host_os']
+        when /mswin|msys|mingw|cygwin|emc/
+          'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+        when /darwin|mac os/
+          '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
+        when /linux/
+          'google-chrome'
+        else
+          raise "Unsupported OS"
+        end
+      end
+
+      def run_new_chrome
+        dir = Dir.mktmpdir
+        at_exit{
+          FileUtils.rm_rf dir
+        }
+        # The command line flags are based on: https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Chrome_Desktop#connecting
+        stdin, stdout, stderr, wait_thr = *Open3.popen3("#{get_chrome_path} --remote-debugging-port=0 --no-first-run --no-default-browser-check --user-data-dir=#{dir}")
+        stdin.close
+        stdout.close
+
+        data = stderr.readpartial 4096
+        if data.match /DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/
+          port = $1
+          path = $2
+        end
+        stderr.close
+        [port, path, wait_thr.pid]
+      end
+    end
+
+    class WebSocketClient
+      def initialize s
+        @sock = s
+      end
+
+      def handshake port, path
+        key = SecureRandom.hex(11)
+        @sock.print "GET #{path} HTTP/1.1\r\nHost: 127.0.0.1:#{port}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: #{key}==\r\n\r\n"
+        res = @sock.readpartial 4092
+        $stderr.puts '[>]' + res if SHOW_PROTOCOL
+
+        if res.match /^Sec-WebSocket-Accept: (.*)\r\n/
+          correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+          raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless $1 == correct_key
+        else
+          raise "Unknown response: #{res}"
+        end
+      end
+
+      def send **msg
+        msg = JSON.generate(msg)
+        frame = []
+        fin = 0b10000000
+        opcode = 0b00000001
+        frame << fin + opcode
+      
+        mask = 0b10000000 # A client must mask all frames in a WebSocket Protocol.
+        bytesize = msg.bytesize
+        if bytesize < 126
+          payload_len = bytesize
+        elsif bytesize < 2 ** 16
+          payload_len = 0b01111110
+          ex_payload_len = [bytesize].pack('n*').bytes
+        else
+          payload_len = 0b01111111
+          ex_payload_len = [bytesize].pack('Q>').bytes
+        end
+      
+        frame << mask + payload_len
+        frame.push *ex_payload_len if ex_payload_len
+      
+        frame.push *masking_key = 4.times.map{rand(1..255)}
+        masked = []
+        msg.bytes.each_with_index do |b, i|
+          masked << (b ^ masking_key[i % 4])
+        end
+      
+        frame.push *masked
+        @sock.print frame.pack 'c*'
+      end
+
+      def extract_data
+        first_group = @sock.getbyte
+        fin = first_group & 0b10000000 != 128
+        raise 'Unsupported' if fin
+        opcode = first_group & 0b00001111
+        raise "Unsupported: #{opcode}" unless opcode == 1
+
+        second_group = @sock.getbyte
+        mask = second_group & 0b10000000 == 128
+        raise 'The server must not mask any frames' if mask
+        payload_len = second_group & 0b01111111
+        # TODO: Support other payload_lengths
+        if payload_len == 126
+          payload_len = @sock.read(2).unpack('n*')[0]
+        end
+
+        data = JSON.parse @sock.read payload_len
+        $stderr.puts '[>]' + data.inspect if SHOW_PROTOCOL
+        data
+      end
+    end
 
     class Detach < StandardError
     end
@@ -286,6 +433,10 @@ module DEBUGGER__
     def deactivate_bp
       @q_msg << 'del'
       @q_ans << 'y'
+    end
+
+    def cleanup_reader
+      Process.kill :KILL, @chrome_pid
     end
 
     ## Called by the SESSION thread

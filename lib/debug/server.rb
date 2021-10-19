@@ -75,17 +75,21 @@ module DEBUGGER__
           DEBUGGER__.warn "ReaderThreadError: #{e}"
           pp e.backtrace
         ensure
-          DEBUGGER__.warn "Disconnected."
-          @sock = nil
-          @q_msg.close
-          @q_msg = nil
-          @q_ans.close
-          @q_ans = nil
+          cleanup_reader
         end # accept
 
       rescue Terminate
         # ignore
       end
+    end
+
+    def cleanup_reader
+      DEBUGGER__.warn "Disconnected."
+      @sock = nil
+      @q_msg.close
+      @q_msg = nil
+      @q_ans.close
+      @q_ans = nil
     end
 
     def greeting
@@ -330,6 +334,19 @@ module DEBUGGER__
       super()
     end
 
+    def chrome_setup
+      require_relative 'server_cdp'
+
+      unless @chrome_pid = UI_CDP.setup_chrome(@addr)
+        DEBUGGER__.warn <<~EOS if CONFIG[:open_frontend] == 'chrome'
+          With Chrome browser, type the following URL in the address-bar:
+          
+             devtools://devtools/bundled/inspector.html?ws=#{@addr}
+          
+          EOS
+      end
+    end
+
     def accept
       retry_cnt = 0
       super # for fork
@@ -347,12 +364,7 @@ module DEBUGGER__
           #
           EOS
 
-          DEBUGGER__.warn <<~EOS if CONFIG[:open_frontend] == 'chrome'
-          With Chrome browser, type the following URL in the address-bar:
-          
-             devtools://devtools/bundled/inspector.html?ws=#{@addr}
-          
-          EOS
+          chrome_setup if CONFIG[:open_frontend] == 'chrome'
 
           Socket.accept_loop(socks) do |sock, client|
             @client_addr = client
