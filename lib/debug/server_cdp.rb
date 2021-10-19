@@ -13,7 +13,7 @@ module DEBUGGER__
     class Detach < StandardError
     end
 
-    class WebSocket
+    class WebSocketServer
       def initialize s
         @sock = s
       end
@@ -86,17 +86,17 @@ module DEBUGGER__
 
     def send_response req, **res
       if res.empty?
-        @web_sock.send id: req['id'], result: {}
+        @ws_server.send id: req['id'], result: {}
       else
-        @web_sock.send id: req['id'], result: res
+        @ws_server.send id: req['id'], result: res
       end
     end
 
     def send_event method, **params
       if params.empty?
-        @web_sock.send method: method, params: {}
+        @ws_server.send method: method, params: {}
       else
-        @web_sock.send method: method, params: params
+        @ws_server.send method: method, params: params
       end
     end
 
@@ -104,7 +104,7 @@ module DEBUGGER__
       bps = {}
       @src_map = {}
       loop do
-        req = @web_sock.extract_data
+        req = @ws_server.extract_data
         $stderr.puts '[>]' + req.inspect if SHOW_PROTOCOL
 
         case req['method']
