@@ -118,8 +118,8 @@ module DEBUGGER__
         @repl = false
         CONFIG.set_config no_color: true
 
-        @web_sock = UI_CDP::WebSocket.new(@sock)
-        @web_sock.handshake
+        @ws_server = UI_CDP::WebSocketServer.new(@sock)
+        @ws_server.handshake
       else
         raise "Greeting message error: #{g}"
       end
