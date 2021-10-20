@@ -91,9 +91,7 @@ module DEBUGGER__
         @console.readline "(rdbg:remote\##{@pid}) "
       else
         @console.readline "(rdbg:remote) "
-      end.tap{|line|
-        p readline: line
-      }
+      end
     end
 
     def connect_unix name = nil
