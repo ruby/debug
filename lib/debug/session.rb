@@ -78,6 +78,8 @@ module DEBUGGER__
   class PostmortemError < RuntimeError; end
 
   class Session
+    attr_reader :intercepted_sigint_cmd, :process_group
+
     def initialize ui
       @ui = ui
       @sr = SourceRepository.new
@@ -100,6 +102,8 @@ module DEBUGGER__
       @thread_stopper = nil
       @intercept_trap_sigint = false
       @intercepted_sigint_cmd = 'DEFAULT'
+      @process_group = ProcessGroup.new
+      @subsession = nil
 
       @frame_map = {} # {id => [threadId, frame_depth]} for DAP
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
@@ -187,98 +191,105 @@ module DEBUGGER__
 
     def session_server_main
       while evt = pop_event
-        # variable `@internal_info` is only used for test
-        tc, output, ev, @internal_info, *ev_args = evt
-        output.each{|str| @ui.puts str}
-
-        case ev
-
-        when :thread_begin # special event, tc is nil
-          th = ev_args.shift
-          q = ev_args.shift
-          on_thread_begin th
-          q << true
-
-        when :init
-          wait_command_loop tc
-
-        when :load
-          iseq, src = ev_args
-          on_load iseq, src
-          @ui.event :load
-          tc << :continue
-
-        when :trace
-          trace_id, msg = ev_args
-          if t = @tracers.values.find{|t| t.object_id == trace_id}
-            t.puts msg
-          end
-          tc << :continue
-
-        when :suspend
-          case ev_args.first
-          when :breakpoint
-            bp, i = bp_index ev_args[1]
-            @ui.event :suspend_bp, i, bp, tc.id
-          when :trap
-            @ui.event :suspend_trap, sig = ev_args[1], tc.id
-
-            if sig == :SIGINT && (@intercepted_sigint_cmd.kind_of?(Proc) || @intercepted_sigint_cmd.kind_of?(String))
-              @ui.puts "#{@intercepted_sigint_cmd.inspect} is registerred as SIGINT handler."
-              @ui.puts "`sigint` command execute it."
-            end
-          else
-            @ui.event :suspended, tc.id
-          end
-
-          if @displays.empty?
-            stop_all_threads
-            wait_command_loop tc
-          else
-            tc << [:eval, :display, @displays]
-          end
-
-        when :result
-          case ev_args.first
-          when :try_display
-            failed_results = ev_args[1]
-            if failed_results.size > 0
-              i, _msg = failed_results.last
-              if i+1 == @displays.size
-                @ui.puts "canceled: #{@displays.pop}"
-              end
-            end
-            stop_all_threads
-
-          when :method_breakpoint, :watch_breakpoint
-            bp = ev_args[1]
-            if bp
-              add_bp(bp)
-              show_bps bp
-            else
-              # can't make a bp
-            end
-          when :trace_pass
-            obj_id = ev_args[1]
-            obj_inspect = ev_args[2]
-            opt = ev_args[3]
-            add_tracer ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
-          else
-            # ignore
-          end
-
-          wait_command_loop tc
-
-        when :dap_result
-          dap_event ev_args # server.rb
-          wait_command_loop tc
-        when :cdp_result
-          cdp_event ev_args
-          wait_command_loop tc
-        end
+        process_event evt
       end
     ensure
       deactivate
+    end
+
+    def process_event evt
+      # variable `@internal_info` is only used for test
+      tc, output, ev, @internal_info, *ev_args = evt
+      output.each{|str| @ui.puts str} if ev != :suspend
+
+      case ev
+
+      when :thread_begin # special event, tc is nil
+        th = ev_args.shift
+        q = ev_args.shift
+        on_thread_begin th
+        q << true
+
+      when :init
+        wait_command_loop tc
+
+      when :load
+        iseq, src = ev_args
+        on_load iseq, src
+        @ui.event :load
+        tc << :continue
+
+      when :trace
+        trace_id, msg = ev_args
+        if t = @tracers.values.find{|t| t.object_id == trace_id}
+          t.puts msg
+        end
+        tc << :continue
+
+      when :suspend
+        enter_subsession if ev_args.first != :replay
+        output.each{|str| @ui.puts str}
+
+        case ev_args.first
+        when :breakpoint
+          bp, i = bp_index ev_args[1]
+          @ui.event :suspend_bp, i, bp, tc.id
+        when :trap
+          @ui.event :suspend_trap, sig = ev_args[1], tc.id
+
+          if sig == :SIGINT && (@intercepted_sigint_cmd.kind_of?(Proc) || @intercepted_sigint_cmd.kind_of?(String))
+            @ui.puts "#{@intercepted_sigint_cmd.inspect} is registerred as SIGINT handler."
+            @ui.puts "`sigint` command execute it."
+          end
+        else
+          @ui.event :suspended, tc.id
+        end
+
+        if @displays.empty?
+          wait_command_loop tc
+        else
+          tc << [:eval, :display, @displays]
+        end
+
+      when :result
+        raise "[BUG] not in subsession" unless @subsession
+
+        case ev_args.first
+        when :try_display
+          failed_results = ev_args[1]
+          if failed_results.size > 0
+            i, _msg = failed_results.last
+            if i+1 == @displays.size
+              @ui.puts "canceled: #{@displays.pop}"
+            end
+          end
+
+        when :method_breakpoint, :watch_breakpoint
+          bp = ev_args[1]
+          if bp
+            add_bp(bp)
+            show_bps bp
+          else
+            # can't make a bp
+          end
+        when :trace_pass
+          obj_id = ev_args[1]
+          obj_inspect = ev_args[2]
+          opt = ev_args[3]
+          add_tracer ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
+        else
+          # ignore
+        end
+
+        wait_command_loop tc
+
+      when :dap_result
+        dap_event ev_args # server.rb
+        wait_command_loop tc
+      when :cdp_result
+        cdp_event ev_args
+        wait_command_loop tc
+      end
     end
 
     def add_preset_commands name, cmds, kick: true, continue: true
@@ -329,6 +340,8 @@ module DEBUGGER__
     def prompt
       if @postmortem
         '(rdbg:postmortem) '
+      elsif @process_group.multi?
+        "(rdbg@#{process_info}) "
       else
         '(rdbg) '
       end
@@ -340,8 +353,7 @@ module DEBUGGER__
           if @preset_command.auto_continue
             @preset_command = nil
 
-            @tc << :continue
-            restart_all_threads
+            leave_subsession :continue
             return
           else
             @preset_command = nil
@@ -416,16 +428,14 @@ module DEBUGGER__
       #   * Resume the program.
       when 'c', 'continue'
         cancel_auto_continue
-        @tc << :continue
-        restart_all_threads
+        leave_subsession :continue
 
       # * `q[uit]` or `Ctrl-D`
       #   * Finish debugger (with the debuggee process on non-remote debugging).
       when 'q', 'quit'
         if ask 'Really quit?'
           @ui.quit arg.to_i
-          @tc << :continue
-          restart_all_threads
+          leave_subsession :continue
         else
           return :retry
         end
@@ -434,8 +444,7 @@ module DEBUGGER__
       #   * Same as q[uit] but without the confirmation prompt.
       when 'q!', 'quit!'
         @ui.quit arg.to_i
-        @tc << :continue
-        restart_all_threads
+        leave_subsession nil
 
       # * `kill`
       #   * Stop the debuggee process with `Kernal#exit!`.
@@ -465,8 +474,7 @@ module DEBUGGER__
             cmd.call
           end
 
-          @tc << :continue
-          restart_all_threads
+          leave_subsession :continue
 
         rescue Exception => e
           @ui.puts "Exception: #{e}"
@@ -730,8 +738,8 @@ module DEBUGGER__
           if ask "clear all?", 'N'
             @displays.clear
           end
+          return :retry
         end
-        return :retry
 
       ### Frame control
 
@@ -1031,12 +1039,12 @@ module DEBUGGER__
 
     def step_command type, arg
       case arg
-      when nil
-        @tc << [:step, type]
-        restart_all_threads
-      when /\A\d+\z/
-        @tc << [:step, type, arg.to_i]
-        restart_all_threads
+      when nil, /\A\d+\z/
+        if type == :in && @tc.recorder&.replaying?
+          @tc << [:step, type, arg&.to_i]
+        else
+          leave_subsession [:step, type, arg&.to_i]
+        end
       when /\Aback\z/, /\Areset\z/
         if type != :in
           @ui.puts "only `step #{arg}` is supported."
@@ -1437,7 +1445,30 @@ module DEBUGGER__
         next if @tc == tc
         tc << :continue
       }
+    end
+
+    private def enter_subsession
+      raise "already in subsession" if @subsession
+      @subsession = true
+      stop_all_threads
+      @process_group.lock
+      DEBUGGER__.info "enter_subsession"
+    end
+
+    private def leave_subsession type
+      DEBUGGER__.info "leave_subsession"
+      @process_group.unlock
+      restart_all_threads
+      @tc << type if type
       @tc = nil
+      @subsession = false
+    rescue Exception => e
+      STDERR.puts [e, e.backtrace].inspect
+      raise
+    end
+
+    def in_subsession?
+      @subsession
     end
 
     ## event
@@ -1563,8 +1594,6 @@ module DEBUGGER__
       prev
     end
 
-    attr_reader :intercepted_sigint_cmd
-
     def intercept_trap_sigint?
       @intercept_trap_sigint
     end
@@ -1586,6 +1615,166 @@ module DEBUGGER__
       @intercept_trap_sigint = false
       prev, @intercepted_sigint_cmd = @intercepted_sigint_cmd, nil
       prev
+    end
+
+    def process_info
+      if @process_group.multi?
+        "#{$0}\##{Process.pid}"
+      end
+    end
+
+    def before_fork need_lock = true
+      if need_lock
+        @process_group.multi_process!
+      end
+    end
+
+    def after_fork_parent
+      parent_pid = Process.pid
+      at_exit{
+        @intercept_trap_sigint = false
+        trap(:SIGINT, :IGNORE)
+
+        if Process.pid == parent_pid
+          # only check child process from its parent
+          begin
+            # wait for all child processes to keep terminal
+            loop{ Process.waitpid }
+          rescue Errno::ESRCH, Errno::ECHILD
+          end
+        end
+      }
+    end
+  end
+
+  class ProcessGroup
+    def initialize
+      @lock_file = nil
+    end
+
+    def locked?
+      true
+    end
+
+    def trylock
+      true
+    end
+
+    def lock
+      true
+    end
+
+    def unlock
+      true
+    end
+
+    def sync
+      yield
+    end
+
+    def after_fork
+    end
+
+    def multi?
+      @lock_file
+    end
+
+    def multi_process!
+      require 'tempfile'
+      @lock_tempfile = Tempfile.open("ruby-debug-lock-")
+      @lock_tempfile.close
+      extend MultiProcessGroup
+    end
+  end
+
+  module MultiProcessGroup
+    def multi_process!
+    end
+
+    def after_fork child: true
+      if child || !@lock_file
+        @m = Mutex.new
+        @lock_level = 0
+        @lock_file = open(@lock_tempfile.path, 'w')
+      end
+    end
+
+    def info msg
+      DEBUGGER__.info "#{msg} (#{@lock_level})" #  #{caller.first(1).map{|bt| bt.sub(__dir__, '')}}"
+    end
+
+    def locked?
+      # DEBUGGER__.info "locked? #{@lock_level}"
+      @lock_level > 0
+    end
+
+    private def lock_level_up
+      raise unless @m.owned?
+      @lock_level += 1
+    end
+
+    private def lock_level_down
+      raise unless @m.owned?
+      raise "@lock_level underflow: #{@lock_level}" if @lock_level < 1
+      @lock_level -= 1
+    end
+
+    private def trylock
+      @m.synchronize do
+        if locked?
+          lock_level_up
+          info "Try lock, already locked"
+          true
+        else
+          case r = @lock_file.flock(File::LOCK_EX | File::LOCK_NB)
+          when 0
+            lock_level_up
+            info "Try lock with file: success"
+            true
+          when false
+            info "Try lock with file: failed"
+            false
+          else
+            raise "unknown flock result: #{r.inspect}"
+          end
+        end
+      end
+    end
+
+    def lock
+      unless trylock
+        @m.synchronize do
+          if locked?
+            lock_level_up
+          else
+            info "Lock: block"
+            @lock_file.flock(File::LOCK_EX)
+            lock_level_up
+          end
+        end
+
+        info "Lock: success"
+      end
+    end
+
+    def unlock
+      @m.synchronize do
+        raise "lock file is not opened (#{@lock_file.inspect})" if @lock_file.closed?
+        lock_level_down
+        @lock_file.flock(File::LOCK_UN) unless locked?
+        info "Unlocked"
+      end
+    end
+
+    def sync &b
+      info "sync"
+
+      begin
+        lock
+        b.call if b
+      ensure
+        unlock
+      end
     end
   end
 
@@ -1767,15 +1956,24 @@ module DEBUGGER__
   end
 
   def self.log level, msg
+    @logfile = STDERR unless defined? @logfile
+
     lv = LOG_LEVELS[level]
     config_lv = LOG_LEVELS[CONFIG[:log_level] || :WARN]
+
+    if defined? SESSION
+      pi = SESSION.process_info
+      process_info = pi ? "[#{pi}]" : nil
+    end
 
     if lv <= config_lv
       if level == :WARN
         # :WARN on debugger is general information
-        STDERR.puts "DEBUGGER: #{msg}"
+        @logfile.puts "DEBUGGER#{process_info}: #{msg}"
+        @logfile.flush
       else
-        STDERR.puts "DEBUGGER (#{level}): #{msg}"
+        @logfile.puts "DEBUGGER#{process_info} (#{level}): #{msg}"
+        @logfile.flush
       end
     end
   end
@@ -1784,8 +1982,19 @@ module DEBUGGER__
     def fork(&given_block)
       return super unless defined?(SESSION) && SESSION.active?
 
+      unless fork_mode = CONFIG[:fork_mode]
+        if CONFIG[:parent_on_fork]
+          fork_mode = :parent
+        else
+          fork_mode = :both
+        end
+      end
+
+      parent_pid = Process.pid
+
       # before fork
-      if CONFIG[:parent_on_fork]
+      case fork_mode
+      when :parent
         parent_hook = -> child_pid {
           # Do nothing
         }
@@ -1793,31 +2002,28 @@ module DEBUGGER__
           DEBUGGER__.warn "Detaching after fork from child process #{Process.pid}"
           SESSION.deactivate
         }
-      else
-        parent_pid = Process.pid
+      when :child
+        SESSION.before_fork false
 
         parent_hook = -> child_pid {
           DEBUGGER__.warn "Detaching after fork from parent process #{Process.pid}"
           SESSION.deactivate
-
-          at_exit{
-            trap(:SIGINT, :IGNORE)
-
-            # only check child process from its parent
-            if Process.pid == parent_pid
-              begin
-                # sending a null signal to see if the child is still alive
-                Process.kill(0, child_pid)
-                # if the child is still alive, wait for it
-                Process.waitpid(child_pid)
-              rescue Errno::ESRCH
-                # if the child process has died, do nothing
-              end
-            end
-          }
+          SESSION.after_fork_parent
         }
         child_hook = -> {
           DEBUGGER__.warn "Attaching after process #{parent_pid} fork to child process #{Process.pid}"
+          SESSION.activate on_fork: true
+        }
+      when :both
+        SESSION.before_fork
+
+        parent_hook = -> child_pid {
+          SESSION.process_group.after_fork
+          SESSION.after_fork_parent
+        }
+        child_hook = -> {
+          DEBUGGER__.warn "Attaching after process #{parent_pid} fork to child process #{Process.pid}"
+          SESSION.process_group.after_fork child: true
           SESSION.activate on_fork: true
         }
       end
@@ -1907,4 +2113,3 @@ class Binding
   alias break debugger
   alias b debugger
 end
-

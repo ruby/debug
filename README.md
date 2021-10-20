@@ -460,7 +460,7 @@ config set no_color true
   * `RUBY_DEBUG_SKIP_NOSRC` (`skip_nosrc`): Skip on no source code lines (default: false)
   * `RUBY_DEBUG_KEEP_ALLOC_SITE` (`keep_alloc_site`): Keep allocation site and p, pp shows it (default: false)
   * `RUBY_DEBUG_POSTMORTEM` (`postmortem`): Enable postmortem debug (default: false)
-  * `RUBY_DEBUG_PARENT_ON_FORK` (`parent_on_fork`): Keep debugging parent process on fork (default: false)
+  * `RUBY_DEBUG_FORK_MODE` (`fork_mode`): Control which process activates a debugger after fork (both/parent/child) (default: both)
   * `RUBY_DEBUG_SIGDUMP_SIG` (`sigdump_sig`): Sigdump signal (default: disabled)
 
 * BOOT
@@ -479,6 +479,9 @@ config set no_color true
   * `RUBY_DEBUG_SOCK_DIR` (`sock_dir`): UNIX Domain Socket remote debugging: socket directory
   * `RUBY_DEBUG_COOKIE` (`cookie`): Cookie for negotiation
   * `RUBY_DEBUG_OPEN_FRONTEND` (`open_frontend`): frontend used by open command (vscode, chrome, default: rdbg).
+
+* OBSOLETE
+  * `RUBY_DEBUG_PARENT_ON_FORK` (`parent_on_fork`): Keep debugging parent process on fork (default: false)
 
 ### Initial scripts
 

@@ -57,6 +57,8 @@ module DEBUGGER__
     end
 
     def initialize argv
+      @multi_process = false
+      @pid = nil
       @console = Console.new
 
       case argv.size
@@ -76,7 +78,6 @@ module DEBUGGER__
 
       @width = IO.console_size[1]
       @width = 80 if @width == 0
-      @width_changed = false
 
       send "version: #{VERSION} width: #{@width} cookie: #{CONFIG[:cookie]}"
     end
@@ -86,7 +87,13 @@ module DEBUGGER__
     end
 
     def readline
-      @console.readline "(rdbg:remote) "
+      if @multi_process
+        @console.readline "(rdbg:remote\##{@pid}) "
+      else
+        @console.readline "(rdbg:remote) "
+      end.tap{|line|
+        p readline: line
+      }
     end
 
     def connect_unix name = nil
@@ -131,15 +138,19 @@ module DEBUGGER__
       }
       trap(:SIGWINCH){
         @width = IO.console_size[1]
-        @width_changed = true
       }
 
       while line = @s.gets
         p recv: line if $VERBOSE
         case line
+
         when /^out (.*)/
           puts "#{$1}"
-        when /^input/
+
+        when /^input (.+)/
+          pid = $1
+          @multi_process = true if @pid && @pid != pid
+          @pid = pid
           prev_trap = trap(:SIGINT, 'DEFAULT')
 
           begin
@@ -151,18 +162,16 @@ module DEBUGGER__
           end
 
           line = (line || 'quit').strip
+          send "command #{pid} #{@width} #{line}"
 
-          if @width_changed
-            @width_changed = false
-            send "width #{@width}"
-          end
+        when /^ask (\d+) (.*)/
+          pid = $1
+          print $2
+          send "answer #{pid} #{gets || ''}"
 
-          send "command #{line}"
-        when /^ask (.*)/
-          print $1
-          send "answer #{gets || ''}"
         when /^quit/
           raise 'quit'
+
         else
           puts "(unknown) #{line.inspect}"
         end

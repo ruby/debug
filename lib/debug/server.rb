@@ -16,6 +16,7 @@ module DEBUGGER__
       @unsent_messages = []
       @width = 80
       @repl = true
+      @session = nil
     end
 
     class Terminate < StandardError
@@ -23,6 +24,7 @@ module DEBUGGER__
 
     def deactivate
       @reader_thread.raise Terminate
+      @reader_thread.join
     end
 
     def accept
@@ -37,9 +39,11 @@ module DEBUGGER__
     end
 
     def activate session, on_fork: false
+      @session = session
       @reader_thread = Thread.new do
         # An error on this thread should break the system.
         Thread.current.abort_on_exception = true
+        Thread.current.name = 'DEBUGGER__::Server::reader'
 
         accept do |server, already_connected: false|
           DEBUGGER__.warn "Connected."
@@ -120,16 +124,43 @@ module DEBUGGER__
     end
 
     def process
-      while line = @sock.gets
+      while true
+        DEBUGGER__.info "sleep IO.select"
+        r = IO.select([@sock])
+        DEBUGGER__.info "wakeup IO.select"
+
+        line = @session.process_group.sync do
+          unless IO.select([@sock], nil, nil, 0)
+            DEBUGGER__.info "UI_Server can not read"
+            break :can_not_read
+          end
+          @sock.gets&.chomp.tap{|line|
+            DEBUGGER__.info "UI_Server received: #{line}"
+          }
+        end
+
+        next if line == :can_not_read
+
         case line
         when /\Apause/
           pause
-        when /\Acommand ?(.+)/
-          @q_msg << $1
-        when /\Aanswer (.*)/
-          @q_ans << $1
-        when /\Awidth (.+)/
-          @width = $1.to_i
+        when /\Acommand (\d+) (\d+) ?(.+)/
+          raise "not in subsession, but received: #{line.inspect}" unless @session.in_subsession?
+
+          if $1.to_i == Process.pid
+            @width = $2.to_i
+            @q_msg << $3
+          else
+            raise "pid:#{Process.pid} but get #{line}"
+          end
+        when /\Aanswer (\d+) (.*)/
+          raise "not in subsession, but received: #{line.inspect}" unless @session.in_subsession?
+
+          if $1.to_i == Process.pid
+            @q_ans << $2
+          else
+            raise "pid:#{Process.pid} but get #{line}"
+          end
         else
           STDERR.puts "unsupported: #{line}"
           exit!
@@ -201,7 +232,7 @@ module DEBUGGER__
 
     def ask prompt
       sock do |s|
-        s.puts "ask #{prompt}"
+        s.puts "ask #{Process.pid} #{prompt}"
         @q_ans.pop
       end
     end
@@ -230,9 +261,16 @@ module DEBUGGER__
 
     def readline prompt
       input = (sock do |s|
-        s.puts "input" if @repl
+        if @repl
+          raise "not in subsession, but received: #{line.inspect}" unless @session.in_subsession?
+          line = "input #{Process.pid}"
+          DEBUGGER__.info "send: #{line}"
+          s.puts line
+        end
         sleep 0.01 until @q_msg
-        @q_msg.pop
+        @q_msg.pop.tap{|msg|
+          DEBUGGER__.info "readline: #{msg.inspect}"
+        }
       end || 'continue')
 
       if input.is_a?(String)
