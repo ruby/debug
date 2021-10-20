@@ -24,7 +24,7 @@ module DEBUGGER__
     skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "CONTROL: Skip on no source code lines (default: false)",              :bool],
     keep_alloc_site:['RUBY_DEBUG_KEEP_ALLOC_SITE',"CONTROL: Keep allocation site and p, pp shows it (default: false)",   :bool],
     postmortem:     ['RUBY_DEBUG_POSTMORTEM',     "CONTROL: Enable postmortem debug (default: false)",                   :bool],
-    parent_on_fork: ['RUBY_DEBUG_PARENT_ON_FORK', "CONTROL: Keep debugging parent process on fork (default: false)",     :bool],
+    fork_mode:      ['RUBY_DEBUG_FORK_MODE',      "CONTROL: Control which process activates a debugger after fork (both/parent/child) (default: both)", :forkmode],
     sigdump_sig:    ['RUBY_DEBUG_SIGDUMP_SIG',    "CONTROL: Sigdump signal (default: disabled)"],
 
     # boot setting
@@ -43,6 +43,9 @@ module DEBUGGER__
     sock_dir:       ['RUBY_DEBUG_SOCK_DIR',     "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
     cookie:         ['RUBY_DEBUG_COOKIE',       "REMOTE: Cookie for negotiation"],
     open_frontend:  ['RUBY_DEBUG_OPEN_FRONTEND',"REMOTE: frontend used by open command (vscode, chrome, default: rdbg)."],
+
+    # obsolete
+    parent_on_fork: ['RUBY_DEBUG_PARENT_ON_FORK', "OBSOLETE: Keep debugging parent process on fork (default: false)",     :bool],
   }.freeze
 
   CONFIG_MAP = CONFIG_SET.map{|k, (ev, desc)| [k, ev]}.to_h.freeze
@@ -193,6 +196,13 @@ module DEBUGGER__
           s
         else
           raise "Unknown loglevel: #{valstr}"
+        end
+      when :forkmode
+        case sym = valstr.to_sym
+        when :parent, :child, :both, nil
+          sym
+        else
+          raise "unknown fork mode: #{sym}"
         end
       when :path # array of String
         valstr.split(/:/).map{|e|
