@@ -151,8 +151,10 @@ module DEBUGGER__
 
     def initialize
       @init_history_lines = load_history
+    end
 
-      at_exit{
+    def deactivate
+      if history
         added_records = history.to_a[@init_history_lines .. -1]
         path = history_file
         max = CONFIG[:save_history] || 10_000
@@ -167,7 +169,7 @@ module DEBUGGER__
             }
           }
         end
-      } if history
+      end
     end
 
     def load_history

@@ -29,6 +29,8 @@ module DEBUGGER__
         prev = SESSION.intercept_trap_sigint_end
         trap(:SIGINT, prev)
       end
+
+      @console.deactivate
     end
 
     def width

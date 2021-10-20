@@ -81,6 +81,10 @@ module DEBUGGER__
       send "version: #{VERSION} width: #{@width} cookie: #{CONFIG[:cookie]}"
     end
 
+    def deactivate
+      @console.deactivate if @console
+    end
+
     def readline
       @console.readline "(rdbg:remote) "
     end
@@ -166,6 +170,8 @@ module DEBUGGER__
     rescue
       STDERR.puts "disconnected (#{$!})"
       exit
+    ensure
+      deactivate
     end
   end
 end
