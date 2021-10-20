@@ -1358,10 +1358,15 @@ module DEBUGGER__
     end
 
     def setup_threads
+      prev_clients = @th_clients || {}
       @th_clients = {}
 
       Thread.list.each{|th|
-        thread_client_create(th)
+        if tc = prev_clients[th]
+          @th_clients[th] = tc
+        else
+          thread_client_create(th)
+        end
       }
     end
 

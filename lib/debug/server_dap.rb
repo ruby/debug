@@ -6,11 +6,17 @@ module DEBUGGER__
   module UI_DAP
     SHOW_PROTOCOL = ENV['RUBY_DEBUG_DAP_SHOW_PROTOCOL'] == '1'
 
+    def show_protocol dir, msg
+      if SHOW_PROTOCOL
+        $stderr.puts "\##{Process.pid}:[#{dir}] #{msg}"
+      end
+    end
+
     def dap_setup bytes
       CONFIG.set_config no_color: true
       @seq = 0
 
-      $stderr.puts '[>]' + bytes if SHOW_PROTOCOL
+      show_protocol :>, bytes
       req = JSON.load(bytes)
 
       # capability
@@ -80,8 +86,7 @@ module DEBUGGER__
     def send **kw
       kw[:seq] = @seq += 1
       str = JSON.dump(kw)
-      $stderr.puts "[<] #{str}" if SHOW_PROTOCOL
-      # STDERR.puts "[STDERR] [<] #{str}"
+      show_protocol '<', str
       @sock.write "Content-Length: #{str.size}\r\n\r\n#{str}"
     end
 
@@ -110,19 +115,32 @@ module DEBUGGER__
       end
     end
 
-    def recv_request
-      case header = @sock.gets
-      when /Content-Length: (\d+)/
-        b = @sock.read(2)
-        raise b.inspect unless b == "\r\n"
+    class RetryBecauseCantRead < Exception
+    end
 
-        l = @sock.read(s = $1.to_i)
-        $stderr.puts "[>] #{l}" if SHOW_PROTOCOL
-        JSON.load(l)
-      when nil
-        nil
-      else
-        raise "unrecognized line: #{l} (#{l.size} bytes)"
+    def recv_request
+      begin
+        r = IO.select([@sock])
+
+        @session.process_group.sync do
+          raise RetryBecauseCantRead unless IO.select([@sock], nil, nil, 0)
+
+          case header = @sock.gets
+          when /Content-Length: (\d+)/
+            b = @sock.read(2)
+            raise b.inspect unless b == "\r\n"
+
+            l = @sock.read(s = $1.to_i)
+            show_protocol :>, l
+            JSON.load(l)
+          when nil
+            nil
+          else
+            raise "unrecognized line: #{l} (#{l.size} bytes)"
+          end
+        end
+      rescue RetryBecauseCantRead
+        retry
       end
     end
 
