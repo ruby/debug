@@ -119,6 +119,7 @@ module DEBUGGER__
         raise "unknown mode: #{mode}"
       end
 
+      # DEBUGGER__.warn "#{@mode} => #{mode} @ #{self.inspect}"
       @mode = mode
     end
 
