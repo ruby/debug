@@ -183,7 +183,7 @@ module DEBUGGER__
           send_response req, breakpoints: filters
         when 'configurationDone'
           send_response req
-          if defined? @is_attach && @is_attach
+          if defined?(@is_attach) && @is_attach
             @q_msg << 'p'
             send_event 'stopped', reason: 'pause',
                                   threadId: 1,
