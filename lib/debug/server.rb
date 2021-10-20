@@ -176,6 +176,21 @@ module DEBUGGER__
       @width
     end
 
+    def sigurg_overridden? prev_handler
+      case prev_handler
+      when "SYSTEM_DEFAULT"
+        false
+      when Proc
+        if prev_handler.source_location[0] == __FILE__
+          false
+        else
+          true
+        end
+      else
+        true
+      end
+    end
+
     def setup_interrupt
       prev_handler = trap(:SIGURG) do
         # $stderr.puts "trapped SIGINT"
@@ -189,8 +204,8 @@ module DEBUGGER__
         end
       end
 
-      if prev_handler != "SYSTEM_DEFAULT"
-        DEBUGGER__.warn "SIGURG handler is overriddend by the debugger."
+      if sigurg_overridden?(prev_handler)
+        DEBUGGER__.warn "SIGURG handler is overridden by the debugger."
       end
       yield
     ensure
