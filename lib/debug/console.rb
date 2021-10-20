@@ -31,6 +31,7 @@ module DEBUGGER__
       end if SIGWINCH_SUPPORTED
 
       def readline_setup prompt
+        load_history_if_not_loaded
         commands = DEBUGGER__.commands
 
         Reline.completion_proc = -> given do
@@ -96,6 +97,9 @@ module DEBUGGER__
         require 'readline.so'
 
         def readline_setup
+          load_history_if_not_loaded
+          commands = DEBUGGER__.commands
+
           Readline.completion_proc = proc{|given|
             buff = Readline.line_buffer
             Readline.completion_append_character= ' '
@@ -108,7 +112,7 @@ module DEBUGGER__
               end
               files
             else
-              DEBUGGER__.commands.keys.grep(/\A#{given}/)
+              commands.keys.grep(/\A#{given}/)
             end
           }
         end
@@ -150,11 +154,17 @@ module DEBUGGER__
     end
 
     def initialize
+      @init_history_lines = nil
+    end
+
+    def load_history_if_not_loaded
+      return if @init_history_lines
+
       @init_history_lines = load_history
     end
 
     def deactivate
-      if history
+      if history && @init_history_lines
         added_records = history.to_a[@init_history_lines .. -1]
         path = history_file
         max = CONFIG[:save_history] || 10_000
