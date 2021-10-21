@@ -40,7 +40,7 @@ module Kernel
     end
   end
 
-  alias b debugger if ENV['RUBY_DEBUG_B']
+  alias bb debugger if ENV['RUBY_DEBUG_BB']
 end
 
 class Binding

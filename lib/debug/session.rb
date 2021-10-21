@@ -2112,6 +2112,8 @@ module Kernel
     loc = caller_locations(up_level, 1).first; ::DEBUGGER__.add_line_breakpoint loc.path, loc.lineno + 1, oneshot: true, command: cmds
     self
   end
+
+  alias bb debugger if ENV['RUBY_DEBUG_BB']
 end
 
 class Binding
