@@ -1774,8 +1774,8 @@ module DEBUGGER__
     def sync &b
       info "sync"
 
+      lock
       begin
-        lock
         b.call if b
       ensure
         unlock
