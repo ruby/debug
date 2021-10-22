@@ -371,27 +371,41 @@ module DEBUGGER__
 
   ## Unix domain socket configuration
 
-  def self.unix_domain_socket_dir
+  def self.unix_domain_socket_tmpdir
     require 'tmpdir'
 
+    tmpdir = Dir.tmpdir
+    path = File.join(tmpdir, "ruby-debug-sock-#{Process.uid}")
+
+    if File.exist?(path)
+      fs = File.stat(path)
+      unless (dir_uid = fs.uid) == (uid = Process.uid)
+        raise "#{path} uid is #{dir_uid}, but Process.uid is #{uid}"
+      end
+      unless (dir_mode = fs.mode) == 040700 # 4: dir, 7:rwx
+        raise "#{path}'s mode is #{dir_mode.to_s(8)} (should be 040700)"
+      end
+    else
+      d = Dir.mktmpdir
+      File.rename(d, path)
+    end
+
+    path
+  rescue => e
+    msg = "can not use tmpdir (#{path}): #{e.message}"
+    if defined? DEBUGGER__::SESSION
+      DEBUGGER__.warn msg
+    else
+      warn "DEBUGGER: #{msg}"
+    end
+    nil
+  end
+
+  def self.unix_domain_socket_dir
     case
     when path = CONFIG[:sock_dir]
     when path = ENV['XDG_RUNTIME_DIR']
-    when tmpdir = Dir.tmpdir
-      path = File.join(tmpdir, "ruby-debug-sock-#{Process.uid}")
-
-      if File.exist?(path)
-        fs = File.stat(path)
-        unless (dir_uid = fs.uid) == (uid = Process.uid)
-          raise "#{path} uid is #{dir_uid}, but Process.uid is #{uid}"
-        end
-        unless (dir_mode = fs.mode) == 040700 # 4: dir, 7:rwx
-          raise "#{path}'s mode is #{dir_mode.to_s(8)} (should be 040700)"
-        end
-      else
-        d = Dir.mktmpdir
-        File.rename(d, path)
-      end
+    when path = unix_domain_socket_tmpdir
     when home = ENV['HOME']
       path = File.join(home, '.ruby-debug-sock')
 
