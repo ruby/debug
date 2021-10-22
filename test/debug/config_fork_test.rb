@@ -6,7 +6,7 @@ module DEBUGGER__
   module ForkTestTemplate
     def program
       <<~RUBY
-         1| #{fork_method} do
+         1| pid = #{fork_method} do
          2|   binding.b do: 'p :child_enter'
          3|   a = 1
          4|   b = 2
@@ -19,6 +19,7 @@ module DEBUGGER__
         11| b = 2
         12| c = 3
         13| binding.b do: 'p :parent_leave'
+        14| Process.waitpid pid
       RUBY
     end
 
