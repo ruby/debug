@@ -1635,20 +1635,7 @@ module DEBUGGER__
     end
 
     def after_fork_parent
-      parent_pid = Process.pid
-      at_exit{
-        @intercept_trap_sigint = false
-        trap(:SIGINT, :IGNORE)
-
-        if Process.pid == parent_pid
-          # only check child process from its parent
-          begin
-            # wait for all child processes to keep terminal
-            loop{ Process.waitpid }
-          rescue Errno::ESRCH, Errno::ECHILD
-          end
-        end
-      }
+      @ui.after_fork_parent
     end
   end
 
@@ -2012,8 +1999,8 @@ module DEBUGGER__
 
         parent_hook = -> child_pid {
           DEBUGGER__.warn "Detaching after fork from parent process #{Process.pid}"
-          SESSION.deactivate
           SESSION.after_fork_parent
+          SESSION.deactivate
         }
         child_hook = -> {
           DEBUGGER__.warn "Attaching after process #{parent_pid} fork to child process #{Process.pid}"

@@ -86,6 +86,24 @@ module DEBUGGER__
         trap(:INT, prev_handler)
       end
     end
+
+    def after_fork_parent
+      parent_pid = Process.pid
+
+      at_exit{
+        SESSION.intercept_trap_sigint_end
+        trap(:SIGINT, :IGNORE)
+
+        if Process.pid == parent_pid
+          # only check child process from its parent
+          begin
+            # wait for all child processes to keep terminal
+            loop{ Process.waitpid }
+          rescue Errno::ESRCH, Errno::ECHILD
+          end
+        end
+      }
+    end
   end
 end
 

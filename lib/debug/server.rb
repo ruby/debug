@@ -306,6 +306,10 @@ module DEBUGGER__
         s.puts "quit"
       end
     end
+
+    def after_fork_parent
+      # do nothing
+    end
   end
 
   class UI_TcpServer < UI_ServerBase
