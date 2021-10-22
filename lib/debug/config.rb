@@ -371,34 +371,44 @@ module DEBUGGER__
 
   ## Unix domain socket configuration
 
-  def self.unix_domain_socket_tmpdir
-    require 'tmpdir'
+  def self.check_dir_authority path
+    fs = File.stat(path)
 
-    tmpdir = Dir.tmpdir
-    path = File.join(tmpdir, "ruby-debug-sock-#{Process.uid}")
-
-    if File.exist?(path)
-      fs = File.stat(path)
-      unless (dir_uid = fs.uid) == (uid = Process.uid)
-        raise "#{path} uid is #{dir_uid}, but Process.uid is #{uid}"
-      end
-      unless (dir_mode = fs.mode) == 040700 # 4: dir, 7:rwx
-        raise "#{path}'s mode is #{dir_mode.to_s(8)} (should be 040700)"
-      end
-    else
-      d = Dir.mktmpdir
-      File.rename(d, path)
+    unless (dir_uid = fs.uid) == (uid = Process.uid)
+      raise "#{path} uid is #{dir_uid}, but Process.uid is #{uid}"
+    end
+    unless (dir_mode = fs.mode) == 040700 # 4: dir, 7:rwx
+      raise "#{path}'s mode is #{dir_mode.to_s(8)} (should be 040700)"
     end
 
     path
-  rescue => e
-    msg = "can not use tmpdir (#{path}): #{e.message}"
-    if defined? DEBUGGER__::SESSION
-      DEBUGGER__.warn msg
-    else
-      warn "DEBUGGER: #{msg}"
+  end
+
+  def self.unix_domain_socket_tmpdir
+    require 'tmpdir'
+
+    if tmpdir = Dir.tmpdir
+      path = File.join(tmpdir, "ruby-debug-sock-#{Process.uid}")
+
+      unless File.exist?(path)
+        d = Dir.mktmpdir
+        File.rename(d, path)
+      end
+
+      check_dir_authority(path)
     end
-    nil
+  end
+
+  def self.unix_domain_socket_homedir
+    if home = ENV['HOME']
+      path = File.join(home, '.ruby-debug-sock')
+
+      unless File.exist?(path)
+        Dir.mkdir(path, 0700)
+      end
+
+      check_dir_authority(path)
+    end
   end
 
   def self.unix_domain_socket_dir
@@ -406,17 +416,9 @@ module DEBUGGER__
     when path = CONFIG[:sock_dir]
     when path = ENV['XDG_RUNTIME_DIR']
     when path = unix_domain_socket_tmpdir
-    when home = ENV['HOME']
-      path = File.join(home, '.ruby-debug-sock')
-
-      case
-      when !File.exist?(path)
-        Dir.mkdir(path, 0700)
-      when !File.directory?(path)
-        raise "#{path} is not a directory."
-      end
+    when path = unix_domain_socket_homedir
     else
-      raise 'specify RUBY_DEBUG_SOCK_DIR environment variable for UNIX domain socket directory.'
+      raise 'specify RUBY_DEBUG_SOCK_DIR environment variable.'
     end
 
     path

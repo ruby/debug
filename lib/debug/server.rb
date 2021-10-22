@@ -458,14 +458,27 @@ module DEBUGGER__
       ::DEBUGGER__.warn "Debugger can attach via UNIX domain socket (#{@sock_path})"
       vscode_setup if CONFIG[:open_frontend] == 'vscode'
 
-      Socket.unix_server_loop @sock_path do |sock, client|
-        @sock_for_fork = sock
-        @client_addr = client
+      begin
+        Socket.unix_server_loop @sock_path do |sock, client|
+          @sock_for_fork = sock
+          @client_addr = client
 
-        yield sock
-      ensure
-        sock.close
-        @sock_for_fork = nil
+          yield sock
+        ensure
+          sock.close
+          @sock_for_fork = nil
+        end
+      rescue Errno::ECONNREFUSED => _e
+        ::DEBUGGER__.warn "#{_e.message} (socket path: #{@sock_path})"
+
+        if @sock_path.start_with? Config.unix_domain_socket_tmpdir
+          # try on homedir
+          @sock_path = Config.create_unix_domain_socket_name(unix_domain_socket_homedir)
+          ::DEBUGGER__.warn "retry with #{@sock_path}"
+          retry
+        else
+          raise
+        end
       end
     end
   end
