@@ -64,7 +64,7 @@ di_body(const rb_debug_inspector_t *dc, void *ptr)
 
         if (!NIL_P(iseq)) {
             VALUE path = iseq_realpath(iseq);
-            if (!NIL_P(path) && str_start_with(path, skip_path_prefix)) continue;
+            if (!NIL_P(path) && !NIL_P(skip_path_prefix) && str_start_with(path, skip_path_prefix)) continue;
         }
 
         loc = RARRAY_AREF(locs, i);
