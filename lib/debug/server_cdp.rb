@@ -124,7 +124,7 @@ module DEBUGGER__
                       url: "http://debuggee#{abs}",
                       startLine: 0,
                       startColumn: 0,
-                      endLine: src.count('\n'),
+                      endLine: src.count("\n"),
                       endColumn: 0,
                       executionContextId: 1,
                       hash: src.hash
@@ -269,7 +269,7 @@ module DEBUGGER__
                             url: frame[:url],
                             startLine: 0,
                             startColumn: 0,
-                            endLine: src.count('\n'),
+                            endLine: src.count("\n"),
                             endColumn: 0,
                             executionContextId: @script_paths.size + 1,
                             hash: src.hash
