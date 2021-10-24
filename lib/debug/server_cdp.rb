@@ -97,10 +97,10 @@ module DEBUGGER__
     end
 
     def process
+      bps = []
       loop do
         req = @web_sock.extract_data
         $stderr.puts '[>]' + req.inspect if SHOW_PROTOCOL
-        bps = []
 
         case req['method']
 
