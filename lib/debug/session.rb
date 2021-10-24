@@ -91,7 +91,7 @@ module DEBUGGER__
                 #   [:check, expr] => CheckBreakpoint
       #
       @tracers = {}
-      @th_clients = nil # {Thread => ThreadClient}
+      @th_clients = {} # {Thread => ThreadClient}
       @q_evt = Queue.new
       @displays = []
       @tc = nil
@@ -1358,7 +1358,7 @@ module DEBUGGER__
     end
 
     def setup_threads
-      prev_clients = @th_clients || {}
+      prev_clients = @th_clients
       @th_clients = {}
 
       Thread.list.each{|th|
