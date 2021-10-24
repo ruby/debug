@@ -169,7 +169,7 @@ module DEBUGGER__
         # breakpoint
         when 'Debugger.getPossibleBreakpoints'
           s_id = req.dig('params', 'start', 'scriptId')
-          line = req.dig('params', 'lineNumber')
+          line = req.dig('params', 'start', 'lineNumber')
           send_response req,
                         locations: [
                           { scriptId: s_id,
