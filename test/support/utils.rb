@@ -79,18 +79,18 @@ module DEBUGGER__
       if ruby
         run_ruby(program, options: ruby, &test_steps)
       else
-        run_rdbg(program, remote: remote, &test_steps)
+        debug_code_with_rdbg(program, remote: remote, &test_steps)
       end
     end
 
     # This method will execute both local and remote mode by default.
-    def run_rdbg(program, remote: true, &test_steps)
+    def debug_code_with_rdbg(program, remote: true, &test_steps)
       prepare_test_environment(program, test_steps) do
         if remote && !NO_REMOTE && MULTITHREADED_TEST
           begin
-            th = [new_thread { debug_on_local TestInfo.new(dup_scenario) },
-                  new_thread { debug_on_unix_domain_socket TestInfo.new(dup_scenario) },
-                  new_thread { debug_on_tcpip TestInfo.new(dup_scenario) }]
+            th = [new_thread { run_rdbg_on_local TestInfo.new(dup_scenario) },
+                  new_thread { run_rdbg_on_unix_domain_socket TestInfo.new(dup_scenario) },
+                  new_thread { run_rdbg_on_tcpip TestInfo.new(dup_scenario) }]
             th.each do |t|
               if fail_msg = t.join.value
                 th.each(&:kill)
@@ -102,11 +102,11 @@ module DEBUGGER__
             flunk e.inspect
           end
         elsif remote && !NO_REMOTE
-          debug_on_local TestInfo.new(dup_scenario)
-          debug_on_unix_domain_socket TestInfo.new(dup_scenario)
-          debug_on_tcpip TestInfo.new(dup_scenario)
+          run_rdbg_on_local TestInfo.new(dup_scenario)
+          run_rdbg_on_unix_domain_socket TestInfo.new(dup_scenario)
+          run_rdbg_on_tcpip TestInfo.new(dup_scenario)
         else
-          debug_on_local TestInfo.new(dup_scenario)
+          run_rdbg_on_local TestInfo.new(dup_scenario)
         end
       end
     end
@@ -155,14 +155,14 @@ module DEBUGGER__
       warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
     end
 
-    def debug_on_local test_info
+    def run_rdbg_on_local test_info
       test_info.mode = 'LOCAL'
       repl_prompt = /\(rdbg\)/
       cmd = "#{RDBG_EXECUTABLE} #{temp_file_path}"
       run_test_scenario cmd, repl_prompt, test_info
     end
 
-    def debug_on_unix_domain_socket repl_prompt = /\(rdbg:remote\)/, test_info
+    def run_rdbg_on_unix_domain_socket repl_prompt = /\(rdbg:remote\)/, test_info
       test_info.mode = 'UNIX DOMAIN SOCKET'
       socket_path, remote_debuggee_info = setup_unix_doman_socket_remote_debuggee
       test_info.remote_debuggee_info = remote_debuggee_info
@@ -170,7 +170,7 @@ module DEBUGGER__
       run_test_scenario cmd, repl_prompt, test_info
     end
 
-    def debug_on_tcpip repl_prompt = /\(rdbg:remote\)/, test_info
+    def run_rdbg_on_tcpip repl_prompt = /\(rdbg:remote\)/, test_info
       test_info.mode = 'TCP/IP'
       cmd = "#{RDBG_EXECUTABLE} -A #{RUBY_DEBUG_TEST_PORT}"
       remote_debuggee_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{RUBY_DEBUG_TEST_PORT} -- #{temp_file_path}")
