@@ -188,6 +188,7 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
       ENV['RUBY_DEBUG_NO_RELINE'] = 'true'
+      ENV['RUBY_DEBUG_SKIP_CLEANUP_SOCKS'] = 'true'
       ENV['RUBY_DEBUG_HISTORY_FILE'] = ''
 
       block.call

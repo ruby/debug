@@ -37,12 +37,13 @@ module DEBUGGER__
     save_history:   ['RUBY_DEBUG_SAVE_HISTORY',"BOOT: maximum save history lines (default: 10,000)"],
 
     # remote setting
-    port:           ['RUBY_DEBUG_PORT',         "REMOTE: TCP/IP remote debugging: port"],
-    host:           ['RUBY_DEBUG_HOST',         "REMOTE: TCP/IP remote debugging: host (localhost if not given)"],
-    sock_path:      ['RUBY_DEBUG_SOCK_PATH',    "REMOTE: UNIX Domain Socket remote debugging: socket path"],
-    sock_dir:       ['RUBY_DEBUG_SOCK_DIR',     "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
-    cookie:         ['RUBY_DEBUG_COOKIE',       "REMOTE: Cookie for negotiation"],
-    open_frontend:  ['RUBY_DEBUG_OPEN_FRONTEND',"REMOTE: frontend used by open command (vscode, chrome, default: rdbg)."],
+    port:               ['RUBY_DEBUG_PORT',               "REMOTE: TCP/IP remote debugging: port"],
+    host:               ['RUBY_DEBUG_HOST',               "REMOTE: TCP/IP remote debugging: host (localhost if not given)"],
+    sock_path:          ['RUBY_DEBUG_SOCK_PATH',          "REMOTE: UNIX Domain Socket remote debugging: socket path"],
+    sock_dir:           ['RUBY_DEBUG_SOCK_DIR',           "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
+    skip_cleanup_socks: ['RUBY_DEBUG_SKIP_CLEANUP_SOCKS', "REMOTE: Skip cleaning up other Sockets when establishing a socket connection", :bool],
+    cookie:             ['RUBY_DEBUG_COOKIE',             "REMOTE: Cookie for negotiation"],
+    open_frontend:      ['RUBY_DEBUG_OPEN_FRONTEND',      "REMOTE: frontend used by open command (vscode, chrome, default: rdbg)."],
 
     # obsolete
     parent_on_fork: ['RUBY_DEBUG_PARENT_ON_FORK', "OBSOLETE: Keep debugging parent process on fork (default: false)",     :bool],

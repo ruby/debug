@@ -102,7 +102,7 @@ module DEBUGGER__
           @s = Socket.unix(File.join(DEBUGGER__.unix_domain_socket_dir, name))
         end
       else
-        Client.cleanup_unix_domain_sockets
+        Client.cleanup_unix_domain_sockets unless CONFIG[:skip_cleanup_socks]
         files = Client.list_connections
 
         case files.size
