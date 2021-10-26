@@ -186,7 +186,7 @@ module DEBUGGER__
       "#{' ' * indent_num}#{index + 2}| #{line}"
     end
 
-    def content_with_module
+    def create_initialized_content
       <<~TEST
         # frozen_string_literal: true
 
@@ -216,7 +216,7 @@ module DEBUGGER__
       if content
         puts "appended: #{path}"
       else
-        content = content_with_module
+        content = create_initialized_content
         puts "created: #{path}"
         puts "    class: #{@class}"
       end
