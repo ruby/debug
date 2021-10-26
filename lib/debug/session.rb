@@ -149,10 +149,10 @@ module DEBUGGER__
         # Thread management
         setup_threads
         thc = get_thread_client Thread.current
-        thc.is_management
+        thc.mark_as_management
 
         if @ui.respond_to?(:reader_thread) && thc = get_thread_client(@ui.reader_thread)
-          thc.is_management
+          thc.mark_as_management
         end
 
         @tp_thread_begin = TracePoint.new(:thread_begin) do |tp|
@@ -1018,7 +1018,7 @@ module DEBUGGER__
       @tp_thread_begin.disable
       @ui.activate self
       if @ui.respond_to?(:reader_thread) && thc = get_thread_client(@ui.reader_thread)
-        thc.is_management
+        thc.mark_as_management
       end
       @tp_thread_begin.enable
     end

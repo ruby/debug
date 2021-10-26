@@ -100,7 +100,7 @@ module DEBUGGER__
       @is_management
     end
 
-    def is_management
+    def mark_as_management
       @is_management = true
     end
 
