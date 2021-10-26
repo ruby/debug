@@ -22,7 +22,7 @@ module DEBUGGER__
       if thc = Thread.current[:DEBUGGER__ThreadClient]
         thc
       else
-        thc = SESSION.thread_client
+        thc = SESSION.get_thread_client
         Thread.current[:DEBUGGER__ThreadClient] = thc
       end
     end

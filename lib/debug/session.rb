@@ -148,15 +148,15 @@ module DEBUGGER__
 
         # Thread management
         setup_threads
-        thc = thread_client Thread.current
+        thc = get_thread_client Thread.current
         thc.is_management
 
-        if @ui.respond_to?(:reader_thread) && thc = thread_client(@ui.reader_thread)
+        if @ui.respond_to?(:reader_thread) && thc = get_thread_client(@ui.reader_thread)
           thc.is_management
         end
 
         @tp_thread_begin = TracePoint.new(:thread_begin) do |tp|
-          thread_client
+          get_thread_client
         end
         @tp_thread_begin.enable
 
@@ -169,7 +169,7 @@ module DEBUGGER__
     end
 
     def deactivate
-      thread_client.deactivate
+      get_thread_client.deactivate
       @thread_stopper.disable
       @tp_load_script.disable
       @tp_thread_begin.disable
@@ -903,7 +903,7 @@ module DEBUGGER__
         when nil, 'list', 'l'
           thread_list
         when /(\d+)/
-          thread_switch $1.to_i
+          switch_thread $1.to_i
         else
           @ui.puts "unknown thread command: #{arg}"
         end
@@ -1017,7 +1017,7 @@ module DEBUGGER__
     def repl_open_setup
       @tp_thread_begin.disable
       @ui.activate self
-      if @ui.respond_to?(:reader_thread) && thc = thread_client(@ui.reader_thread)
+      if @ui.respond_to?(:reader_thread) && thc = get_thread_client(@ui.reader_thread)
         thc.is_management
       end
       @tp_thread_begin.enable
@@ -1345,7 +1345,7 @@ module DEBUGGER__
       thcs
     end
 
-    def thread_switch n
+    def switch_thread n
       thcs, _unmanaged_ths = update_thread_list
 
       if tc = thcs[n]
@@ -1366,7 +1366,7 @@ module DEBUGGER__
         if tc = prev_clients[th]
           @th_clients[th] = tc
         else
-          thread_client_create(th)
+          create_thread_client(th)
         end
       }
     end
@@ -1375,11 +1375,11 @@ module DEBUGGER__
       if @th_clients.has_key? th
         # TODO: NG?
       else
-        thread_client_create th
+        create_thread_client th
       end
     end
 
-    private def thread_client_create th
+    private def create_thread_client th
       # TODO: Ractor support
       raise "Only session_server can create thread_client" unless Thread.current == @session_server
       @th_clients[th] = ThreadClient.new((@tc_id += 1), @q_evt, Queue.new, th)
@@ -1396,12 +1396,12 @@ module DEBUGGER__
     end
 
     # can be called by other threads
-    def thread_client th = Thread.current
+    def get_thread_client th = Thread.current
       if @th_clients.has_key? th
         @th_clients[th]
       else
         if Thread.current == @session_server
-          thread_client_create th
+          create_thread_client th
         else
           ask_thread_client th
         end
