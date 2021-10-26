@@ -1385,7 +1385,7 @@ module DEBUGGER__
       @th_clients[th] = ThreadClient.new((@tc_id += 1), @q_evt, Queue.new, th)
     end
 
-    private def ask_thread_client th = Thread.current
+    private def ask_thread_client th
       # TODO: Ractor support
       q2 = Queue.new
       # tc, output, ev, @internal_info, *ev_args = evt
