@@ -99,7 +99,6 @@ module DEBUGGER__
       @preset_command = nil
       @postmortem_hook = nil
       @postmortem = false
-      @thread_stopper = nil
       @intercept_trap_sigint = false
       @intercepted_sigint_cmd = 'DEFAULT'
       @process_group = ProcessGroup.new
@@ -116,6 +115,8 @@ module DEBUGGER__
         ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
       }
       @tp_load_script.enable
+
+      @thread_stopper = thread_stopper
 
       activate
 
@@ -169,7 +170,7 @@ module DEBUGGER__
 
     def deactivate
       thread_client.deactivate
-      @thread_stopper.disable if @thread_stopper
+      @thread_stopper.disable
       @tp_load_script.disable
       @tp_thread_begin.disable
       @bps.each{|k, bp| bp.disable}
@@ -1407,18 +1408,6 @@ module DEBUGGER__
       end
     end
 
-    private def thread_stopper
-      @thread_stopper ||= TracePoint.new(:line) do
-        # run on each thread
-        tc = ThreadClient.current
-        next if tc.management?
-        next unless tc.running?
-        next if tc == @tc
-
-        tc.on_pause
-      end
-    end
-
     private def running_thread_clients_count
       @th_clients.count{|th, tc|
         next if tc.management?
@@ -1435,15 +1424,27 @@ module DEBUGGER__
       }.compact
     end
 
+    private def thread_stopper
+      TracePoint.new(:line) do
+        # run on each thread
+        tc = ThreadClient.current
+        next if tc.management?
+        next unless tc.running?
+        next if tc == @tc
+
+        tc.on_pause
+      end
+    end
+
     private def stop_all_threads
       return if running_thread_clients_count == 0
 
-      stopper = thread_stopper
+      stopper = @thread_stopper
       stopper.enable unless stopper.enabled?
     end
 
     private def restart_all_threads
-      stopper = thread_stopper
+      stopper = @thread_stopper
       stopper.disable if stopper.enabled?
 
       waiting_thread_clients.each{|tc|
