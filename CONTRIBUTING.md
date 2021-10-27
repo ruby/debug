@@ -216,6 +216,24 @@ The following table shows examples of the gentest options.
 | `$ bin/gentest target.rb -m test_step` | Specify the method name | `foo_test.rb` | `FooTest` | `test_step` |
 | `$ bin/gentest target.rb -c step -m test_step` | Specify the class name and the method name | `step_test.rb` | `StepTest` | `test_step` |
 
+### Assertions
+
+- assert_line_num(expected)
+
+Passes if `expected` is equal to the location where debugger is stopped.
+
+- assert_line_text(text)
+
+Passes if `text` is included in the last debugger log.
+
+- assert_no_line_text(text)
+
+Passes if `text` is not included in the last debugger log.
+
+- assert_finish
+
+Passes if debugger is finished collectly.
+
 ## To Update README
 
 This project generates `README.md` from the template `misc/README.md.erb`
