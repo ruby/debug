@@ -96,6 +96,7 @@ module DEBUGGER__
 
     def process
       bps = []
+      src_map = {}
       loop do
         req = @web_sock.extract_data
         $stderr.puts '[>]' + req.inspect if SHOW_PROTOCOL
@@ -106,6 +107,7 @@ module DEBUGGER__
         when 'Page.getResourceTree'
           abs = File.absolute_path($0)
           src = File.read(abs)
+          src_map[abs] = src
           send_response req,
                         frameTree: {
                           frame: {
@@ -134,7 +136,10 @@ module DEBUGGER__
                       }
         when 'Debugger.getScriptSource'
           s_id = req.dig('params', 'scriptId')
-          src = File.read(s_id)
+          unless src = src_map[s_id]
+            src = File.read(s_id)
+            src_map[s_id] = src
+          end
           send_response req, scriptSource: src
           @q_msg << req
         when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
