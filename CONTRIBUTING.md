@@ -234,7 +234,7 @@ The following table shows examples of the gentest options.
 
 - assert_line_num(expected)
 
-Passes if `expected` is equal to the location where debugger is stopped.
+Passes if `expected` is equal to the location where debugger stops.
 
 - assert_line_text(text)
 
@@ -246,7 +246,7 @@ Passes if `text` is not included in the last debugger log.
 
 - assert_finish
 
-Passes if debugger is finished collectly.
+Passes if debugger finishes correctly.
 
 ## To Update README
 
