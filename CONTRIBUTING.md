@@ -26,11 +26,17 @@ $ ruby test/debug/bp_test.rb -h # to see all the test options
 ```
 
 ## Generate Tests
+
 There is a test generator in `debug.rb` project to make it easier to write tests.
+
 ### Quickstart
+
 This section shows you how to create test file by test generator. For more advanced informations on creating tests, please take a look at [gentest options](#gentest-options). (You can also check by `$bin/gentest -h`)
+
 #### 1. Create a target file for debuggee.
+
 Let's say, we created `target.rb` which is located in top level directory of debugger.
+
 ```ruby
 module Foo
   class Bar
@@ -42,11 +48,15 @@ module Foo
   bar = Bar.new
 end
 ```
+
 #### 2. Run `gentest` as shown in the example below.
+
 ```shell
 $ bin/gentest target.rb
 ```
+
 #### 3. Debugger will be executed. You can type any debug commands.
+
 ```shell
 $ bin/gentest target.rb
 DEBUGGER: Session start (pid: 11139)
@@ -119,8 +129,11 @@ created: /Users/naotto/workspace/debug/test/tool/../debug/foo_test.rb
     class: FooTest
     method: test_1629720194
 ```
+
 #### 4. The test file will be created as `test/debug/foo_test.rb`.
+
 If the file already exists, **only method** will be added to it.
+
 ```ruby
 # frozen_string_literal: true
 
@@ -204,6 +217,7 @@ end
 ```
 
 #### gentest options
+
 You can get more information about `gentest` here.
 
 The default method name is `test_#{some integer numbers}`, the class name is `FooTest`, and the file name will be `foo_test.rb`.
