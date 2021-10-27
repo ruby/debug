@@ -70,7 +70,7 @@ module DEBUGGER__
     TestInfo = Struct.new(:queue, :mode, :prompt_pattern, :remote_info,
                           :backlog, :last_backlog, :internal_info)
 
-    RemoteInfo = Struct.new(:r, :w, :pid, :sock_path, :port)
+    RemoteInfo = Struct.new(:r, :w, :pid, :sock_path, :port, :retry_count)
 
     MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
@@ -269,6 +269,11 @@ module DEBUGGER__
           check_error(/DEBUGGEE Exception/, test_info)
           assert_empty_queue test_info, exception: e
         rescue Timeout::Error => e
+          if test_info.remote_info && test_info.remote_info.retry_count <= 3
+            test_info.remote_info.retry_count += 1
+            collect_debuggee_backlog test_info
+            retry
+          end
           assert_block(create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)", test_info)) { false }
         ensure
           kill_remote_debuggee test_info.remote_info
@@ -325,6 +330,7 @@ module DEBUGGER__
 
     def setup_remote_debuggee(cmd)
       remote_info = RemoteInfo.new(*PTY.spawn(cmd))
+      remote_info.retry_count = 0
       remote_info.r.read(1) # wait for the remote server to boot up
       remote_info
     end
