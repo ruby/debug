@@ -275,13 +275,39 @@ module DEBUGGER__
           # kill debug console process
           read.close
           write.close
-          Process.kill(:KILL, pid)
-          Process.waitpid pid
+          kill_safely pid, :debugger
         end
       end
     end
 
     private
+
+    def wait_pid pid, sec
+      total_sec = 0.0
+      wait_sec = 0.001 # 0.1ms
+
+      while total_sec < sec
+        if Process.waitpid(pid, Process::WNOHANG) == pid
+          return true
+        end
+        sleep wait_sec
+        total_sec += wait_sec
+        wait_sec *= 2
+      end
+
+      false
+    end
+
+    def kill_safely pid, name
+      return if wait_pid pid, 0.3
+
+      Process.kill :KILL, pid
+      return if wait_pid pid, 0.2
+
+      Process.kill :KILL, pid
+      Process.waitpid(pid)
+    rescue Errno::EPERM, Errno::ESRCH
+    end
 
     def temp_file_path
       @temp_file.path
@@ -304,8 +330,7 @@ module DEBUGGER__
 
       remote_info.r.close
       remote_info.w.close
-      Process.kill :KILL, remote_info.pid
-      Process.waitpid remote_info.pid
+      kill_safely remote_info.pid, :remote
     end
 
     # use this to start a debug session with the test program
