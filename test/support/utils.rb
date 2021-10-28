@@ -43,6 +43,7 @@ module DEBUGGER__
       FAILURE_MSG
 
       <<~MSG.chomp
+
         #{debugger_msg}
 
         #{debuggee_msg}
