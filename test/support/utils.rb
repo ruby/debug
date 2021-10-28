@@ -74,20 +74,7 @@ module DEBUGGER__
 
     MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
-    def debug_code(program, ruby: nil, rdbg: nil, remote: true, &test_steps)
-      if ruby && rdbg
-        raise "a test can only be ran with either `ruby` or `rdbg` command, not both"
-      end
-
-      if ruby
-        run_ruby(program, options: ruby, &test_steps)
-      else
-        debug_code_with_rdbg(program, remote: remote, &test_steps)
-      end
-    end
-
-    # This method will execute both local and remote mode by default.
-    def debug_code_with_rdbg(program, remote: true, &test_steps)
+    def debug_code(program, remote: true, &test_steps)
       prepare_test_environment(program, test_steps) do
         if remote && !NO_REMOTE && MULTITHREADED_TEST
           begin
