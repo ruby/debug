@@ -96,7 +96,7 @@ module DEBUGGER__
 
     def process
       bps = []
-      src_map = {}
+      @src_map = {}
       loop do
         req = @web_sock.extract_data
         $stderr.puts '[>]' + req.inspect if SHOW_PROTOCOL
@@ -107,7 +107,7 @@ module DEBUGGER__
         when 'Page.getResourceTree'
           abs = File.absolute_path($0)
           src = File.read(abs)
-          src_map[abs] = src
+          @src_map[abs] = src
           send_response req,
                         frameTree: {
                           frame: {
@@ -136,10 +136,7 @@ module DEBUGGER__
                       }
         when 'Debugger.getScriptSource'
           s_id = req.dig('params', 'scriptId')
-          unless src = src_map[s_id]
-            src = File.read(s_id)
-            src_map[s_id] = src
-          end
+          src = get_source_code s_id
           send_response req, scriptSource: src
           @q_msg << req
         when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
@@ -173,6 +170,9 @@ module DEBUGGER__
         when 'Debugger.getPossibleBreakpoints'
           s_id = req.dig('params', 'start', 'scriptId')
           line = req.dig('params', 'start', 'lineNumber')
+          src = get_source_code s_id
+          end_line = src.count("\n")
+          line = end_line  if line > end_line
           send_response req,
                         locations: [
                           { scriptId: s_id,
@@ -183,6 +183,9 @@ module DEBUGGER__
           line = req.dig('params', 'lineNumber')
           path = req.dig('params', 'url').match('http://debuggee(.*)')[1]
           cond = req.dig('params', 'condition')
+          src = get_source_code path
+          end_line = src.count("\n")
+          line = end_line  if line > end_line
           if cond != ''
             bps << SESSION.add_line_breakpoint(path, line + 1, cond: cond)
           else
@@ -203,6 +206,14 @@ module DEBUGGER__
           @q_msg << req
         end
       end
+    end
+
+    def get_source_code path
+      return @src_map[path] if @src_map[path]
+
+      src = File.read(path)
+      @src_map[path] = src
+      src
     end
 
     ## Called by the SESSION thread
