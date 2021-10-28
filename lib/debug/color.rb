@@ -79,7 +79,7 @@ module DEBUGGER__
     end
 
     if defined? IRB::Color.colorize_code
-      if SUPPORT_COLORABLE_OPTION
+      if defined? SUPPORT_COLORABLE_OPTION
         def colorize_code code
           IRB::Color.colorize_code(code, colorable: true)
         end
