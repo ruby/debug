@@ -18,4 +18,21 @@ module DEBUGGER__
       end
     end
   end
+
+  class NonstopOptionTest < TestCase
+    def program
+      <<~RUBY
+      1| a = "foo"
+      2| binding.b
+      RUBY
+    end
+
+    def test_debugger_doesnt_stop
+      run_rdbg(program, options: "--nonstop") do
+        type "a + 'bar'"
+        assert_line_text(/foobar/)
+        type "c"
+      end
+    end
+  end
 end
