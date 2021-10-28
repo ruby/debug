@@ -329,10 +329,13 @@ module DEBUGGER__
       remote_info
     end
 
+    $ruby_debug_test_num = 0
+
     def setup_unix_doman_socket_remote_debuggee
-      socket_path = DEBUGGER__.create_unix_domain_socket_name
-      remote_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{socket_path} #{temp_file_path}")
-      remote_info.sock_path = socket_path
+      sock_path = DEBUGGER__.create_unix_domain_socket_name + "-#{$ruby_debug_test_num += 1}"
+      remote_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{sock_path} #{temp_file_path}")
+      remote_info.sock_path = sock_path
+      sleep 0.1 while !File.exist?(sock_path) && Process.kill(0, remote_info.pid)
       remote_info
     end
 
