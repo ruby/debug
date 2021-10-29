@@ -491,7 +491,7 @@ module DEBUGGER__
       case type
       when :backtrace
         event! :dap_result, :backtrace, req, {
-          stackFrames: @target_frames.map.{|frame|
+          stackFrames: @target_frames.map{|frame|
             path = frame.realpath || frame.path
             ref = frame.file_lines unless path && File.exist?(path)
 
