@@ -222,14 +222,35 @@ module DEBUGGER__
           @q_msg << 'c'
           send_response req, allThreadsContinued: true
         when 'next'
-          @q_msg << 'n'
-          send_response req
+          begin
+            @session.check_postmortem
+            @q_msg << 'n'
+            send_response req
+          rescue PostmortemError
+            send_response req,
+                          success: false, message: 'postmortem mode',
+                          result: "'Next' is not supported while postrmotem mode"
+          end
         when 'stepIn'
-          @q_msg << 's'
-          send_response req
+          begin
+            @session.check_postmortem
+            @q_msg << 's'
+            send_response req
+          rescue PostmortemError
+            send_response req,
+                          success: false, message: 'postmortem mode',
+                          result: "'stepIn' is not supported while postrmotem mode"
+          end
         when 'stepOut'
-          @q_msg << 'fin'
-          send_response req
+          begin
+            @session.check_postmortem
+            @q_msg << 'fin'
+            send_response req
+          rescue PostmortemError
+            send_response req,
+                          success: false, message: 'postmortem mode',
+                          result: "'stepOut' is not supported while postrmotem mode"
+          end
         when 'terminate'
           send_response req
           exit
