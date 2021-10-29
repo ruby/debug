@@ -1555,6 +1555,36 @@ module DEBUGGER__
       @postmortem = false
     end
 
+    def capture_exception_frames *exclude_path
+      postmortem_hook = TracePoint.new(:raise){|tp|
+        exc = tp.raised_exception
+        frames = DEBUGGER__.capture_frames(__dir__)
+
+        exclude_path.each{|ex|
+          if Regexp === ex
+            frames.delete_if{|e| ex =~ e.path}
+          else
+            frames.delete_if{|e| e.path.start_with? ex.to_s}
+          end
+        }
+        exc.instance_variable_set(:@__debugger_postmortem_frames, frames)
+      }
+      postmortem_hook.enable
+
+      begin
+        yield
+        nil
+      rescue Exception => e
+        if e.instance_variable_defined? :@__debugger_postmortem_frames
+          e
+        else
+          raise
+        end
+      ensure
+        postmortem_hook.disable
+      end
+    end
+
     def postmortem=(is_enable)
       if is_enable
         unless @postmortem_hook
