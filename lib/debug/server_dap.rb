@@ -653,8 +653,8 @@ module DEBUGGER__
       v
     end
 
-    def variable_ name, obj, indexedVariables: 0, namedVariables: 0, use_short: true
-      if indexedVariables > 0 || namedVariables > 0
+    def variable_ name, obj, indexed_variables: 0, named_variables: 0, use_short: true
+      if indexed_variables > 0 || named_variables > 0
         vid = @var_map.size + 1
         @var_map[vid] = obj
       else
@@ -667,27 +667,27 @@ module DEBUGGER__
         value: DEBUGGER__.short_inspect(obj, use_short),
         type: obj.class.name || obj.class.to_s,
         variablesReference: vid,
-        indexedVariables: indexedVariables,
-        namedVariables: namedVariables + ivnum,
+        indexedVariables: indexed_variables,
+        namedVariables: named_variables + ivnum,
       }
     end
 
     def variable name, obj
       case obj
       when Array
-        variable_ name, obj, indexedVariables: obj.size
+        variable_ name, obj, indexed_variables: obj.size
       when Hash
-        variable_ name, obj, namedVariables: obj.size
+        variable_ name, obj, named_variables: obj.size
       when String
-        variable_ name, obj, use_short: false, namedVariables: 3 # #to_str, #length, #encoding
+        variable_ name, obj, use_short: false, named_variables: 3 # #to_str, #length, #encoding
       when Struct
-        variable_ name, obj, namedVariables: obj.size
+        variable_ name, obj, named_variables: obj.size
       when Class, Module
-        variable_ name, obj, namedVariables: 1 # %ancestors (#ancestors without self)
+        variable_ name, obj, named_variables: 1 # %ancestors (#ancestors without self)
       when Range
-        variable_ name, obj, namedVariables: 2 # #begin, #end
+        variable_ name, obj, named_variables: 2 # #begin, #end
       else
-        variable_ name, obj, namedVariables: 1 # #class
+        variable_ name, obj, named_variables: 1 # #class
       end
     end
   end
