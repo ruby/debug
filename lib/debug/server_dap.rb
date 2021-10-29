@@ -87,7 +87,7 @@ module DEBUGGER__
       kw[:seq] = @seq += 1
       str = JSON.dump(kw)
       show_protocol '<', str
-      @sock.write "Content-Length: #{str.size}\r\n\r\n#{str}"
+      @sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
     end
 
     def send_response req, success: true, **kw
