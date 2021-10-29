@@ -648,7 +648,8 @@ module DEBUGGER__
 
     def evaluate_result r
       v = variable nil, r
-      v.delete(:name)
+      v.delete :name
+      v.delete :value
       v[:result] = DEBUGGER__.short_inspect(r)
       v
     end
