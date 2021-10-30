@@ -254,17 +254,15 @@ module DEBUGGER__
         @tc << [:cdp, :evaluate, req, expr]
       when 'Runtime.getProperties'
         oid = req.dig('params', 'objectId')
-        case oid
-        when /(\d?):local/
-          @tc << [:cdp, :properties, req, $1.to_i]
-        when /\d?:script/
-          # TODO: Support a script type
+        case @scope_map[oid]
+        when 'local', 'eval'
+          @tc << [:cdp, :properties, req, oid]
+        when 'script', 'global'
+          # TODO: Support script and global types
           @ui.respond req
           return :retry
-        when /\d?:global/
-          # TODO: Support a global type
-          @ui.respond req
-          return :retry
+        else
+          raise "Unknown object id #{oid}"
         end
       end
     end
@@ -289,12 +287,27 @@ module DEBUGGER__
                             hash: src.hash
             @script_paths << s_id
           end
+
+          frame[:scopeChain].each {|s|
+            oid = s.dig(:object, :objectId)
+            @scope_map[oid] = s[:type]
+          }
         end
         result[:reason] = 'other'
         @ui.fire_event 'Debugger.paused', **result
       when :evaluate
-        @ui.respond req, result: result
+        result.each {|r|
+          if oid = r.dig(:objectId)
+            @scope_map[oid] = 'eval'
+          end
+        }
+        @ui.respond req, result: result[0]
       when :properties
+        result.each {|r|
+          if oid = r.dig(:value, :objectId)
+            @scope_map[oid] = 'local' # TODO: Change this part because it is not necessarily `local`.
+          end
+        }
         @ui.respond req, result: result
       end
     end
@@ -329,21 +342,21 @@ module DEBUGGER__
                   type: 'local',
                   object: {
                     type: 'object',
-                    objectId: "#{i}:local"
+                    objectId: rand.to_s
                   }
                 },
                 {
                   type: 'script',
                   object: {
                     type: 'object',
-                    objectId: "#{i}:script"
+                    objectId: rand.to_s
                   }
                 },
                 {
                   type: 'global',
                   object: {
                     type: 'object',
-                    objectId: "#{i}:global"
+                    objectId: rand.to_s
                   }
                 }
               ],
@@ -351,6 +364,11 @@ module DEBUGGER__
                 type: 'object'
               }
             }
+            local_scope[:scopeChain].each {|s|
+              oid = s.dig(:object, :objectId)
+              @frame_id_map[oid] = i
+            }
+            local_scope
           }
         }
       when :evaluate
@@ -360,26 +378,32 @@ module DEBUGGER__
         rescue Exception => e
           result = e
         end
-        event! :cdp_result, :evaluate, req, evaluate_result(result)
+        event! :cdp_result, :evaluate, req, [evaluate_result(result)]
       when :properties
-        fid = args.shift
-        frame = @target_frames[fid]
-        if b = frame.binding
-          vars = b.local_variables.map{|name|
-            v = b.local_variable_get(name)
-            variable(name, v)
-          }
-          vars.unshift variable('%raised', frame.raised_exception) if frame.has_raised_exception
-          vars.unshift variable('%return', frame.return_value) if frame.has_return_value
-          vars.unshift variable('%self', b.receiver)
-        elsif lvars = frame.local_variables
-          vars = lvars.map{|var, val|
-            variable(var, val)
-          }
+        oid = args.shift
+        if fid = @frame_id_map[oid]
+          frame = @target_frames[fid]
+          if b = frame.binding
+            vars = b.local_variables.map{|name|
+              v = b.local_variable_get(name)
+              variable(name, v)
+            }
+            vars.unshift variable('%raised', frame.raised_exception) if frame.has_raised_exception
+            vars.unshift variable('%return', frame.return_value) if frame.has_return_value
+            vars.unshift variable('%self', b.receiver)
+          elsif lvars = frame.local_variables
+            vars = lvars.map{|var, val|
+              variable(var, val)
+            }
+          else
+            vars = [variable('%self', frame.self)]
+            vars.push variable('%raised', frame.raised_exception) if frame.has_raised_exception
+            vars.push variable('%return', frame.return_value) if frame.has_return_value
+          end
+        elsif objs = @obj_map[oid]
+          vars = parse_object(objs)
         else
-          vars = [variable('%self', frame.self)]
-          vars.push variable('%raised', frame.raised_exception) if frame.has_raised_exception
-          vars.push variable('%return', frame.return_value) if frame.has_return_value
+          raise "Unknown object id #{oid}"
         end
         event! :cdp_result, :properties, req, vars
       end
@@ -390,21 +414,43 @@ module DEBUGGER__
       v[:value]
     end
 
-    def variable_ name, obj, type, use_short: true
-      {
+    def parse_object objs
+      case objs
+      when Array
+        objs.map.with_index{|obj, i| variable i.to_s, obj}
+      when Hash
+        objs.map{|k, v| variable k, v}
+      end
+    end
+
+    def variable_ name, obj, type, description: nil, use_short: true
+      prop = {
         name: name,
         value: {
           type: type,
-          value: DEBUGGER__.short_inspect(obj, use_short)
+          description: obj.inspect,
+          value: obj,
         },
-        configurable: true,
-        enumerable: true
+        configurable: true, # TODO: Change these parts because
+        enumerable: true    #       they are not necessarily `true`.
       }
+      if description
+        v = prop[:value]
+        v[:description] = description
+        v[:objectId] = oid = rand.to_s
+        v[:className] = obj.class
+        @obj_map[oid] = obj
+      end
+      prop
     end
 
     def variable name, obj
       case obj
-      when Array, Hash, Range, NilClass, Time
+      when Array
+        variable_ name, obj, 'object', description: "Array(#{obj.size})"
+      when Hash
+        variable_ name, obj, 'object', description: 'Object'
+      when Range, NilClass, Time
         variable_ name, obj, 'object'
       when String
         variable_ name, obj, 'string', use_short: false

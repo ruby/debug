@@ -84,6 +84,8 @@ module DEBUGGER__
       @output = []
       @frame_formatter = method(:default_frame_formatter)
       @var_map = {} # { thread_local_var_id => obj } for DAP
+      @obj_map = {} # { object_id => obj } for CDP
+      @frame_id_map = {} # { object_id => frame_id } for CDP
       @recorder = nil
       @mode = :waiting
       set_mode :running
