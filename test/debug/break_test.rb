@@ -479,7 +479,7 @@ module DEBUGGER__
     end
 
     def test_conditional_breakpoint_stops_if_condition_is_true
-      debug_code program, remote: false do
+      debug_code program do
         type 'break if: n == 1'
         assert_line_text(/#0  BP - Check  n == 1/)
         type 'continue'
