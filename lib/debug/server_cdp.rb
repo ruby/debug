@@ -141,7 +141,8 @@ module DEBUGGER__
           @q_msg << req
         when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
           'Runtime.compileScript', 'Page.getResourceContent', 'Overlay.setPausedInDebuggerMessage',
-          'Debugger.setBreakpointsActive', 'Runtime.releaseObjectGroup'
+          'Debugger.setBreakpointsActive', 'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries',
+          'Log.clear'
           send_response req
 
         ## control
