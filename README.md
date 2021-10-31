@@ -429,6 +429,8 @@ Also `open chrome` command works like `open vscode`.
 
 For more information about how to use Chrome debugging, you might want to read [here](https://developer.chrome.com/docs/devtools/)
 
+Note: If you want to maximize Chrome DevTools, click [Toggle Device Toolbar](https://developer.chrome.com/docs/devtools/device-mode/#viewport).
+
 ## Configuration
 
 You can configure the debugger's behavior with debug commands and environment variables.
