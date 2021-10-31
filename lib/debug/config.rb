@@ -48,7 +48,7 @@ module DEBUGGER__
     parent_on_fork: ['RUBY_DEBUG_PARENT_ON_FORK', "OBSOLETE: Keep debugging parent process on fork (default: false)",     :bool],
   }.freeze
 
-  CONFIG_MAP = CONFIG_SET.map{|k, (ev, desc)| [k, ev]}.to_h.freeze
+  CONFIG_MAP = CONFIG_SET.map{|k, (ev, _)| [k, ev]}.to_h.freeze
 
   class Config
     def self.config
