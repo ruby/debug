@@ -329,7 +329,7 @@ module DEBUGGER__
               abs = path
             end
 
-            local_scope = {
+            call_frame = {
               callFrameId: SecureRandom.hex(16),
               functionName: frame.name,
               location: {
@@ -364,11 +364,11 @@ module DEBUGGER__
                 type: 'object'
               }
             }
-            local_scope[:scopeChain].each {|s|
+            call_frame[:scopeChain].each {|s|
               oid = s.dig(:object, :objectId)
               @frame_id_map[oid] = i
             }
-            local_scope
+            call_frame
           }
         }
       when :evaluate
