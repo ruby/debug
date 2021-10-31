@@ -23,14 +23,12 @@ module DEBUGGER__
 
       debuggee_msg =
         if test_info.mode != 'LOCAL'
-          debuggee_backlog = collect_debuggee_backlog(test_info)
-
           <<~DEBUGGEE_MSG.chomp
             --------------------
             | Debuggee Session |
             --------------------
 
-            > #{debuggee_backlog.join('> ')}
+            > #{test_info.remote_info.debuggee_backlog.join('> ')}
           DEBUGGEE_MSG
         end
 
@@ -52,26 +50,10 @@ module DEBUGGER__
       MSG
     end
 
-    def collect_debuggee_backlog test_info
-      backlog = []
-
-      begin
-        Timeout.timeout(TIMEOUT_SEC) do
-          while (line = test_info.remote_info.r.gets)
-            backlog << line
-          end
-        end
-      rescue Timeout::Error, Errno::EIO
-        # result of `gets` return Errno::EIO in some platform
-        # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
-      end
-      backlog
-    end
-
     TestInfo = Struct.new(:queue, :mode, :prompt_pattern, :remote_info,
                           :backlog, :last_backlog, :internal_info)
 
-    RemoteInfo = Struct.new(:r, :w, :pid, :sock_path, :port)
+    RemoteInfo = Struct.new(:r, :w, :pid, :sock_path, :port, :reader_thread, :debuggee_backlog)
 
     MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
@@ -316,6 +298,7 @@ module DEBUGGER__
     def kill_remote_debuggee remote_info
       return unless remote_info
 
+      remote_info.reader_thread.kill
       remote_info.r.close
       remote_info.w.close
       kill_safely remote_info.pid, :remote
@@ -339,6 +322,14 @@ module DEBUGGER__
     def setup_remote_debuggee(cmd)
       remote_info = RemoteInfo.new(*PTY.spawn(cmd))
       remote_info.r.read(1) # wait for the remote server to boot up
+      remote_info.debuggee_backlog = []
+
+      remote_info.reader_thread = Thread.new(remote_info) do |info|
+        while data = info.r.gets
+          info.debuggee_backlog << data
+        end
+      rescue Errno::EIO
+      end
       remote_info
     end
 
