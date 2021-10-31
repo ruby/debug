@@ -490,12 +490,11 @@ module DEBUGGER__
     end
 
     def test_conditional_breakpoint_shows_error
-      # TODO: error message on remote debugging
-      debug_code program, remote: false do
+      debug_code(program) do
         type 'break if: xyzzy'
         type 'b 23'
         type 'c'
-        assert_line_text(/EVAL ERROR/)
+        assert_debuggee_line_text(/EVAL ERROR/)
         type 'c'
         assert_finish
       end

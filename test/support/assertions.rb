@@ -57,6 +57,19 @@ module DEBUGGER__
       })
     end
 
+    def assert_debuggee_line_text text
+      @scenario.push(Proc.new {|test_info|
+        next if test_info.mode == 'LOCAL'
+
+        log = test_info.remote_info.debuggee_backlog.join
+        msg = "Expected to include `#{text.inspect}` in\n(\n#{log})\n"
+
+        assert_block(FailureMessage.new{create_message(msg, test_info)}) do
+          log.match? text
+        end
+      })
+    end
+
     def assert_block msg
       if multithreaded_test?
         # test-unit doesn't support multi thread
