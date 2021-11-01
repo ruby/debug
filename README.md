@@ -427,7 +427,7 @@ Type `devtools://devtools/bundled/inspector.html?ws=127.0.0.1:43633` in the addr
 
 Also `open chrome` command works like `open vscode`.
 
-For more information about how to use Chrome debugging, you might want to read [here](https://developer.chrome.com/docs/devtools/)
+For more information about how to use Chrome debugging, you might want to read [here](https://developer.chrome.com/docs/devtools/).
 
 Note: If you want to maximize Chrome DevTools, click [Toggle Device Toolbar](https://developer.chrome.com/docs/devtools/device-mode/#viewport).
 

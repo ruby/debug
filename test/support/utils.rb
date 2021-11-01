@@ -120,7 +120,7 @@ module DEBUGGER__
 
     private def debug_code_on_tcpip
       test_info = TestInfo.new(dup_scenario, 'TCP/IP', /\(rdbg:remote\)/)
-      test_info.remote_info = setup_tcpip_remote_debuggeee
+      test_info.remote_info = setup_tcpip_remote_debuggee
       cmd = "#{RDBG_EXECUTABLE} -A #{test_info.remote_info.port}"
       run_test_scenario cmd, test_info
     end
@@ -357,7 +357,7 @@ module DEBUGGER__
       TCPIP_PORT = ss.first.local_address.ip_port
     end.each{|s| s.close}
 
-    def setup_tcpip_remote_debuggeee
+    def setup_tcpip_remote_debuggee
       remote_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{TCPIP_PORT} -- #{temp_file_path}")
       remote_info.port = TCPIP_PORT
       remote_info
