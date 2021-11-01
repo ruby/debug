@@ -268,6 +268,17 @@ module DEBUGGER__
       end
     end
 
+    def kill_safely pid, name
+      return if wait_pid pid, 0.3
+
+      Process.kill :KILL, pid
+      return if wait_pid pid, 0.2
+
+      Process.kill :KILL, pid
+      Process.waitpid(pid)
+    rescue Errno::EPERM, Errno::ESRCH
+    end
+
     private
 
     def wait_pid pid, sec
@@ -284,17 +295,6 @@ module DEBUGGER__
       end
 
       false
-    end
-
-    def kill_safely pid, name
-      return if wait_pid pid, 0.3
-
-      Process.kill :KILL, pid
-      return if wait_pid pid, 0.2
-
-      Process.kill :KILL, pid
-      Process.waitpid(pid)
-    rescue Errno::EPERM, Errno::ESRCH
     end
 
     def temp_file_path
