@@ -116,6 +116,9 @@ module DEBUGGER__
                       params: {scriptId: temp_file_path}
       res = ws_client.extract_data
       assert_equal res.dig('result', 'scriptSource'), File.read(temp_file_path)
+      # 2.times do
+        p ws_client.extract_data
+      # end
     ensure
       kill_safely pid, nil
     end
