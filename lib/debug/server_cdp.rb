@@ -95,7 +95,7 @@ module DEBUGGER__
     end
 
     def process
-      bps = []
+      bps = {}
       @src_map = {}
       loop do
         req = @web_sock.extract_data
@@ -187,20 +187,25 @@ module DEBUGGER__
           src = get_source_code path
           end_line = src.count("\n")
           line = end_line  if line > end_line
+          b_id = "#{bps.size+1}:#{line}:#{path}"
           if cond != ''
-            bps << SESSION.add_line_breakpoint(path, line + 1, cond: cond)
+            SESSION.add_line_breakpoint(path, line + 1, cond: cond)
+            bps[b_id] = bps.size
           else
-            bps << SESSION.add_line_breakpoint(path, line + 1)
+            SESSION.add_line_breakpoint(path, line + 1)
+            bps[b_id] = bps.size
           end
           send_response req,
-                        breakpointId: (bps.size - 1).to_s,
+                        breakpointId: b_id,
                         locations: [
                           scriptId: path,
                           lineNumber: line
                         ]
         when 'Debugger.removeBreakpoint'
           b_id = req.dig('params', 'breakpointId')
-          @q_msg << "del #{b_id}"
+          idx = bps[b_id]
+          bps.each_value{|i| i -= 1 if i > idx}
+          @q_msg << "del #{idx}"
           send_response req
 
         when 'Debugger.evaluateOnCallFrame', 'Runtime.getProperties'
