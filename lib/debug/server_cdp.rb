@@ -141,8 +141,7 @@ module DEBUGGER__
           @q_msg << req
         when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
           'Runtime.compileScript', 'Page.getResourceContent', 'Overlay.setPausedInDebuggerMessage',
-          'Debugger.setBreakpointsActive', 'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries',
-          'Log.clear'
+          'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries', 'Log.clear'
           send_response req
 
         ## control
@@ -202,6 +201,14 @@ module DEBUGGER__
           b_id = req.dig('params', 'breakpointId')
           @q_msg << "del #{b_id}"
           send_response req
+        when 'Debugger.setBreakpointsActive'
+          active = req.dig('params', 'active')
+          if active
+            activate_bp bps
+          else
+            deactivate_bp
+          end
+          send_response req
 
         when 'Debugger.evaluateOnCallFrame', 'Runtime.getProperties'
           @q_msg << req
@@ -215,6 +222,18 @@ module DEBUGGER__
       src = File.read(path)
       @src_map[path] = src
       src
+    end
+
+    def activate_bp bps
+      bps.each_key{|id|
+        _, line, path = id.match(/^\d+:(\d+):(.*)/).to_a
+        SESSION.add_line_breakpoint(path, line.to_i)
+      }
+    end
+
+    def deactivate_bp
+      @q_msg << 'del'
+      @q_ans << 'y'
     end
 
     ## Called by the SESSION thread
