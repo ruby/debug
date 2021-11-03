@@ -240,7 +240,7 @@ module DEBUGGER__
           @ui.event :suspend_trap, sig = ev_args[1], tc.id
 
           if sig == :SIGINT && (@intercepted_sigint_cmd.kind_of?(Proc) || @intercepted_sigint_cmd.kind_of?(String))
-            @ui.puts "#{@intercepted_sigint_cmd.inspect} is registerred as SIGINT handler."
+            @ui.puts "#{@intercepted_sigint_cmd.inspect} is registered as SIGINT handler."
             @ui.puts "`sigint` command execute it."
           end
         else
@@ -463,7 +463,7 @@ module DEBUGGER__
         exit! (arg || 1).to_i
 
       # * `sigint`
-      #   * Execute SIGINT handler registerred by the debuggee.
+      #   * Execute SIGINT handler registered by the debuggee.
       #   * Note that this command should be used just after stop by `SIGINT`.
       when 'sigint'
         begin

@@ -539,7 +539,7 @@ The `<...>` notation means the argument.
 * `kill!`
   * Same as kill but without the confirmation prompt.
 * `sigint`
-  * Execute SIGINT handler registerred by the debuggee.
+  * Execute SIGINT handler registered by the debuggee.
   * Note that this command should be used just after stop by `SIGINT`.
 
 ### Breakpoint
