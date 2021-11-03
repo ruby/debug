@@ -165,6 +165,14 @@ module DEBUGGER__
           @q_msg << req
           send_response req
           send_event 'Debugger.resumed'
+        when 'Debugger.setSkipAllPauses'
+          skip = req.dig('params', 'skip')
+          if skip
+            deactivate_bp
+          else
+            activate_bp bps
+          end
+          send_response req
 
         # breakpoint
         when 'Debugger.getPossibleBreakpoints'
