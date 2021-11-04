@@ -527,7 +527,7 @@ The `<...>` notation means the argument.
 * `fin[ish]`
   * Finish this frame. Resume the program until the current frame is finished.
 * `fin[ish] <n>`
-  * Finish frames, same as `step <n>`.
+  * Finish `<n>`th frames.
 * `c[ontinue]`
   * Resume the program.
 * `q[uit]` or `Ctrl-D`

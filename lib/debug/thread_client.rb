@@ -294,15 +294,15 @@ module DEBUGGER__
       SUPPORT_TARGET_THREAD = false
     end
 
-    def step_tp iter
+    def step_tp iter, events = [:line, :b_return, :return]
       @step_tp.disable if @step_tp
 
       thread = Thread.current
 
       if SUPPORT_TARGET_THREAD
-        @step_tp = TracePoint.new(:line, :b_return, :return){|tp|
+        @step_tp = TracePoint.new(*events){|tp|
           next if SESSION.break_at? tp.path, tp.lineno
-          next if !yield
+          next if !yield(tp.event)
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
@@ -315,10 +315,10 @@ module DEBUGGER__
         }
         @step_tp.enable(target_thread: thread)
       else
-        @step_tp = TracePoint.new(:line, :b_return, :return){|tp|
+        @step_tp = TracePoint.new(*events){|tp|
           next if thread != Thread.current
           next if SESSION.break_at? tp.path, tp.lineno
-          next if !yield
+          next if !yield(tp.event)
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
@@ -734,10 +734,11 @@ module DEBUGGER__
             break
 
           when :finish
-            depth = @target_frames.first.frame_depth
-            step_tp iter do
-              # 3 is debugger's frame count
-              DEBUGGER__.frame_depth - 3 < depth
+            finish_frames = (iter || 1) - 1
+            goal_depth = @target_frames.first.frame_depth - finish_frames
+
+            step_tp nil, [:return, :b_return] do |event|
+              DEBUGGER__.frame_depth - 3 <= goal_depth ? true : false
             end
             break
 

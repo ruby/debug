@@ -420,10 +420,15 @@ module DEBUGGER__
       # * `fin[ish]`
       #   * Finish this frame. Resume the program until the current frame is finished.
       # * `fin[ish] <n>`
-      #   * Finish frames, same as `step <n>`.
+      #   * Finish `<n>`th frames.
       when 'fin', 'finish'
         cancel_auto_continue
         check_postmortem
+
+        if arg&.to_i == 0
+          raise 'finish command with 0 does not make sense.'
+        end
+
         step_command :finish, arg
 
       # * `c[ontinue]`
