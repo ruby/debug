@@ -34,9 +34,9 @@ module DEBUGGER__
       debug_code(program) do
         type 'continue'
         # stops at binding.break
-        assert_line_text('Student#initialize(name="John")')
+        assert_debugger_out('Student#initialize(name="John")')
         # stops when @name changes
-        assert_line_text(/#0  BP - Watch  #<Student:.*> @name = John/)
+        assert_debugger_out(/#0  BP - Watch  #<Student:.*> @name = John/)
         type 'continue'
       end
     end

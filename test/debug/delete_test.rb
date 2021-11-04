@@ -41,18 +41,18 @@ module DEBUGGER__
     def test_delete_keeps_current_breakpoints_if_not_confirmed
       debug_code(program) do
         type 'b 2'
-        assert_line_text(/\#0  BP \- Line  .*/)
+        assert_debugger_out(/\#0  BP \- Line  .*/)
         type 'b 3'
-        assert_line_text(/\#1  BP \- Line  .*/)
+        assert_debugger_out(/\#1  BP \- Line  .*/)
         type 'del'
-        assert_line_text([
+        assert_debugger_out([
           /\#0  BP \- Line  .*/,
           /\#1  BP \- Line  .*/,
           /Remove all breakpoints\? \[y\/N\]/
         ])
         type 'n' # confirmation
         type 'b'
-        assert_line_text([
+        assert_debugger_out([
           /\#0  BP \- Line  .*/,
           /\#1  BP \- Line  .*/
         ])

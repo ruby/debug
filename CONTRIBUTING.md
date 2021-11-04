@@ -159,7 +159,7 @@ module DEBUGGER__
       debug_code(program) do
         type 's'
         assert_line_num 2
-        assert_line_text([
+        assert_debugger_out([
           /\[1, 9\] in .*/,
           /     1\| module Foo/,
           /=>   2\|   class Bar/,
@@ -175,7 +175,7 @@ module DEBUGGER__
         ])
         type 'n'
         assert_line_num 3
-        assert_line_text([
+        assert_debugger_out([
           /\[1, 9\] in .*/,
           /     1\| module Foo/,
           /     2\|   class Bar/,
@@ -191,10 +191,10 @@ module DEBUGGER__
           /  \# and 1 frames \(use `bt' command for all frames\)/
         ])
         type 'b 7'
-        assert_line_text(/\#0  BP \- Line  .*/)
+        assert_debugger_out(/\#0  BP \- Line  .*/)
         type 'c'
         assert_line_num 7
-        assert_line_text([
+        assert_debugger_out([
           /\[2, 9\] in .*/,
           /     2\|   class Bar/,
           /     3\|     def self\.a/,
@@ -236,7 +236,7 @@ The following table shows examples of the gentest options.
 
 Passes if `expected` is equal to the location where debugger stops.
 
-- assert_line_text(text)
+- assert_debugger_out(text)
 
 Passes if `text` is included in the last debugger log.
 

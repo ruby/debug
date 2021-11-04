@@ -42,8 +42,8 @@ module DEBUGGER__
     def test_list_only_lists_part_of_the_program
       debug_code(program) do
         type 'list'
-        assert_line_text(/p 1/)
-        assert_line_text(/p 10/)
+        assert_debugger_out(/p 1/)
+        assert_debugger_out(/p 10/)
         assert_no_line_text(/p 11/)
 
         type 'q!'
@@ -54,7 +54,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'list 11'
         assert_no_line_text(/p 10/)
-        assert_line_text(/p 11/)
+        assert_debugger_out(/p 11/)
 
         type 'q!'
       end
@@ -63,16 +63,16 @@ module DEBUGGER__
     def test_list_continues_automatically
       debug_code(program) do
         type 'list'
-        assert_line_text(/p 10/)
+        assert_debugger_out(/p 10/)
         assert_no_line_text(/p 11/)
 
         type ""
-        assert_line_text(/p 20/)
+        assert_debugger_out(/p 20/)
         assert_no_line_text(/p 10/)
         assert_no_line_text(/p 21/)
 
         type ""
-        assert_line_text(/p 30/)
+        assert_debugger_out(/p 30/)
         assert_no_line_text(/p 20/)
         type 'q!'
       end

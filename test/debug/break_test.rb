@@ -37,7 +37,7 @@ module DEBUGGER__
     def test_break_with_namespaced_instance_method_stops_at_correct_place
       debug_code(program) do
         type 'break Foo::Bar#b'
-        assert_line_text(/#0  BP - Method \(pending\)  Foo::Bar#b/)
+        assert_debugger_out(/#0  BP - Method \(pending\)  Foo::Bar#b/)
         type 'continue'
         assert_line_num 8
         type 'quit!'
@@ -78,7 +78,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'break Foo::Baz.c'
         type 'break Foo::Baz.c'
-        assert_line_text(/duplicated breakpoint/)
+        assert_debugger_out(/duplicated breakpoint/)
         type 'continue'
         assert_line_num 15
         type 'continue'
@@ -121,7 +121,7 @@ module DEBUGGER__
         type "c"
         type "b B.bar"
         type "c"
-        assert_line_text(/Stop by #0  BP - Method  B.bar/)
+        assert_debugger_out(/Stop by #0  BP - Method  B.bar/)
         type "c"
         type "c"
       end
@@ -167,7 +167,7 @@ module DEBUGGER__
         type "c"
         type "b B#bar"
         type "c"
-        assert_line_text(/Stop by #0  BP - Method  B#bar/)
+        assert_debugger_out(/Stop by #0  BP - Method  B#bar/)
         type "c"
         type "c"
       end
@@ -188,7 +188,7 @@ module DEBUGGER__
         type "c"
         type "b b.bar"
         type "c"
-        assert_line_text(/Stop by #0  BP - Method  b.bar/)
+        assert_debugger_out(/Stop by #0  BP - Method  b.bar/)
         type "c"
         type "c"
       end
@@ -222,10 +222,10 @@ module DEBUGGER__
         type 'continue'
 
         if RUBY_VERSION.to_f >= 3.0
-          assert_line_text('Integer#abs at <internal:')
+          assert_debugger_out('Integer#abs at <internal:')
         else
           # it doesn't show any source before Ruby 3.0
-          assert_line_text('<main>')
+          assert_debugger_out('<main>')
         end
 
         type 'quit'
@@ -239,10 +239,10 @@ module DEBUGGER__
         type 'continue'
 
         if RUBY_VERSION.to_f >= 3.0
-          assert_line_text('Integer#div at')
+          assert_debugger_out('Integer#div at')
         else
           # it doesn't show any source before Ruby 3.0
-          assert_line_text('<main>')
+          assert_debugger_out('<main>')
         end
 
         type 'quit'
@@ -256,10 +256,10 @@ module DEBUGGER__
         type 'continue'
 
         if RUBY_VERSION.to_f >= 3.0
-          assert_line_text('Integer#times at')
+          assert_debugger_out('Integer#times at')
         else
           # it doesn't show any source before Ruby 3.0
-          assert_line_text('<main>')
+          assert_debugger_out('<main>')
         end
 
         type 'quit'
@@ -271,7 +271,7 @@ module DEBUGGER__
       debug_code program do
         type 'b 1.abs'
         type 'c'
-        assert_line_text(/:3\b/)
+        assert_debugger_out(/:3\b/)
         type 'c'
         assert_finish
       end
@@ -324,7 +324,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'break 6 pre: p s*10'
         type 'c'
-        assert_line_text(/aaaaaaaaaa/)
+        assert_debugger_out(/aaaaaaaaaa/)
         type 'c'
       end
     end
@@ -333,7 +333,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'break Object#foo pre: p "foobar"'
         type 'c'
-        assert_line_text(/foobar/)
+        assert_debugger_out(/foobar/)
         type 'c'
       end
     end
@@ -343,7 +343,7 @@ module DEBUGGER__
         type 'break 6 do: p s*10'
         type 'break 9'
         type 'c'
-        assert_line_text(/aaaaaaaaaa/)
+        assert_debugger_out(/aaaaaaaaaa/)
         type 'c'
       end
     end
@@ -353,7 +353,7 @@ module DEBUGGER__
         type 'break Object#foo do: p "foobar"'
         type 'break 9'
         type 'c'
-        assert_line_text(/foobar/)
+        assert_debugger_out(/foobar/)
         type 'c'
       end
     end
@@ -448,7 +448,7 @@ module DEBUGGER__
     def test_break_stops_at_correct_place_when_breakpoint_set_in_a_regular_line
       debug_code(program) do
         type 'break 4'
-        assert_line_text(/#0  BP - Line  .*\.rb:4 \(call\)/)
+        assert_debugger_out(/#0  BP - Line  .*\.rb:4 \(call\)/)
         type 'continue'
         assert_line_num 4
         type 'quit'
@@ -481,7 +481,7 @@ module DEBUGGER__
     def test_conditional_breakpoint_stops_if_condition_is_true
       debug_code program, remote: false do
         type 'break if: n == 1'
-        assert_line_text(/#0  BP - Check  n == 1/)
+        assert_debugger_out(/#0  BP - Check  n == 1/)
         type 'continue'
         assert_line_num 8
         type 'quit'
@@ -495,7 +495,7 @@ module DEBUGGER__
         type 'break if: xyzzy'
         type 'b 23'
         type 'c'
-        assert_line_text(/EVAL ERROR/)
+        assert_debugger_out(/EVAL ERROR/)
         type 'c'
         assert_finish
       end
@@ -504,7 +504,7 @@ module DEBUGGER__
     def test_conditional_breakpoint_stops_at_specified_location_if_condition_is_true
       debug_code(program) do
         type 'break 16 if: d == 1'
-        assert_line_text(/#0  BP - Line  .*\.rb:16 \(return\) if: d == 1/)
+        assert_debugger_out(/#0  BP - Line  .*\.rb:16 \(return\) if: d == 1/)
         type 'continue'
         assert_line_num 16
         type 'quit'
@@ -517,7 +517,7 @@ module DEBUGGER__
         type 'break 19'
         type 'break 18'
         type 'break 18'
-        assert_line_text(/duplicated breakpoint:/)
+        assert_debugger_out(/duplicated breakpoint:/)
         type 'continue'
         assert_line_num 18
         type 'continue'
@@ -529,7 +529,7 @@ module DEBUGGER__
     def test_break_with_colon_between_file_and_line_stops_at_correct_place
       debug_code(program) do
         type "b #{temp_file_path}:4"
-        assert_line_text(/\#0  BP \- Line  .*/)
+        assert_debugger_out(/\#0  BP \- Line  .*/)
         type 'c'
         assert_line_num 4
         type 'q!'
@@ -539,7 +539,7 @@ module DEBUGGER__
     def test_break_with_space_between_file_and_line_stops_at_correct_place
       debug_code(program) do
         type "b #{temp_file_path} 9"
-        assert_line_text(/\#0  BP \- Line  .*/)
+        assert_debugger_out(/\#0  BP \- Line  .*/)
         type 'c'
         assert_line_num 9
         type 'q!'

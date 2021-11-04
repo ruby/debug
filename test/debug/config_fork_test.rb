@@ -30,8 +30,8 @@ module DEBUGGER__
         type 'b 10'
         type 'c'
         assert_line_num 5
-        # assert_line_text([/DEBUGGER: Detaching after fork from parent process \d+/,]) # TODO
-        assert_line_text([
+        # assert_debugger_out([/DEBUGGER: Detaching after fork from parent process \d+/,]) # TODO
+        assert_debugger_out([
           # /DEBUGGER: Attaching after process \d+ fork to child process \d+/, # TODO
           /:child_enter/,
         ])
@@ -48,8 +48,8 @@ module DEBUGGER__
         type 'b 10'
         type 'c'
         assert_line_num 5
-        # assert_line_text([/DEBUGGER: Detaching after fork from parent process \d+/,]) # TODO
-        assert_line_text([
+        # assert_debugger_out([/DEBUGGER: Detaching after fork from parent process \d+/,]) # TODO
+        assert_debugger_out([
           # /DEBUGGER: Attaching after process \d+ fork to child process \d+/, # TODO
           /:child_enter/,
         ])
@@ -99,8 +99,8 @@ module DEBUGGER__
         type 'b 10'
         type 'c'
         assert_line_num 5
-        # assert_line_text([/DEBUGGER: Detaching after fork from parent process \d+/,]) # TODO
-        assert_line_text([
+        # assert_debugger_out([/DEBUGGER: Detaching after fork from parent process \d+/,]) # TODO
+        assert_debugger_out([
           # /DEBUGGER: Attaching after process \d+ fork to child process \d+/, # TODO
           /:child_enter/,
         ])
@@ -115,7 +115,7 @@ module DEBUGGER__
         type 'b 10'
         type 'c'
         assert_line_num 10
-        assert_line_text([
+        assert_debugger_out([
           # /DEBUGGER: Detaching after fork from child process \d+/, # TODO: puts on debug console
           /:parent_leave/
         ])

@@ -25,7 +25,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'c'
         type 'outline'
-        assert_line_text(/locals: foo/)
+        assert_debugger_out(/locals: foo/)
         type 'c'
       end
     end
@@ -34,7 +34,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'c'
         type 'outline foo'
-        assert_line_text([
+        assert_debugger_out([
           /Foo#methods: bar/,
           /instance variables: @var/
         ])
@@ -46,7 +46,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'c'
         type 'outline Foo'
-        assert_line_text(
+        assert_debugger_out(
           [
             /Class#methods: allocate/,
             /Foo\.methods: baz/,
@@ -60,9 +60,9 @@ module DEBUGGER__
       debug_code(program) do
         type 'c'
         type 'outline'
-        assert_line_text(/locals: foo/)
+        assert_debugger_out(/locals: foo/)
         type 'ls'
-        assert_line_text(/locals: foo/)
+        assert_debugger_out(/locals: foo/)
         type 'c'
       end
     end

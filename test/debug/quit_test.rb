@@ -13,7 +13,7 @@ module DEBUGGER__
     def test_quit_quits_debugger_process_if_confirmed
       debug_code(program) do
         type 'q'
-        assert_line_text(/Really quit\? \[Y\/n\]/)
+        assert_debugger_out(/Really quit\? \[Y\/n\]/)
         type 'y'
         assert_finish
       end
@@ -22,7 +22,7 @@ module DEBUGGER__
     def test_quit_does_not_quit_debugger_process_if_not_confirmed
       debug_code(program) do
         type 'q'
-        assert_line_text(/Really quit\? \[Y\/n\]/)
+        assert_debugger_out(/Really quit\? \[Y\/n\]/)
         type 'n'
         type 'q!'
         assert_finish

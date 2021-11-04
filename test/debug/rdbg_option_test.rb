@@ -13,7 +13,7 @@ module DEBUGGER__
     def test_debug_command_is_executed
       run_rdbg(program, options: "-e 'catch RuntimeError'") do
         type "c"
-        assert_line_text(/Stop by #0  BP - Catch  "RuntimeError"/)
+        assert_debugger_out(/Stop by #0  BP - Catch  "RuntimeError"/)
         type "q!"
       end
     end
@@ -30,7 +30,7 @@ module DEBUGGER__
     def test_debugger_doesnt_stop
       run_rdbg(program, options: "--nonstop") do
         type "a + 'bar'"
-        assert_line_text(/foobar/)
+        assert_debugger_out(/foobar/)
         type "c"
       end
     end
@@ -66,7 +66,7 @@ module DEBUGGER__
         with_init_script([TEMPFILE_BASENAME]) do |init_script|
           run_rdbg(program, options: "-x #{init_script.path}") do
             type "c"
-            assert_line_text(/Stop by #0  BP - Catch  "RuntimeError"/)
+            assert_debugger_out(/Stop by #0  BP - Catch  "RuntimeError"/)
             type "q!"
           end
         end
@@ -92,7 +92,7 @@ module DEBUGGER__
         with_init_script([TEMPFILE_BASENAME, ".rb"]) do |init_script|
           run_rdbg(program, options: "-x #{init_script.path}") do
             type "foo + 'bar'"
-            assert_line_text(/foobar/)
+            assert_debugger_out(/foobar/)
             type "q!"
           end
         end

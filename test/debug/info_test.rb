@@ -23,7 +23,7 @@ module DEBUGGER__
         type 'c'
 
         type 'info'
-        assert_line_text('#<RuntimeError: Boom>')
+        assert_debugger_out('#<RuntimeError: Boom>')
         type 'q!'
       end
     end
@@ -47,7 +47,7 @@ module DEBUGGER__
         type 'b 5'
         type 'c'
         type 'info'
-        assert_line_text(
+        assert_debugger_out(
           "%self = main\r\n" \
           "%return = 11\r\n" \
           "a = 1\r\n" \
@@ -62,10 +62,10 @@ module DEBUGGER__
         type 'b 4'
         type 'c'
         type 'info'
-        assert_line_text(/a = 1\b/)
+        assert_debugger_out(/a = 1\b/)
         type 'a = 128'
         type 'info'
-        assert_line_text(/a = 128\b/)
+        assert_debugger_out(/a = 128\b/)
         type 'c'
         assert_finish
       end
@@ -90,7 +90,7 @@ module DEBUGGER__
         type 'b 7'
         type 'c'
         type 'info threads'
-        assert_line_text(/#0 \(sleep\)@.*:7:in `<main>'/)
+        assert_debugger_out(/#0 \(sleep\)@.*:7:in `<main>'/)
         type 'q!'
       end
     end
@@ -100,7 +100,7 @@ module DEBUGGER__
         type 'b 7'
         type 'c'
         type 'info threads'
-        assert_line_text(/#1 \(sleep\)@.*:2 sleep/)
+        assert_debugger_out(/#1 \(sleep\)@.*:2 sleep/)
         type 'q!'
       end
     end
@@ -139,10 +139,10 @@ module DEBUGGER__
     def test_info_constant
       debug_code(program) do
         type 'info'
-        assert_line_text(/%self = main/)
+        assert_debugger_out(/%self = main/)
         assert_no_line_text(/SystemExit = SystemExit/)
         type 'info constant'
-        assert_line_text([
+        assert_debugger_out([
           /SystemExit = SystemExit/,
         ])
         type 'b 17'
@@ -151,7 +151,7 @@ module DEBUGGER__
         assert_line_num 18
 
         type 'info'
-        assert_line_text([
+        assert_debugger_out([
           /%self = D::C1/,
           /l1 = 10/,
           /l2 = 20/,
@@ -163,7 +163,7 @@ module DEBUGGER__
         assert_no_line_text(/C1 = D::C1/)
 
         type 'info constants'
-        assert_line_text([
+        assert_debugger_out([
           /C1 = D::C1/
         ])
 
@@ -171,9 +171,9 @@ module DEBUGGER__
         assert_line_num 19
 
         type 'info'
-        assert_line_text(/%self = \#<D::C1/)
+        assert_debugger_out(/%self = \#<D::C1/)
         type 'info constants'
-        assert_line_text([
+        assert_debugger_out([
           /CONST1 = 1/,
           /CONST2 = 2/,
           /C0_CONST1 = \-1/,

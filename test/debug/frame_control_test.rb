@@ -26,7 +26,7 @@ module DEBUGGER__
         type 'continue'
 
         type 'frame'
-        assert_line_text(/Foo#baz at/)
+        assert_debugger_out(/Foo#baz at/)
         type 'q!'
       end
     end
@@ -37,13 +37,13 @@ module DEBUGGER__
         type 'continue'
 
         type 'frame'
-        assert_line_text(/Foo#baz at/)
+        assert_debugger_out(/Foo#baz at/)
         type 'up'
-        assert_line_text(/Foo#bar at/)
+        assert_debugger_out(/Foo#bar at/)
         type 'up'
-        assert_line_text(/<main> at/)
+        assert_debugger_out(/<main> at/)
         type 'frame'
-        assert_line_text(/<main> at/)
+        assert_debugger_out(/<main> at/)
         type 'q!'
       end
     end
@@ -54,13 +54,13 @@ module DEBUGGER__
         type 'continue'
 
         type 'up'
-        assert_line_text(/Foo#bar at/)
+        assert_debugger_out(/Foo#bar at/)
         type 'up'
-        assert_line_text(/<main> at/)
+        assert_debugger_out(/<main> at/)
         type 'down'
-        assert_line_text(/Foo#bar at/)
+        assert_debugger_out(/Foo#bar at/)
         type 'down'
-        assert_line_text(/Foo#baz at/)
+        assert_debugger_out(/Foo#baz at/)
         type 'q!'
       end
     end

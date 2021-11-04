@@ -17,9 +17,9 @@ module DEBUGGER__
     def test_debugger_stops_when_the_exception_raised
       debug_code(program) do
         type 'catch ZeroDivisionError'
-        assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
+        assert_debugger_out(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
-        assert_line_text('Integer#/')
+        assert_debugger_out('Integer#/')
         type 'q!'
       end
     end
@@ -28,7 +28,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'catch StandardError'
         type 'continue'
-        assert_line_text('Integer#/')
+        assert_debugger_out('Integer#/')
         type 'q!'
       end
     end
@@ -45,18 +45,18 @@ module DEBUGGER__
     def test_catch_works_with_command
       debug_code(program) do
         type 'catch ZeroDivisionError pre: p "1234"'
-        assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
+        assert_debugger_out(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
-        assert_line_text(/1234/)
+        assert_debugger_out(/1234/)
         type 'continue'
         type 'continue'
       end
 
       debug_code(program) do
         type 'catch ZeroDivisionError do: p "1234"'
-        assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
+        assert_debugger_out(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
-        assert_line_text(/1234/)
+        assert_debugger_out(/1234/)
         type 'continue'
       end
     end
@@ -64,7 +64,7 @@ module DEBUGGER__
     def test_catch_works_with_condition
       debug_code(program) do
         type 'catch ZeroDivisionError if: a == 2 do: p "1234"'
-        assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
+        assert_debugger_out(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
         assert_no_line_text(/1234/)
         type 'continue'
@@ -75,10 +75,10 @@ module DEBUGGER__
       debug_code(program) do
         type 'catch ZeroDivisionError'
         type 'catch ZeroDivisionError'
-        assert_line_text(/duplicated breakpoint:/)
+        assert_debugger_out(/duplicated breakpoint:/)
         type 'continue'
 
-        assert_line_text('Integer#/') # stopped by catch
+        assert_debugger_out('Integer#/') # stopped by catch
         type 'continue'
 
         type 'continue' # exit the final binding.b
@@ -107,9 +107,9 @@ module DEBUGGER__
       debug_code(program) do
         type 'catch ZeroDivisionError'
         type 'continue'
-        assert_line_text('Integer#/')
+        assert_debugger_out('Integer#/')
         type 's'
-        assert_line_text('Object#bar')
+        assert_debugger_out('Object#bar')
         type 'q!'
       end
     end

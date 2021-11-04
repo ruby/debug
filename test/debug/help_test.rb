@@ -13,7 +13,7 @@ module DEBUGGER__
     def test_help_prints_all_help_messages_by_default
       debug_code(program) do
         type "help"
-        assert_line_text(
+        assert_debugger_out(
           [
             /### Breakpoint/,
             /Show all breakpoints/,
@@ -27,7 +27,7 @@ module DEBUGGER__
     def test_help_only_prints_given_command_when_specified
       debug_code(program) do
         type "help break"
-        assert_line_text(/Show all breakpoints/)
+        assert_debugger_out(/Show all breakpoints/)
         assert_no_line_text(/### Frame control/)
         type "continue"
       end
@@ -36,7 +36,7 @@ module DEBUGGER__
     def test_help_with_undefined_command_shows_an_error
       debug_code(program) do
         type 'help foo'
-        assert_line_text(/not found: foo/)
+        assert_debugger_out(/not found: foo/)
         type 'q!'
       end
     end

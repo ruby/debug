@@ -12,7 +12,7 @@ module DEBUGGER__
       })
     end
 
-    def assert_line_text(text)
+    def assert_debugger_out(text)
       @scenario.push(Proc.new { |test_info|
         result = collect_recent_backlog(test_info.last_backlog)
 

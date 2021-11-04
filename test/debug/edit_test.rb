@@ -15,7 +15,7 @@ module DEBUGGER__
 
       debug_code(program, remote: false) do
         type "edit"
-        assert_line_text(/command: null_editor/)
+        assert_debugger_out(/command: null_editor/)
         type "continue"
       end
     end
@@ -25,7 +25,7 @@ module DEBUGGER__
 
       debug_code(program, remote: false) do
         type "edit foo.rb"
-        assert_line_text(/not found/)
+        assert_debugger_out(/not found/)
         type "continue"
       end
     end
@@ -35,7 +35,7 @@ module DEBUGGER__
 
       debug_code(program, remote: false) do
         type "edit"
-        assert_line_text(/can not find editor setting/)
+        assert_debugger_out(/can not find editor setting/)
         type "continue"
       end
     end

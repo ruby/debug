@@ -21,7 +21,7 @@ module DEBUGGER__
     def test_step_back_at_first
       debug_code(program) do
         type 'step back'
-        assert_line_text(/Can not step back more\./)
+        assert_debugger_out(/Can not step back more\./)
         type 'q!'
       end
     end
@@ -33,19 +33,19 @@ module DEBUGGER__
         type 'step back'
         type 'step back'
         type 'step back'
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] =>   5\| p a \+= 1/,
         ])
         type 'step back'
-        assert_line_text(/\[replay\] Can not step back more\./)
+        assert_debugger_out(/\[replay\] Can not step back more\./)
         type 'step'
         assert_line_num 6
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] =>   6\| p a \+= 1/,
         ])
         type 'step'
         assert_line_num 7
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] =>   7\| binding\.b/,
         ])
         type 'record off'
@@ -55,7 +55,7 @@ module DEBUGGER__
         type 'step'
         assert_line_num 9
         type 'step back'
-        assert_line_text(/Can not step back more\./)
+        assert_debugger_out(/Can not step back more\./)
         type 'q!'
       end
     end
@@ -86,48 +86,48 @@ module DEBUGGER__
         type 'record on'
         type 'c'
         assert_line_num 9
-        assert_line_text([
+        assert_debugger_out([
           /=>\#0\tObject\#bar\(n=121\)/,
           /  \#1\tObject\#foo\(n=20\)/,
         ])
         type 'step back'
         type 'step back'
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] =>\#0\tObject\#bar\(n=21\)/,
           /\[replay\]   \#1\tObject\#foo\(n=20\)/,
         ])
         type 'i'
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] n = 21/
         ])
         type 'step back'
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] =>\#0\tObject\#foo\(n=20\)/,
         ])
         type 'i'
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] n = 20/
         ])
         type 'step back'
         type 'i'
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] n = 10/
         ])
         type 'step'
         assert_line_num 4
         type 'i'
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] n = 20/
         ])
         type 'step '
         type 'i'
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] n = 21/
         ])
         type 'step'
         assert_line_num 9
         type 'i'
-        assert_line_text([
+        assert_debugger_out([
           /\[replay\] n = 121/
         ])
         type 'step'

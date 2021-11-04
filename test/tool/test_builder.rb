@@ -93,8 +93,8 @@ module DEBUGGER__
             command = write_user_input(write, 'quit')
           when %r{\[y/n\]}i
             @scenario.push("type '#{command}'")
-            @scenario.push("assert_line_text(#{format_as_string})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_STRING'] == 'false'
-            @scenario.push("assert_line_text(#{format_as_regexp})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] == 'false'
+            @scenario.push("assert_debugger_out(#{format_as_string})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_STRING'] == 'false'
+            @scenario.push("assert_debugger_out(#{format_as_regexp})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] == 'false'
             @scenario.push("type '#{write_user_input(write, '')}'")
             command = nil
             @last_backlog.clear
@@ -110,8 +110,8 @@ module DEBUGGER__
                 @internal_info = JSON.parse(Regexp.last_match(1))
                 @scenario.push("assert_line_num #{@internal_info['line']}")
               end
-              @scenario.push("assert_line_text(#{format_as_string})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_STRING'] == 'false'
-              @scenario.push("assert_line_text(#{format_as_regexp})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] == 'false'
+              @scenario.push("assert_debugger_out(#{format_as_string})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_STRING'] == 'false'
+              @scenario.push("assert_debugger_out(#{format_as_regexp})") unless ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] == 'false'
             end
             @last_backlog.clear
           when /q!$/, /quit!$/

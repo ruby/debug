@@ -19,7 +19,7 @@ module DEBUGGER__
     def test_trace
       debug_code(program) do
         type 'trace'
-        assert_line_text(/Tracers/)
+        assert_debugger_out(/Tracers/)
         type 'trace line'
         type 'trace call'
         type 'trace'
@@ -30,23 +30,23 @@ module DEBUGGER__
     def test_trace_off
       debug_code(program) do
         type 'trace'
-        assert_line_text(/Tracers/)
+        assert_debugger_out(/Tracers/)
         type 'trace line'
         type 'trace call'
         type 'trace'
-        assert_line_text [/#0 LineTracer \(enabled\)/, /#1 CallTracer \(enabled\)/]
+        assert_debugger_out [/#0 LineTracer \(enabled\)/, /#1 CallTracer \(enabled\)/]
         type 'trace off 0'
         type 'trace'
-        assert_line_text [/#0 LineTracer \(disabled\)/, /#1 CallTracer \(enabled\)/]
+        assert_debugger_out [/#0 LineTracer \(disabled\)/, /#1 CallTracer \(enabled\)/]
         type 'trace off 0'
         type 'trace'
-        assert_line_text [/#0 LineTracer \(disabled\)/, /#1 CallTracer \(enabled\)/]
+        assert_debugger_out [/#0 LineTracer \(disabled\)/, /#1 CallTracer \(enabled\)/]
         type 'trace off 1'
         type 'trace'
-        assert_line_text [/#0 LineTracer \(disabled\)/, /#1 CallTracer \(disabled\)/]
+        assert_debugger_out [/#0 LineTracer \(disabled\)/, /#1 CallTracer \(disabled\)/]
         type 'trace off 1'
         type 'trace'
-        assert_line_text [/#0 LineTracer \(disabled\)/, /#1 CallTracer \(disabled\)/]
+        assert_debugger_out [/#0 LineTracer \(disabled\)/, /#1 CallTracer \(disabled\)/]
         type 'q!'
       end
     end
@@ -88,10 +88,10 @@ module DEBUGGER__
     def test_trace_line_prints_line_execution
       debug_code(program) do
         type 'trace line'
-        assert_line_text(/Enable LineTracer \(enabled\)/)
+        assert_debugger_out(/Enable LineTracer \(enabled\)/)
         type 'c'
-        assert_line_text(/DEBUGGER \(trace\/line\)/)
-        assert_line_text([
+        assert_debugger_out(/DEBUGGER \(trace\/line\)/)
+        assert_debugger_out([
           /rb:5/,
           /rb:9/,
           /rb:2/,
@@ -105,12 +105,12 @@ module DEBUGGER__
     def test_debugger_rejects_duplicated_tracer
       debug_code(program) do
         type 'trace line'
-        assert_line_text(/Enable LineTracer \(enabled\)/)
+        assert_debugger_out(/Enable LineTracer \(enabled\)/)
         type 'trace line'
-        assert_line_text(/Duplicated tracer: LineTracer \(disabled\)/)
+        assert_debugger_out(/Duplicated tracer: LineTracer \(disabled\)/)
         type 'c'
-        assert_line_text(/DEBUGGER \(trace\/line\)/)
-        assert_line_text([
+        assert_debugger_out(/DEBUGGER \(trace\/line\)/)
+        assert_debugger_out([
           /rb:5/,
           /rb:9/,
           /rb:2/,
@@ -124,15 +124,15 @@ module DEBUGGER__
     def test_trace_line_filters_output_with_file_path
       debug_code(program) do
         type 'trace line /debug/'
-        assert_line_text(/Enable LineTracer/)
+        assert_debugger_out(/Enable LineTracer/)
         type 'c'
-        assert_line_text(/DEBUGGER \(trace\/line\)/)
+        assert_debugger_out(/DEBUGGER \(trace\/line\)/)
         type 'q!'
       end
 
       debug_code(program) do
         type 'trace line /abc/'
-        assert_line_text(/Enable LineTracer/)
+        assert_debugger_out(/Enable LineTracer/)
         type 'c'
 
         assert_no_line_text(/DEBUGGER \(trace\/line\)/)
@@ -164,10 +164,10 @@ module DEBUGGER__
     def test_trace_exception_prints_raised_exception
       debug_code(program) do
         type 'trace exception'
-        assert_line_text(/Enable ExceptionTracer \(enabled\)/)
+        assert_debugger_out(/Enable ExceptionTracer \(enabled\)/)
         type 'c'
-        assert_line_text(/trace\/exception.+RuntimeError: foo/)
-        assert_line_text(/trace\/exception.+RuntimeError: bar/)
+        assert_debugger_out(/trace\/exception.+RuntimeError: foo/)
+        assert_debugger_out(/trace\/exception.+RuntimeError: bar/)
         type 'q!'
       end
     end
@@ -175,11 +175,11 @@ module DEBUGGER__
     def test_debugger_rejects_duplicated_tracer
       debug_code(program) do
         type 'trace exception'
-        assert_line_text(/Enable ExceptionTracer \(enabled\)/)
+        assert_debugger_out(/Enable ExceptionTracer \(enabled\)/)
         type 'trace exception'
-        assert_line_text(/Duplicated tracer: ExceptionTracer \(disabled\)/)
+        assert_debugger_out(/Duplicated tracer: ExceptionTracer \(disabled\)/)
         type 'c'
-        assert_line_text(
+        assert_debugger_out(
           [
             /trace\/exception.+RuntimeError: foo/,
             /trace\/exception.+RuntimeError: bar/
@@ -192,12 +192,12 @@ module DEBUGGER__
     def test_debugger_accepts_multiple_exception_tracers_with_different_patterns
       debug_code(program) do
         type 'trace exception /foo/'
-        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/foo\//)
+        assert_debugger_out(/Enable ExceptionTracer \(enabled\) with pattern \/foo\//)
         type 'trace exception /bar/'
-        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/bar\//)
+        assert_debugger_out(/Enable ExceptionTracer \(enabled\) with pattern \/bar\//)
         assert_no_line_text(/Duplicated tracer: ExceptionTracer/)
         type 'c'
-        assert_line_text(
+        assert_debugger_out(
           [
             /trace\/exception.+RuntimeError: foo/,
             /trace\/exception.+RuntimeError: bar/
@@ -210,8 +210,8 @@ module DEBUGGER__
     def test_trace_exception_filters_output_with_file_path
       debug_code(program) do
         type 'trace exception /abc/'
-        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/abc\//)
-        assert_line_text(/Enable ExceptionTracer/)
+        assert_debugger_out(/Enable ExceptionTracer \(enabled\) with pattern \/abc\//)
+        assert_debugger_out(/Enable ExceptionTracer/)
         type 'c'
         assert_no_line_text(/trace\/exception.+RuntimeError: foo/)
         type 'q!'
@@ -219,10 +219,10 @@ module DEBUGGER__
 
       debug_code(program) do
         type 'trace exception /debug/'
-        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/debug\//)
+        assert_debugger_out(/Enable ExceptionTracer \(enabled\) with pattern \/debug\//)
         type 'c'
-        assert_line_text(/trace\/exception.+RuntimeError: foo/)
-        assert_line_text(/trace\/exception.+RuntimeError: bar/)
+        assert_debugger_out(/trace\/exception.+RuntimeError: foo/)
+        assert_debugger_out(/trace\/exception.+RuntimeError: bar/)
         type 'q!'
       end
     end
@@ -230,9 +230,9 @@ module DEBUGGER__
     def test_trace_exception_filters_output_with_exception
       debug_code(program) do
         type 'trace exception /foo/'
-        assert_line_text(/Enable ExceptionTracer \(enabled\) with pattern \/foo\//)
+        assert_debugger_out(/Enable ExceptionTracer \(enabled\) with pattern \/foo\//)
         type 'c'
-        assert_line_text(/trace\/exception.+RuntimeError: foo/)
+        assert_debugger_out(/trace\/exception.+RuntimeError: foo/)
         assert_no_line_text(/trace\/exception.+RuntimeError: bar/)
         type 'q!'
       end
@@ -258,9 +258,9 @@ module DEBUGGER__
     def test_trace_call_prints_method_calls
       debug_code(program) do
         type 'trace call'
-        assert_line_text(/Enable CallTracer/)
+        assert_debugger_out(/Enable CallTracer/)
         type 'c'
-        assert_line_text(
+        assert_debugger_out(
           [
             /Object#foo at/,
             /Object#foo #=> nil/,
@@ -278,11 +278,11 @@ module DEBUGGER__
     def test_debugger_rejects_duplicated_tracer
       debug_code(program) do
         type 'trace call'
-        assert_line_text(/Enable CallTracer/)
+        assert_debugger_out(/Enable CallTracer/)
         type 'trace call'
-        assert_line_text(/Duplicated tracer: CallTracer \(disabled\)/)
+        assert_debugger_out(/Duplicated tracer: CallTracer \(disabled\)/)
         type 'c'
-        assert_line_text(
+        assert_debugger_out(
           [
             /Object#foo at/,
             /Object#foo #=> nil/,
@@ -297,12 +297,12 @@ module DEBUGGER__
     def test_debugger_accepts_multiple_call_tracers_with_different_patterns
       debug_code(program) do
         type 'trace call /foo/'
-        assert_line_text(/Enable CallTracer \(enabled\) with pattern \/foo\//)
+        assert_debugger_out(/Enable CallTracer \(enabled\) with pattern \/foo\//)
         type 'trace call /bar/'
-        assert_line_text(/Enable CallTracer \(enabled\) with pattern \/bar\//)
+        assert_debugger_out(/Enable CallTracer \(enabled\) with pattern \/bar\//)
         assert_no_line_text(/Duplicated tracer: CallTracer \(disabled\)/)
         type 'c'
-        assert_line_text(
+        assert_debugger_out(
           [
             /Object#foo at/,
             /Object#foo #=> nil/,
@@ -317,10 +317,10 @@ module DEBUGGER__
     def test_trace_call_with_pattern_filters_output_with_method_name
       debug_code(program) do
         type 'trace call /bar/'
-        assert_line_text(/Enable CallTracer/)
+        assert_debugger_out(/Enable CallTracer/)
         type 'c'
         assert_no_line_text(/Object#foo at/)
-        assert_line_text([
+        assert_debugger_out([
             /Object#bar at/,
             /Object#bar #=> nil/
           ]
@@ -332,9 +332,9 @@ module DEBUGGER__
     def test_trace_call_with_pattern_filters_output_with_file_path
       debug_code(program) do
         type 'trace call /debug/'
-        assert_line_text(/Enable CallTracer/)
+        assert_debugger_out(/Enable CallTracer/)
         type 'c'
-        assert_line_text(
+        assert_debugger_out(
           [
             /Object#foo at/,
             /Object#foo #=> nil/,
@@ -347,7 +347,7 @@ module DEBUGGER__
 
       debug_code(program) do
         type 'trace call /not_a_path/'
-        assert_line_text(/Enable CallTracer/)
+        assert_debugger_out(/Enable CallTracer/)
         type 'c'
         assert_no_line_text(/Object#foo/)
         assert_no_line_text(/Object#bar/)
@@ -386,7 +386,7 @@ module DEBUGGER__
     def test_not_tracing_anonymous_rest_argument
       debug_code(program) do
         type 'trace object 1'
-        assert_line_text(/Enable ObjectTracer/)
+        assert_debugger_out(/Enable ObjectTracer/)
         type 'c'
         assert_no_line_text(/trace\/object/)
         type 'q!'
@@ -396,9 +396,9 @@ module DEBUGGER__
     def test_tracing_key_argument
       debug_code(program) do
         type 'trace object 2'
-        assert_line_text(/Enable ObjectTracer/)
+        assert_debugger_out(/Enable ObjectTracer/)
         type 'c'
-        assert_line_text(/2 is used as a parameter a of Object#bar/)
+        assert_debugger_out(/2 is used as a parameter a of Object#bar/)
         type 'q!'
       end
     end
@@ -406,13 +406,13 @@ module DEBUGGER__
     def test_debugger_rejects_duplicated_tracer
       debug_code(program) do
         type 'trace object 2'
-        assert_line_text(/Enable ObjectTracer for 2 \(enabled\)/)
+        assert_debugger_out(/Enable ObjectTracer for 2 \(enabled\)/)
         type 'trace object 2'
-        assert_line_text(/Duplicated tracer: ObjectTracer for 2 \(disabled\)/)
+        assert_debugger_out(/Duplicated tracer: ObjectTracer for 2 \(disabled\)/)
         type 'trace object 3'
-        assert_line_text(/Enable ObjectTracer for 3 \(enabled\)/)
+        assert_debugger_out(/Enable ObjectTracer for 3 \(enabled\)/)
         type 'c'
-        assert_line_text(
+        assert_debugger_out(
           [
             /2 is used as a parameter a of Object#bar/,
             /3 is used as a parameter in kw of Object#baz/
@@ -425,9 +425,9 @@ module DEBUGGER__
     def test_tracing_keyrest_argument
       debug_code(program) do
         type 'trace object 3'
-        assert_line_text(/Enable ObjectTracer/)
+        assert_debugger_out(/Enable ObjectTracer/)
         type 'c'
-        assert_line_text(/3 is used as a parameter in kw of Object#baz/)
+        assert_debugger_out(/3 is used as a parameter in kw of Object#baz/)
         type 'q!'
       end
     end
@@ -443,9 +443,9 @@ module DEBUGGER__
 
       debug_code(program) do
         type 'trace object 1'
-        assert_line_text(/Enable ObjectTracer/)
+        assert_debugger_out(/Enable ObjectTracer/)
         type 'c'
-        assert_line_text(/1 receives #to_s \(Integer#to_s\)/)
+        assert_debugger_out(/1 receives #to_s \(Integer#to_s\)/)
         type 'c'
       end
     end
@@ -465,10 +465,10 @@ module DEBUGGER__
 
       debug_code(program) do
         type 'trace object 1'
-        assert_line_text(/Enable ObjectTracer/)
+        assert_debugger_out(/Enable ObjectTracer/)
         type 'c'
-        assert_line_text(/1 is used as a parameter int of block\{\}/)
-        assert_line_text(/1 receives #to_s \(Integer#to_s\)/)
+        assert_debugger_out(/1 is used as a parameter int of block\{\}/)
+        assert_debugger_out(/1 receives #to_s \(Integer#to_s\)/)
         type 'c'
       end
     end
@@ -510,7 +510,7 @@ module DEBUGGER__
           type 'trace object Foo'
           type 'trace object f'
           type 'c'
-          assert_line_text([
+          assert_debugger_out([
             /Foo receives .baz \(#<Class:Foo>.baz\) at/,
             /#<Foo:.*> receives #bar \(Foo#bar\) at/,
             /#<Foo:.*> receives .foobar/
@@ -523,7 +523,7 @@ module DEBUGGER__
           type 'trace object Bar'
           type 'trace object b'
           type 'c'
-          assert_line_text([
+          assert_debugger_out([
             /Bar receives .baz \(#<Class:Foo>.baz\) at/,
             /#<Bar:.*> receives #bar \(Foo#bar\) at/,
             /#<Bar:.*> receives .foobar/

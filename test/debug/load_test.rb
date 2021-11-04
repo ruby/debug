@@ -15,7 +15,7 @@ module DEBUGGER__
       debug_code(program) do
         type "c"
         type "p r"
-        assert_line_text('false')
+        assert_debugger_out('false')
         type 'q!'
       end
     end

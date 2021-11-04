@@ -20,13 +20,13 @@ module DEBUGGER__
       debug_code(program) do
         type 'config'
         # show all configurations with descriptions
-        assert_line_text([
+        assert_debugger_out([
           /show_src_lines = \(default\)/,
           /show_frames = \(default\)/
         ])
         # only show this configuration
         type 'config show_frames'
-        assert_line_text([
+        assert_debugger_out([
           /show_frames = \(default\)/
         ])
         type 'q!'
@@ -36,14 +36,14 @@ module DEBUGGER__
     def test_config_show_frames_set_with_eq
       debug_code(program) do
         type 'config show_frames=1'
-        assert_line_text([
+        assert_debugger_out([
           /show_frames = 1/
         ])
         type 'b 5'
         type 'c'
         assert_line_num 5
         # only show 1 frame, and 2 frames are left.
-        assert_line_text([
+        assert_debugger_out([
           /  # and 2 frames \(use `bt' command for all frames\)/,
         ])
         type 'q!'
@@ -53,14 +53,14 @@ module DEBUGGER__
     def test_config_show_frames_set
       debug_code(program) do
         type 'config set show_frames 1'
-        assert_line_text([
+        assert_debugger_out([
           /show_frames = 1/
         ])
         type 'b 5'
         type 'c'
         assert_line_num 5
         # only show 1 frame, and 2 frames are left.
-        assert_line_text([
+        assert_debugger_out([
           /  # and 2 frames \(use `bt' command for all frames\)/,
         ])
         type 'q!'
@@ -93,7 +93,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'config set show_src_lines 2'
         type 'continue'
-        assert_line_text([
+        assert_debugger_out([
           /9| p 9/,
           /=>   10| binding.b/
         ])
@@ -131,7 +131,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'config set show_frames 2'
         type 'continue'
-        assert_line_text([
+        assert_debugger_out([
           /Object#foo at/,
           /Object#m3 at/
         ])
@@ -204,11 +204,11 @@ module DEBUGGER__
         type 's'
 
         # skip definition of lib_m1
-        assert_line_text(/foo \+ lib_m2/)
+        assert_debugger_out(/foo \+ lib_m2/)
         assert_no_line_text(/def lib_m1/)
 
         # don't display frame that matches skip_path
-        assert_line_text([
+        assert_debugger_out([
           /#0\s+block in <main> at/,
           /#2\s+<main> at/
         ])
@@ -217,7 +217,7 @@ module DEBUGGER__
 
         # make sure the debugger and program can proceed normally
         type 'p "result: #{result.to_s}"'
-        assert_line_text(/result: 3/)
+        assert_debugger_out(/result: 3/)
 
         type 'c'
       end
@@ -241,13 +241,13 @@ module DEBUGGER__
         type 'record on'
         type 'c'
         type 'record'
-        assert_line_text(/5 records/)
+        assert_debugger_out(/5 records/)
         type 's back'
         type 's back'
         type 's back'
         type 's back'
         type 's back'
-        assert_line_text(/foo \+ lib_m2/)
+        assert_debugger_out(/foo \+ lib_m2/)
         assert_no_line_text(/def lib_m1/)
 
         type 'c'
@@ -259,7 +259,7 @@ module DEBUGGER__
       debug_code do
         type 'catch RuntimeError'
         type 'c'
-        assert_line_text(/RuntimeError/)
+        assert_debugger_out(/RuntimeError/)
         type 'c'
         type 'c'
       end
@@ -286,17 +286,17 @@ module DEBUGGER__
     def test_p_with_keep_alloc_site
       debug_code(program) do
         type 'config set keep_alloc_site true'
-        assert_line_text([
+        assert_debugger_out([
           /keep_alloc_site = true/
         ])
         type 's'
         assert_line_num 2
         type 'p a'
-        assert_line_text([
+        assert_debugger_out([
           /allocated at/
         ])
         type 'pp a'
-        assert_line_text([
+        assert_debugger_out([
           /allocated at/
         ])
         type 'q!'
@@ -322,7 +322,7 @@ module DEBUGGER__
       ENV["RUBY_DEBUG_LOG_LEVEL"] = "INFO"
       debug_code(program, remote: false) do
         type 'Thread.new {}.join'
-        assert_line_text(/DEBUGGER \(INFO\): Thread #\d+ is created/)
+        assert_debugger_out(/DEBUGGER \(INFO\): Thread #\d+ is created/)
         type 'c'
       end
     ensure
@@ -336,7 +336,7 @@ module DEBUGGER__
         assert_no_line_text(/Thread #\d+ is created/)
         type 'config set log_level INFO'
         type 'Thread.new {}.join'
-        assert_line_text(/DEBUGGER \(INFO\): Thread #\d+ is created/)
+        assert_debugger_out(/DEBUGGER \(INFO\): Thread #\d+ is created/)
         type 'c'
       end
     end

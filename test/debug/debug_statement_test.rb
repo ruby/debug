@@ -30,7 +30,7 @@ module DEBUGGER__
     def test_breakpoint_fires_correctly
       debug_code(program) do
         type 'continue'
-        assert_line_text('Foo#bar')
+        assert_debugger_out('Foo#bar')
         type 'q!'
       end
     end
@@ -57,13 +57,13 @@ module DEBUGGER__
     def test_breakpoint_executes_command_argument_correctly
       debug_code(program) do
         type 'continue'
-        assert_line_text('Foo#bar')
-        assert_line_text(/aaaaa/)
+        assert_debugger_out('Foo#bar')
+        assert_debugger_out(/aaaaa/)
         # should stay at Foo#bar
         assert_no_line_text(/Foo#baz/)
 
         type 'continue'
-        assert_line_text('Foo#baz')
+        assert_debugger_out('Foo#baz')
         type 'continue'
       end
     end
@@ -98,9 +98,9 @@ module DEBUGGER__
     def test_breakpoint_execute_command_argument_correctly
       debug_code(program) do
         type 'continue'
-        assert_line_text(/aaaaa/)
+        assert_debugger_out(/aaaaa/)
         # should move on to the next bp
-        assert_line_text('Foo#baz')
+        assert_debugger_out('Foo#baz')
         type 'continue'
       end
     end
@@ -131,8 +131,8 @@ module DEBUGGER__
       def test_debugger_auto_continues_across_threads
         debug_code(program) do
           type 'continue'
-          assert_line_text(/foobar/)
-          assert_line_text(/barbaz/)
+          assert_debugger_out(/foobar/)
+          assert_debugger_out(/barbaz/)
           type 'continue'
         end
       end

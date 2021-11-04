@@ -16,13 +16,13 @@ module DEBUGGER__
     def test_display_displays_expressions_when_the_program_stopps
       debug_code(program) do
         type "display a"
-        assert_line_text(/0: a =/)
+        assert_debugger_out(/0: a =/)
         type "display b"
-        assert_line_text(/0: a = /)
-        assert_line_text(/1: b = /)
+        assert_debugger_out(/0: a = /)
+        assert_debugger_out(/1: b = /)
         type "continue"
-        assert_line_text(/0: a = 1/)
-        assert_line_text(/1: b = 2/)
+        assert_debugger_out(/0: a = 1/)
+        assert_debugger_out(/1: b = 2/)
 
         type "q!"
       end
@@ -33,8 +33,8 @@ module DEBUGGER__
         type "display a"
         type "display b"
         type "display"
-        assert_line_text(/0: a = /)
-        assert_line_text(/1: b = /)
+        assert_debugger_out(/0: a = /)
+        assert_debugger_out(/1: b = /)
 
         type "q!"
       end

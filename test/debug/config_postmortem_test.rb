@@ -20,14 +20,14 @@ module DEBUGGER__
       debug_code(program) do
         type 'config postmortem = true'
         type 'c'
-        assert_line_text(/Enter postmortem mode with RuntimeError/)
+        assert_debugger_out(/Enter postmortem mode with RuntimeError/)
         type 'p x'
-        assert_line_text(/=> 4/)
+        assert_debugger_out(/=> 4/)
         type 'up'
         type 'p y'
-        assert_line_text(/=> 1/)
+        assert_debugger_out(/=> 1/)
         type 'step'
-        assert_line_text(/Can not use this command on postmortem mode/)
+        assert_debugger_out(/Can not use this command on postmortem mode/)
         type 'c'
         assert_finish
       end
@@ -37,14 +37,14 @@ module DEBUGGER__
       ENV["RUBY_DEBUG_POSTMORTEM"] = "true"
       debug_code(program) do
         type 'c'
-        assert_line_text(/Enter postmortem mode with RuntimeError/)
+        assert_debugger_out(/Enter postmortem mode with RuntimeError/)
         type 'p x'
-        assert_line_text(/=> 4/)
+        assert_debugger_out(/=> 4/)
         type 'up'
         type 'p y'
-        assert_line_text(/=> 1/)
+        assert_debugger_out(/=> 1/)
         type 'step'
-        assert_line_text(/Can not use this command on postmortem mode/)
+        assert_debugger_out(/Can not use this command on postmortem mode/)
         type 'c'
         assert_finish
       end
@@ -79,15 +79,15 @@ module DEBUGGER__
         type 'c'
         assert_line_num 6
         type 'bt'
-        assert_line_text([/bar/, /foo/])
+        assert_debugger_out([/bar/, /foo/])
         type 'c'
         assert_line_num 13
         type 'p v'
-        assert_line_text(/=> nil/)
+        assert_debugger_out(/=> nil/)
         type 'step'
         type 'step'
         type 'p v'
-        assert_line_text(/=> :ok1/)
+        assert_debugger_out(/=> :ok1/)
         type 'c'
         assert_finish
       end
