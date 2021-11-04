@@ -110,29 +110,14 @@ module DEBUGGER__
         type 's'
         assert_line_num 3
         type 'fin'
+        assert_line_num 4
+        type 's'
         assert_line_num 12
         type 's'
         assert_line_num 7
         type 'fin'
-        assert_line_num 13
-        type 'quit'
-        type 'y'
-      end
-    end
-
-    def test_finish_with_number_leaves_the_current_frame_and_advance_n_frames
-      debug_code(program) do
-        type 'b 11'
-        type 'c'
-        assert_line_num 11
-        type 's'
-        assert_line_num 3
-        type 'fin 2'
-        assert_line_num 7
-        type 'fin'
-        assert_line_num 13
-        type 'quit'
-        type 'y'
+        assert_line_num 8
+        type 'q!'
       end
     end
   end
@@ -146,7 +131,7 @@ module DEBUGGER__
         1| 2.times do |n|
         2|   n
         3| end
-        4| a += 1
+        4| :ok
       RUBY
     end
 
@@ -183,17 +168,128 @@ module DEBUGGER__
         type 'y'
       end
     end
+  end
 
-    def test_finish_leaves_blocks_right_away
-      debug_code(program) do
-        type 'step'
-        assert_line_num 2
-        type 'next'
-        assert_line_num 3
+  class FinishControlFlowTest < TestCase
+    def program
+      <<~RUBY
+      1| def foo
+      2|   bar
+      3| end
+      4| def bar
+      5|   baz
+      6| end
+      7| def baz
+      8|   :baz
+      9| end
+     10| foo
+     11| :ok
+      RUBY
+    end
+
+    def test_finish
+      debug_code program do
+        type 'b 8'
+        type 'c'
+        assert_line_num 8
         type 'finish'
-        assert_line_num 4
-        type 'quit'
-        type 'y'
+        assert_line_num 9
+        type 'q!'
+      end
+    end
+
+    def test_finish_0
+      debug_code program do
+        type 'b 8'
+        type 'c'
+        assert_line_num 8
+        type 'fin 0'
+        assert_line_text /finish command with 0 does not make sense/
+        type 'q!'
+      end
+    end
+
+    def test_finish_1
+      debug_code program do
+        type 'b 8'
+        type 'c'
+        assert_line_num 8
+        type 'fin 1'
+        assert_line_num 9
+        type 'q!'
+      end
+    end
+
+    def test_finish_2
+      debug_code program do
+        type 'b 8'
+        type 'c'
+        assert_line_num 8
+        type 'fin 2'
+        assert_line_num 6
+        type 'q!'
+      end
+    end
+
+    def test_finish_3
+      debug_code program do
+        type 'b 8'
+        type 'c'
+        assert_line_num 8
+        type 'fin 3'
+        assert_line_num 3
+        type 'q!'
+      end
+    end
+
+    def test_finish_4
+      debug_code program do
+        type 'b 8'
+        type 'c'
+        assert_line_num 8
+        type 'fin 4'
+        assert_finish
+      end
+    end
+
+
+    def program2
+      <<~RUBY
+      1| def foo x
+      2|   :foo
+      3| end
+      4| def bar
+      5|   :bar
+      6| end
+      7| def baz
+      8|   foo(bar())
+      9| end
+     10| baz
+     11| :ok
+      RUBY
+    end
+
+    def test_finish_param
+      debug_code program2 do
+        type 'b 5'
+        type 'c'
+        assert_line_num 5
+        type 'finish'
+        assert_line_num 6
+        type 'next'
+        assert_line_num 2
+        type 'c'
+      end
+    end
+
+    def test_finish_param2
+      debug_code program2 do
+        type 'b 5'
+        type 'c'
+        assert_line_num 5
+        type 'finish 2'
+        assert_line_num 9
+        type 'c'
       end
     end
   end
