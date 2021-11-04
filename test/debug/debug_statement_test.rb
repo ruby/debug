@@ -60,7 +60,7 @@ module DEBUGGER__
         assert_debugger_out('Foo#bar')
         assert_debugger_out(/aaaaa/)
         # should stay at Foo#bar
-        assert_no_line_text(/Foo#baz/)
+        assert_debugger_noout(/Foo#baz/)
 
         type 'continue'
         assert_debugger_out('Foo#baz')
@@ -71,7 +71,7 @@ module DEBUGGER__
     def test_debugger_doesnt_complain_about_duplicated_breakpoint
       debug_code(program) do
         type 'continue'
-        assert_no_line_text(/duplicated breakpoint:/)
+        assert_debugger_noout(/duplicated breakpoint:/)
         type 'q!'
       end
     end
@@ -108,7 +108,7 @@ module DEBUGGER__
     def test_debugger_doesnt_complain_about_duplicated_breakpoint
       debug_code(program) do
         type 'continue'
-        assert_no_line_text(/duplicated breakpoint:/)
+        assert_debugger_noout(/duplicated breakpoint:/)
         type 'q!'
       end
     end

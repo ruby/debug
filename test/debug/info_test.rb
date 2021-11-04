@@ -140,7 +140,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'info'
         assert_debugger_out(/%self = main/)
-        assert_no_line_text(/SystemExit = SystemExit/)
+        assert_debugger_noout(/SystemExit = SystemExit/)
         type 'info constant'
         assert_debugger_out([
           /SystemExit = SystemExit/,
@@ -160,7 +160,7 @@ module DEBUGGER__
           /CONST1 = 1/,
           /CONST2 = 2/
         ])
-        assert_no_line_text(/C1 = D::C1/)
+        assert_debugger_noout(/C1 = D::C1/)
 
         type 'info constants'
         assert_debugger_out([

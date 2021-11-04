@@ -98,7 +98,7 @@ module DEBUGGER__
           /=>   10| binding.b/
         ])
 
-        assert_no_line_text(/p 11/)
+        assert_debugger_noout(/p 11/)
         type 'continue'
       end
     end
@@ -136,7 +136,7 @@ module DEBUGGER__
           /Object#m3 at/
         ])
 
-        assert_no_line_text(/Object#m2/)
+        assert_debugger_noout(/Object#m2/)
         type 'continue'
       end
     end
@@ -205,14 +205,14 @@ module DEBUGGER__
 
         # skip definition of lib_m1
         assert_debugger_out(/foo \+ lib_m2/)
-        assert_no_line_text(/def lib_m1/)
+        assert_debugger_noout(/def lib_m1/)
 
         # don't display frame that matches skip_path
         assert_debugger_out([
           /#0\s+block in <main> at/,
           /#2\s+<main> at/
         ])
-        assert_no_line_text(/#1/)
+        assert_debugger_noout(/#1/)
         type 'c'
 
         # make sure the debugger and program can proceed normally
@@ -229,7 +229,7 @@ module DEBUGGER__
         type 'trace line'
         type 'c'
 
-        assert_no_line_text(/#{TEMPFILE_BASENAME}.*\.rb/)
+        assert_debugger_noout(/#{TEMPFILE_BASENAME}.*\.rb/)
 
         type 'c'
       end
@@ -248,7 +248,7 @@ module DEBUGGER__
         type 's back'
         type 's back'
         assert_debugger_out(/foo \+ lib_m2/)
-        assert_no_line_text(/def lib_m1/)
+        assert_debugger_noout(/def lib_m1/)
 
         type 'c'
       end
@@ -269,7 +269,7 @@ module DEBUGGER__
         type "config set skip_path /#{TEMPFILE_BASENAME}/"
         type 'catch RuntimeError'
         type 'c'
-        assert_no_line_text(/RuntimeError/)
+        assert_debugger_noout(/RuntimeError/)
         type 'c'
       end
     end
@@ -315,7 +315,7 @@ module DEBUGGER__
       # default WARN level doesn't report threads creation
       debug_code(program, remote: false) do
         type 'Thread.new {}.join'
-        assert_no_line_text(/Thread #\d+ is created/)
+        assert_debugger_noout(/Thread #\d+ is created/)
         type 'c'
       end
 
@@ -333,7 +333,7 @@ module DEBUGGER__
       # default WARN level doesn't report threads creation
       debug_code(program, remote: false) do
         type 'Thread.new {}.join'
-        assert_no_line_text(/Thread #\d+ is created/)
+        assert_debugger_noout(/Thread #\d+ is created/)
         type 'config set log_level INFO'
         type 'Thread.new {}.join'
         assert_debugger_out(/DEBUGGER \(INFO\): Thread #\d+ is created/)

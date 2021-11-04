@@ -45,7 +45,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'continue'
         type ''
-        assert_no_line_text(/duplicated breakpoint/)
+        assert_debugger_noout(/duplicated breakpoint/)
         type 'quit!'
       end
     end

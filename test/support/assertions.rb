@@ -41,7 +41,7 @@ module DEBUGGER__
       })
     end
 
-    def assert_no_line_text(text)
+    def assert_debugger_noout(text)
       @scenario.push(Proc.new { |test_info|
         result = collect_recent_backlog(test_info.last_backlog)
         if text.is_a?(String)

@@ -28,7 +28,7 @@ module DEBUGGER__
       debug_code(program) do
         type "help break"
         assert_debugger_out(/Show all breakpoints/)
-        assert_no_line_text(/### Frame control/)
+        assert_debugger_noout(/### Frame control/)
         type "continue"
       end
     end

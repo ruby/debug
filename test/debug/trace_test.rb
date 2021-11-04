@@ -135,7 +135,7 @@ module DEBUGGER__
         assert_debugger_out(/Enable LineTracer/)
         type 'c'
 
-        assert_no_line_text(/DEBUGGER \(trace\/line\)/)
+        assert_debugger_noout(/DEBUGGER \(trace\/line\)/)
         type 'q!'
       end
     end
@@ -195,7 +195,7 @@ module DEBUGGER__
         assert_debugger_out(/Enable ExceptionTracer \(enabled\) with pattern \/foo\//)
         type 'trace exception /bar/'
         assert_debugger_out(/Enable ExceptionTracer \(enabled\) with pattern \/bar\//)
-        assert_no_line_text(/Duplicated tracer: ExceptionTracer/)
+        assert_debugger_noout(/Duplicated tracer: ExceptionTracer/)
         type 'c'
         assert_debugger_out(
           [
@@ -213,7 +213,7 @@ module DEBUGGER__
         assert_debugger_out(/Enable ExceptionTracer \(enabled\) with pattern \/abc\//)
         assert_debugger_out(/Enable ExceptionTracer/)
         type 'c'
-        assert_no_line_text(/trace\/exception.+RuntimeError: foo/)
+        assert_debugger_noout(/trace\/exception.+RuntimeError: foo/)
         type 'q!'
       end
 
@@ -233,7 +233,7 @@ module DEBUGGER__
         assert_debugger_out(/Enable ExceptionTracer \(enabled\) with pattern \/foo\//)
         type 'c'
         assert_debugger_out(/trace\/exception.+RuntimeError: foo/)
-        assert_no_line_text(/trace\/exception.+RuntimeError: bar/)
+        assert_debugger_noout(/trace\/exception.+RuntimeError: bar/)
         type 'q!'
       end
     end
@@ -270,7 +270,7 @@ module DEBUGGER__
         )
         # tracer should ignore calls from associated libraries
         # for example, the test implementation relies on 'json' to generate test info, which's calls should be ignored
-        assert_no_line_text(/JSON/)
+        assert_debugger_noout(/JSON/)
         type 'q!'
       end
     end
@@ -300,7 +300,7 @@ module DEBUGGER__
         assert_debugger_out(/Enable CallTracer \(enabled\) with pattern \/foo\//)
         type 'trace call /bar/'
         assert_debugger_out(/Enable CallTracer \(enabled\) with pattern \/bar\//)
-        assert_no_line_text(/Duplicated tracer: CallTracer \(disabled\)/)
+        assert_debugger_noout(/Duplicated tracer: CallTracer \(disabled\)/)
         type 'c'
         assert_debugger_out(
           [
@@ -319,7 +319,7 @@ module DEBUGGER__
         type 'trace call /bar/'
         assert_debugger_out(/Enable CallTracer/)
         type 'c'
-        assert_no_line_text(/Object#foo at/)
+        assert_debugger_noout(/Object#foo at/)
         assert_debugger_out([
             /Object#bar at/,
             /Object#bar #=> nil/
@@ -349,8 +349,8 @@ module DEBUGGER__
         type 'trace call /not_a_path/'
         assert_debugger_out(/Enable CallTracer/)
         type 'c'
-        assert_no_line_text(/Object#foo/)
-        assert_no_line_text(/Object#bar/)
+        assert_debugger_noout(/Object#foo/)
+        assert_debugger_noout(/Object#bar/)
         type 'q!'
       end
     end
@@ -388,7 +388,7 @@ module DEBUGGER__
         type 'trace object 1'
         assert_debugger_out(/Enable ObjectTracer/)
         type 'c'
-        assert_no_line_text(/trace\/object/)
+        assert_debugger_noout(/trace\/object/)
         type 'q!'
       end
     end if RUBY_VERSION >= "2.7"

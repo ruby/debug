@@ -240,7 +240,7 @@ Passes if `expected` is equal to the location where debugger stops.
 
 Passes if `text` is included in the last debugger log.
 
-- assert_no_line_text(text)
+- assert_debugger_noout(text)
 
 Passes if `text` is not included in the last debugger log.
 

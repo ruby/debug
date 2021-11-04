@@ -44,7 +44,7 @@ module DEBUGGER__
         type 'list'
         assert_debugger_out(/p 1/)
         assert_debugger_out(/p 10/)
-        assert_no_line_text(/p 11/)
+        assert_debugger_noout(/p 11/)
 
         type 'q!'
       end
@@ -53,7 +53,7 @@ module DEBUGGER__
     def test_list_only_lists_after_the_given_line
       debug_code(program) do
         type 'list 11'
-        assert_no_line_text(/p 10/)
+        assert_debugger_noout(/p 10/)
         assert_debugger_out(/p 11/)
 
         type 'q!'
@@ -64,16 +64,16 @@ module DEBUGGER__
       debug_code(program) do
         type 'list'
         assert_debugger_out(/p 10/)
-        assert_no_line_text(/p 11/)
+        assert_debugger_noout(/p 11/)
 
         type ""
         assert_debugger_out(/p 20/)
-        assert_no_line_text(/p 10/)
-        assert_no_line_text(/p 21/)
+        assert_debugger_noout(/p 10/)
+        assert_debugger_noout(/p 21/)
 
         type ""
         assert_debugger_out(/p 30/)
-        assert_no_line_text(/p 20/)
+        assert_debugger_noout(/p 20/)
         type 'q!'
       end
     end

@@ -75,7 +75,7 @@ module DEBUGGER__
         type 'bt 2'
         assert_debugger_out(/Foo#third_call_with_block/)
         assert_debugger_out(/Foo#second_call/)
-        assert_no_line_text(/Foo#first_call/)
+        assert_debugger_noout(/Foo#first_call/)
         type 'q!'
       end
     end
@@ -87,7 +87,7 @@ module DEBUGGER__
         type 'bt /rb:\d\z/'
         assert_debugger_out(/Foo#second_call/)
         assert_debugger_out(/Foo#first_call/)
-        assert_no_line_text(/Foo#third_call_with_block/)
+        assert_debugger_noout(/Foo#third_call_with_block/)
         type 'q!'
       end
     end
@@ -98,8 +98,8 @@ module DEBUGGER__
         type 'c'
         type 'bt /second/'
         assert_debugger_out(/Foo#second_call/)
-        assert_no_line_text(/Foo#first_call/)
-        assert_no_line_text(/Foo#third_call_with_block/)
+        assert_debugger_noout(/Foo#first_call/)
+        assert_debugger_noout(/Foo#third_call_with_block/)
         type 'q!'
       end
     end
@@ -110,7 +110,7 @@ module DEBUGGER__
         type 'c'
         type 'bt 1 /rb:\d\z/'
         assert_debugger_out(/Foo#second_call/)
-        assert_no_line_text(/Foo#first_call/)
+        assert_debugger_noout(/Foo#first_call/)
         type 'q!'
       end
     end

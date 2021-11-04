@@ -89,7 +89,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'break Foo::Baz.c'
         type ''
-        assert_no_line_text(/duplicated breakpoint/)
+        assert_debugger_noout(/duplicated breakpoint/)
         type 'quit!'
       end
     end
@@ -132,7 +132,7 @@ module DEBUGGER__
         type "c"
         type "b C.bar"
         type "c"
-        assert_no_line_text(/Stop by #0  BP - Method  C.bar/)
+        assert_debugger_noout(/Stop by #0  BP - Method  C.bar/)
         type "c"
       end
     end
@@ -178,7 +178,7 @@ module DEBUGGER__
         type "c"
         type "b C#bar"
         type "c"
-        assert_no_line_text(/Stop by #0  BP - Method  C#bar/)
+        assert_debugger_noout(/Stop by #0  BP - Method  C#bar/)
         type "c"
       end
     end
@@ -199,7 +199,7 @@ module DEBUGGER__
         type "c"
         type "b c.bar"
         type "c"
-        assert_no_line_text(/Stop by #0  BP - Method  b.bar/)
+        assert_debugger_noout(/Stop by #0  BP - Method  b.bar/)
         type "c"
       end
     end

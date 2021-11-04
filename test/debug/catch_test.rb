@@ -37,7 +37,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'catch StandardError'
         type ''
-        assert_no_line_text(/duplicated breakpoint/)
+        assert_debugger_noout(/duplicated breakpoint/)
         type 'q!'
       end
     end
@@ -66,7 +66,7 @@ module DEBUGGER__
         type 'catch ZeroDivisionError if: a == 2 do: p "1234"'
         assert_debugger_out(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
-        assert_no_line_text(/1234/)
+        assert_debugger_noout(/1234/)
         type 'continue'
       end
     end

@@ -46,7 +46,7 @@ module DEBUGGER__
         type "undisplay 0"
         type "y"
         type "continue"
-        assert_no_line_text(/0: a =/)
+        assert_debugger_noout(/0: a =/)
 
         type "q!"
       end
@@ -58,8 +58,8 @@ module DEBUGGER__
         type "display b"
         type "undisplay"
         type "y"
-        assert_no_line_text(/0: a = /)
-        assert_no_line_text(/1: b = /)
+        assert_debugger_noout(/0: a = /)
+        assert_debugger_noout(/1: b = /)
 
         type "q!"
       end
