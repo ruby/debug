@@ -2,35 +2,35 @@
 
 module DEBUGGER__
   module AssertionHelpers
-    def assert_line_num(exp)
+    def assert_line_num(expected)
       @scenario.push(Proc.new { |test_info|
-        msg = "Expected line number to be #{exp.inspect}, but was #{test_info.internal_info['line']}\n"
+        msg = "Expected line number to be #{expected.inspect}, but was #{test_info.internal_info['line']}\n"
 
         assert_block(FailureMessage.new { create_message(msg, test_info) }) do
-          exp == test_info.internal_info['line']
+          expected == test_info.internal_info['line']
         end
       })
     end
 
-    def assert_debugger_out(exp)
+    def assert_debugger_out(text)
       @scenario.push(Proc.new { |test_info|
         result = collect_recent_backlog(test_info.last_backlog)
 
         expected =
-          case exp
+          case text
           when Array
-            case exp.first
+            case text.first
             when String
-              exp.map { |s| Regexp.escape(s) }.join
+              text.map { |s| Regexp.escape(s) }.join
             when Regexp
-              Regexp.compile(exp.map(&:source).join('.*'), Regexp::MULTILINE)
+              Regexp.compile(text.map(&:source).join('.*'), Regexp::MULTILINE)
             end
           when String
-            Regexp.escape(exp)
+            Regexp.escape(text)
           when Regexp
-            exp
+            text
           else
-            raise "Unknown expectation value: #{exp.inspect}"
+            raise "Unknown expectation value: #{text.inspect}"
           end
 
         msg = "Expected to include `#{expected.inspect}` in\n(\n#{result})\n"
@@ -41,13 +41,13 @@ module DEBUGGER__
       })
     end
 
-    def assert_debugger_noout(exp)
+    def assert_debugger_noout(text)
       @scenario.push(Proc.new { |test_info|
         result = collect_recent_backlog(test_info.last_backlog)
-        if exp.is_a?(String)
-          expected = Regexp.escape(exp)
+        if text.is_a?(String)
+          expected = Regexp.escape(text)
         else
-          expected = exp
+          expected = text
         end
         msg = "Expected not to include `#{expected.inspect}` in\n(\n#{result})\n"
 

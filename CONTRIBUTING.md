@@ -232,17 +232,17 @@ The following table shows examples of the gentest options.
 
 ### Assertions
 
-- assert_line_num(exp)
+- assert_line_num(expected)
 
-Passes if `exp` is equal to the location where debugger stops.
+Passes if `expected` is equal to the location where debugger stops.
 
-- assert_debugger_out(exp)
+- assert_debugger_out(text)
 
-Passes if `exp` is included in the last debugger log.
+Passes if `text` is included in the last debugger log.
 
-- assert_debugger_noout(exp)
+- assert_debugger_noout(text)
 
-Passes if `exp` is not included in the last debugger log.
+Passes if `text` is not included in the last debugger log.
 
 - assert_finish
 
