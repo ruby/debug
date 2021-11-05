@@ -454,7 +454,7 @@ module DEBUGGER__
         leave_subsession nil
 
       # * `kill`
-      #   * Stop the debuggee process with `Kernal#exit!`.
+      #   * Stop the debuggee process with `Kernel#exit!`.
       when 'kill'
         if ask 'Really kill?'
           exit! (arg || 1).to_i
