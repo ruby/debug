@@ -535,7 +535,7 @@ The `<...>` notation means the argument.
 * `q[uit]!`
   * Same as q[uit] but without the confirmation prompt.
 * `kill`
-  * Stop the debuggee process with `Kernal#exit!`.
+  * Stop the debuggee process with `Kernel#exit!`.
 * `kill!`
   * Same as kill but without the confirmation prompt.
 * `sigint`
