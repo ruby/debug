@@ -244,6 +244,10 @@ Passes if `text` is included in the last debugger log.
 
 Passes if `text` is not included in the last debugger log.
 
+- assert_debuggee_line_text(text)
+
+Passes if `text` is included in the debuggee log.
+
 - assert_finish
 
 Passes if debugger finishes correctly.
