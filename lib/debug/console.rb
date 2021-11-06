@@ -1,6 +1,30 @@
 # frozen_string_literal: true
 module DEBUGGER__
   class Console
+    COMPLETION_PROC = -> given do
+      thread_client = SESSION.managed_thread_clients.first
+      binding = thread_client.current_binding
+      frame_self = thread_client.current_frame&.self
+
+      candidates =
+        case given
+        when /\A@\w/
+          frame_self&.instance_variables
+        when /\A[A-Z]/
+          if frame_self.is_a?(Module)
+            frame_self.constants
+          else
+            frame_self.class.constants
+          end
+        when /\A\w/
+          binding.local_variables + frame_self.methods
+        else
+          DEBUGGER__.commands.keys.grep(/\A#{given}/)
+        end
+
+      candidates.map(&:to_s)
+    end
+
     begin
       raise LoadError if CONFIG[:no_reline]
       require 'reline'
@@ -32,12 +56,9 @@ module DEBUGGER__
 
       def readline_setup prompt
         load_history_if_not_loaded
-        commands = DEBUGGER__.commands
+        Reline.completion_proc = COMPLETION_PROC
 
-        Reline.completion_append_character= ' '
-        Reline.completion_proc = -> given do
-          commands.keys.grep(/\A#{given}/)
-        end
+        commands = DEBUGGER__.commands
 
         Reline.output_modifier_proc = -> buff, **kw do
           c, rest = get_command buff
@@ -87,23 +108,7 @@ module DEBUGGER__
 
         def readline_setup
           load_history_if_not_loaded
-          commands = DEBUGGER__.commands
-
-          Readline.completion_proc = proc{|given|
-            buff = Readline.line_buffer
-            Readline.completion_append_character= ' '
-
-            if /\s/ =~ buff # second parameters
-              given = File.expand_path(given + 'a').sub(/a\z/, '')
-              files = Dir.glob(given + '*')
-              if files.size == 1 && File.directory?(files.first)
-                Readline.completion_append_character= '/'
-              end
-              files
-            else
-              commands.keys.grep(/\A#{given}/)
-            end
-          }
+          Readline.completion_proc = COMPLETION_PROC
         end
 
         def readline prompt
