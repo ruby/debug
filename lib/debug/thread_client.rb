@@ -340,11 +340,15 @@ module DEBUGGER__
       frame_self.instance_eval(src)
     end
 
+    def current_binding
+      current_frame&.eval_binding || TOPLEVEL_BINDING
+    end
+
     def frame_eval src, re_raise: false
       begin
         @success_last_eval = false
 
-        b = current_frame&.eval_binding || TOPLEVEL_BINDING
+        b = current_binding
 
         result = if b
                    f, _l = b.source_location
