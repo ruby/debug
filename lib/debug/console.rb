@@ -34,20 +34,9 @@ module DEBUGGER__
         load_history_if_not_loaded
         commands = DEBUGGER__.commands
 
+        Reline.completion_append_character= ' '
         Reline.completion_proc = -> given do
-          buff = Reline.line_buffer
-          Reline.completion_append_character= ' '
-
-          if /\s/ =~ buff # second parameters
-            given = File.expand_path(given + 'a').sub(/a\z/, '')
-            files = Dir.glob(given + '*')
-            if files.size == 1 && File.directory?(files.first)
-              Reline.completion_append_character= '/'
-            end
-            files
-          else
-            commands.keys.grep(/\A#{given}/)
-          end
+          commands.keys.grep(/\A#{given}/)
         end
 
         Reline.output_modifier_proc = -> buff, **kw do
