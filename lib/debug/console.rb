@@ -6,10 +6,14 @@ module DEBUGGER__
       binding = thread_client.current_binding
       frame_self = thread_client.current_frame&.self
 
+      if frame_self.nil?
+        next DEBUGGER__.commands.keys.grep(/\A#{given}/)
+      end
+
       candidates =
         case given
         when /\A@\w/
-          frame_self&.instance_variables
+          frame_self.instance_variables
         when /\A[A-Z]/
           if frame_self.is_a?(Module)
             frame_self.constants
