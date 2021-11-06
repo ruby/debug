@@ -16,6 +16,11 @@ module DEBUGGER__
           else
             frame_self.class.constants
           end
+        when /^::([A-Z][^:\.\(\)]*)$/
+          # Absolute Constant or class methods
+          receiver = $1
+          candidates = Object.constants.collect{|m| m.to_s}
+          candidates.grep(/^#{receiver}/).collect{|e| "::" + e}
         when /\A\w/
           binding.local_variables + frame_self.methods
         else
