@@ -558,12 +558,15 @@ module DEBUGGER__
       when 'catch'
         check_postmortem
 
-        if arg
-          bp = repl_add_catch_breakpoint arg
-          show_bps bp if bp
-        else
-          show_bps
-        end
+        bp =
+          if arg
+            repl_add_catch_breakpoint arg
+          else
+            repl_add_catch_breakpoint "StandardError"
+          end
+
+        show_bps bp if bp
+
         return :retry
 
       # * `watch @ivar`

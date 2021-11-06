@@ -42,6 +42,15 @@ module DEBUGGER__
       end
     end
 
+    def test_catch_command_without_argument_catches_standard_error
+      debug_code(program) do
+        type 'catch'
+        type 'c'
+        assert_line_text(/Stop by #0  BP - Catch  "StandardError"/)
+        type 'q!'
+      end
+    end
+
     def test_catch_works_with_command
       debug_code(program) do
         type 'catch ZeroDivisionError pre: p "1234"'
