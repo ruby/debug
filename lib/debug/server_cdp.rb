@@ -211,7 +211,7 @@ module DEBUGGER__
         when 'Debugger.removeBreakpoint'
           b_id = req.dig('params', 'breakpointId')
           idx = bps[b_id]
-          bps.each_value{|i| i -= 1 if i > idx}
+          bps.each_key{|i| bps[i] -= 1 if bps[i] > idx}
           @q_msg << "del #{idx}"
           send_response req
         when 'Debugger.setBreakpointsActive'
