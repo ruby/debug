@@ -241,7 +241,7 @@ module DEBUGGER__
     def activate_bp bps
       bps.each_key{|id|
         _, line, path = id.match(/^\d+:(\d+):(.*)/).to_a
-        SESSION.add_line_breakpoint(path, line.to_i)
+        SESSION.add_line_breakpoint(path, line.to_i + 1)
       }
     end
 
