@@ -34,6 +34,12 @@ module DEBUGGER__
         load_history_if_not_loaded
         commands = DEBUGGER__.commands
 
+        prev_completion_proc = Reline.completion_proc
+        prev_output_modifier_proc = Reline.output_modifier_proc
+        prev_prompt_proc = Reline.prompt_proc
+
+        Reline.prompt_proc = nil
+
         Reline.completion_proc = -> given do
           buff = Reline.line_buffer
           Reline.completion_append_character= ' '
@@ -72,6 +78,13 @@ module DEBUGGER__
             colorize_code(buff.chomp) + colorize("    # ruby", [:DIM])
           end
         end
+
+        yield
+
+      ensure
+        Reline.completion_proc = prev_completion_proc
+        Reline.output_modifier_proc = prev_output_modifier_proc
+        Reline.prompt_proc = prev_prompt_proc
       end
 
       private def get_command line
@@ -84,8 +97,9 @@ module DEBUGGER__
       end
 
       def readline prompt
-        readline_setup prompt
-        Reline.readmultiline(prompt, true){ true }
+        readline_setup prompt do
+          Reline.readmultiline(prompt, true){ true }
+        end
       end
 
       def history
