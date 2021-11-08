@@ -235,6 +235,7 @@ module DEBUGGER__
         case ev_args.first
         when :breakpoint
           bp, i = bp_index ev_args[1]
+          clean_bps unless bp
           @ui.event :suspend_bp, i, bp, tc.id
         when :trap
           @ui.event :suspend_trap, sig = ev_args[1], tc.id
@@ -1202,6 +1203,12 @@ module DEBUGGER__
       }
     end
 
+    def clean_bps
+      @bps.delete_if{|_k, bp|
+        bp.deleted?
+      }
+    end
+
     def add_bp bp
       # don't repeat commands that add breakpoints
       @repl_prev_line = nil
@@ -1296,6 +1303,11 @@ module DEBUGGER__
       add_bp bp
     rescue Errno::ENOENT => e
       @ui.puts e.message
+    end
+
+    def add_iseq_breakpoint iseq, **kw
+      bp = ISeqBreakpoint.new(iseq, [:line], **kw)
+      add_bp bp
     end
 
     # tracers
@@ -2005,6 +2017,14 @@ module DEBUGGER__
         @logfile.flush
       end
     end
+  end
+
+  def self.step_in &b
+    if defined?(SESSION) && SESSION.active?
+      SESSION.add_iseq_breakpoint RubyVM::InstructionSequence.of(b), oneshot: true
+    end
+
+    yield
   end
 
   module ForkInterceptor

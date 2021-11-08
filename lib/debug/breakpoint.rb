@@ -23,6 +23,10 @@ module DEBUGGER__
       nil
     end
 
+    def oneshot?
+      defined?(@oneshot) && @oneshot
+    end
+
     def setup
       raise "not implemented..."
     end
@@ -85,6 +89,28 @@ module DEBUGGER__
   if RUBY_VERSION.to_f <= 2.7
     # workaround for https://bugs.ruby-lang.org/issues/17302
     TracePoint.new(:line){}.enable{}
+  end
+
+  class ISeqBreakpoint < Breakpoint
+    def initialize iseq, events, oneshot: false
+      @events = events
+      @iseq = iseq
+      @oneshot = oneshot
+      @key = [:iseq, @iseq.path, @iseq.first_lineno].freeze
+
+      super()
+    end
+
+    def setup
+      @tp = TracePoint.new(*@events) do |tp|
+        delete if @oneshot
+        suspend
+      end
+    end
+
+    def enable
+      @tp.enable(target: @iseq)
+    end
   end
 
   class LineBreakpoint < Breakpoint
