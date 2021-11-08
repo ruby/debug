@@ -24,6 +24,7 @@ module DEBUGGER__
 
     def setup
       @temp_file = nil
+      @pty_home_dir = Dir.mktmpdir
     end
 
     def teardown

@@ -57,6 +57,10 @@ module DEBUGGER__
   end
 
   class RCFileTest < ConsoleTestCase
+    def rc_filename
+      File.join(@pty_home_dir, ".rdbgrc")
+    end
+
     def rc_script
       "config set skip_path /foo/bar/"
     end
@@ -68,14 +72,11 @@ module DEBUGGER__
     end
 
     def with_rc_script
-      rc_filename = "~/.rdbgrc"
-      renamed_rc_filename = "~/.rdbgrc.original"
-      File.rename(rc_filename, renamed_rc_filename) if File.exist?(rc_filename)
-      File.open(File.join(Dir.home, ".rdbgrc"), "w") { |f| f.write(rc_script) }
+      File.open(rc_filename, "w") { |f| f.write(rc_script) }
 
       yield
     ensure
-      File.rename(renamed_rc_filename, rc_filename) if File.exist?(renamed_rc_filename)
+      File.delete(rc_filename)
     end
 
     def test_debugger_loads_the_rc_file_by_default
