@@ -4,6 +4,7 @@ require 'json'
 require 'digest/sha1'
 require 'base64'
 require 'securerandom'
+require 'stringio'
 
 module DEBUGGER__
   module UI_CDP
@@ -330,12 +331,25 @@ module DEBUGGER__
         result[:reason] = 'other'
         @ui.fire_event 'Debugger.paused', **result
       when :evaluate
-        result.each {|r|
-          if oid = r.dig(:objectId)
+        res = result[:result]
+        [res].each {|e|
+          if oid = e.dig(:objectId)
             @scope_map[oid] = 'eval'
           end
         }
-        @ui.respond req, result: result[0]
+        @ui.respond req, result: res
+
+        out = result[:output]
+        if out && !out.empty?
+          @ui.fire_event 'Runtime.consoleAPICalled',
+                          type: 'log',
+                          args: [
+                            type: out.class,
+                            value: out
+                          ],
+                          executionContextId: 1, # Change this number if something goes wrong.
+                          timestamp: Time.now.to_f
+        end
       when :properties
         result.each {|r|
           if oid = r.dig(:value, :objectId)
@@ -408,11 +422,14 @@ module DEBUGGER__
       when :evaluate
         expr = args.shift
         begin
+          $stdout = StringIO.new
           result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
+          output = $stdout.string
+          $stdout = STDOUT
         rescue Exception => e
           result = e
         end
-        event! :cdp_result, :evaluate, req, [evaluate_result(result)]
+        event! :cdp_result, :evaluate, req, result: evaluate_result(result), output: output
       when :properties
         oid = args.shift
         if fid = @frame_id_map[oid]
