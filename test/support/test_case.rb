@@ -27,6 +27,7 @@ module DEBUGGER__
     end
 
     def teardown
+      FileUtils.remove_entry @pty_home_dir
       remove_temp_file
     end
 
