@@ -29,8 +29,10 @@ module DEBUGGER__
           else
             puts <<~EOS
             # add the following lines in your .bash_profile
+            eval "$(rdbg --util=init -)"
 
-            eval "$(rdbg init -)"
+            # Add `Kernel#bb` method which is alias of `Kernel#debugger`
+            # export RUBY_DEBUG_BB=1
             EOS
           end
         else
