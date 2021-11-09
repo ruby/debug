@@ -108,7 +108,7 @@ module DEBUGGER__
 
     def with_inspection_error_guard
       yield
-    rescue => ex
+    rescue Exception => ex
       err_msg = "#{ex.inspect} rescued during inspection"
       string_result = obj.to_s rescue nil
 
