@@ -48,33 +48,29 @@ module DEBUGGER__
 
     if defined? IRB::ColorPrinter.pp
       def color_pp obj, width
-        if !CONFIG[:no_color]
-          IRB::ColorPrinter.pp(obj, "".dup, width)
-        else
-          obj.pretty_inspect
+        with_inspection_error_guard do
+          if !CONFIG[:no_color]
+            IRB::ColorPrinter.pp(obj, "".dup, width)
+          else
+            obj.pretty_inspect
+          end
         end
       end
     else
       def color_pp obj, width
-        obj.pretty_inspect
+        with_inspection_error_guard do
+          obj.pretty_inspect
+        end
       end
     end
 
     def colored_inspect obj, width: SESSION.width, no_color: false
-      if !no_color
-        color_pp obj, width
-      else
-        obj.pretty_inspect
-      end
-    rescue => ex
-      err_msg = "#{ex.inspect} rescued during inspection"
-      string_result = obj.to_s rescue nil
-
-      # don't colorize the string here because it's not from user's application
-      if string_result
-        %Q{"#{string_result}" from #to_s because #{err_msg}}
-      else
-        err_msg
+      with_inspection_error_guard do
+        if !no_color
+          color_pp obj, width
+        else
+          obj.pretty_inspect
+        end
       end
     end
 
@@ -108,6 +104,20 @@ module DEBUGGER__
 
     def colorize_dim(str)
       colorize(str, [:DIM])
+    end
+
+    def with_inspection_error_guard
+      yield
+    rescue => ex
+      err_msg = "#{ex.inspect} rescued during inspection"
+      string_result = obj.to_s rescue nil
+
+      # don't colorize the string here because it's not from user's application
+      if string_result
+        %Q{"#{string_result}" from #to_s because #{err_msg}}
+      else
+        err_msg
+      end
     end
   end
 end

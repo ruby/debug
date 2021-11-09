@@ -29,4 +29,34 @@ module DEBUGGER__
       end
     end
   end
+
+  class InpsectionFailureTest < TestCase
+    def program
+      <<~RUBY
+     1| f = Object.new
+     2| def f.inspect
+     3|   raise "foo"
+     4| end
+     5| binding.b
+      RUBY
+    end
+
+    def test_p_prints_the_expression
+      debug_code(program) do
+        type "c"
+        type "p f"
+        assert_line_text('#<RuntimeError: foo> rescued during inspection')
+        type "c"
+      end
+    end
+
+    def test_pp_pretty_prints_the_expression
+      debug_code(program) do
+        type "c"
+        type "pp f"
+        assert_line_text('#<RuntimeError: foo> rescued during inspection')
+        type "c"
+      end
+    end
+  end
 end
