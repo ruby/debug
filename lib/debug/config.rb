@@ -333,7 +333,7 @@ module DEBUGGER__
 
         o.on('--util=NAME', 'Utility mode (used by tools)') do |name|
           require_relative 'client'
-          Client.util(name)
+          Client.util(name, argv: ARGV)
           exit
         end
 

@@ -14,26 +14,46 @@ module DEBUGGER__
 
   class Client
     class << self
-      def util name
+      def util name, argv: []
         case name
+        when 'current-shell'
+          puts current_shell
         when 'gen-sockpath'
           puts DEBUGGER__.create_unix_domain_socket_name
         when 'list-socks'
           cleanup_unix_domain_sockets
           puts list_connections
         when 'init'
-          if ARGV.shift == '-'
-            puts <<~EOS
-            export RUBYOPT="-r #{__dir__}/prelude $(RUBYOPT)"
-            EOS
+          if argv.shift == '-'
+            case current_shell
+            when :fish
+              puts <<~EOS
+              set -x RUBYOPT "-r #{__dir__}/prelude" $RUBYOPT
+              EOS
+            else
+              puts <<~EOS
+              export RUBYOPT="-r #{__dir__}/prelude $RUBYOPT"
+              EOS
+            end
           else
-            puts <<~EOS
-            # add the following lines in your .bash_profile
-            eval "$(rdbg --util=init -)"
+            case current_shell
+            when :fish
+              puts <<~EOS
+              # add the following lines to your .config/fish/config.fish
+              eval (rdbg --util=init -)
 
-            # Add `Kernel#bb` method which is alias of `Kernel#debugger`
-            # export RUBY_DEBUG_BB=1
-            EOS
+              # Add `Kernel#bb` method which is alias of `Kernel#debugger`
+              # set -x RUBY_DEBUG_BB 1
+              EOS
+            else
+              puts <<~EOS
+              # add the following lines in your .bash_profile
+              eval "$(rdbg --util=init -)"
+
+              # Add `Kernel#bb` method which is alias of `Kernel#debugger`
+              # export RUBY_DEBUG_BB=1
+              EOS
+            end
           end
         else
           raise "Unknown utility: #{name}"
@@ -55,6 +75,15 @@ module DEBUGGER__
 
       def list_connections
         Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*')
+      end
+
+      def current_shell
+        case `ps -p #{Process.ppid} -o 'args='`.strip
+        when 'fish', '-fish'
+          :fish
+        else
+          :bash
+        end
       end
     end
 
