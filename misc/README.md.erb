@@ -346,7 +346,7 @@ You can attach with external debugger frontend with VSCode and Chrome.
 $ rdbg --open=[frontend] target.rb
 ```
 
-will open a debug port and `[frontned]` can attache to the port.
+will open a debug port and `[frontend]` can attach to the port.
 
 Also `open` command allows opening the debug port.
 
