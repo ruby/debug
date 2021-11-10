@@ -204,7 +204,7 @@ module DEBUGGER__
         type 'c'
         assert_line_num 8
         type 'fin 0'
-        assert_line_text /finish command with 0 does not make sense/
+        assert_line_text(/finish command with 0 does not make sense/)
         type 'q!'
       end
     end
