@@ -36,7 +36,7 @@ module DEBUGGER__
             EOS
           end
         else
-          raise "Unknown utility: #{name}"
+          abort "Unknown utility: #{name}"
         end
       end
 
