@@ -10,6 +10,9 @@ module DEBUGGER__
   module UI_CDP
     SHOW_PROTOCOL = ENV['RUBY_DEBUG_CDP_SHOW_PROTOCOL'] == '1'
 
+    class Detach < StandardError
+    end
+
     class WebSocket
       def initialize s
         @sock = s
@@ -56,7 +59,9 @@ module DEBUGGER__
         first_group = @sock.getbyte
         fin = first_group & 0b10000000 != 128
         raise 'Unsupported' if fin
+
         opcode = first_group & 0b00001111
+        raise Detach if opcode == 8
         raise "Unsupported: #{opcode}" unless opcode == 1
 
         second_group = @sock.getbyte
@@ -229,6 +234,8 @@ module DEBUGGER__
           @q_msg << req
         end
       end
+    rescue Detach
+      @q_msg << 'continue'
     end
 
     def get_source_code path
