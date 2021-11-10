@@ -422,12 +422,14 @@ module DEBUGGER__
       when :evaluate
         expr = args.shift
         begin
+          orig_stdout = $stdout
           $stdout = StringIO.new
           result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
-          output = $stdout.string
-          $stdout = STDOUT
         rescue Exception => e
           result = e
+        ensure
+          output = $stdout.string
+          $stdout = orig_stdout
         end
         event! :cdp_result, :evaluate, req, result: evaluate_result(result), output: output
       when :properties
