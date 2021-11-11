@@ -3,8 +3,6 @@
 # Copyright (C) 2000  Information-technology Promotion Agency, Japan
 # Copyright (C) 2000-2003  NAKAMURA, Hiroshi  <nahi@ruby-lang.org>
 
-require 'continuation'
-
 if $SAFE > 0
   STDERR.print "-r debug.rb is not available in safe mode\n"
   exit 1
@@ -183,6 +181,9 @@ SCRIPT_LINES__ = {} unless defined? SCRIPT_LINES__ # :nodoc:
 
 class DEBUGGER__
   MUTEX = Thread::Mutex.new # :nodoc:
+  CONTINUATIONS_SUPPORTED = RUBY_ENGINE == 'ruby'
+
+  require 'continuation' if CONTINUATIONS_SUPPORTED
 
   class Context # :nodoc:
     DEBUG_LAST_CMD = []
@@ -380,8 +381,10 @@ class DEBUGGER__
 
     def debug_command(file, line, id, binding)
       MUTEX.lock
-      unless defined?($debugger_restart) and $debugger_restart
-        callcc{|c| $debugger_restart = c}
+      if CONTINUATIONS_SUPPORTED
+        unless defined?($debugger_restart) and $debugger_restart
+          callcc{|c| $debugger_restart = c}
+        end
       end
       set_last_thread(Thread.current)
       frame_pos = 0
@@ -432,7 +435,7 @@ class DEBUGGER__
             pos = $2
             if $1
               klass = debug_silent_eval($1, binding)
-              file = $1
+              file = File.expand_path($1)
             end
             if pos =~ /^\d+$/
               pname = pos
@@ -653,7 +656,11 @@ class DEBUGGER__
             stdout.printf "%s\n", debug_eval($', binding).inspect
 
           when /^\s*r(?:estart)?$/
-            $debugger_restart.call
+            if CONTINUATIONS_SUPPORTED
+              $debugger_restart.call
+            else
+              stdout.print "Restart requires continuations.\n"
+            end
 
           when /^\s*h(?:elp)?$/
             debug_print_help()
@@ -1017,8 +1024,8 @@ EOHELP
     #
     #   (rdb:1) DEBUGGER__.thread_list_all
     #   +1 #<Thread:0x007fb2320c03f0 run> debug_me.rb.rb:3
-    #    2 #<Thread:0x007fb23218a538@debug_me.rb.rb:3 sleep>
-    #    3 #<Thread:0x007fb23218b0f0@debug_me.rb.rb:3 sleep>
+    #    2 #<Thread:0x007fb23218a538 debug_me.rb.rb:3 sleep>
+    #    3 #<Thread:0x007fb23218b0f0 debug_me.rb.rb:3 sleep>
     #   [1, 2, 3]
     #
     # Your current thread is indicated by a <b>+</b>
@@ -1027,8 +1034,8 @@ EOHELP
     #
     #   (rdb:1) th l
     #    +1 #<Thread:0x007f99328c0410 run>  debug_me.rb:3
-    #     2 #<Thread:0x007f9932938230@debug_me.rb:3 sleep> debug_me.rb:3
-    #     3 #<Thread:0x007f9932938e10@debug_me.rb:3 sleep> debug_me.rb:3
+    #     2 #<Thread:0x007f9932938230 debug_me.rb:3 sleep> debug_me.rb:3
+    #     3 #<Thread:0x007f9932938e10 debug_me.rb:3 sleep> debug_me.rb:3
     #
     # See DEBUGGER__ for more usage.
 
@@ -1102,9 +1109,11 @@ EOHELP
 
   stdout.printf "Debug.rb\n"
   stdout.printf "Emacs support available.\n\n"
-  RubyVM::InstructionSequence.compile_option = {
-    trace_instruction: true
-  }
+  if defined?(RubyVM::InstructionSequence)
+    RubyVM::InstructionSequence.compile_option = {
+      trace_instruction: true
+    }
+  end
   set_trace_func proc { |event, file, line, id, binding, klass, *rest|
     DEBUGGER__.context.trace_func event, file, line, id, binding, klass
   }
