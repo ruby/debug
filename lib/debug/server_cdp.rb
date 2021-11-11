@@ -331,13 +331,13 @@ module DEBUGGER__
         result[:reason] = 'other'
         @ui.fire_event 'Debugger.paused', **result
       when :evaluate
-        res = result[:result]
-        [res].each {|e|
-          if oid = e.dig(:objectId)
+        rs = result.dig(:response, :result)
+        [rs].each {|r|
+          if oid = r.dig(:objectId)
             @scope_map[oid] = 'eval'
           end
         }
-        @ui.respond req, result: res
+        @ui.respond req, **result[:response]
 
         out = result[:output]
         if out && !out.empty?
@@ -420,6 +420,7 @@ module DEBUGGER__
           }
         }
       when :evaluate
+        res = {}
         expr = args.shift
         begin
           orig_stdout = $stdout
@@ -427,11 +428,21 @@ module DEBUGGER__
           result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
         rescue Exception => e
           result = e
+          b = result.backtrace.map{|e| "    #{e}\n"}
+          line = b.first.match('.*:(\d+):in .*')[1].to_i
+          res[:exceptionDetails] = {
+            exceptionId: 1,
+            text: 'Uncaught',
+            lineNumber: line - 1,
+            columnNumber: 0,
+            exception: evaluate_result(result),
+          }
         ensure
           output = $stdout.string
           $stdout = orig_stdout
         end
-        event! :cdp_result, :evaluate, req, result: evaluate_result(result), output: output
+        res[:result] = evaluate_result(result)
+        event! :cdp_result, :evaluate, req, response: res, output: output
       when :properties
         oid = args.shift
         if fid = @frame_id_map[oid]
@@ -476,7 +487,7 @@ module DEBUGGER__
       end
     end
 
-    def variable_ name, obj, type, description: nil, use_short: true
+    def variable_ name, obj, type, description: nil, subtype: nil, use_short: true
       prop = {
         name: name,
         value: {
@@ -487,9 +498,11 @@ module DEBUGGER__
         configurable: true, # TODO: Change these parts because
         enumerable: true    #       they are not necessarily `true`.
       }
-      if description
+      if description && subtype
         v = prop[:value]
+        v.delete :value
         v[:description] = description
+        v[:subtype] = subtype
         v[:objectId] = oid = rand.to_s
         v[:className] = obj.class
         @obj_map[oid] = obj
@@ -500,9 +513,9 @@ module DEBUGGER__
     def variable name, obj
       case obj
       when Array
-        variable_ name, obj, 'object', description: "Array(#{obj.size})"
+        variable_ name, obj, 'object', description: "Array(#{obj.size})", subtype: 'array'
       when Hash
-        variable_ name, obj, 'object', description: 'Object'
+        variable_ name, obj, 'object', description: 'Object', subtype: 'map'
       when Range, NilClass, Time
         variable_ name, obj, 'object'
       when String
@@ -517,6 +530,8 @@ module DEBUGGER__
         variable_ name, obj, 'number'
       when Integer
         variable_ name, obj, 'number'
+      when Exception
+        variable_ name, obj, 'object', description: "#{obj.inspect}\n#{obj.backtrace.map{|e| "    #{e}\n"}.join}", subtype: 'error'
       else
         variable_ name, obj, 'undefined'
       end

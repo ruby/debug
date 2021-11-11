@@ -56,7 +56,7 @@ module DEBUGGER__
             end
           end
         else
-          raise "Unknown utility: #{name}"
+          abort "Unknown utility: #{name}"
         end
       end
 
@@ -78,7 +78,7 @@ module DEBUGGER__
       end
 
       def current_shell
-        case `ps -p #{Process.ppid} -o 'args='`.strip
+        case File.basename(`ps -p #{Process.ppid} -o 'args='`.strip)
         when 'fish', '-fish'
           :fish
         else
