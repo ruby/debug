@@ -216,10 +216,7 @@ module DEBUGGER__
                         ]
         when 'Debugger.removeBreakpoint'
           b_id = req.dig('params', 'breakpointId')
-          idx = bps[b_id]
-          bps.delete b_id
-          bps.each_key{|i| bps[i] -= 1 if bps[i] > idx}
-          @q_msg << "del #{idx}"
+          bps = del_bp bps, b_id
           send_response req
         when 'Debugger.setBreakpointsActive'
           active = req.dig('params', 'active')
@@ -227,6 +224,17 @@ module DEBUGGER__
             activate_bp bps
           else
             deactivate_bp
+          end
+          send_response req
+        when 'Debugger.setPauseOnExceptions'
+          state = req.dig('params', 'state')
+          ex = 'Exception'
+          if state == 'none'
+            bps = del_bp bps, ex
+          else
+            # TODO: Support 'uncaught' feature.
+            SESSION.add_catch_breakpoint ex
+            bps[ex] = bps.size
           end
           send_response req
 
@@ -238,6 +246,15 @@ module DEBUGGER__
       @q_msg << 'continue'
     end
 
+    def del_bp bps, k
+      return bps unless idx = bps[k]
+
+      bps.delete k
+      bps.each_key{|i| bps[i] -= 1 if bps[i] > idx}
+      @q_msg << "del #{idx}"
+      bps
+    end
+
     def get_source_code path
       return @src_map[path] if @src_map[path]
 
@@ -247,9 +264,14 @@ module DEBUGGER__
     end
 
     def activate_bp bps
-      bps.each_key{|id|
-        _, line, path = id.match(/^\d+:(\d+):(.*)/).to_a
-        SESSION.add_line_breakpoint(path, line.to_i + 1)
+      bps.each_key{|k|
+        if k.match /^\d+:(\d+):(.*)/
+          line = $1
+          path = $2
+          SESSION.add_line_breakpoint(path, line.to_i + 1)
+        else
+          SESSION.add_catch_breakpoint 'Exception'
+        end
       }
     end
 
