@@ -280,16 +280,14 @@ module DEBUGGER__
         exc = tp.raised_exception
         next if SystemExit === exc
         next if !safe_eval(tp.binding, @cond) if @cond
-        should_suspend = false
 
         exc.class.ancestors.each{|cls|
           if @pat === cls.name
-            should_suspend = true
             @last_exc = exc
+            suspend
             break
           end
         }
-        suspend if should_suspend
       }
     end
 
