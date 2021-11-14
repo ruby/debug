@@ -218,16 +218,21 @@ module DEBUGGER__
           if active
             activate_bp bps
           else
-            deactivate_bp
+            deactivate_bp # TODO: Change this part because catch breakpoints should not be deactivated.
           end
           send_response req
         when 'Debugger.setPauseOnExceptions'
           state = req.dig('params', 'state')
           ex = 'Exception'
-          if state == 'none'
+          case state
+          when 'none'
+            @q_msg << 'config postmortem = false'
             bps = del_bp bps, ex
-          else
-            # TODO: Support 'uncaught' feature.
+          when 'uncaught'
+            @q_msg << 'config postmortem = true'
+            bps = del_bp bps, ex
+          when 'all'
+            @q_msg << 'config postmortem = false'
             SESSION.add_catch_breakpoint ex
             bps[ex] = bps.size
           end
