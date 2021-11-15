@@ -11,7 +11,7 @@ module DEBUGGER__
          3|
          4|   def initialize(name)
          5|     @name = name
-         6|     binding.break(do: "watch @name")
+         6|     binding.b
          7|   end
          8| end
          9|
@@ -33,10 +33,10 @@ module DEBUGGER__
     def test_debugger_only_stops_when_the_ivar_of_instance_changes
       debug_code(program) do
         type 'continue'
-        # stops at binding.break
-        assert_line_text('Student#initialize(name="John")')
-        # stops when @name changes
+        type 'watch @name'
         assert_line_text(/#0  BP - Watch  #<Student:.*> @name = John/)
+        type 'continue'
+        assert_line_text(/Stop by #0  BP - Watch  #<Student:.*> @name = John -> Josh/)
         type 'continue'
       end
     end
@@ -44,6 +44,7 @@ module DEBUGGER__
     def test_watch_command_isnt_repeatable
       debug_code(program) do
         type 'continue'
+        type 'watch @name'
         type ''
         assert_no_line_text(/duplicated breakpoint/)
         type 'quit!'
