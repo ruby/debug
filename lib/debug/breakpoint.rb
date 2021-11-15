@@ -328,12 +328,15 @@ module DEBUGGER__
   end
 
   class WatchIVarBreakpoint < Breakpoint
-    def initialize ivar, object, current
+    def initialize ivar, object, current, cond: nil, command: nil
       @ivar = ivar.to_sym
       @object = object
       @key = [:watch, @ivar].freeze
 
       @current = current
+
+      @cond = cond
+      @command = command
       super()
     end
 
@@ -356,6 +359,7 @@ module DEBUGGER__
       @tp = TracePoint.new(:line, :return, :b_return){|tp|
         next if tp.path.start_with? __dir__
         next if tp.path.start_with? '<internal:'
+        next if !safe_eval(tp.binding, @cond) if @cond
 
         watch_eval
       }
