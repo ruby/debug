@@ -646,8 +646,8 @@ module DEBUGGER__
 
         bp
       when :watch
-        ivar, object, result = args[1..]
-        WatchIVarBreakpoint.new(ivar, object, result)
+        ivar, object, result, cond, command = args[1..]
+        WatchIVarBreakpoint.new(ivar, object, result, cond: cond, command: command)
       else
         raise "unknown breakpoint: #{args}"
       end
@@ -890,7 +890,7 @@ module DEBUGGER__
             bp = make_breakpoint args
             event! :result, :method_breakpoint, bp
           when :watch
-            ivar = args[1]
+            ivar, cond, command = args[1..]
             result = frame_eval(ivar)
 
             if @success_last_eval
@@ -900,7 +900,7 @@ module DEBUGGER__
                 else
                   current_frame.self
                 end
-              bp = make_breakpoint [:watch, ivar, object, result]
+              bp = make_breakpoint [:watch, ivar, object, result, cond, command]
               event! :result, :watch_breakpoint, bp
             else
               event! :result, nil

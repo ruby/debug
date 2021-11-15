@@ -50,5 +50,35 @@ module DEBUGGER__
         type 'quit!'
       end
     end
+
+    def test_watch_works_with_command
+      debug_code(program) do
+        type 'continue'
+        type 'watch @name pre: p "1234"'
+        assert_line_text(/#0  BP - Watch  #<Student:.*> @name = John/)
+        type 'continue'
+        assert_line_text(/1234/)
+        type 'continue'
+      end
+
+      debug_code(program) do
+        type 'continue'
+        type 'watch @name do: p "1234"'
+        assert_line_text(/#0  BP - Watch  #<Student:.*> @name = John/)
+        type 'b 21'
+        type 'continue'
+        assert_line_text(/1234/)
+        type 'continue'
+      end
+    end
+
+    def test_watch_works_with_condition
+      debug_code(program) do
+        type 'continue'
+        type 'watch @name if: 1 == 2'
+        type 'continue'
+        assert_finish
+      end
+    end
   end
 end

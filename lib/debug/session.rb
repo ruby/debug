@@ -574,7 +574,7 @@ module DEBUGGER__
         check_postmortem
 
         if arg && arg.match?(/\A@\w+/)
-          @tc << [:breakpoint, :watch, arg]
+          repl_add_watch_breakpoint(arg)
         else
           show_bps
           return :retry
@@ -1284,6 +1284,14 @@ module DEBUGGER__
 
       bp = CatchBreakpoint.new(expr[:sig], cond: cond, command: cmd)
       add_bp bp
+    end
+
+    def repl_add_watch_breakpoint arg
+      expr = parse_break arg.strip
+      cond = expr[:if]
+      cmd = ['watch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
+
+      @tc << [:breakpoint, :watch, expr[:sig], cond, cmd]
     end
 
     def add_catch_breakpoint pat
