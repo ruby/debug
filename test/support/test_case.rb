@@ -11,6 +11,10 @@ module DEBUGGER__
     include TestUtils
     include AssertionHelpers
 
+    def setup
+      @temp_file = nil
+    end
+
     def teardown
       remove_temp_file
     end
