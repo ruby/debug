@@ -556,6 +556,12 @@ module DEBUGGER__
 
       # * `catch <Error>`
       #   * Set breakpoint on raising `<Error>`.
+      # * `catch ... if: <expr>`
+      #   * stops only if `<expr>` is true as well.
+      # * `catch ... pre: <command>`
+      #   * runs `<command>` before stopping.
+      # * `catch ... do: <command>`
+      #   * stops and run `<command>`, and continue.
       when 'catch'
         check_postmortem
 
@@ -570,6 +576,12 @@ module DEBUGGER__
       # * `watch @ivar`
       #   * Stop the execution when the result of current scope's `@ivar` is changed.
       #   * Note that this feature is super slow.
+      # * `watch ... if: <expr>`
+      #   * stops only if `<expr>` is true as well.
+      # * `watch ... pre: <command>`
+      #   * runs `<command>` before stopping.
+      # * `watch ... do: <command>`
+      #   * stops and run `<command>`, and continue.
       when 'wat', 'watch'
         check_postmortem
 
