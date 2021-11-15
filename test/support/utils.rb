@@ -499,11 +499,11 @@ module DEBUGGER__
           Thread.current[:cdp_res] << res
         end
       end
-      sleep 0.001 while @reader_thread.status != 'sleep'
+      sleep 0.01 while @reader_thread.status != 'sleep'
       @reader_thread.run
       test_steps.call
     ensure
-      @reader_thread.kill
+      @reader_thread.kill if @reader_thread
       kill_safely pid, nil
     end
 
