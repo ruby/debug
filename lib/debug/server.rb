@@ -267,7 +267,7 @@ module DEBUGGER__
       sock skip: true do |s|
         enum.each do |line|
           msg = "out #{line.chomp}"
-          if s
+          if s && @repl
             s.puts msg
           else
             @unsent_messages << msg
