@@ -174,8 +174,8 @@ module DEBUGGER__
       @thread_stopper.disable
       @tp_load_script.disable
       @tp_thread_begin.disable
-      @bps.each{|k, bp| bp.disable}
-      @th_clients.each{|th, thc| thc.close}
+      @bps.each_value{|bp| bp.disable}
+      @th_clients.each_value{|thc| thc.close}
       @tracers.values.each{|t| t.disable}
       @q_evt.close
       @ui&.deactivate
@@ -534,7 +534,7 @@ module DEBUGGER__
         require 'json'
 
         h = Hash.new{|h, k| h[k] = []}
-        @bps.each{|key, bp|
+        @bps.each_value{|bp|
           if LineBreakpoint === bp
             h[bp.path] << {lnum: bp.line}
           end

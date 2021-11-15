@@ -480,7 +480,7 @@ module DEBUGGER__
     self.helps.each{|cat, cmds|
       r << "### #{cat}"
       r << ''
-      cmds.each{|ws, desc|
+      cmds.each{|_, desc|
         r << desc
       }
       r << ''
