@@ -84,6 +84,42 @@ module DEBUGGER__
       @scenario.push(method(:flunk_finish))
     end
 
+    def assert_cdp_res expected
+      result = @last_cdp_res
+      res = ProtocolParser.new.parse expected
+      res.each{|r|
+        k, v = r
+        case v
+        when Regexp
+          assert_match v, result.dig(*k).to_s, FailureMessage.new{@ws_client.backlog.join("\n> ")}
+        else
+          assert_equal v, result.dig(*k), FailureMessage.new{@ws_client.backlog.join("\n> ")}
+        end
+      }
+    end
+
+    def assert_cdp_evt expected
+      result = nil
+      @reader_thread[:cdp_res].reverse_each{|r|
+        if r[:method] == expected[:method]
+          result = r
+          break
+        end
+      }
+      flunk "CDP Event: #{expected[:method]} was not found in #{@reader_thread[:cdp_res]}" if result.nil?
+
+      req = ProtocolParser.new.parse expected
+      req.each{|r|
+        k, v = r
+        case v
+        when Regexp
+          assert_match v, result.dig(*k).to_s, FailureMessage.new{@ws_client.backlog.join("\n> ")}
+        else
+          assert_equal v, result.dig(*k), FailureMessage.new{@ws_client.backlog.join("\n> ")}
+        end
+      }
+    end
+
     private
 
     def collect_recent_backlog(last_backlog)
@@ -94,6 +130,39 @@ module DEBUGGER__
       msg = 'Expected the debugger program to finish'
 
       assert_block(FailureMessage.new { create_message(msg, test_info) }) { false }
+    end
+
+    class ProtocolParser
+      def initialize
+        @result = []
+        @keys = []
+      end
+
+      def parse objs
+        objs.each{|k, v|
+          parse_ k, v
+          @keys.pop
+        }
+        @result
+      end
+
+      def parse_ k, v
+        @keys << k
+        case v
+        when Array
+          v.each.with_index{|v, i|
+            parse_ i, v
+            @keys.pop
+          }
+        when Hash
+          v.each{|k, v|
+            parse_ k, v
+            @keys.pop
+          }
+        else
+          @result << [@keys.dup, v]
+        end
+      end
     end
   end
 end

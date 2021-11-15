@@ -27,6 +27,15 @@ module DEBUGGER__
         end
       end
 
+      def send_close
+        frame = []
+        fin = 0b10000000
+        opcode = 0b00001000
+        frame << fin + opcode
+
+        @sock.print frame.pack 'c*'
+      end
+
       def send **msg
         msg = JSON.generate(msg)
         frame = []
@@ -229,6 +238,8 @@ module DEBUGGER__
           @q_msg << req
         end
       end
+    ensure
+      @web_sock.send_close
     end
 
     def get_source_code path

@@ -4,6 +4,11 @@ require 'pty'
 require 'timeout'
 require 'json'
 require 'rbconfig'
+require 'socket'
+require 'digest/sha1'
+require 'base64'
+require 'securerandom'
+
 require_relative "../../lib/debug/client"
 
 module DEBUGGER__
@@ -396,6 +401,133 @@ module DEBUGGER__
       end
 
       lines_with_number.join("\n")
+    end
+
+    class Detach < StandardError
+    end
+
+    class WebSocketClient
+      attr_reader :backlog
+
+      def initialize s
+        @sock = s
+        @backlog = []
+      end
+
+      def handshake port, path
+        key = SecureRandom.hex(11)
+        @sock.print "GET #{path} HTTP/1.1\r\nHost: 127.0.0.1:#{port}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: #{key}==\r\n\r\n"
+        res = @sock.readpartial 4092
+        res.split("\n").each{|r| @backlog << "#{r}"}
+
+        if res.match(/^Sec-WebSocket-Accept: (.*)\r\n/)
+          correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+          raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless $1 == correct_key
+        else
+          raise "Unknown response: #{res}"
+        end
+      end
+
+      def send msg
+        msg = JSON.generate(msg)
+        frame = []
+        fin = 0b10000000
+        opcode = 0b00000001
+        frame << fin + opcode
+
+        mask = 0b10000000 # A client must mask all frames in a WebSocket Protocol.
+        bytesize = msg.bytesize
+        if bytesize < 126
+          payload_len = bytesize
+        elsif bytesize < 2 ** 16
+          payload_len = 0b01111110
+          ex_payload_len = [bytesize].pack('n*').bytes
+        else
+          payload_len = 0b01111111
+          ex_payload_len = [bytesize].pack('Q>').bytes
+        end
+
+        frame << mask + payload_len
+        frame.push(*ex_payload_len) if ex_payload_len
+
+        masking_key = 4.times.map{rand(1..255)}
+        frame.push(*masking_key)
+        masked = []
+        msg.bytes.each_with_index do |b, i|
+          masked << (b ^ masking_key[i % 4])
+        end
+
+        frame.push(*masked)
+        @sock.print frame.pack 'c*'
+      end
+
+      def extract_data
+        first_group = @sock.getbyte
+        fin = first_group & 0b10000000 != 128
+        raise 'Unsupported' if fin
+
+        opcode = first_group & 0b00001111
+        raise Detach if opcode == 8
+        raise "Unsupported: #{opcode}" unless opcode == 1
+
+        second_group = @sock.getbyte
+        mask = second_group & 0b10000000 == 128
+        raise 'The server must not mask any frames' if mask
+        payload_len = second_group & 0b01111111
+        # TODO: Support other payload_lengths
+        if payload_len == 126
+          payload_len = @sock.read(2).unpack('n*')[0]
+        end
+
+        data = JSON.parse @sock.read(payload_len), symbolize_names: true
+        @backlog << JSON.pretty_generate(data).split("\n")
+        data
+      end
+    end
+
+    def run_cdp_scenario program, &test_steps
+      write_temp_file strip_line_num program
+      pid = spawn("#{RDBG_EXECUTABLE} --open=chrome --port=#{TCPIP_PORT} -- #{temp_file_path}", :err=>"/dev/null")
+      begin
+        s = Socket.tcp '127.0.0.1', TCPIP_PORT
+      rescue Errno::ECONNREFUSED
+        sleep 0.1
+        retry
+      end
+      @cdp_res_size = 0
+      @ws_client = WebSocketClient.new(s)
+      @ws_client.handshake TCPIP_PORT, '/'
+      @reader_thread = Thread.new(@ws_client) do |w|
+        Thread.current[:cdp_res] = []
+        while res = w.extract_data
+          Thread.current[:cdp_res] << res
+        end
+      rescue Detach
+      end
+      sleep 0.001 while @reader_thread.status != 'sleep'
+      @reader_thread.run
+      test_steps.call
+    ensure
+      @reader_thread.kill
+      kill_safely pid, nil
+    end
+
+    def cdp_req msg
+      @ws_client.send msg
+      res = @reader_thread[:cdp_res]
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.01 until res.size > @cdp_res_size
+      end
+      @cdp_res_size = res.size
+      res.each{|r|
+        if r[:id] == msg[:id]
+          @last_cdp_res = r
+          break
+        end
+      }
+      @last_cdp_res
+    rescue Timeout::Error
+      flunk "TIMEOUT ERROR (#{TIMEOUT_SEC} sec)\n[DEBUGGEE SESSION LOG]\n> #{@ws_client.backlog.join("\n> ")}"
     end
   end
 end
