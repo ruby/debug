@@ -84,6 +84,25 @@ module DEBUGGER__
       @scenario.push(method(:flunk_finish))
     end
 
+    def assert_cdp_res expected, *keys
+      result = @last_cdp_res.dig('result', *keys)
+      assert_equal expected, result
+    end
+
+    def assert_cdp_evt expected, evt, *keys
+      @reader_thread[:cdp_res].each{|r|
+        if r['method'] == evt
+          result = r.dig('params', *keys)
+          return assert_equal expected, result
+        end
+      }
+      flunk "CDP Event: #{evt} was not found in #{@reader_thread[:cdp_res]}"
+    end
+
+    def assert_finish_cdp
+      flunk 'Expected CDP server to finish'
+    end
+
     private
 
     def collect_recent_backlog(last_backlog)
