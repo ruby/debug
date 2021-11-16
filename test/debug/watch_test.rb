@@ -72,12 +72,36 @@ module DEBUGGER__
       end
     end
 
-    def test_watch_works_with_condition
-      debug_code(program) do
-        type 'continue'
-        type 'watch @name if: 1 == 2'
-        type 'continue'
-        assert_finish
+    class ConditionTest < TestCase
+      def program
+        <<~RUBY
+         1| class Student
+         2|   attr_accessor :name, :age
+         3|
+         4|   def initialize(name, age)
+         5|     @name = name
+         6|     @age = age
+         7|     binding.b(do: "watch @age if: name == 'Sean'")
+         8|   end
+         9| end
+        10|
+        11| stan = Student.new("Stan", 30)
+        12| stan.age += 1
+        13| # only stops for Sean's age change
+        14| sean = Student.new("Sean", 25)
+        15| sean.age += 1
+        16|
+        17| a = 1 # additional line for line tp
+        RUBY
+      end
+
+      def test_condition_is_evaluated_in_the_watched_object
+        debug_code(program) do
+          type 'continue'
+          assert_line_text(/Stop by #\d  BP - Watch  #<Student:.*> @age = 25 -> 26/)
+          type 'continue'
+          assert_finish
+        end
       end
     end
   end
