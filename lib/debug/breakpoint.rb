@@ -331,7 +331,7 @@ module DEBUGGER__
     def initialize ivar, object, current, cond: nil, command: nil
       @ivar = ivar.to_sym
       @object = object
-      @key = [:watch, @ivar].freeze
+      @key = [:watch, object.object_id, @ivar].freeze
 
       @current = current
 
