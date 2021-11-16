@@ -346,7 +346,10 @@ module DEBUGGER__
         begin
           @prev = @current
           @current = result
-          suspend
+
+          if @cond.nil? || @object.instance_eval(@cond)
+            suspend
+          end
         ensure
           remove_instance_variable(:@prev)
         end
@@ -359,7 +362,6 @@ module DEBUGGER__
       @tp = TracePoint.new(:line, :return, :b_return){|tp|
         next if tp.path.start_with? __dir__
         next if tp.path.start_with? '<internal:'
-        next if !safe_eval(tp.binding, @cond) if @cond
 
         watch_eval
       }
