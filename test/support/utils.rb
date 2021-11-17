@@ -277,7 +277,7 @@ module DEBUGGER__
       
       test_info.failed_process = name
 
-      Process.kill :KILL, pid
+      Process.kill :TERM, pid
       return if wait_pid pid, 0.2
 
       Process.kill :KILL, pid
