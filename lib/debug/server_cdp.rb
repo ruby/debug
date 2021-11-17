@@ -425,7 +425,17 @@ module DEBUGGER__
         begin
           orig_stdout = $stdout
           $stdout = StringIO.new
-          result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
+          case req.dig('params', 'objectGroup')
+          when 'popover'
+            case current_frame.binding.eval("defined? #{expr}", '(DEBUG CONSOLE)')
+            when 'method'
+              result = method expr
+            else
+              result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
+            end
+          else
+            result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
+          end
         rescue Exception => e
           result = e
           b = result.backtrace.map{|e| "    #{e}\n"}
@@ -530,6 +540,8 @@ module DEBUGGER__
         variable_ name, obj, 'number'
       when Integer
         variable_ name, obj, 'number'
+      when Method
+        variable_ name, obj, 'function'
       when Exception
         variable_ name, obj, 'object', description: "#{obj.inspect}\n#{obj.backtrace.map{|e| "    #{e}\n"}.join}", subtype: 'error'
       else
