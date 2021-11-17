@@ -273,7 +273,6 @@ module DEBUGGER__
         type 'c'
         assert_line_text(/:3\b/)
         type 'c'
-        assert_finish
       end
     end
   end
@@ -496,7 +495,6 @@ module DEBUGGER__
         type 'c'
         assert_debuggee_line_text(/EVAL ERROR/)
         type 'c'
-        assert_finish
       end
     end
 

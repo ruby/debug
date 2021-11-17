@@ -67,7 +67,6 @@ module DEBUGGER__
         type 'info'
         assert_line_text(/a = 128\b/)
         type 'c'
-        assert_finish
       end
     end
   end

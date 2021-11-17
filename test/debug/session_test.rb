@@ -22,7 +22,6 @@ module DEBUGGER__
         type 'c'
         assert_line_num(6)
         type 'c'
-        assert_finish
       end
     end
   end
@@ -44,7 +43,6 @@ module DEBUGGER__
           type 'c'
           assert_line_num(3)
           type 'c'
-          assert_finish
         end
       end
     end
@@ -68,7 +66,6 @@ module DEBUGGER__
           type 'c'
           assert_line_num(6)
           type 'c'
-          assert_finish
         end
       end
     end

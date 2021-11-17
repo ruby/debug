@@ -248,10 +248,6 @@ Passes if `text` is not included in the last debugger log.
 
 Passes if `text` is included in the debuggee log.
 
-- assert_finish
-
-Passes if debugger finishes correctly.
-
 ## To Update README
 
 This project generates `README.md` from the template `misc/README.md.erb`

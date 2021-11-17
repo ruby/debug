@@ -15,7 +15,6 @@ module DEBUGGER__
         type 'kill'
         assert_line_text(/Really kill\? \[Y\/n\]/)
         type 'y'
-        assert_finish
       end
     end
 
@@ -25,14 +24,12 @@ module DEBUGGER__
         assert_line_text(/Really kill\? \[Y\/n\]/)
         type 'n'
         type 'q!'
-        assert_finish
       end
     end
 
     def test_kill_with_exclamation_mark_kills_the_debugger_process_immediately
       debug_code(program) do
         type "kill!"
-        assert_finish
       end
     end
   end

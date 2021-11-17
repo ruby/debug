@@ -199,6 +199,7 @@ module DEBUGGER__
                 is_ask_cmd = false
 
                 loop do
+                  assert_block(FailureMessage.new { create_message "Expected the REPL prompt to finish", test_info }) { !test_info.queue.empty? }
                   cmd = test_info.queue.pop
 
                   case cmd.to_s
@@ -371,16 +372,7 @@ module DEBUGGER__
         message += "\nAssociated exception: #{exception.class} - #{exception.message}" +
                    exception.backtrace.map{|l| "  #{l}\n"}.join
       end
-      assert_block(FailureMessage.new { create_message message, test_info }) do
-        return true if test_info.queue.empty?
-
-        case test_info.queue.pop.to_s
-        when /flunk_finish/
-          true
-        else
-          false
-        end
-      end
+      assert_block(FailureMessage.new { create_message message, test_info }) { test_info.queue.empty? }
     end
 
     def strip_line_num(str)

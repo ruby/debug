@@ -80,20 +80,10 @@ module DEBUGGER__
       end
     end
 
-    def assert_finish
-      @scenario.push(method(:flunk_finish))
-    end
-
     private
 
     def collect_recent_backlog(last_backlog)
       last_backlog[1..].join
-    end
-
-    def flunk_finish test_info
-      msg = 'Expected the debugger program to finish'
-
-      assert_block(FailureMessage.new { create_message(msg, test_info) }) { false }
     end
   end
 end

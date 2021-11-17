@@ -248,7 +248,6 @@ module DEBUGGER__
         type 'c'
         assert_line_num 8
         type 'fin 4'
-        assert_finish
       end
     end
 

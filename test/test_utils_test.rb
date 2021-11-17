@@ -30,7 +30,13 @@ module DEBUGGER__
     def test_the_test_work_when_debuggee_outputs_many_lines
       debug_code ' 1| 300.times{|i| p i}' do
         type 'c'
-        assert_finish
+      end
+    end
+
+    def test_the_test_fails_when_the_repl_prompt_does_not_finish_even_though_scenario_is_empty
+      assert_raise_message(/Expected the REPL prompt to finish/) do
+        debug_code(program) do
+        end
       end
     end
   end
