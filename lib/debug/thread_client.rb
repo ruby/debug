@@ -340,10 +340,20 @@ module DEBUGGER__
       frame_self.instance_eval(src)
     end
 
+    SPECIAL_LOCALS = [
+      [:raised_exception, "_raised_"],
+      [:return_value, "_returned_"],
+    ]
+
     def frame_eval src, re_raise: false
       @success_last_eval = false
 
       b = current_frame&.eval_binding || TOPLEVEL_BINDING
+      b = b.dup
+
+      SPECIAL_LOCALS.each do |m, local_name|
+        b.local_variable_set(local_name, current_frame.send(m))
+      end
 
       result = if b
                   f, _l = b.source_location
