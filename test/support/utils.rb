@@ -51,7 +51,7 @@ module DEBUGGER__
     end
 
     TestInfo = Struct.new(:queue, :mode, :prompt_pattern, :remote_info,
-                          :backlog, :last_backlog, :internal_info)
+                          :backlog, :last_backlog, :internal_info, :failed_process)
 
     RemoteInfo = Struct.new(:r, :w, :pid, :sock_path, :port, :reader_thread, :debuggee_backlog)
 
@@ -241,11 +241,14 @@ module DEBUGGER__
         rescue Timeout::Error => e
           assert_block(create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)", test_info)) { false }
         ensure
-          kill_remote_debuggee test_info.remote_info
+          kill_remote_debuggee test_info
           # kill debug console process
           read.close
           write.close
-          kill_safely pid, :debugger
+          kill_safely pid, :debugger, test_info
+          if name = test_info.failed_process
+            assert_block(create_message("Expected the #{name} program to finish", test_info)) { false }
+          end
         end
       end
     end
@@ -268,8 +271,10 @@ module DEBUGGER__
       false
     end
 
-    def kill_safely pid, name
-      return if wait_pid pid, 0.3
+    def kill_safely pid, name, test_info
+      return if wait_pid pid, 3
+      
+      test_info.failed_process = name
 
       Process.kill :KILL, pid
       return if wait_pid pid, 0.2
@@ -295,13 +300,13 @@ module DEBUGGER__
       end
     end
 
-    def kill_remote_debuggee remote_info
-      return unless remote_info
+    def kill_remote_debuggee test_info
+      return unless r = test_info.remote_info
 
-      remote_info.reader_thread.kill
-      remote_info.r.close
-      remote_info.w.close
-      kill_safely remote_info.pid, :remote
+      r.reader_thread.kill
+      r.r.close
+      r.w.close
+      kill_safely r.pid, :remote, test_info
     end
 
     # use this to start a debug session with the test program
