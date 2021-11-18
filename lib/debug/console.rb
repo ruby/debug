@@ -159,7 +159,7 @@ module DEBUGGER__
     FH = "# Today's OMIKUJI: "
 
     def read_history_file
-      if history && File.exists?(path = history_file)
+      if history && File.exist?(path = history_file)
         f = (['', 'DAI-', 'CHU-', 'SHO-'].map{|e| e+'KICHI'}+['KYO']).sample
         ["#{FH}#{f}".dup] + File.readlines(path)
       else
