@@ -1070,7 +1070,7 @@ module DEBUGGER__
       end
     end
 
-    # copyed from irb
+    # copied from irb
     class Output
       include Color
 
