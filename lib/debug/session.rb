@@ -1279,7 +1279,7 @@ module DEBUGGER__
       when /\A(.+)[:\s+](\d+)\z/
         add_line_breakpoint $1, $2.to_i, cond: cond, command: cmd
       when /\A(.+)([\.\#])(.+)\z/
-        @tc << [:breakpoint, :method, $1, $2, $3, cond, cmd]
+        @tc << [:breakpoint, :method, $1, $2, $3, cond, cmd, path]
         return :noretry
       when nil
         add_check_breakpoint cond, path
