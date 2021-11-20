@@ -385,7 +385,7 @@ module DEBUGGER__
   class MethodBreakpoint < Breakpoint
     attr_reader :sig_method_name, :method
 
-    def initialize b, klass_name, op, method_name, cond: nil, command: nil
+    def initialize b, klass_name, op, method_name, cond: nil, command: nil, path: nil
       @sig_klass_name = klass_name
       @sig_op = op
       @sig_method_name = method_name
@@ -397,6 +397,7 @@ module DEBUGGER__
       @cond = cond
       @cond_class = nil
       @command = command
+      @path = path
       @key = "#{klass_name}#{op}#{method_name}".freeze
 
       super(false)
@@ -406,6 +407,7 @@ module DEBUGGER__
       @tp = TracePoint.new(:call){|tp|
         next if !safe_eval(tp.binding, @cond) if @cond
         next if @cond_class && !tp.self.kind_of?(@cond_class)
+        next if @path && !tp.path.match?(@path)
         next if @override_method ? (caller_locations(2, 1).first.to_s.start_with?(__dir__)) : tp.path.start_with?(__dir__)
 
         suspend
