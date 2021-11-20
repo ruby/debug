@@ -1251,7 +1251,7 @@ module DEBUGGER__
       end
     end
 
-    BREAK_KEYWORDS = %w(if: do: pre:).freeze
+    BREAK_KEYWORDS = %w(if: do: pre: path:).freeze
 
     def parse_break arg
       mode = :sig
@@ -1293,8 +1293,9 @@ module DEBUGGER__
       expr = parse_break arg.strip
       cond = expr[:if]
       cmd = ['catch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
+      path = Regexp.compile(expr[:path]) if expr[:path]
 
-      bp = CatchBreakpoint.new(expr[:sig], cond: cond, command: cmd)
+      bp = CatchBreakpoint.new(expr[:sig], cond: cond, command: cmd, path: path)
       add_bp bp
     end
 

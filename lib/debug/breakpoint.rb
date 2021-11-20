@@ -263,13 +263,14 @@ module DEBUGGER__
     attr_reader :last_exc
     include SkipPathHelper
 
-    def initialize pat, cond: nil, command: nil
+    def initialize pat, cond: nil, command: nil, path: nil
       @pat = pat.freeze
       @key = [:catch, @pat].freeze
       @last_exc = nil
 
       @cond = cond
       @command = command
+      @path = path
 
       super()
     end
@@ -279,6 +280,7 @@ module DEBUGGER__
         next if skip_path?(tp.path)
         exc = tp.raised_exception
         next if SystemExit === exc
+        next if @path && !tp.path.match?(@path)
         next if !safe_eval(tp.binding, @cond) if @cond
         should_suspend = false
 
