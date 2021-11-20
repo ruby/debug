@@ -1271,6 +1271,7 @@ module DEBUGGER__
       expr = parse_break arg.strip
       cond = expr[:if]
       cmd = ['break', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
+      path = Regexp.compile(expr[:path]) if expr[:path]
 
       case expr[:sig]
       when /\A(\d+)\z/
@@ -1281,7 +1282,7 @@ module DEBUGGER__
         @tc << [:breakpoint, :method, $1, $2, $3, cond, cmd]
         return :noretry
       when nil
-        add_check_breakpoint cond
+        add_check_breakpoint cond, path
       else
         @ui.puts "Unknown breakpoint format: #{arg}"
         @ui.puts
@@ -1312,8 +1313,8 @@ module DEBUGGER__
       add_bp bp
     end
 
-    def add_check_breakpoint expr
-      bp = CheckBreakpoint.new(expr)
+    def add_check_breakpoint expr, path
+      bp = CheckBreakpoint.new(expr, path)
       add_bp bp
     end
 

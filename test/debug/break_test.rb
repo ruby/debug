@@ -477,27 +477,6 @@ module DEBUGGER__
       end
     end
 
-    def test_conditional_breakpoint_stops_if_condition_is_true
-      debug_code program do
-        type 'break if: n == 1'
-        assert_line_text(/#0  BP - Check  n == 1/)
-        type 'continue'
-        assert_line_num 8
-        type 'quit'
-        type 'y'
-      end
-    end
-
-    def test_conditional_breakpoint_shows_error
-      debug_code(program) do
-        type 'break if: xyzzy'
-        type 'b 23'
-        type 'c'
-        assert_debuggee_line_text(/EVAL ERROR/)
-        type 'c'
-      end
-    end
-
     def test_conditional_breakpoint_stops_at_specified_location_if_condition_is_true
       debug_code(program) do
         type 'break 16 if: d == 1'
@@ -540,6 +519,81 @@ module DEBUGGER__
         type 'c'
         assert_line_num 9
         type 'q!'
+      end
+    end
+  end
+
+  class ConditionalBreakTest < TestCase
+    def program
+      <<~RUBY
+     1| a = 1
+     2| a += 1
+     3| a += 2
+     4| a += 3
+     5|
+     6| binding.b
+      RUBY
+    end
+
+
+    def test_conditional_breakpoint_stops_if_condition_is_true
+      debug_code program do
+        type 'break if: a == 4'
+        assert_line_text(/#0  BP - Check  a == 4/)
+        type 'c'
+        assert_line_num 4
+        type 'c'
+        type 'c'
+      end
+    end
+
+    def test_conditional_breakpoint_shows_error
+      debug_code(program) do
+        type 'break if: xyzzy'
+        type 'c'
+        assert_debuggee_line_text(/EVAL ERROR/)
+        type 'c'
+      end
+    end
+
+    class PathOptionTest < TestCase
+      def additional_file
+        <<~RUBY
+        a = 1
+        b = 200
+        RUBY
+      end
+
+      ADDITIONAL_FILE_BASENAME = __FILE__.hash.abs.to_s(16)
+
+      def program(additional_file_path)
+        <<~RUBY
+        1| a = 1
+        2| b = 100
+        3| load "#{additional_file_path}"
+        RUBY
+      end
+
+      def with_tempfile
+        t = Tempfile.create([ADDITIONAL_FILE_BASENAME, '.rb']).tap do |f|
+          f.write(additional_file)
+          f.close
+        end
+        yield t
+      ensure
+        File.unlink t if t
+      end
+
+      def test_conditional_breakpoint_only_stops_when_path_matches
+        with_tempfile do |additional_file|
+          debug_code(program(additional_file.path)) do
+            type "break if: a == 1 path: #{additional_file.path}"
+            type 'c'
+            assert_line_text(/#{additional_file.path}/)
+            assert_line_text(/b = 200/)
+            type 'c'
+          end
+        end
       end
     end
   end
