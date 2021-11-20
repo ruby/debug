@@ -305,9 +305,10 @@ module DEBUGGER__
   end
 
   class CheckBreakpoint < Breakpoint
-    def initialize expr
+    def initialize expr, path
       @expr = expr.freeze
       @key = [:check, @expr].freeze
+      @path = path
 
       super()
     end
@@ -317,6 +318,7 @@ module DEBUGGER__
         next if tp.path.start_with? __dir__
         next if tp.path.start_with? '<internal:'
         next if ThreadClient.current.management?
+        next if @path && !tp.path.match?(@path)
 
         if safe_eval tp.binding, @expr
           suspend
