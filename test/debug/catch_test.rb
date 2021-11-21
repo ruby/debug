@@ -150,7 +150,9 @@ module DEBUGGER__
   end
 
   class PathOptionTest < TestCase
-    def additional_file
+    include ExtraFileHelper
+
+    def extra_file
       <<~RUBY
         def bar
           raise "bar"
@@ -159,11 +161,9 @@ module DEBUGGER__
       RUBY
     end
 
-    ADDITIONAL_FILE_BASENAME = __FILE__.hash.abs.to_s(16)
-
-    def program(additional_file_path)
+    def program(extra_file_path)
       <<~RUBY
-     1| load "#{additional_file_path}"
+     1| load "#{extra_file_path}"
      2|
      3| def foo
      4|   raise "foo"
@@ -175,20 +175,10 @@ module DEBUGGER__
       RUBY
     end
 
-    def with_tempfile
-      t = Tempfile.create([ADDITIONAL_FILE_BASENAME, '.rb']).tap do |f|
-        f.write(additional_file)
-        f.close
-      end
-      yield t
-    ensure
-      File.unlink t if t
-    end
-
     def test_catch_only_stops_when_path_matches
-      with_tempfile do |additional_file|
-        debug_code(program(additional_file.path)) do
-          type "catch RuntimeError path: #{additional_file.path}"
+      with_extra_tempfile do |extra_file|
+        debug_code(program(extra_file.path)) do
+          type "catch RuntimeError path: #{extra_file.path}"
           type 'c'
           assert_line_text(/bar/)
           type 'c'

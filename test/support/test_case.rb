@@ -5,6 +5,7 @@ require 'tempfile'
 
 require_relative 'utils'
 require_relative 'assertions'
+require_relative 'extra_file_helper'
 
 module DEBUGGER__
   class TestCase < Test::Unit::TestCase
