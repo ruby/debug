@@ -277,10 +277,15 @@ module DEBUGGER__
 
     def setup
       @tp = TracePoint.new(:raise){|tp|
-        next if skip_path?(tp.path)
         exc = tp.raised_exception
         next if SystemExit === exc
-        next if @path && !tp.path.match?(@path)
+
+        if @path
+          next if !tp.path.match?(@path)
+        elsif skip_path?(tp.path)
+          next
+        end
+
         next if !safe_eval(tp.binding, @cond) if @cond
         should_suspend = false
 
