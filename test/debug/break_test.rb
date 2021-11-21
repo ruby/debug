@@ -203,6 +203,50 @@ module DEBUGGER__
         type "c"
       end
     end
+
+    class PathOptionTest < TestCase
+      def additional_file
+        <<~RUBY
+        Foo.new.bar
+        RUBY
+      end
+
+      ADDITIONAL_FILE_BASENAME = __FILE__.hash.abs.to_s(16)
+
+      def program(additional_file_path)
+        <<~RUBY
+         1| class Foo
+         2|   def bar; end
+         3| end
+         4|
+         5| Foo.new.bar
+         6|
+         7| load "#{additional_file_path}"
+        RUBY
+      end
+
+      def with_tempfile
+        t = Tempfile.create([ADDITIONAL_FILE_BASENAME, '.rb']).tap do |f|
+          f.write(additional_file)
+          f.close
+        end
+        yield t
+      ensure
+        File.unlink t if t
+      end
+
+      def test_break_only_stops_when_path_matches
+        with_tempfile do |additional_file|
+          debug_code(program(additional_file.path)) do
+            type "break Foo#bar path: #{additional_file.path}"
+            type 'c'
+            assert_line_text(/#{ADDITIONAL_FILE_BASENAME}/)
+            type 'c'
+            assert_finish
+          end
+        end
+      end
+    end
   end
 
   class BreakAtCMethodsTest < TestCase
@@ -273,6 +317,45 @@ module DEBUGGER__
         type 'c'
         assert_line_text(/:3\b/)
         type 'c'
+      end
+    end
+
+    class PathOptionTest < TestCase
+      def additional_file
+        <<~RUBY
+        1.abs
+        RUBY
+      end
+
+      ADDITIONAL_FILE_BASENAME = __FILE__.hash.abs.to_s(16)
+
+      def program(additional_file_path)
+        <<~RUBY
+        1| load "#{additional_file_path}"
+        2| 1.abs
+        RUBY
+      end
+
+      def with_tempfile
+        t = Tempfile.create([ADDITIONAL_FILE_BASENAME, '.rb']).tap do |f|
+          f.write(additional_file)
+          f.close
+        end
+        yield t
+      ensure
+        File.unlink t if t
+      end
+
+      def test_break_only_stops_when_path_matches
+        with_tempfile do |additional_file|
+          debug_code(program(additional_file.path)) do
+            type "break Integer#abs path: #{additional_file.path}"
+            type 'c'
+            assert_line_text(/#{ADDITIONAL_FILE_BASENAME}/)
+            type 'c'
+            assert_finish
+          end
+        end
       end
     end
   end

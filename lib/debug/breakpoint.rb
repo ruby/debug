@@ -407,8 +407,10 @@ module DEBUGGER__
       @tp = TracePoint.new(:call){|tp|
         next if !safe_eval(tp.binding, @cond) if @cond
         next if @cond_class && !tp.self.kind_of?(@cond_class)
-        next if @path && !tp.path.match?(@path)
-        next if @override_method ? (caller_locations(2, 1).first.to_s.start_with?(__dir__)) : tp.path.start_with?(__dir__)
+
+        caller_location = caller_locations(2, 1).first.to_s
+        next if @path && !caller_location.match?(@path)
+        next if caller_location.start_with?(__dir__)
 
         suspend
       }
