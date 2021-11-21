@@ -205,15 +205,15 @@ module DEBUGGER__
     end
 
     class PathOptionTest < TestCase
-      def additional_file
+      include ExtraFileHelper
+
+      def extra_file
         <<~RUBY
         Foo.new.bar
         RUBY
       end
 
-      ADDITIONAL_FILE_BASENAME = __FILE__.hash.abs.to_s(16)
-
-      def program(additional_file_path)
+      def program(extra_file_path)
         <<~RUBY
          1| class Foo
          2|   def bar; end
@@ -221,26 +221,16 @@ module DEBUGGER__
          4|
          5| Foo.new.bar
          6|
-         7| load "#{additional_file_path}"
+         7| load "#{extra_file_path}"
         RUBY
       end
 
-      def with_tempfile
-        t = Tempfile.create([ADDITIONAL_FILE_BASENAME, '.rb']).tap do |f|
-          f.write(additional_file)
-          f.close
-        end
-        yield t
-      ensure
-        File.unlink t if t
-      end
-
       def test_break_only_stops_when_path_matches
-        with_tempfile do |additional_file|
-          debug_code(program(additional_file.path)) do
-            type "break Foo#bar path: #{additional_file.path}"
+        with_extra_tempfile do |extra_file|
+          debug_code(program(extra_file.path)) do
+            type "break Foo#bar path: #{extra_file.path}"
             type 'c'
-            assert_line_text(/#{ADDITIONAL_FILE_BASENAME}/)
+            assert_line_text(/#{extra_file.path}/)
             type 'c'
             assert_finish
           end
@@ -321,37 +311,27 @@ module DEBUGGER__
     end
 
     class PathOptionTest < TestCase
-      def additional_file
+      include ExtraFileHelper
+
+      def extra_file
         <<~RUBY
         1.abs
         RUBY
       end
 
-      ADDITIONAL_FILE_BASENAME = __FILE__.hash.abs.to_s(16)
-
-      def program(additional_file_path)
+      def program(extra_file_path)
         <<~RUBY
-        1| load "#{additional_file_path}"
+        1| load "#{extra_file_path}"
         2| 1.abs
         RUBY
       end
 
-      def with_tempfile
-        t = Tempfile.create([ADDITIONAL_FILE_BASENAME, '.rb']).tap do |f|
-          f.write(additional_file)
-          f.close
-        end
-        yield t
-      ensure
-        File.unlink t if t
-      end
-
       def test_break_only_stops_when_path_matches
-        with_tempfile do |additional_file|
-          debug_code(program(additional_file.path)) do
-            type "break Integer#abs path: #{additional_file.path}"
+        with_extra_tempfile do |extra_file|
+          debug_code(program(extra_file.path)) do
+            type "break Integer#abs path: #{extra_file.path}"
             type 'c'
-            assert_line_text(/#{ADDITIONAL_FILE_BASENAME}/)
+            assert_line_text(/#{extra_file.path}/)
             type 'c'
             assert_finish
           end
@@ -640,40 +620,32 @@ module DEBUGGER__
     end
 
     class PathOptionTest < TestCase
-      def additional_file
+      include ExtraFileHelper
+
+      def extra_file
         <<~RUBY
-        a = 1
-        b = 200
+        a = 100
+        b = 1
+        _ = 0
         RUBY
       end
 
-      ADDITIONAL_FILE_BASENAME = __FILE__.hash.abs.to_s(16)
-
-      def program(additional_file_path)
+      def program(extra_file_path)
         <<~RUBY
-        1| a = 1
-        2| b = 100
-        3| load "#{additional_file_path}"
+       1| a = 200
+       2| b = 1
+       3| _ = 0
+       4| load "#{extra_file_path}"
         RUBY
-      end
-
-      def with_tempfile
-        t = Tempfile.create([ADDITIONAL_FILE_BASENAME, '.rb']).tap do |f|
-          f.write(additional_file)
-          f.close
-        end
-        yield t
-      ensure
-        File.unlink t if t
       end
 
       def test_conditional_breakpoint_only_stops_when_path_matches
-        with_tempfile do |additional_file|
-          debug_code(program(additional_file.path)) do
-            type "break if: a == 1 path: #{additional_file.path}"
+        with_extra_tempfile do |extra_file|
+          debug_code(program(extra_file.path)) do
+            type "break if: b == 1 path: #{extra_file.path}"
             type 'c'
-            assert_line_text(/#{additional_file.path}/)
-            assert_line_text(/b = 200/)
+            type 'a + b'
+            assert_line_text(/101/)
             type 'c'
           end
         end
