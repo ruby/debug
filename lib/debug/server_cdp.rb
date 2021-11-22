@@ -17,11 +17,13 @@ module DEBUGGER__
 
       def handshake  
         req = @sock.readpartial 4096
-        $stderr.puts '[>]' + req if SHOW_PROTOCOL
+        req.split("\n").each{|r| $stderr.puts '[>]' + r} if SHOW_PROTOCOL
   
         if req.match /^Sec-WebSocket-Key: (.*)\r\n/
           accept = Base64.strict_encode64 Digest::SHA1.digest "#{$1}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-          @sock.print "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: #{accept}\r\n\r\n"
+          res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: #{accept}\r\n\r\n"
+          @sock.print res
+          res.split("\n").each{|r| $stderr.puts '[>]' + r} if SHOW_PROTOCOL
         else
           "Unknown request: #{req}"
         end
@@ -38,6 +40,8 @@ module DEBUGGER__
 
       def send **msg
         msg = JSON.generate(msg)
+        $stderr.puts '[<]' + msg if SHOW_PROTOCOL
+
         frame = []
         fin = 0b10000000
         opcode = 0b00000001
@@ -84,7 +88,10 @@ module DEBUGGER__
           masked = @sock.getbyte
           unmasked << (masked ^ masking_key[n % 4])
         end
-        JSON.parse unmasked.pack 'c*'
+        msg = unmasked.pack 'c*'
+        $stderr.puts '[>]' + msg if SHOW_PROTOCOL
+
+        JSON.parse msg
       end
     end
 
@@ -109,7 +116,6 @@ module DEBUGGER__
       @src_map = {}
       loop do
         req = @web_sock.extract_data
-        $stderr.puts '[>]' + req.inspect if SHOW_PROTOCOL
 
         case req['method']
 
@@ -137,7 +143,7 @@ module DEBUGGER__
                       endLine: src.count("\n"),
                       endColumn: 0,
                       executionContextId: 1,
-                      hash: src.hash
+                      hash: src.hash.to_s
           send_event 'Runtime.executionContextCreated',
                       context: {
                         id: SecureRandom.hex(16),
@@ -149,9 +155,28 @@ module DEBUGGER__
           src = get_source_code s_id
           send_response req, scriptSource: src
           @q_msg << req
-        when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
-          'Runtime.compileScript', 'Page.getResourceContent', 'Overlay.setPausedInDebuggerMessage',
-          'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries', 'Log.clear'
+        when 'Page.enable', 'Page.setAdBlockingEnabled', 'Page.startScreencast', 'Page.stopScreencast',
+              'Page.getNavigationHistory', 'Page.getResourceContent',
+              'Target.setDiscoverTargets', 'Target.setRemoteLocations',
+              'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse', 'Emulation.setEmulatedVisionDeficiency',
+              'Emulation.setEmulatedMedia', 'Emulation.setFocusEmulationEnabled',
+              'Runtime.enable', 'Runtime.compileScript', 'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries',
+              'Runtime.runIfWaitingForDebugger', 'Runtime.getIsolateId',
+              'Log.enable', 'Log.clear', 'Log.startViolationsReport',
+              'Network.enable', 'Network.setAttachDebugStack', 'Network.clearAcceptedEncodingsOverride',
+              'Network.setCacheDisabled',
+              'Overlay.setPausedInDebuggerMessage', 'Overlay.setShowViewportSizeOnResize',
+              'Debugger.enable', 'Debugger.setAsyncCallStackDepth', 'Debugger.setPauseOnExceptions',
+              'Debugger.setBlackboxPatterns',
+              'DOM.enable', 'DOM.getDocument',
+              'DOMDebugger.setBreakOnCSPViolation',
+              'Target.setAutoAttach', 
+              'CSS.enable',
+              'Overlay.enable',
+              'Profiler.enable',
+              'Audits.enable',
+              'ServiceWorker.enable',
+              'Inspector.enable'
           send_response req
 
         ## control
@@ -308,7 +333,7 @@ module DEBUGGER__
           @ui.respond req
           return :retry
         else
-          raise "Unknown object id #{oid}"
+          raise "Unknown object id #{oid}: #{@scope_map}"
         end
       end
     end
@@ -330,7 +355,7 @@ module DEBUGGER__
                             endLine: src.count("\n"),
                             endColumn: 0,
                             executionContextId: @script_paths.size + 1,
-                            hash: src.hash
+                            hash: src.hash.to_s
             @script_paths << s_id
           end
 
