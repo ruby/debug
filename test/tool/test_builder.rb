@@ -2,7 +2,6 @@
 
 require 'pty'
 require 'expect'
-require 'tempfile'
 require 'json'
 
 module DEBUGGER__
@@ -223,11 +222,6 @@ module DEBUGGER__
       puts "    method: #{@method}"
 
       File.write(path, content)
-    end
-
-    def remove_temp_file
-      File.unlink(@temp_file)
-      @temp_file = nil
     end
   end
 end
