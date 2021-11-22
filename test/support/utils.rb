@@ -238,7 +238,7 @@ module DEBUGGER__
         rescue Errno::EIO => e
           check_error(/DEBUGGEE Exception/, test_info)
           assert_empty_queue test_info, exception: e
-        rescue Timeout::Error => e
+        rescue Timeout::Error
           assert_block(create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)", test_info)) { false }
         ensure
           kill_remote_debuggee test_info.remote_info
