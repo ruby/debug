@@ -48,7 +48,7 @@ module DEBUGGER__
         type 'outline Foo'
         assert_line_text(
           [
-            /Class#methods: allocate/,
+            /Class#methods:\s+allocate/,
             /Foo\.methods: baz/,
           ]
         )
