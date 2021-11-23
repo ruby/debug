@@ -336,21 +336,21 @@ module DEBUGGER__
 
       begin
         Socket.tcp_server_sockets @host, @port do |socks|
-          addr = socks[0].local_address.inspect_sockaddr # Change this part if `socks` are multiple.
+          @addr = socks[0].local_address.inspect_sockaddr # Change this part if `socks` are multiple.
           rdbg = File.expand_path('../../exe/rdbg', __dir__)
 
-          DEBUGGER__.warn "Debugger can attach via TCP/IP (#{addr})"
+          DEBUGGER__.warn "Debugger can attach via TCP/IP (#{@addr})"
           DEBUGGER__.info <<~EOS
           With rdbg, use the following command line:
           #
-          #   #{rdbg} --attach #{addr.split(':').join(' ')}
+          #   #{rdbg} --attach #{@addr.split(':').join(' ')}
           #
           EOS
 
           DEBUGGER__.warn <<~EOS if CONFIG[:open_frontend] == 'chrome'
           With Chrome browser, type the following URL in the address-bar:
           
-             devtools://devtools/bundled/inspector.html?ws=#{addr}
+             devtools://devtools/bundled/inspector.html?ws=#{@addr}
           
           EOS
 
