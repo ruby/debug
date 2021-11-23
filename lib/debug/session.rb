@@ -1841,7 +1841,7 @@ module DEBUGGER__
     ::DEBUGGER__::SESSION.add_catch_breakpoint pat
   end
 
-  # String for requring location
+  # String for requiring location
   # nil for -r
   def self.require_location
     locs = caller_locations
