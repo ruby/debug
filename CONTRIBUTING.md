@@ -31,7 +31,7 @@ There is a test generator in `debug.rb` project to make it easier to write tests
 
 ### Quickstart
 
-This section shows you how to create test file by test generator. For more advanced informations on creating tests, please take a look at [gentest options](#gentest-options). (You can also check by `$bin/gentest -h`)
+This section shows you how to create test file by test generator. For more advanced information on creating tests, please take a look at [gentest options](#gentest-options). (You can also check by `$bin/gentest -h`)
 
 #### 1. Create a target file for debuggee.
 
