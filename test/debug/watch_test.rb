@@ -100,7 +100,6 @@ module DEBUGGER__
           type 'continue'
           assert_line_text(/Stop by #\d  BP - Watch  #<Student:.*> @age = 25 -> 26/)
           type 'continue'
-          assert_finish
         end
       end
     end
