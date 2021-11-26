@@ -232,7 +232,6 @@ module DEBUGGER__
             type 'c'
             assert_line_text(/#{extra_file.path}/)
             type 'c'
-            assert_finish
           end
         end
       end
@@ -333,7 +332,6 @@ module DEBUGGER__
             type 'c'
             assert_line_text(/#{extra_file.path}/)
             type 'c'
-            assert_finish
           end
         end
       end
