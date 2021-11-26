@@ -195,25 +195,32 @@ module DEBUGGER__
                         ]
         when 'Debugger.setBreakpointByUrl'
           line = req.dig('params', 'lineNumber')
-          path = req.dig('params', 'url').match('http://debuggee(.*)')[1]
-          cond = req.dig('params', 'condition')
-          src = get_source_code path
-          end_line = src.count("\n")
-          line = end_line  if line > end_line
-          b_id = "#{bps.size+1}:#{line}:#{path}"
-          if cond != ''
-            SESSION.add_line_breakpoint(path, line + 1, cond: cond)
+          url = req.dig('params', 'url')
+          if url.match /http:\/\/debuggee(.*)/
+            path = $1
+            cond = req.dig('params', 'condition')
+            src = get_source_code path
+            end_line = src.count("\n")
+            line = end_line  if line > end_line
+            b_id = "1:#{line}:#{path}"
+            if cond != ''
+              SESSION.add_line_breakpoint(path, line + 1, cond: cond)
+            else
+              SESSION.add_line_breakpoint(path, line + 1)
+            end
             bps[b_id] = bps.size
+            send_response req,
+                          breakpointId: b_id,
+                          locations: [
+                            scriptId: path,
+                            lineNumber: line
+                          ]
           else
-            SESSION.add_line_breakpoint(path, line + 1)
-            bps[b_id] = bps.size
+            b_id = "1:#{line}:#{url}"
+            send_response req,
+                          breakpointId: b_id,
+                          locations: []
           end
-          send_response req,
-                        breakpointId: b_id,
-                        locations: [
-                          scriptId: path,
-                          lineNumber: line
-                        ]
         when 'Debugger.removeBreakpoint'
           b_id = req.dig('params', 'breakpointId')
           bps = del_bp bps, b_id
