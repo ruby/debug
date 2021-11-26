@@ -103,5 +103,43 @@ module DEBUGGER__
         end
       end
     end
+
+    class PathOptionTest < TestCase
+      def extra_file
+        <<~RUBY
+        STUDENT.age = 25
+        _ = 1 # for the debugger to stop
+        RUBY
+      end
+
+      def program(extra_file_path)
+        <<~RUBY
+         1| class Student
+         2|   attr_accessor :age
+         3|
+         4|   def initialize
+         5|     binding.b(do: "watch @age path: #{extra_file_path}")
+         6|   end
+         7| end
+         8|
+         9| STUDENT = Student.new
+        10|
+        11| load "#{extra_file_path}"
+        12|
+        13| STUDENT.age = 30
+        14| _ = 1
+        RUBY
+      end
+
+      def test_watch_only_stops_when_path_matches
+        with_extra_tempfile do |extra_file|
+          debug_code(program(extra_file.path)) do
+            type 'c'
+            assert_line_text(/@age =  -> 25/)
+            type 'c'
+          end
+        end
+      end
+    end
   end
 end
