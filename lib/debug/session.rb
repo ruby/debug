@@ -1304,8 +1304,9 @@ module DEBUGGER__
       expr = parse_break arg.strip
       cond = expr[:if]
       cmd = ['watch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
+      path = Regexp.compile(expr[:path]) if expr[:path]
 
-      @tc << [:breakpoint, :watch, expr[:sig], cond, cmd]
+      @tc << [:breakpoint, :watch, expr[:sig], cond, cmd, path]
     end
 
     def add_catch_breakpoint pat
