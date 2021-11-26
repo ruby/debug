@@ -150,8 +150,6 @@ module DEBUGGER__
   end
 
   class PathOptionTest < TestCase
-    include ExtraFileHelper
-
     def extra_file
       <<~RUBY
         def bar
