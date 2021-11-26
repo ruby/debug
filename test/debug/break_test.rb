@@ -205,8 +205,6 @@ module DEBUGGER__
     end
 
     class PathOptionTest < TestCase
-      include ExtraFileHelper
-
       def extra_file
         <<~RUBY
         Foo.new.bar
@@ -310,8 +308,6 @@ module DEBUGGER__
     end
 
     class PathOptionTest < TestCase
-      include ExtraFileHelper
-
       def extra_file
         <<~RUBY
         1.abs
@@ -618,8 +614,6 @@ module DEBUGGER__
     end
 
     class PathOptionTest < TestCase
-      include ExtraFileHelper
-
       def extra_file
         <<~RUBY
         a = 100
