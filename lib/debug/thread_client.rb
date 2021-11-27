@@ -67,7 +67,7 @@ module DEBUGGER__
       result = "#{call_identifier_str} at #{location_str}"
 
       if return_str = frame.return_str
-        result += " #=> #{colorize_magenta(frame.return_str)}"
+        result += " #=> #{colorize_magenta(return_str)}"
       end
 
       result
@@ -108,7 +108,7 @@ module DEBUGGER__
 
     def set_mode mode
       # STDERR.puts "#{@mode} => #{mode} @ #{caller.inspect}"
-      #pp caller
+      # pp caller
 
       # mode transition check
       case mode
@@ -737,7 +737,7 @@ module DEBUGGER__
             finish_frames = (iter || 1) - 1
             goal_depth = @target_frames.first.frame_depth - finish_frames
 
-            step_tp nil, [:return, :b_return] do |event|
+            step_tp nil, [:return, :b_return] do
               DEBUGGER__.frame_depth - 3 <= goal_depth ? true : false
             end
             break
