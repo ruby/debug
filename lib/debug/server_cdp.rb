@@ -417,6 +417,10 @@ module DEBUGGER__
             call_frame = {
               callFrameId: SecureRandom.hex(16),
               functionName: frame.name,
+              functionLocation: {
+                scriptId: abs,
+                lineNumber: 0
+              },
               location: {
                 scriptId: abs,
                 lineNumber: frame.location.lineno - 1 # The line number is 0-based.
