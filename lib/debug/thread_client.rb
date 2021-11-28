@@ -341,32 +341,30 @@ module DEBUGGER__
     end
 
     def frame_eval src, re_raise: false
-      begin
-        @success_last_eval = false
+      @success_last_eval = false
 
-        b = current_frame&.eval_binding || TOPLEVEL_BINDING
+      b = current_frame&.eval_binding || TOPLEVEL_BINDING
 
-        result = if b
-                   f, _l = b.source_location
-                   b.eval(src, "(rdbg)/#{f}")
-                 else
-                   frame_self = current_frame.self
-                   instance_eval_for_cmethod(frame_self, src)
-                 end
-        @success_last_eval = true
-        result
+      result = if b
+                  f, _l = b.source_location
+                  b.eval(src, "(rdbg)/#{f}")
+                else
+                  frame_self = current_frame.self
+                  instance_eval_for_cmethod(frame_self, src)
+                end
+      @success_last_eval = true
+      result
 
-      rescue Exception => e
-        return yield(e) if block_given?
+    rescue Exception => e
+      return yield(e) if block_given?
 
-        puts "eval error: #{e}"
+      puts "eval error: #{e}"
 
-        e.backtrace_locations&.each do |loc|
-          break if loc.path == __FILE__
-          puts "  #{loc}"
-        end
-        raise if re_raise
+      e.backtrace_locations&.each do |loc|
+        break if loc.path == __FILE__
+        puts "  #{loc}"
       end
+      raise if re_raise
     end
 
     def show_src(frame_index: @current_frame_index,
