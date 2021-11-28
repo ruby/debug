@@ -40,12 +40,10 @@ module DEBUGGER__
     end
 
     private def add_path path
-      begin
-        src = File.read(path)
-        src = src.gsub("\r\n", "\n") # CRLF -> LF
-        @files[path] = SrcInfo.new(src.lines)
-      rescue SystemCallError
-      end
+      src = File.read(path)
+      src = src.gsub("\r\n", "\n") # CRLF -> LF
+      @files[path] = SrcInfo.new(src.lines)
+    rescue SystemCallError
     end
 
     private def get_si iseq

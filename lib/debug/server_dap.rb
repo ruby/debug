@@ -119,29 +119,27 @@ module DEBUGGER__
     end
 
     def recv_request
-      begin
-        r = IO.select([@sock])
+      r = IO.select([@sock])
 
-        @session.process_group.sync do
-          raise RetryBecauseCantRead unless IO.select([@sock], nil, nil, 0)
+      @session.process_group.sync do
+        raise RetryBecauseCantRead unless IO.select([@sock], nil, nil, 0)
 
-          case header = @sock.gets
-          when /Content-Length: (\d+)/
-            b = @sock.read(2)
-            raise b.inspect unless b == "\r\n"
+        case header = @sock.gets
+        when /Content-Length: (\d+)/
+          b = @sock.read(2)
+          raise b.inspect unless b == "\r\n"
 
-            l = @sock.read(s = $1.to_i)
-            show_protocol :>, l
-            JSON.load(l)
-          when nil
-            nil
-          else
-            raise "unrecognized line: #{l} (#{l.size} bytes)"
-          end
+          l = @sock.read(s = $1.to_i)
+          show_protocol :>, l
+          JSON.load(l)
+        when nil
+          nil
+        else
+          raise "unrecognized line: #{l} (#{l.size} bytes)"
         end
-      rescue RetryBecauseCantRead
-        retry
       end
+    rescue RetryBecauseCantRead
+      retry
     end
 
     def process
