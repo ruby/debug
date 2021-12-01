@@ -44,11 +44,11 @@ module DEBUGGER__
              ],
              supportsExceptionFilterOptions: true,
              supportsStepBack: true,
+             supportsEvaluateForHovers: true,
 
              ## Will be supported
              # supportsExceptionOptions: true,
              # supportsHitConditionalBreakpoints:
-             # supportsEvaluateForHovers:
              # supportsSetVariable: true,
              # supportSuspendDebuggee:
              # supportsLogPoints:
@@ -90,19 +90,19 @@ module DEBUGGER__
       @sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
     end
 
-    def send_response req, success: true, **kw
+    def send_response req, success: true, message: nil, **kw
       if kw.empty?
         send type: 'response',
              command: req['command'],
              request_seq: req['seq'],
              success: success,
-             message: success ? 'Success' : 'Failed'
+             message: message || (success ? 'Success' : 'Failed')
       else
         send type: 'response',
              command: req['command'],
              request_seq: req['seq'],
              success: success,
-             message: success ? 'Success' : 'Failed',
+             message: message || (success ? 'Success' : 'Failed'),
              body: kw
       end
     end
@@ -421,11 +421,13 @@ module DEBUGGER__
         end
       when 'evaluate'
         frame_id = req.dig('arguments', 'frameId')
+        context = req.dig('arguments', 'context')
+
         if @frame_map[frame_id]
           tid, fid = @frame_map[frame_id]
           expr = req.dig('arguments', 'expression')
           if tc = find_waiting_tc(tid)
-            tc << [:dap, :evaluate, req, fid, expr]
+            tc << [:dap, :evaluate, req, fid, expr, context]
           else
             fail_response req
           end
@@ -477,9 +479,14 @@ module DEBUGGER__
         register_vars result[:variables], tid
         @ui.respond req, result
       when :evaluate
-        tid = result.delete :tid
-        register_var result, tid
-        @ui.respond req, result
+        message = result.delete :message
+        if message
+          @ui.respond req, success: false, message: message
+        else
+          tid = result.delete :tid
+          register_var result, tid
+          @ui.respond req, result
+        end
       else
         raise "unsupported: #{args.inspect}"
       end
@@ -628,8 +635,9 @@ module DEBUGGER__
         event! :dap_result, :variable, req, variables: (vars || []), tid: self.id
 
       when :evaluate
-        fid, expr = args
+        fid, expr, context = args
         frame = @target_frames[fid]
+        message = nil
 
         if frame && (b = frame.binding)
           b = b.dup
@@ -637,18 +645,75 @@ module DEBUGGER__
             b.local_variable_set(name, var) if /\%/ !~ name
           end
 
-          begin
-            result = b.eval(expr.to_s, '(DEBUG CONSOLE)')
-          rescue Exception => e
-            result = e
+          case context
+          when 'repl', 'watch'
+            begin
+              result = b.eval(expr.to_s, '(DEBUG CONSOLE)')
+            rescue Exception => e
+              result = e
+            end
+          when 'hover'
+            case expr
+            when /\A\@\S/
+              begin
+                (r = b.receiver).instance_variable_defined?(expr) or raise(NameError)
+                result = r.instance_variable_get(expr)
+              rescue NameError
+                message = "Error: Not defined instance variable: #{expr.inspect}"
+              end
+
+            when /\A\$\S/
+              global_variables.each{|gvar|
+                if gvar.to_s == expr
+                  result = eval(gvar.to_s)
+                  break false
+                end
+              } and (message = "Error: Not defined global variable: #{expr.inspect}")
+
+            when /\A[A-Z]/
+              unless result = search_const(b, expr)
+                message = "Error: Not defined constants: #{expr.inspect}"
+              end
+            else
+              begin
+                # try to check local variables
+                b.local_variable_defined?(expr) or raise NameError
+                result = b.local_variable_get(expr)
+              rescue NameError
+                # try to check method
+                if b.receiver.respond_to? expr, include_all: true
+                  result = b.receiver.method(expr)
+                else
+                  message = "Error: Can not evaluate: #{expr.inspect}"
+                end
+              end
+            end
           end
         else
-          result = 'can not evaluate on this frame...'
+          result = 'Error: Can not evaluate on this frame'
         end
-        event! :dap_result, :evaluate, req, tid: self.id, **evaluate_result(result)
+
+        event! :dap_result, :evaluate, req, message: message, tid: self.id, **evaluate_result(result)
       else
         raise "Unknown req: #{args.inspect}"
       end
+    end
+
+    def search_const b, expr
+      cs = expr.split('::')
+      [Object, *b.eval('Module.nesting')].reverse_each{|mod|
+        if cs.all?{|c|
+             if mod.const_defined?(c)
+               mod = mod.const_get(c)
+             else
+               false
+             end
+           }
+          # if-body
+          return mod
+        end
+      }
+      false
     end
 
     def evaluate_result r
