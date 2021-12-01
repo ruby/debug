@@ -340,9 +340,9 @@ module DEBUGGER__
       frame_self.instance_eval(src)
     end
 
-    SPECIAL_LOCALS = [
-      [:raised_exception, "_raised_"],
-      [:return_value, "_returned_"],
+    SPECIAL_LOCAL_VARS = [
+      [:raised_exception, "_raised"],
+      [:return_value,     "_return"],
     ]
 
     def frame_eval src, re_raise: false
@@ -351,8 +351,8 @@ module DEBUGGER__
       b = current_frame&.eval_binding || TOPLEVEL_BINDING
       b = b.dup
 
-      SPECIAL_LOCALS.each do |m, local_name|
-        b.local_variable_set(local_name, current_frame.send(m))
+      special_local_variables current_frame do |name, var|
+        b.local_variable_set(name, var) if /\%/ !~ name
       end
 
       result = if b
@@ -438,15 +438,20 @@ module DEBUGGER__
 
     ## cmd: show
 
+    def special_local_variables frame
+      SPECIAL_LOCAL_VARS.each do |mid, name|
+        next unless frame&.send("has_#{mid}")
+        name = name.sub('_', '%') if frame.binding.local_variable_defined? name
+        yield name, frame.send(mid)
+      end
+    end
+
     def show_locals pat
       if s = current_frame&.self
         puts_variable_info '%self', s, pat
       end
-      if current_frame&.has_return_value
-        puts_variable_info '%return', current_frame.return_value, pat
-      end
-      if current_frame&.has_raised_exception
-        puts_variable_info "%raised", current_frame.raised_exception, pat
+      special_local_variables current_frame do |name, val|
+        puts_variable_info name, val, pat
       end
 
       if vars = current_frame&.local_variables
