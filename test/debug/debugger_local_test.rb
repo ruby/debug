@@ -20,7 +20,7 @@ module DEBUGGER__
         debug_code(program) do
           type "catch Exception"
           type "c"
-          type "_raised_"
+          type "_raised"
           assert_line_text(/#<NameError: undefined local variable or method `foo' for main:Object/)
           type "c"
           type "result"
@@ -31,7 +31,7 @@ module DEBUGGER__
 
       def test_raised_is_accessible_from_command
         debug_code(program) do
-          type "catch Exception pre: p _raised_"
+          type "catch Exception pre: p _raised"
           type "c"
           assert_line_text(/#<NameError: undefined local variable or method `foo' for main:Object/)
           type "c"
@@ -45,7 +45,7 @@ module DEBUGGER__
     class ReturnedTest < TestCase
       def program
         <<~RUBY
-   1| _returned_ = 1111
+   1| _return = 1111
    2|
    3| def foo
    4|   "foo"
@@ -54,7 +54,7 @@ module DEBUGGER__
    7| foo
    8|
    9| # check repl variable doesn't leak to the program
-  10| result = _returned_ * 2
+  10| result = _return * 2
   11|
   12| binding.b
         RUBY
@@ -64,7 +64,7 @@ module DEBUGGER__
         debug_code(program) do
           type "b 5"
           type "c"
-          type "_returned_ + 'bar'"
+          type "_return + 'bar'"
           assert_line_text(/"foobar"/)
           type "c"
           type "result"
@@ -75,7 +75,7 @@ module DEBUGGER__
 
       def test_returned_is_accessible_from_command
         debug_code(program) do
-          type "b 5 pre: p _returned_ + 'bar'"
+          type "b 5 pre: p _return + 'bar'"
           type "c"
           assert_line_text(/"foobar"/)
           type "c"

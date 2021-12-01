@@ -2,7 +2,7 @@
 
 module DEBUGGER__
   FrameInfo = Struct.new(:location, :self, :binding, :iseq, :class, :frame_depth,
-                          :has_return_value, :return_value,
+                          :has_return_value,     :return_value,
                           :has_raised_exception, :raised_exception,
                           :show_line,
                           :_local_variables, :_callee # for recorder
