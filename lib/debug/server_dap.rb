@@ -603,7 +603,7 @@ module DEBUGGER__
             case obj
             when Hash
               vars = obj.map{|k, v|
-                variable(DEBUGGER__.short_inspect(k), v)
+                variable(DEBUGGER__.safe_inspect(k), v,)
               }
             when Struct
               vars = obj.members.map{|m|
@@ -652,6 +652,7 @@ module DEBUGGER__
             rescue Exception => e
               result = e
             end
+
           when 'hover'
             case expr
             when /\A\@\S/
@@ -661,7 +662,6 @@ module DEBUGGER__
               rescue NameError
                 message = "Error: Not defined instance variable: #{expr.inspect}"
               end
-
             when /\A\$\S/
               global_variables.each{|gvar|
                 if gvar.to_s == expr
@@ -669,7 +669,6 @@ module DEBUGGER__
                   break false
                 end
               } and (message = "Error: Not defined global variable: #{expr.inspect}")
-
             when /\A[A-Z]/
               unless result = search_const(b, expr)
                 message = "Error: Not defined constants: #{expr.inspect}"
@@ -688,6 +687,8 @@ module DEBUGGER__
                 end
               end
             end
+          else
+            message = "Error: unknown context: #{context}"
           end
         else
           result = 'Error: Can not evaluate on this frame'
@@ -720,11 +721,11 @@ module DEBUGGER__
       v = variable nil, r
       v.delete :name
       v.delete :value
-      v[:result] = DEBUGGER__.short_inspect(r)
+      v[:result] = DEBUGGER__.safe_inspect(r)
       v
     end
 
-    def variable_ name, obj, indexedVariables: 0, namedVariables: 0, use_short: true
+    def variable_ name, obj, indexedVariables: 0, namedVariables: 0
       if indexedVariables > 0 || namedVariables > 0
         vid = @var_map.size + 1
         @var_map[vid] = obj
@@ -735,7 +736,7 @@ module DEBUGGER__
       ivnum = obj.instance_variables.size
 
       { name: name,
-        value: DEBUGGER__.short_inspect(obj, use_short),
+        value: DEBUGGER__.safe_inspect(obj),
         type: obj.class.name || obj.class.to_s,
         variablesReference: vid,
         indexedVariables: indexedVariables,
@@ -750,7 +751,7 @@ module DEBUGGER__
       when Hash
         variable_ name, obj, namedVariables: obj.size
       when String
-        variable_ name, obj, use_short: false, namedVariables: 3 # #to_str, #length, #encoding
+        variable_ name, obj, namedVariables: 3 # #to_str, #length, #encoding
       when Struct
         variable_ name, obj, namedVariables: obj.size
       when Class, Module
