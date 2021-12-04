@@ -510,6 +510,8 @@ module DEBUGGER__
       #   * break and run `<command>` before stopping.
       # * `b[reak] ... do: <command>`
       #   * break and run `<command>`, and continue.
+      # * `b[reak] ... path: <path_regexp>`
+      #   * break if the triggering event's path matches <path_regexp>.
       # * `b[reak] if: <expr>`
       #   * break if: `<expr>` is true at any lines.
       #   * Note that this feature is super slow.
@@ -564,6 +566,8 @@ module DEBUGGER__
       #   * runs `<command>` before stopping.
       # * `catch ... do: <command>`
       #   * stops and run `<command>`, and continue.
+      # * `catch ... path: <path_regexp>`
+      #   * stops if the exception is raised from a path that matches <path_regexp>.
       when 'catch'
         check_postmortem
 
@@ -584,6 +588,8 @@ module DEBUGGER__
       #   * runs `<command>` before stopping.
       # * `watch ... do: <command>`
       #   * stops and run `<command>`, and continue.
+      # * `watch ... path: <path_regexp>`
+      #   * stops if the triggering event's path matches <path_regexp>.
       when 'wat', 'watch'
         check_postmortem
 
