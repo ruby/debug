@@ -185,14 +185,19 @@ module DEBUGGER__
     end
 
     def test_the_path_option_supersede_skip_path_config
+      # skips the extra_file's breakpoint
       with_extra_tempfile do |extra_file|
         debug_code(program(extra_file.path)) do
-          type "config set skip_path #{extra_file.path}"
+          type "config set skip_path /#{extra_file.path}/"
+          type "catch RuntimeError"
+          type 'c'
+          assert_line_text(/foo/)
           type 'c'
         end
 
+        # ignores skip_path and stops at designated path
         debug_code(program(extra_file.path)) do
-          type "config set skip_path #{extra_file.path}"
+          type "config set skip_path /#{extra_file.path}/"
           type "catch RuntimeError path: #{extra_file.path}"
           type 'c'
           assert_line_text(/bar/)
