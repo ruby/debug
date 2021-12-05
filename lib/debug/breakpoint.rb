@@ -422,7 +422,13 @@ module DEBUGGER__
         next if @cond_class && !tp.self.kind_of?(@cond_class)
 
         caller_location = caller_locations(2, 1).first.to_s
-        next if @path && !caller_location.match?(@path)
+
+        if @path
+          next if !caller_location.match?(@path)
+        elsif skip_path?(caller_location)
+          next
+        end
+
         next if caller_location.start_with?(__dir__)
 
         suspend
