@@ -322,8 +322,13 @@ module DEBUGGER__
       when 'Debugger.stepOver', 'Debugger.stepInto', 'Debugger.stepOut', 'Debugger.resume', 'Debugger.getScriptSource'
         @tc << [:cdp, :backtrace, req]
       when 'Debugger.evaluateOnCallFrame'
-        expr = req.dig('params', 'expression')
-        @tc << [:cdp, :evaluate, req, expr]
+        frame_id = req.dig('params', 'callFrameId')
+        if fid = @frame_map[frame_id]
+          expr = req.dig('params', 'expression')
+          @tc << [:cdp, :evaluate, req, fid, expr]
+        else
+          @ui.respond req
+        end
       when 'Runtime.getProperties'
         oid = req.dig('params', 'objectId')
         case @scope_map[oid]
@@ -344,7 +349,8 @@ module DEBUGGER__
 
       case type
       when :backtrace
-        result[:callFrames].each do |frame|
+        result[:callFrames].each.with_index do |frame, i|
+          @frame_map[frame[:callFrameId]] = i
           s_id = frame.dig(:location, :scriptId)
           if File.exist?(s_id) && !@script_paths.include?(s_id)
             src = File.read(s_id)
@@ -462,26 +468,72 @@ module DEBUGGER__
         }
       when :evaluate
         res = {}
-        expr = args.shift
-        begin
-          orig_stdout = $stdout
-          $stdout = StringIO.new
-          result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
-        rescue Exception => e
-          result = e
-          b = result.backtrace.map{|e| "    #{e}\n"}
-          line = b.first.match('.*:(\d+):in .*')[1].to_i
-          res[:exceptionDetails] = {
-            exceptionId: 1,
-            text: 'Uncaught',
-            lineNumber: line - 1,
-            columnNumber: 0,
-            exception: evaluate_result(result),
-          }
-        ensure
-          output = $stdout.string
-          $stdout = orig_stdout
+        fid, expr = args
+        frame = @target_frames[fid]
+        
+        if frame && (b = frame.binding)
+          b = b.dup
+          special_local_variables current_frame do |name, var|
+            b.local_variable_set(name, var) if /\%/ !~name
+          end
+
+          result = nil
+
+          case req.dig('params', 'objectGroup')
+          when 'popover'
+            case expr
+            # Chrome doesn't read instance variables
+            when /\A\$\S/
+              global_variables.each{|gvar|
+                if gvar.to_s == expr
+                  result = eval(gvar.to_s)
+                  break false
+                end
+              } and (result = Exception.new("Error: Not defined global variable: #{expr.inspect}"))
+            when /\A[A-Z]/
+              unless result = search_const(b, expr)
+                result = Exception.new("Error: Not defined global variable: #{expr.inspect}")
+              end
+            else
+              begin
+                $stderr.puts expr
+                # try to check local variables
+                b.local_variable_defined?(expr) or raise NameError
+                result = b.local_variable_get(expr)
+              rescue NameError
+                # try to check method
+                if b.receiver.respond_to? expr, include_all: true
+                  result = b.receiver.method(expr)
+                else
+                  result = "Error: Can not evaluate: #{expr.inspect}"
+                end
+              end
+            end
+          else
+            begin
+              orig_stdout = $stdout
+              $stdout = StringIO.new
+              result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
+            rescue Exception => e
+              result = e
+              b = result.backtrace.map{|e| "    #{e}\n"}
+              line = b.first.match('.*:(\d+):in .*')[1].to_i
+              res[:exceptionDetails] = {
+                exceptionId: 1,
+                text: 'Uncaught',
+                lineNumber: line - 1,
+                columnNumber: 0,
+                exception: evaluate_result(result),
+              }
+            ensure
+              output = $stdout.string
+              $stdout = orig_stdout
+            end
+          end
+        else
+          result = Exception.new("Error: Can not evaluate on this frame")
         end
+
         res[:result] = evaluate_result(result)
         event! :cdp_result, :evaluate, req, response: res, output: output
       when :properties
