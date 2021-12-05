@@ -286,7 +286,10 @@ module DEBUGGER__
         end
 
         wait_command_loop tc
-
+      when :sync_prev_evaled
+        @th_clients.each_value do |tc|
+          tc << [:store_prev_evaled, ev_args[0]]
+        end
       when :dap_result
         dap_event ev_args # server.rb
         wait_command_loop tc

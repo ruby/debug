@@ -161,5 +161,59 @@ module DEBUGGER__
         end
       end
     end
+
+    class UnderscoreTest < TestCase
+      def program
+        <<~RUBY
+     1| a = 10
+     2| b = 100
+     3| binding.b
+        RUBY
+      end
+
+      def test_underscore_returns_nil_by_default
+        debug_code(program) do
+          type "_"
+          assert_line_text(/nil/)
+          type "q!"
+        end
+      end
+
+      def test_underscore_returns_the_previous_value
+        debug_code(program) do
+          type "c"
+          type "a"
+          assert_line_text(/10/)
+          type "_ + 40"
+          assert_line_text(/50/)
+          type "_ + b"
+          assert_line_text(/150/)
+          type "c"
+        end
+      end
+
+      def test_underscore_ignores_exceptions
+        debug_code(program) do
+          type "c"
+          type "a"
+          assert_line_text(/10/)
+          type "a / 0"
+          assert_line_text(/divided by 0/)
+          type "_ + 40"
+          assert_line_text(/50/)
+          type "c"
+        end
+      end
+
+      def test_underscore_keeps_value_to_next_bp
+        debug_code(program) do
+          type "x = 100"
+          type "c"
+          type "_ + 40"
+          assert_line_text(/140/)
+          type "c"
+        end
+      end
+    end
   end
 end

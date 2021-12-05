@@ -87,6 +87,7 @@ module DEBUGGER__
       @obj_map = {} # { object_id => obj } for CDP
       @recorder = nil
       @mode = :waiting
+      @prev_evaled_value = nil
       set_mode :running
       thr.instance_variable_set(:@__thread_client_id, id)
 
@@ -358,6 +359,8 @@ module DEBUGGER__
         b.local_variable_set(name, var) if /\%/ !~ name
       end
 
+      b.local_variable_set(:_, @prev_evaled_value)
+
       result = if b
                   f, _l = b.source_location
                   b.eval(src, "(rdbg)/#{f}")
@@ -366,6 +369,8 @@ module DEBUGGER__
                   instance_eval_for_cmethod(frame_self, src)
                 end
       @success_last_eval = true
+
+      event! :sync_prev_evaled, result
       result
 
     rescue Exception => e
@@ -824,6 +829,8 @@ module DEBUGGER__
           end
 
           event! :result, result_type, result
+        when :store_prev_evaled
+          @prev_evaled_value = args[0]
         when :frame
           type, arg = *args
           case type
