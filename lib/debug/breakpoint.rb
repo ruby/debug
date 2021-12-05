@@ -356,7 +356,7 @@ module DEBUGGER__
       super()
     end
 
-    def watch_eval
+    def watch_eval(tp)
       result = @object.instance_variable_get(@ivar)
       if result != @current
         begin
@@ -364,7 +364,15 @@ module DEBUGGER__
           @current = result
 
           if @cond.nil? || @object.instance_eval(@cond)
-            suspend
+            stoppable_path =
+              if @path
+                tp.path.match?(@path)
+              else
+                !skip_path?(tp.path)
+              end
+            if stoppable_path
+              suspend
+            end
           end
         ensure
           remove_instance_variable(:@prev)
@@ -378,9 +386,8 @@ module DEBUGGER__
       @tp = TracePoint.new(:line, :return, :b_return){|tp|
         next if tp.path.start_with? __dir__
         next if tp.path.start_with? '<internal:'
-        next if @path && !tp.path.match?(@path)
 
-        watch_eval
+        watch_eval(tp)
       }
     end
 

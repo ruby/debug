@@ -118,7 +118,7 @@ module DEBUGGER__
          2|   attr_accessor :age
          3|
          4|   def initialize
-         5|     binding.b(do: "watch @age path: #{extra_file_path}")
+         5|
          6|   end
          7| end
          8|
@@ -134,6 +134,35 @@ module DEBUGGER__
       def test_watch_only_stops_when_path_matches
         with_extra_tempfile do |extra_file|
           debug_code(program(extra_file.path)) do
+            type 'b 5'
+            type 'c'
+            type "watch @age path: #{extra_file.path}"
+            type 'c'
+            assert_line_text(/@age =  -> 25/)
+            type 'c'
+          end
+        end
+      end
+
+      def test_the_path_option_supersede_skip_path_config
+        # skips the extra_file's breakpoint
+        with_extra_tempfile do |extra_file|
+          debug_code(program(extra_file.path)) do
+            type "config set skip_path /#{extra_file.path}/"
+            type 'b 5'
+            type 'c'
+            type "watch @age"
+            type 'c'
+            assert_line_text(/@age = 25 -> 30/)
+            type 'c'
+          end
+
+          # ignores skip_path and stops at designated path
+          debug_code(program(extra_file.path)) do
+            type "config set skip_path /#{extra_file.path}/"
+            type 'b 5'
+            type 'c'
+            type "watch @age path: #{extra_file.path}"
             type 'c'
             assert_line_text(/@age =  -> 25/)
             type 'c'
