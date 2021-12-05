@@ -81,6 +81,14 @@ module DEBUGGER__
       false
     end
 
+    def skip_path?(path)
+      if @path
+        !path.match?(@path)
+      else
+        super
+      end
+    end
+
     include Color
 
     def generate_label(name)
@@ -280,12 +288,7 @@ module DEBUGGER__
       @tp = TracePoint.new(:raise){|tp|
         exc = tp.raised_exception
         next if SystemExit === exc
-
-        if @path
-          next if !tp.path.match?(@path)
-        elsif skip_path?(tp.path)
-          next
-        end
+        next if skip_path?(tp.path)
 
         next if !safe_eval(tp.binding, @cond) if @cond
         should_suspend = false
@@ -324,12 +327,7 @@ module DEBUGGER__
         next if tp.path.start_with? __dir__
         next if tp.path.start_with? '<internal:'
         next if ThreadClient.current.management?
-
-        if @path
-          next if !tp.path.match?(@path)
-        elsif skip_path?(tp.path)
-          next
-        end
+        next if skip_path?(tp.path)
 
         if safe_eval tp.binding, @expr
           suspend
@@ -363,16 +361,8 @@ module DEBUGGER__
           @prev = @current
           @current = result
 
-          if @cond.nil? || @object.instance_eval(@cond)
-            stoppable_path =
-              if @path
-                tp.path.match?(@path)
-              else
-                !skip_path?(tp.path)
-              end
-            if stoppable_path
-              suspend
-            end
+          if (@cond.nil? || @object.instance_eval(@cond)) && !skip_path?(tp.path)
+            suspend
           end
         ensure
           remove_instance_variable(:@prev)
@@ -429,14 +419,8 @@ module DEBUGGER__
         next if @cond_class && !tp.self.kind_of?(@cond_class)
 
         caller_location = caller_locations(2, 1).first.to_s
-
-        if @path
-          next if !caller_location.match?(@path)
-        elsif skip_path?(caller_location)
-          next
-        end
-
         next if caller_location.start_with?(__dir__)
+        next if skip_path?(caller_location)
 
         suspend
       }
