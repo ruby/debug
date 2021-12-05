@@ -4,6 +4,8 @@ require_relative 'color'
 
 module DEBUGGER__
   class Breakpoint
+    include SkipPathHelper
+
     attr_reader :key
 
     def initialize do_enable = true
@@ -261,7 +263,6 @@ module DEBUGGER__
 
   class CatchBreakpoint < Breakpoint
     attr_reader :last_exc
-    include SkipPathHelper
 
     def initialize pat, cond: nil, command: nil, path: nil
       @pat = pat.freeze
@@ -323,7 +324,12 @@ module DEBUGGER__
         next if tp.path.start_with? __dir__
         next if tp.path.start_with? '<internal:'
         next if ThreadClient.current.management?
-        next if @path && !tp.path.match?(@path)
+
+        if @path
+          next if !tp.path.match?(@path)
+        elsif skip_path?(tp.path)
+          next
+        end
 
         if safe_eval tp.binding, @expr
           suspend

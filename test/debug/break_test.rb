@@ -642,6 +642,37 @@ module DEBUGGER__
           end
         end
       end
+
+      def test_the_path_option_supersede_skip_path_config
+        # skips the extra_file's breakpoint
+        with_extra_tempfile do |extra_file|
+          debug_code(program(extra_file.path)) do
+            type "config set skip_path /#{extra_file.path}/"
+            type "break if: b == 1"
+            type 'c'
+            type 'a + b'
+            assert_line_num(3)
+            assert_line_text(/201/)
+            type 'c'
+            # this stop is because check bp stops at every line after the condition is fulfilled, which is another issue
+            # see https://github.com/ruby/debug/issues/406 for more about the issue
+            assert_line_num(4)
+            type 'c'
+          end
+        end
+
+        # ignores skip_path and stops at designated path
+        with_extra_tempfile do |extra_file|
+          debug_code(program(extra_file.path)) do
+            type "config set skip_path /#{extra_file.path}/"
+            type "break if: b == 1 path: #{extra_file.path}"
+            type 'c'
+            type 'a + b'
+            assert_line_text(/101/)
+            type 'c'
+          end
+        end
+      end
     end
   end
 end
