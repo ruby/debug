@@ -344,6 +344,10 @@ module DEBUGGER__
       frame_self.instance_eval(src)
     end
 
+    def eval_binding
+      current_frame&.binding || TOPLEVEL_BINDING
+    end
+
     SPECIAL_LOCAL_VARS = [
       [:raised_exception, "_raised"],
       [:return_value,     "_return"],
@@ -352,7 +356,7 @@ module DEBUGGER__
     def frame_eval src, re_raise: false
       @success_last_eval = false
 
-      b = current_frame&.binding || TOPLEVEL_BINDING
+      b = eval_binding
 
       special_local_variables current_frame, binding: b do |name, var|
         b.local_variable_set(name, var) if /\%/ !~ name
