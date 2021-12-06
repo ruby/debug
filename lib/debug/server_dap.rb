@@ -4,7 +4,7 @@ require 'json'
 
 module DEBUGGER__
   module UI_DAP
-    SHOW_PROTOCOL = ENV['RUBY_DEBUG_DAP_SHOW_PROTOCOL'] == '1'
+    SHOW_PROTOCOL = ENV['DEBUG_DAP_SHOW_PROTOCOL'] == '1' || ENV['RUBY_DEBUG_DAP_SHOW_PROTOCOL'] == '1'
 
     def show_protocol dir, msg
       if SHOW_PROTOCOL
