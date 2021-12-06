@@ -554,8 +554,9 @@ module DEBUGGER__
             v = b.local_variable_get(name)
             variable(name, v)
           }
-          vars.unshift variable('%raised', frame.raised_exception) if frame.has_raised_exception
-          vars.unshift variable('%return', frame.return_value) if frame.has_return_value
+          special_local_variables frame do |name, val|
+            vars.unshift variable(name, val)
+          end
           vars.unshift variable('%self', b.receiver)
         elsif lvars = frame.local_variables
           vars = lvars.map{|var, val|
@@ -563,8 +564,9 @@ module DEBUGGER__
           }
         else
           vars = [variable('%self', frame.self)]
-          vars.push variable('%raised', frame.raised_exception) if frame.has_raised_exception
-          vars.push variable('%return', frame.return_value) if frame.has_return_value
+          special_local_variables frame do |name, val|
+            vars.unshift variable(name, val)
+          end
         end
         event! :cdp_result, :scope, req, vars
       when :properties
