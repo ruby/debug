@@ -331,15 +331,23 @@ module DEBUGGER__
         end
       when 'Runtime.getProperties'
         oid = req.dig('params', 'objectId')
-        case @obj_map[oid]
-        when 'local', 'eval'
-          @tc << [:cdp, :properties, req, oid]
-        when 'script', 'global'
-          # TODO: Support script and global types
-          @ui.respond req
-          return :retry
+        if ref = @obj_map[oid]
+          case ref[0]
+          when 'local'
+            frame_id = ref[1]
+            fid = @frame_map[frame_id]
+            @tc << [:cdp, :scope, req, fid]
+          when 'properties'
+            @tc << [:cdp, :properties, req, oid]
+          when 'script', 'global'
+            # TODO: Support script and global types
+            @ui.respond req
+            return :retry
+          else
+            raise "Unknown object id #{oid}"
+          end
         else
-          raise "Unknown object id #{oid}"
+          @ui.respond req
         end
       end
     end
@@ -350,7 +358,8 @@ module DEBUGGER__
       case type
       when :backtrace
         result[:callFrames].each.with_index do |frame, i|
-          @frame_map[frame[:callFrameId]] = i
+          frame_id = frame[:callFrameId]
+          @frame_map[frame_id] = i
           s_id = frame.dig(:location, :scriptId)
           if File.exist?(s_id) && !@script_paths.include?(s_id)
             src = File.read(s_id)
@@ -368,7 +377,7 @@ module DEBUGGER__
 
           frame[:scopeChain].each {|s|
             oid = s.dig(:object, :objectId)
-            @obj_map[oid] = s[:type]
+            @obj_map[oid] = [s[:type], frame_id]
           }
         end
         result[:reason] = 'other'
@@ -377,7 +386,7 @@ module DEBUGGER__
         rs = result.dig(:response, :result)
         [rs].each {|r|
           if oid = r.dig(:objectId)
-            @obj_map[oid] = 'eval'
+            @obj_map[oid] = ['properties']
           end
         }
         @ui.respond req, **result[:response]
@@ -393,10 +402,17 @@ module DEBUGGER__
                           executionContextId: 1, # Change this number if something goes wrong.
                           timestamp: Time.now.to_f
         end
+      when :scope
+        result.each {|r|
+          if oid = r.dig(:value, :objectId)
+            @obj_map[oid] = ['properties']
+          end
+        }
+        @ui.respond req, result: result
       when :properties
         result.each {|r|
           if oid = r.dig(:value, :objectId)
-            @obj_map[oid] = 'local' # TODO: Change this part because it is not necessarily `local`.
+            @obj_map[oid] = ['properties']
           end
         }
         @ui.respond req, result: result
@@ -456,10 +472,6 @@ module DEBUGGER__
               this: {
                 type: 'object'
               }
-            }
-            call_frame[:scopeChain].each {|s|
-              oid = s.dig(:object, :objectId)
-              @frame_id_map[oid] = i
             }
             call_frame
           }
@@ -534,28 +546,30 @@ module DEBUGGER__
 
         res[:result] = evaluate_result(result)
         event! :cdp_result, :evaluate, req, response: res, output: output
+      when :scope
+        fid = args.shift
+        frame = @target_frames[fid]
+        if b = frame.binding
+          vars = b.local_variables.map{|name|
+            v = b.local_variable_get(name)
+            variable(name, v)
+          }
+          vars.unshift variable('%raised', frame.raised_exception) if frame.has_raised_exception
+          vars.unshift variable('%return', frame.return_value) if frame.has_return_value
+          vars.unshift variable('%self', b.receiver)
+        elsif lvars = frame.local_variables
+          vars = lvars.map{|var, val|
+            variable(var, val)
+          }
+        else
+          vars = [variable('%self', frame.self)]
+          vars.push variable('%raised', frame.raised_exception) if frame.has_raised_exception
+          vars.push variable('%return', frame.return_value) if frame.has_return_value
+        end
+        event! :cdp_result, :scope, req, vars
       when :properties
         oid = args.shift
-        if fid = @frame_id_map[oid]
-          frame = @target_frames[fid]
-          if b = frame.binding
-            vars = b.local_variables.map{|name|
-              v = b.local_variable_get(name)
-              variable(name, v)
-            }
-            vars.unshift variable('%raised', frame.raised_exception) if frame.has_raised_exception
-            vars.unshift variable('%return', frame.return_value) if frame.has_return_value
-            vars.unshift variable('%self', b.receiver)
-          elsif lvars = frame.local_variables
-            vars = lvars.map{|var, val|
-              variable(var, val)
-            }
-          else
-            vars = [variable('%self', frame.self)]
-            vars.push variable('%raised', frame.raised_exception) if frame.has_raised_exception
-            vars.push variable('%return', frame.return_value) if frame.has_return_value
-          end
-        elsif objs = @obj_map[oid]
+        if objs = @obj_map[oid]
           vars = parse_object(objs)
         else
           raise "Unknown object id #{oid}"
