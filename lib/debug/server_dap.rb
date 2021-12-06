@@ -640,7 +640,6 @@ module DEBUGGER__
         message = nil
 
         if frame && (b = frame.binding)
-          b = b.dup
           special_local_variables current_frame do |name, var|
             b.local_variable_set(name, var) if /\%/ !~ name
           end

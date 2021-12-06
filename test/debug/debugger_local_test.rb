@@ -4,6 +4,23 @@ require_relative '../support/test_case'
 
 module DEBUGGER__
   class DebuggerLocalsTest < TestCase
+    class REPLLocalsTest < TestCase
+      def program
+        <<~RUBY
+        1| a = 1
+        RUBY
+      end
+
+      def test_locals_added_in_locals_are_accessible_between_evaluations
+        debug_code(program) do
+          type "y = 50"
+          type "y"
+          assert_line_text(/50/)
+          type "c"
+        end
+      end
+    end
+
     class RaisedTest < TestCase
       class RubyMethodTest < TestCase
         def program

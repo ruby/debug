@@ -353,7 +353,6 @@ module DEBUGGER__
       @success_last_eval = false
 
       b = current_frame&.eval_binding || TOPLEVEL_BINDING
-      b = b.dup
 
       special_local_variables current_frame, binding: b do |name, var|
         b.local_variable_set(name, var) if /\%/ !~ name
