@@ -111,9 +111,9 @@ module DEBUGGER__
 
         ## boot/configuration
         when 'Page.getResourceTree'
-          abs = File.absolute_path($0)
-          src = File.read(abs)
-          @src_map[abs] = src
+          path = File.absolute_path($0)
+          src = File.read(path)
+          @src_map[path] = src
           send_response req,
                         frameTree: {
                           frame: {
@@ -126,8 +126,8 @@ module DEBUGGER__
                           ]
                         }
           send_event 'Debugger.scriptParsed',
-                      scriptId: abs,
-                      url: "http://debuggee#{abs}",
+                      scriptId: path,
+                      url: "http://debuggee#{path}",
                       startLine: 0,
                       startColumn: 0,
                       endLine: src.count("\n"),
@@ -415,23 +415,21 @@ module DEBUGGER__
           callFrames: @target_frames.map.with_index{|frame, i|
             path = frame.realpath || frame.path
             if path.match /<internal:(.*)>/
-              abs = $1
-            else
-              abs = path
+              path = $1
             end
 
             call_frame = {
               callFrameId: SecureRandom.hex(16),
               functionName: frame.name,
               functionLocation: {
-                scriptId: abs,
+                scriptId: path,
                 lineNumber: 0
               },
               location: {
-                scriptId: abs,
+                scriptId: path,
                 lineNumber: frame.location.lineno - 1 # The line number is 0-based.
               },
-              url: "http://debuggee#{abs}",
+              url: "http://debuggee#{path}",
               scopeChain: [
                 {
                   type: 'local',
