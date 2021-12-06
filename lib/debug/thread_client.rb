@@ -355,7 +355,7 @@ module DEBUGGER__
       b = current_frame&.eval_binding || TOPLEVEL_BINDING
       b = b.dup
 
-      special_local_variables current_frame do |name, var|
+      special_local_variables current_frame, binding: b do |name, var|
         b.local_variable_set(name, var) if /\%/ !~ name
       end
 
@@ -442,10 +442,12 @@ module DEBUGGER__
 
     ## cmd: show
 
-    def special_local_variables frame
+    def special_local_variables frame, binding: nil
       SPECIAL_LOCAL_VARS.each do |mid, name|
         next unless frame&.send("has_#{mid}")
-        name = name.sub('_', '%') if frame.binding.local_variable_defined? name
+        binding ||= frame&.binding
+        next unless binding
+        name = name.sub('_', '%') if binding.local_variable_defined? name
         yield name, frame.send(mid)
       end
     end
