@@ -118,22 +118,6 @@ module DEBUGGER__
       "#{pretty_path}:#{location.lineno}"
     end
 
-    private def make_binding
-      __newb__ = self.self.instance_eval('binding')
-      self.local_variables.each{|var, val|
-        __newb__.local_variable_set(var, val)
-      }
-      __newb__
-    end
-
-    def eval_binding
-      if b = self.binding
-        b
-      elsif self.local_variables
-        make_binding
-      end
-    end
-
     def local_variables
       if lvars = self._local_variables
         lvars
