@@ -494,7 +494,7 @@ module DEBUGGER__
           case req.dig('params', 'objectGroup')
           when 'popover'
             case expr
-            # Chrome doesn't read instance variables
+            # Chrome doesn't read instance variables.
             when /\A\$\S/
               global_variables.each{|gvar|
                 if gvar.to_s == expr
