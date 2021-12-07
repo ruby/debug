@@ -109,7 +109,7 @@ module DEBUGGER__
       @src_map   = {} # {id => src}
 
       @script_paths = [File.absolute_path($0)] # for CDP
-      @obj_map = {} # { object_id => ... } for CDP
+      @obj_map = {} # { object_id => scope } for CDP
 
       @tp_thread_begin = nil
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
