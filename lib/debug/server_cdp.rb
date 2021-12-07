@@ -412,10 +412,12 @@ module DEBUGGER__
         }
         @ui.respond req, result: result
       when :properties
-        result[:result].each {|r|
-          if oid = r.dig(:value, :objectId)
-            @obj_map[oid] = ['properties']
-          end
+        result.each{|k, v|
+          v.each{|r|
+            if oid = r.dig(:value, :objectId)
+              @obj_map[oid] = ['properties']
+            end
+          }
         }
         @ui.respond req, **result
       end
@@ -572,45 +574,46 @@ module DEBUGGER__
         event! :cdp_result, :scope, req, vars
       when :properties
         oid = args.shift
-        vars = []
+        result = []
+        prop = []
 
         if obj = @obj_map[oid]
           case obj
           when Array
-            vars = obj.map.with_index{|o, i|
+            result = obj.map.with_index{|o, i|
               variable i.to_s, o
             }
           when Hash
-            vars = obj.map{|k, v|
+            result = obj.map{|k, v|
               variable(k, v)
             }
           when Struct
-            vars = obj.members.map{|m|
+            result = obj.members.map{|m|
               variable(m, obj[m])
             }
           when String
-            vars = [
-              variable('#length', obj.length),
-              variable('#encoding', obj.encoding)
+            prop = [
+              property('#length', obj.length),
+              property('#encoding', obj.encoding)
             ]
           when Class, Module
-            vars = obj.instance_variables.map{|iv|
+            result = obj.instance_variables.map{|iv|
               variable(iv, obj.instance_variable_get(iv))
             }
-            vars.unshift variable('%ancestors', obj.ancestors[1..])
+            prop = [property('%ancestors', obj.ancestors[1..])]
           when Range
-            vars = [
-              variable('#begin', obj.begin),
-              variable('#end', obj.end),
+            prop = [
+              property('#begin', obj.begin),
+              property('#end', obj.end),
             ]
           end
 
-          vars += obj.instance_variables.map{|iv|
+          result += obj.instance_variables.map{|iv|
             variable(iv, obj.instance_variable_get(iv))
           }
-          vars.unshift variable('#class', obj.class)
+          prop += [property('#class', obj.class)]
         end
-        event! :cdp_result, :properties, req, result: vars
+        event! :cdp_result, :properties, req, result: result, internalProperties: prop
       end
     end
 
@@ -634,6 +637,13 @@ module DEBUGGER__
     def evaluate_result r
       v = variable nil, r
       v[:value]
+    end
+
+    def property name, obj
+      v = variable name, obj
+      v.delete :configurable
+      v.delete :enumerable
+      v
     end
 
     def variable_ name, obj, type, description: obj.inspect, subtype: nil
