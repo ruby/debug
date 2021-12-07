@@ -104,7 +104,7 @@ module DEBUGGER__
       @process_group = ProcessGroup.new
       @subsession = nil
 
-      @frame_map = {} # for DAP: {id => [threadId, frame_depth]} and CDP: {id => frame_depth}
+      @frame_map = {} # {id => [threadId, frame_depth]} for DAP
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
       @src_map   = {} # {id => src}
 
