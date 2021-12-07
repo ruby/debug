@@ -410,12 +410,12 @@ module DEBUGGER__
         }
         @ui.respond req, result: result
       when :properties
-        result[:result].each {|r|
+        result.each {|r|
           if oid = r.dig(:value, :objectId)
             @obj_map[oid] = ['properties']
           end
         }
-        @ui.respond req, **result
+        @ui.respond req, result: result
       end
     end
   end
@@ -500,12 +500,13 @@ module DEBUGGER__
                   break false
                 end
               } and (result = Exception.new("Error: Not defined global variable: #{expr.inspect}"))
-            when /(\A[A-Z][a-zA-Z]*)/
-              unless result = search_const(b, $1)
-                result = Exception.new("Error: Not defined constans: #{expr.inspect}")
+            when /\A[A-Z]/
+              unless result = search_const(b, expr)
+                result = Exception.new("Error: Not defined global variable: #{expr.inspect}")
               end
             else
               begin
+                $stderr.puts expr
                 # try to check local variables
                 b.local_variable_defined?(expr) or raise NameError
                 result = b.local_variable_get(expr)
@@ -514,7 +515,7 @@ module DEBUGGER__
                 if b.receiver.respond_to? expr, include_all: true
                   result = b.receiver.method(expr)
                 else
-                  result = Exception.new("Error: Can not evaluate: #{expr.inspect}")
+                  result = "Error: Can not evaluate: #{expr.inspect}"
                 end
               end
             end
@@ -570,63 +571,13 @@ module DEBUGGER__
         event! :cdp_result, :scope, req, vars
       when :properties
         oid = args.shift
-        vars = []
-
-        if obj = @obj_map[oid]
-          case obj
-          when Array
-            vars = obj.map.with_index{|o, i|
-              variable i.to_s, o
-            }
-          when Hash
-            vars = obj.map{|k, v|
-              variable(k, v)
-            }
-          when Struct
-            vars = obj.members.map{|m|
-              variable(m, obj[m])
-            }
-          when String
-            vars = [
-              variable('#length', obj.length),
-              variable('#encoding', obj.encoding)
-            ]
-          when Class, Module
-            vars = obj.instance_variables.map{|iv|
-              variable(iv, obj.instance_variable_get(iv))
-            }
-            vars.unshift variable('%ancestors', obj.ancestors[1..])
-          when Range
-            vars = [
-              variable('#begin', obj.begin),
-              variable('#end', obj.end),
-            ]
-          end
-
-          vars += obj.instance_variables.map{|iv|
-            variable(iv, obj.instance_variable_get(iv))
-          }
-          vars.unshift variable('#class', obj.class)
+        if objs = @obj_map[oid]
+          vars = parse_object(objs)
+        else
+          raise "Unknown object id #{oid}"
         end
-        event! :cdp_result, :properties, req, result: vars
+        event! :cdp_result, :properties, req, vars
       end
-    end
-
-    def search_const b, expr
-      cs = expr.split('::')
-      [Object, *b.eval('Module.nesting')].reverse_each{|mod|
-        if cs.all?{|c|
-             if mod.const_defined?(c)
-               mod = mod.const_get(c)
-             else
-               false
-             end
-           }
-          # if-body
-          return mod
-        end
-      }
-      false
     end
 
     def evaluate_result r
@@ -634,27 +585,34 @@ module DEBUGGER__
       v[:value]
     end
 
-    def variable_ name, obj, type, description: nil, subtype: nil
-      oid = rand.to_s
-      @obj_map[oid] = obj
+    def parse_object objs
+      case objs
+      when Array
+        objs.map.with_index{|obj, i| variable i.to_s, obj}
+      when Hash
+        objs.map{|k, v| variable k, v}
+      end
+    end
+
+    def variable_ name, obj, type, description: nil, subtype: nil, use_short: true
       prop = {
         name: name,
         value: {
           type: type,
           description: obj.inspect,
           value: obj,
-          objectId: oid
         },
         configurable: true, # TODO: Change these parts because
         enumerable: true    #       they are not necessarily `true`.
       }
-
-      if description
+      if description && subtype
         v = prop[:value]
         v.delete :value
-        v[:subtype] = subtype if subtype
         v[:description] = description
+        v[:subtype] = subtype
+        v[:objectId] = oid = rand.to_s
         v[:className] = obj.class
+        @obj_map[oid] = obj
       end
       prop
     end
@@ -665,13 +623,11 @@ module DEBUGGER__
         variable_ name, obj, 'object', description: "Array(#{obj.size})", subtype: 'array'
       when Hash
         variable_ name, obj, 'object', description: 'Object', subtype: 'map'
-      when Range, Time
+      when Range, NilClass, Time
         variable_ name, obj, 'object'
       when String
-        variable_ name, obj, 'string'
-      when Class
-        variable_ name, obj, 'object', description: obj.inspect
-      when Module, Struct
+        variable_ name, obj, 'string', use_short: false
+      when Class, Module, Struct
         variable_ name, obj, 'function'
       when TrueClass, FalseClass
         variable_ name, obj, 'boolean'
@@ -682,9 +638,7 @@ module DEBUGGER__
       when Integer
         variable_ name, obj, 'number'
       when Exception
-        bt = nil
-        bt = log.map{|e| "    #{e}\n"}.join if log = obj.backtrace
-        variable_ name, obj, 'object', description: "#{obj.inspect}\n#{bt}", subtype: 'error'
+        variable_ name, obj, 'object', description: "#{obj.inspect}\n#{obj.backtrace.map{|e| "    #{e}\n"}.join}", subtype: 'error'
       else
         variable_ name, obj, 'undefined'
       end
