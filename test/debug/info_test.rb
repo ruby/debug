@@ -49,29 +49,11 @@ module DEBUGGER__
         type 'info'
         assert_line_text(
           "%self = main\r\n" \
-          "_return = 11\r\n" \
+          "%return = 11\r\n" \
           "a = 1\r\n" \
           "@var = 10\r\n"
         )
         type 'q!'
-      end
-    end
-
-    def test_info_conflict_lvar
-      code = <<~RUBY
-      1| def foo _return
-      2|   :ok
-      3| end
-      4| foo :ret
-      RUBY
-
-      debug_code code do
-        type 'b 3'
-        type 'c'
-        assert_line_num 3
-        type 'i'
-        assert_line_text [/%return = :ok/, /_return = :ret/]
-        type 'c'
       end
     end
 

@@ -563,9 +563,8 @@ module DEBUGGER__
             v = b.local_variable_get(name)
             variable(name, v)
           }
-          special_local_variables frame do |name, val|
-            vars.unshift variable(name, val)
-          end
+          vars.unshift variable('%raised', frame.raised_exception) if frame.has_raised_exception
+          vars.unshift variable('%return', frame.return_value) if frame.has_return_value
           vars.unshift variable('%self', b.receiver)
         elsif lvars = frame.local_variables
           vars = lvars.map{|var, val|
@@ -573,9 +572,8 @@ module DEBUGGER__
           }
         else
           vars = [variable('%self', frame.self)]
-          special_local_variables frame do |name, val|
-            vars.push variable(name, val)
-          end
+          vars.push variable('%raised', frame.raised_exception) if frame.has_raised_exception
+          vars.push variable('%return', frame.return_value) if frame.has_return_value
         end
         event! :dap_result, :scope, req, variables: vars, tid: self.id
 
@@ -632,11 +630,6 @@ module DEBUGGER__
         frame = @target_frames[fid]
 
         if frame && (b = frame.binding)
-          b = b.dup
-          special_local_variables current_frame do |name, var|
-            b.local_variable_set(name, var) if /\%/ !~ name
-          end
-
           begin
             result = b.eval(expr.to_s, '(DEBUG CONSOLE)')
           rescue Exception => e
