@@ -331,7 +331,7 @@ module DEBUGGER__
         end
       when 'Runtime.getProperties'
         oid = req.dig('params', 'objectId')
-        case @obj_map[oid]
+        case @scope_map[oid]
         when 'local', 'eval'
           @tc << [:cdp, :properties, req, oid]
         when 'script', 'global'
@@ -368,7 +368,7 @@ module DEBUGGER__
 
           frame[:scopeChain].each {|s|
             oid = s.dig(:object, :objectId)
-            @obj_map[oid] = s[:type]
+            @scope_map[oid] = s[:type]
           }
         end
         result[:reason] = 'other'
@@ -377,7 +377,7 @@ module DEBUGGER__
         rs = result.dig(:response, :result)
         [rs].each {|r|
           if oid = r.dig(:objectId)
-            @obj_map[oid] = 'eval'
+            @scope_map[oid] = 'eval'
           end
         }
         @ui.respond req, **result[:response]
@@ -396,7 +396,7 @@ module DEBUGGER__
       when :properties
         result.each {|r|
           if oid = r.dig(:value, :objectId)
-            @obj_map[oid] = 'local' # TODO: Change this part because it is not necessarily `local`.
+            @scope_map[oid] = 'local' # TODO: Change this part because it is not necessarily `local`.
           end
         }
         @ui.respond req, result: result
