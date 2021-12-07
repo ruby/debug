@@ -142,7 +142,7 @@ module DEBUGGER__
           out tp, ">#{sp}#{call_identifier_str}", depth
         when :return, :c_return, :b_return
           depth += 1 if tp.event == :c_return
-          return_str = colorize_magenta(DEBUGGER__.safe_inspect(tp.return_value, short: true))
+          return_str = colorize_magenta(DEBUGGER__.short_inspect(tp.return_value))
           out tp, "<#{sp}#{call_identifier_str} #=> #{return_str}", depth
         end
       }

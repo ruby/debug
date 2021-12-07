@@ -2002,17 +2002,13 @@ module DEBUGGER__
   METHOD_ADDED_TRACKER = self.create_method_added_tracker
 
   SHORT_INSPECT_LENGTH = 40
-
-  def self.safe_inspect obj, max_length: SHORT_INSPECT_LENGTH, short: false
+  def self.short_inspect obj, use_short = true
     str = obj.inspect
-
-    if short && str.length > max_length
-      str[0...max_length] + '...'
+    if use_short && str.length > SHORT_INSPECT_LENGTH
+      str[0...SHORT_INSPECT_LENGTH] + '...'
     else
       str
     end
-  rescue Exception => e
-    str = "<#inspect raises #{e.inspect}>"
   end
 
   def self.warn msg

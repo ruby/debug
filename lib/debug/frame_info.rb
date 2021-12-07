@@ -110,7 +110,7 @@ module DEBUGGER__
 
     def return_str
       if self.binding && iseq && has_return_value
-        DEBUGGER__.safe_inspect(return_value, short: true)
+        DEBUGGER__.short_inspect(return_value)
       end
     end
 
@@ -160,7 +160,7 @@ module DEBUGGER__
       vars = iseq.locals[0...argc]
       vars.map{|var|
         begin
-          { name: var, value: DEBUGGER__.safe_inspect(local_variable_get(var), short: true) }
+          { name: var, value: DEBUGGER__.short_inspect(local_variable_get(var)) }
         rescue NameError, TypeError
           nil
         end
