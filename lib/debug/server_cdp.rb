@@ -291,8 +291,6 @@ module DEBUGGER__
     ## Called by the SESSION thread
 
     def readline prompt
-      return 'c' unless @q_msg
-
       @q_msg.pop || 'kill!'
     end
 
