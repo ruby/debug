@@ -828,7 +828,7 @@ module DEBUGGER__
       when Array
         variable_ name, obj, 'object', description: "Array(#{obj.size})", subtype: 'array'
       when Hash
-        variable_ name, obj, 'object', description: 'Object', subtype: 'map'
+        variable_ name, obj, 'object', description: "Hash(#{obj.size})", subtype: 'map'
       when String
         variable_ name, obj, 'string', description: obj
       when Class, Module, Struct, Range, Time, Method
