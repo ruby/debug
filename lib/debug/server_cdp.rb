@@ -636,14 +636,14 @@ module DEBUGGER__
       v[:value]
     end
 
-    def variable_ name, obj, type, description: nil, subtype: nil
+    def variable_ name, obj, type, description: obj.inspect, subtype: nil
       oid = rand.to_s
       @obj_map[oid] = obj
       prop = {
         name: name,
         value: {
           type: type,
-          description: obj.inspect,
+          description: description,
           value: obj,
           objectId: oid
         },
@@ -651,11 +651,10 @@ module DEBUGGER__
         enumerable: true    #       they are not necessarily `true`.
       }
 
-      if description
+      if type == 'object'
         v = prop[:value]
         v.delete :value
         v[:subtype] = subtype if subtype
-        v[:description] = description
         v[:className] = obj.class
       end
       prop
@@ -667,21 +666,15 @@ module DEBUGGER__
         variable_ name, obj, 'object', description: "Array(#{obj.size})", subtype: 'array'
       when Hash
         variable_ name, obj, 'object', description: 'Object', subtype: 'map'
-      when Range, Time
-        variable_ name, obj, 'object'
       when String
-        variable_ name, obj, 'string'
-      when Class
-        variable_ name, obj, 'object', description: obj.inspect
-      when Module, Struct
-        variable_ name, obj, 'function'
+        variable_ name, obj, 'string', description: obj
+      when Class, Module, Struct, Range, Time, Method
+        variable_ name, obj, 'object'
       when TrueClass, FalseClass
         variable_ name, obj, 'boolean'
       when Symbol
         variable_ name, obj, 'symbol'
-      when Float
-        variable_ name, obj, 'number'
-      when Integer
+      when Integer, Float
         variable_ name, obj, 'number'
       when Exception
         bt = nil
