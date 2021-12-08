@@ -386,8 +386,8 @@ module DEBUGGER__
         @ui.fire_event 'Debugger.paused', **result
       when :evaluate
         rs = result.dig(:response, :result)
-        [rs].each {|r|
-          if oid = r.dig(:objectId)
+        [rs].each{|obj|
+          if oid = obj[:objectId]
             @obj_map[oid] = ['properties']
           end
         }
@@ -405,16 +405,16 @@ module DEBUGGER__
                           timestamp: Time.now.to_f
         end
       when :scope
-        result.each {|r|
-          if oid = r.dig(:value, :objectId)
+        result.each{|obj|
+          if oid = obj.dig(:value, :objectId)
             @obj_map[oid] = ['properties']
           end
         }
         @ui.respond req, result: result
       when :properties
-        result.each{|k, v|
-          v.each{|r|
-            if oid = r.dig(:value, :objectId)
+        result.each_value{|v|
+          v.each{|obj|
+            if oid = obj.dig(:value, :objectId)
               @obj_map[oid] = ['properties']
             end
           }
