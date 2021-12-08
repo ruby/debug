@@ -15,7 +15,7 @@ module DEBUGGER__
     begin
       require 'debug/debug.so'
     rescue LoadError
-      system("ls -Rla #{File.join(__dir__, '*')}"
+      system("ls -Rla #{File.join(__dir__, '*')}")
       raise
     end
   end
