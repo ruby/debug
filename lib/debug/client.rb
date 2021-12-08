@@ -21,22 +21,56 @@ module DEBUGGER__
         when 'list-socks'
           cleanup_unix_domain_sockets
           puts list_connections
-        when 'init'
-          if ARGV.shift == '-'
-            puts <<~EOS
-            export RUBYOPT="-r #{__dir__}/prelude $(RUBYOPT)"
-            EOS
-          else
-            puts <<~EOS
-            # add the following lines in your .bash_profile
-            eval "$(rdbg --util=init -)"
-
-            # Add `Kernel#bb` method which is alias of `Kernel#debugger`
-            # export RUBY_DEBUG_BB=1
-            EOS
-          end
+        when 'setup-autoload'
+          setup_autoload
         else
           abort "Unknown utility: #{name}"
+        end
+      end
+
+      def working_shell_type
+        shell = `ps -p #{Process.ppid} -o 'args='`
+        case shell
+        when /bash/
+          :bash
+        when /fish/
+          :fish
+        when /csh/
+          :csh
+        when /zsh/
+          :szh
+        when /dash/
+          :dash
+        else
+          :unknown
+        end
+      end
+
+      def setup_autoload
+        prelude_path = File.join(__dir__, 'prelude.rb')
+
+        case shell = working_shell_type
+        when :bash, :zsh
+          puts <<~EOS
+          # add the following lines in your ~/.#{shell}_profile
+
+          if test -s #{prelude_path} ; then
+            export RUBYOPT='-r #{prelude_path}'
+          fi
+
+          # Add `Kernel#bb` method which is alias of `Kernel#debugger`
+          # export RUBY_DEBUG_BB=1
+          EOS
+
+        when :fish
+          puts <<~EOS
+          # add the following lines in your ~/.config/fish/config.fish
+          set -x RUBYOPT "-r #{__dir__}/prelude" $RUBYOPT
+          EOS
+
+        else
+          puts "# Sorry I don't know your shell.",
+               "# Read #{prelude_path} and modify your login script."
         end
       end
 
