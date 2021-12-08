@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+return if ENV['RUBY_DEBUG_ENABLE'] == '0'
+
 # skip to load debugger for bundle exec
 
 if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
