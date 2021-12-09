@@ -70,7 +70,7 @@ module DEBUGGER__
 
         else
           puts "# Sorry that your shell is not supported yet.",
-               "# Read #{prelude_path} and modify your login script."
+               "# Please use the content in #{prelude_path} as a reference and modify your login script accordingly."
         end
       end
 
