@@ -69,7 +69,7 @@ module DEBUGGER__
           EOS
 
         else
-          puts "# Sorry I don't know your shell.",
+          puts "# Sorry that your shell is not supported yet.",
                "# Read #{prelude_path} and modify your login script."
         end
       end
