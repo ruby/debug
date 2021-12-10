@@ -227,7 +227,7 @@ module DEBUGGER__
           rescue PostmortemError
             send_response req,
                           success: false, message: 'postmortem mode',
-                          result: "'Next' is not supported while postrmotem mode"
+                          result: "'Next' is not supported while postmortem mode"
           end
         when 'stepIn'
           begin
@@ -237,7 +237,7 @@ module DEBUGGER__
           rescue PostmortemError
             send_response req,
                           success: false, message: 'postmortem mode',
-                          result: "'stepIn' is not supported while postrmotem mode"
+                          result: "'stepIn' is not supported while postmortem mode"
           end
         when 'stepOut'
           begin
@@ -247,7 +247,7 @@ module DEBUGGER__
           rescue PostmortemError
             send_response req,
                           success: false, message: 'postmortem mode',
-                          result: "'stepOut' is not supported while postrmotem mode"
+                          result: "'stepOut' is not supported while postmortem mode"
           end
         when 'terminate'
           send_response req
