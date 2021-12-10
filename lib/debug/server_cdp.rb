@@ -18,10 +18,10 @@ module DEBUGGER__
         @sock = s
       end
 
-      def handshake  
+      def handshake
         req = @sock.readpartial 4096
         $stderr.puts '[>]' + req if SHOW_PROTOCOL
-  
+
         if req.match /^Sec-WebSocket-Key: (.*)\r\n/
           accept = Base64.strict_encode64 Digest::SHA1.digest "#{$1}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
           @sock.print "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: #{accept}\r\n\r\n"
@@ -36,7 +36,7 @@ module DEBUGGER__
         fin = 0b10000000
         opcode = 0b00000001
         frame << fin + opcode
-  
+
         mask = 0b00000000 # A server must not mask any frames in a WebSocket Protocol.
         bytesize = msg.bytesize
         if bytesize < 126
@@ -48,7 +48,7 @@ module DEBUGGER__
           payload_len = 0b01111111
           ex_payload_len = [bytesize].pack('Q>').bytes
         end
-  
+
         frame << mask + payload_len
         frame.push *ex_payload_len if ex_payload_len
         frame.push *msg.bytes
@@ -482,7 +482,7 @@ module DEBUGGER__
         res = {}
         fid, expr = args
         frame = @target_frames[fid]
-        
+
         if frame && (b = frame.binding)
           b = b.dup
           special_local_variables current_frame do |name, var|
@@ -504,7 +504,7 @@ module DEBUGGER__
               } and (result = Exception.new("Error: Not defined global variable: #{expr.inspect}"))
             when /(\A[A-Z][a-zA-Z]*)/
               unless result = search_const(b, $1)
-                result = Exception.new("Error: Not defined constans: #{expr.inspect}")
+                result = Exception.new("Error: Not defined constant: #{expr.inspect}")
               end
             else
               begin
