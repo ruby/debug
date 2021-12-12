@@ -220,15 +220,16 @@ end
 
 You can get more information about `gentest` here.
 
-The default method name is `test_#{some integer numbers}`, the class name is `FooTest`, and the file name will be `foo_test.rb`.
+The default method name is `test_#{some integer numbers}`, the class name is `FooTest#{some integer numbers}`, and the file name will be `foo_test.rb`.
 The following table shows examples of the gentest options.
 
 | Command | Description | File | Class | Method |
 | --- | --- | --- | --- | --- |
-| `$ bin/gentest target.rb` | Run without any options | `foo_test.rb` | `FooTest` | `test_#{some integer numbers}` |
-| `$ bin/gentest target.rb -c step` | Specify the class name | `step_test.rb` | `StepTest` | `test_#{some integer numbers}` |
-| `$ bin/gentest target.rb -m test_step` | Specify the method name | `foo_test.rb` | `FooTest` | `test_step` |
-| `$ bin/gentest target.rb -c step -m test_step` | Specify the class name and the method name | `step_test.rb` | `StepTest` | `test_step` |
+| `$ bin/gentest target.rb` | Run without any options | `foo_test.rb` | `FooTest...` | `test_...` |
+| `$ bin/gentest target.rb --open=vscode` | Run the debugger with VScode | `foo_test.rb` | `FooTest...` | `test_...` |
+| `$ bin/gentest target.rb -c step` | Specify the class name | `step_test.rb` | `StepTest...` | `test_...` |
+| `$ bin/gentest target.rb -m test_step` | Specify the method name | `foo_test.rb` | `FooTest...` | `test_step` |
+| `$ bin/gentest target.rb -c step -m test_step` | Specify the class name and the method name | `step_test.rb` | `StepTest...` | `test_step` |
 
 ### Assertions
 
