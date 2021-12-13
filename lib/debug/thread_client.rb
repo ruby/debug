@@ -229,7 +229,7 @@ module DEBUGGER__
       suspend :pause
     end
 
-    def suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil, replay_frames: nil
+    def suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil, replay_frames: nil, postmortem_exc: nil
       return if management?
 
       @current_frame_index = 0
@@ -256,6 +256,11 @@ module DEBUGGER__
         if CatchBreakpoint === bp
           cf.has_raised_exception = true
           cf.raised_exception = bp.last_exc
+        end
+
+        if postmortem_exc
+          cf.has_raised_exception = true
+          cf.raised_exception = postmortem_exc
         end
       end
 
