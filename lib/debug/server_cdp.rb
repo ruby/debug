@@ -382,7 +382,10 @@ module DEBUGGER__
             @obj_map[oid] = [s[:type], frame_id]
           }
         end
-        result[:reason] = 'other'
+
+        if oid = result.dig(:data, :objectId)
+          @obj_map[oid] = ['properties']
+        end
         @ui.fire_event 'Debugger.paused', **result
       when :evaluate
         rs = result.dig(:response, :result)
@@ -429,14 +432,18 @@ module DEBUGGER__
 
       case type
       when :backtrace
-        event! :cdp_result, :backtrace, req, {
+        exception = nil
+        result = {
+          reason: 'other',
           callFrames: @target_frames.map.with_index{|frame, i|
+            exception = frame.raised_exception if frame == current_frame && frame.has_raised_exception
+
             path = frame.realpath || frame.path
             if path.match /<internal:(.*)>/
               path = $1
             end
 
-            call_frame = {
+            {
               callFrameId: SecureRandom.hex(16),
               functionName: frame.name,
               functionLocation: {
@@ -475,9 +482,14 @@ module DEBUGGER__
                 type: 'object'
               }
             }
-            call_frame
           }
         }
+
+        if exception
+          result[:data] = evaluate_result exception
+          result[:reason] = 'exception'
+        end
+        event! :cdp_result, :backtrace, req, result
       when :evaluate
         res = {}
         fid, expr = args
@@ -685,7 +697,9 @@ module DEBUGGER__
         variable_ name, obj, 'number'
       when Exception
         bt = nil
-        bt = log.map{|e| "    #{e}\n"}.join if log = obj.backtrace
+        if log = obj.backtrace
+          bt = log.map{|e| "    #{e}\n"}.join
+        end
         variable_ name, obj, 'object', description: "#{obj.inspect}\n#{bt}", subtype: 'error'
       else
         variable_ name, obj, 'undefined'

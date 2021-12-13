@@ -1594,7 +1594,7 @@ module DEBUGGER__
 
       frames = exc.instance_variable_get(:@__debugger_postmortem_frames)
       @postmortem = true
-      ThreadClient.current.suspend :postmortem, postmortem_frames: frames
+      ThreadClient.current.suspend :postmortem, postmortem_frames: frames, postmortem_exc: exc
     ensure
       @postmortem = false
     end
