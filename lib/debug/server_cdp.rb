@@ -327,6 +327,10 @@ module DEBUGGER__
       send_response req, **result
     end
 
+    def respond_fail req, **result
+      send_fail_response req, **result
+    end
+
     def fire_event event, **result
       if result.empty?
         send_event event
@@ -346,6 +350,13 @@ module DEBUGGER__
   end
 
   class Session
+    def fail_response req, **result
+      @ui.respond_fail req, result
+      return :retry
+    end
+
+    INVALID_PARAMS = -32602
+
     def process_protocol_request req
       case req['method']
       when 'Debugger.stepOver', 'Debugger.stepInto', 'Debugger.stepOut', 'Debugger.resume', 'Debugger.getScriptSource'
@@ -356,7 +367,9 @@ module DEBUGGER__
           expr = req.dig('params', 'expression')
           @tc << [:cdp, :evaluate, req, fid, expr]
         else
-          @ui.respond req
+          fail_response req,
+                        code: INVALID_PARAMS,
+                        message: "'callFrameId' is an invalid"
         end
       when 'Runtime.getProperties'
         oid = req.dig('params', 'objectId')
@@ -373,10 +386,12 @@ module DEBUGGER__
             @ui.respond req
             return :retry
           else
-            raise "Unknown object id #{oid}"
+            raise "Unknown type: #{ref.inspect}"
           end
         else
-          @ui.respond req
+          fail_response req,
+                        code: INVALID_PARAMS,
+                        message: "'objectId' is an invalid"
         end
       end
     end
@@ -412,24 +427,31 @@ module DEBUGGER__
         result[:reason] = 'other'
         @ui.fire_event 'Debugger.paused', **result
       when :evaluate
-        rs = result.dig(:response, :result)
-        [rs].each{|obj|
-          if oid = obj[:objectId]
-            @obj_map[oid] = ['properties']
-          end
-        }
-        @ui.respond req, **result[:response]
+        message = result.delete :message
+        if message
+          fail_response req,
+                        code: INVALID_PARAMS,
+                        message: message
+        else
+          rs = result.dig(:response, :result)
+          [rs].each{|obj|
+            if oid = obj[:objectId]
+              @obj_map[oid] = ['properties']
+            end
+          }
+          @ui.respond req, **result[:response]
 
-        out = result[:output]
-        if out && !out.empty?
-          @ui.fire_event 'Runtime.consoleAPICalled',
-                          type: 'log',
-                          args: [
-                            type: out.class,
-                            value: out
-                          ],
-                          executionContextId: 1, # Change this number if something goes wrong.
-                          timestamp: Time.now.to_f
+          out = result[:output]
+          if out && !out.empty?
+            @ui.fire_event 'Runtime.consoleAPICalled',
+                            type: 'log',
+                            args: [
+                              type: out.class,
+                              value: out
+                            ],
+                            executionContextId: 1, # Change this number if something goes wrong.
+                            timestamp: Time.now.to_f
+          end
         end
       when :scope
         result.each{|obj|
@@ -511,6 +533,7 @@ module DEBUGGER__
         res = {}
         fid, expr = args
         frame = @target_frames[fid]
+        message = nil
 
         if frame && (b = frame.binding)
           b = b.dup
@@ -530,10 +553,10 @@ module DEBUGGER__
                   result = eval(gvar.to_s)
                   break false
                 end
-              } and (result = Exception.new("Error: Not defined global variable: #{expr.inspect}"))
+              } and (message = "Error: Not defined global variable: #{expr.inspect}")
             when /(\A[A-Z][a-zA-Z]*)/
               unless result = search_const(b, $1)
-                result = Exception.new("Error: Not defined constant: #{expr.inspect}")
+                message = "Error: Not defined constant: #{expr.inspect}"
               end
             else
               begin
@@ -545,7 +568,7 @@ module DEBUGGER__
                 if b.receiver.respond_to? expr, include_all: true
                   result = b.receiver.method(expr)
                 else
-                  result = Exception.new("Error: Can not evaluate: #{expr.inspect}")
+                  message = "Error: Can not evaluate: #{expr.inspect}"
                 end
               end
             end
@@ -575,7 +598,7 @@ module DEBUGGER__
         end
 
         res[:result] = evaluate_result(result)
-        event! :cdp_result, :evaluate, req, response: res, output: output
+        event! :cdp_result, :evaluate, req, message: message, response: res, output: output
       when :scope
         fid = args.shift
         frame = @target_frames[fid]
