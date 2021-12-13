@@ -239,6 +239,10 @@ module DEBUGGER__
       end
     end
 
+    def send_fail_response req, **res
+      @web_sock.send id: req['id'], error: res
+    end
+
     def send_event method, **params
       if params.empty?
         @ws_server.send method: method, params: {}
@@ -246,6 +250,8 @@ module DEBUGGER__
         @ws_server.send method: method, params: params
       end
     end
+
+    INVALID_REQUEST = -32600
 
     def process
       bps = {}
@@ -304,20 +310,41 @@ module DEBUGGER__
           send_response req
           send_event 'Debugger.resumed'
         when 'Debugger.stepOver'
-          @q_msg << 'n'
           @q_msg << req
-          send_response req
-          send_event 'Debugger.resumed'
+          begin
+            @session.check_postmortem
+            @q_msg << 'n'
+            send_response req
+            send_event 'Debugger.resumed'
+          rescue PostmortemError
+            send_fail_response req,
+                              code: INVALID_REQUEST,
+                              message: "'stepOver' is not supported while postmortem mode"
+          end
         when 'Debugger.stepInto'
-          @q_msg << 's'
           @q_msg << req
-          send_response req
-          send_event 'Debugger.resumed'
+          begin
+            @session.check_postmortem
+            @q_msg << 's'
+            send_response req
+            send_event 'Debugger.resumed'
+          rescue PostmortemError
+            send_fail_response req,
+                              code: INVALID_REQUEST,
+                              message: "'stepInto' is not supported while postmortem mode"
+          end
         when 'Debugger.stepOut'
-          @q_msg << 'fin'
           @q_msg << req
-          send_response req
-          send_event 'Debugger.resumed'
+          begin
+            @session.check_postmortem
+            @q_msg << 'fin'
+            send_response req
+            send_event 'Debugger.resumed'
+          rescue PostmortemError
+            send_fail_response req,
+                              code: INVALID_REQUEST,
+                              message: "'stepOut' is not supported while postmortem mode"
+          end
         when 'Debugger.setSkipAllPauses'
           skip = req.dig('params', 'skip')
           if skip
