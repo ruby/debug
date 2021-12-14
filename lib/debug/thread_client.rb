@@ -352,24 +352,35 @@ module DEBUGGER__
       [:raised_exception, "_raised"],
       [:return_value,     "_return"],
     ]
+    SPECIAL_LOCAL_VAR_NAMES = SPECIAL_LOCAL_VARS.map { |_, n| n }
 
     def frame_eval src, re_raise: false
       @success_last_eval = false
 
-      b = eval_binding
+      # the binding of original program
+      original_binding = eval_binding
+      # the binding used by debugger REPL that can have special locals
+      repl_binding = eval_binding.dup
 
-      special_local_variables current_frame, binding: b do |name, var|
-        b.local_variable_set(name, var) if /\%/ !~ name
+      special_local_variables current_frame, binding: repl_binding do |name, var|
+        repl_binding.local_variable_set(name, var) if /\%/ !~ name
       end
 
-      result = if b
-                  f, _l = b.source_location
-                  b.eval(src, "(rdbg)/#{f}")
+      result = if repl_binding
+                  f, _l = repl_binding.source_location
+                  repl_binding.eval(src, "(rdbg)/#{f}")
                 else
                   frame_self = current_frame.self
                   instance_eval_for_cmethod(frame_self, src)
                 end
       @success_last_eval = true
+
+      # write non-special local variables back to the original binding
+      repl_binding.local_variables.each do |var|
+        next if SPECIAL_LOCAL_VAR_NAMES.include?(var)
+        original_binding.local_variable_set(var, repl_binding.local_variable_get(var))
+      end
+
       result
 
     rescue Exception => e
