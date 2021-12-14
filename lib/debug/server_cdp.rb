@@ -314,7 +314,6 @@ module DEBUGGER__
           send_response req
           send_event 'Debugger.resumed'
         when 'Debugger.stepOver'
-          @q_msg << req
           begin
             @session.check_postmortem
             @q_msg << 'n'
@@ -324,9 +323,10 @@ module DEBUGGER__
             send_fail_response req,
                               code: INVALID_REQUEST,
                               message: "'stepOver' is not supported while postmortem mode"
+          ensure
+            @q_msg << req
           end
         when 'Debugger.stepInto'
-          @q_msg << req
           begin
             @session.check_postmortem
             @q_msg << 's'
@@ -336,9 +336,10 @@ module DEBUGGER__
             send_fail_response req,
                               code: INVALID_REQUEST,
                               message: "'stepInto' is not supported while postmortem mode"
+          ensure
+            @q_msg << req
           end
         when 'Debugger.stepOut'
-          @q_msg << req
           begin
             @session.check_postmortem
             @q_msg << 'fin'
@@ -348,6 +349,8 @@ module DEBUGGER__
             send_fail_response req,
                               code: INVALID_REQUEST,
                               message: "'stepOut' is not supported while postmortem mode"
+          ensure
+            @q_msg << req
           end
         when 'Debugger.setSkipAllPauses'
           skip = req.dig('params', 'skip')
