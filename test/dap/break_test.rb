@@ -20,7 +20,7 @@ module DEBUGGER__
     def test_break_works_correctly
       run_dap_scenario PROGRAM do
         [
-          *CFG_DAP,
+          *INITIALIZE_MSG,
           {
             seq: 7,
             type: "event",
