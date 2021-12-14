@@ -46,6 +46,8 @@ module DEBUGGER__
           end
         end
         pid
+      rescue Errno::ENOENT
+        nil
       end
 
       def get_chrome_path
@@ -66,9 +68,6 @@ module DEBUGGER__
 
       def run_new_chrome
         dir = Dir.mktmpdir
-        at_exit{
-          FileUtils.rm_rf dir
-        }
         # The command line flags are based on: https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Chrome_Desktop#connecting
         stdin, stdout, stderr, wait_thr = *Open3.popen3("#{get_chrome_path} --remote-debugging-port=0 --no-first-run --no-default-browser-check --user-data-dir=#{dir}")
         stdin.close
@@ -80,6 +79,11 @@ module DEBUGGER__
           path = $2
         end
         stderr.close
+
+        at_exit{
+          FileUtils.rm_rf dir
+        }
+
         [port, path, wait_thr.pid]
       end
     end
@@ -463,7 +467,7 @@ module DEBUGGER__
     end
 
     def cleanup_reader
-      Process.kill :KILL, @chrome_pid
+      Process.kill :KILL, @chrome_pid if @chrome_pid
     end
 
     ## Called by the SESSION thread
