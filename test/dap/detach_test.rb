@@ -23,7 +23,7 @@ module DEBUGGER__
     def test_1639218122
       run_dap_scenario PROGRAM do
         [
-          *CFG_DAP,
+          *INITIALIZE_MSG,
           {
             seq: 7,
             type: "event",

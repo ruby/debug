@@ -75,7 +75,7 @@ module DEBUGGER__
       MSG
     end
 
-    CFG_DAP = [
+    INITIALIZE_MSG = [
       {
         seq: 1,
         command: "initialize",
