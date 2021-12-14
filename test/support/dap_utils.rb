@@ -161,99 +161,105 @@ module DEBUGGER__
     end
 
     TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
+    dt = ENV['RUBY_DEBUG_DAP_TEST']
+    DAP_TEST = dt == 'true' || dt == '1'
 
     def run_dap_scenario program, &msgs
-      write_temp_file(strip_line_num(program))
+      pend 'Tests for DAP were skipped. You can enable them with RUBY_DEBUG_DAP_TEST=1.' unless DAP_TEST
 
-      test_info = DAP_TestInfo.new([], [])
-      remote_info = setup_unix_doman_socket_remote_debuggee
-      sock = nil
-      reader_thread = nil
-      res_log = test_info.res_backlog
-      backlog = test_info.backlog
-      target_msg = nil
+      begin
+        write_temp_file(strip_line_num(program))
 
-      msgs.call.each{|msg|
-        case msg[:type]
-        when 'request'
-          if msg[:command] == 'initialize'
-            sock, reader_thread = connect_to_dap_server remote_info.sock_path, test_info
-          end
-          str = JSON.dump(msg)
-          sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
-          backlog << "V>D #{str}"
-        when 'response'
-          result = nil
-          target_msg = msg
-          Timeout.timeout(TIMEOUT_SEC) do
-            loop do
-              res_log.each{|r|
-                if r[:request_seq] == msg[:request_seq]
-                  result = r
-                  break
-                end
-              }
-              break unless result.nil?
+        test_info = DAP_TestInfo.new([], [])
+        remote_info = setup_unix_doman_socket_remote_debuggee
+        sock = nil
+        reader_thread = nil
+        res_log = test_info.res_backlog
+        backlog = test_info.backlog
+        target_msg = nil
 
-              sleep 0.01
+        msgs.call.each{|msg|
+          case msg[:type]
+          when 'request'
+            if msg[:command] == 'initialize'
+              sock, reader_thread = connect_to_dap_server remote_info.sock_path, test_info
             end
-          end
+            str = JSON.dump(msg)
+            sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
+            backlog << "V>D #{str}"
+          when 'response'
+            result = nil
+            target_msg = msg
+            Timeout.timeout(TIMEOUT_SEC) do
+              loop do
+                res_log.each{|r|
+                  if r[:request_seq] == msg[:request_seq]
+                    result = r
+                    break
+                  end
+                }
+                break unless result.nil?
 
-          msg.delete :seq
-          hash = ProtocolParser.new.parse msg
-          hash.each{|r|
-            k, v = r
-            case v
-            when Regexp
-              assert_match v, result.dig(*k).to_s, FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
-            else
-              assert_equal v, result.dig(*k), FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
+                sleep 0.01
+              end
             end
-          }
-          if msg[:command] == 'disconnect'
-            res_log.clear
-            reader_thread.raise Detach
-            sock.close
-          end
-        when 'event'
-          result = nil
-          target_msg = msg
-          Timeout.timeout(TIMEOUT_SEC) do
-            loop do
-              res_log.each{|r|
-                if r[:event] == msg[:event]
-                  result = r
-                  break
-                end
-              }
-              break unless result.nil?
 
-              sleep 0.01
+            msg.delete :seq
+            hash = ProtocolParser.new.parse msg
+            hash.each{|r|
+              k, v = r
+              case v
+              when Regexp
+                assert_match v, result.dig(*k).to_s, FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
+              else
+                assert_equal v, result.dig(*k), FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
+              end
+            }
+            if msg[:command] == 'disconnect'
+              res_log.clear
+              reader_thread.raise Detach
+              sock.close
             end
-          end
+          when 'event'
+            result = nil
+            target_msg = msg
+            Timeout.timeout(TIMEOUT_SEC) do
+              loop do
+                res_log.each{|r|
+                  if r[:event] == msg[:event]
+                    result = r
+                    break
+                  end
+                }
+                break unless result.nil?
 
-          msg.delete :seq
-          hash = ProtocolParser.new.parse msg
-          hash.each{|r|
-            k, v = r
-            case v
-            when Regexp
-              assert_match v, result.dig(*k).to_s, FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
-            else
-              assert_equal v, result.dig(*k), FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
+                sleep 0.01
+              end
             end
-          }
-          res_log.delete result
+
+            msg.delete :seq
+            hash = ProtocolParser.new.parse msg
+            hash.each{|r|
+              k, v = r
+              case v
+              when Regexp
+                assert_match v, result.dig(*k).to_s, FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
+              else
+                assert_equal v, result.dig(*k), FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
+              end
+            }
+            res_log.delete result
+          end
+        }
+      rescue Timeout::Error
+        flunk create_protocol_msg backlog, remote_info, "TIMEOUT ERROR (#{TIMEOUT_SEC} sec) while waiting for the following response.\n#{JSON.pretty_generate target_msg}"
+      ensure
+        reader_thread.kill
+        sock.close
+        kill_safely remote_info.pid, :debuggee, test_info
+        if test_info.failed_process
+          flunk create_protocol_msg backlog, remote_info, "Expected the debuggee program to finish"
         end
-      }
-    rescue Timeout::Error
-      flunk create_protocol_msg backlog, remote_info, "TIMEOUT ERROR (#{TIMEOUT_SEC} sec) while waiting for the following response.\n#{JSON.pretty_generate target_msg}"
-    ensure
-      reader_thread.kill
-      sock.close
-      kill_safely remote_info.pid, :debuggee, test_info
-      if test_info.failed_process
-        flunk create_protocol_msg backlog, remote_info, "Expected the debuggee program to finish"
       end
     end
   end
