@@ -31,7 +31,7 @@ module DEBUGGER__
       use_short_path = CONFIG[:use_short_path]
 
       case
-      when use_short_path && path.start_with?(dir = CONFIG["rubylibdir"] + '/')
+      when use_short_path && path.start_with?(dir = RbConfig::CONFIG["rubylibdir"] + '/')
         path.sub(dir, '$(rubylibdir)/')
       when use_short_path && Gem.path.any? do |gp|
           path.start_with?(dir = gp + '/gems/')
