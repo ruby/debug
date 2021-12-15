@@ -113,7 +113,7 @@ module DEBUGGER__
         fin = 0b10000000
         opcode = 0b00000001
         frame << fin + opcode
-      
+
         mask = 0b10000000 # A client must mask all frames in a WebSocket Protocol.
         bytesize = msg.bytesize
         if bytesize < 126
@@ -125,16 +125,16 @@ module DEBUGGER__
           payload_len = 0b01111111
           ex_payload_len = [bytesize].pack('Q>').bytes
         end
-      
+
         frame << mask + payload_len
         frame.push *ex_payload_len if ex_payload_len
-      
+
         frame.push *masking_key = 4.times.map{rand(1..255)}
         masked = []
         msg.bytes.each_with_index do |b, i|
           masked << (b ^ masking_key[i % 4])
         end
-      
+
         frame.push *masked
         @sock.print frame.pack 'c*'
       end
@@ -244,7 +244,7 @@ module DEBUGGER__
     end
 
     def send_fail_response req, **res
-      @web_sock.send id: req['id'], error: res
+      @ws_server.send id: req['id'], error: res
     end
 
     def send_event method, **params
