@@ -17,7 +17,7 @@ module DEBUGGER__
         port, path, pid = run_new_chrome
         begin
           s = Socket.tcp '127.0.0.1', port
-        rescue Errno::ECONNREFUSED
+        rescue Errno::ECONNREFUSED, Errno::EADDRNOTAVAIL
           return
         end
 
