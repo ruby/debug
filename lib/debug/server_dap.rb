@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'irb/completion'
 
 module DEBUGGER__
   module UI_DAP
@@ -45,6 +46,7 @@ module DEBUGGER__
              supportsExceptionFilterOptions: true,
              supportsStepBack: true,
              supportsEvaluateForHovers: true,
+             supportsCompletionsRequest: true,
 
              ## Will be supported
              # supportsExceptionOptions: true,
@@ -58,7 +60,6 @@ module DEBUGGER__
 
              ## Possible?
              # supportsRestartFrame:
-             # supportsCompletionsRequest:
              # completionTriggerCharacters:
              # supportsModulesRequest:
              # additionalModuleColumns:
@@ -274,7 +275,8 @@ module DEBUGGER__
              'scopes',
              'variables',
              'evaluate',
-             'source'
+             'source',
+             'completions'
           @q_msg << req
 
         else
@@ -442,6 +444,21 @@ module DEBUGGER__
           fail_response req, message: 'not found...'
         end
         return :retry
+
+      when 'completions'
+        frame_id = req.dig('arguments', 'frameId')
+        tid, fid = @frame_map[frame_id]
+
+        if tc = find_waiting_tc(tid)
+          text = req.dig('arguments', 'text')
+          line = req.dig('arguments', 'line')
+          if col  = req.dig('arguments', 'column')
+            text = text.split(/\n/)[line.to_i - 1][0...(col.to_i - 1)]
+          end
+          tc << [:dap, :completions, req, fid, text]
+        else
+          fail_response req
+        end
       else
         raise "Unknown DAP request: #{req.inspect}"
       end
@@ -487,6 +504,8 @@ module DEBUGGER__
           register_var result, tid
           @ui.respond req, result
         end
+      when :completions
+        @ui.respond req, result
       else
         raise "unsupported: #{args.inspect}"
       end
@@ -695,6 +714,36 @@ module DEBUGGER__
         end
 
         event! :dap_result, :evaluate, req, message: message, tid: self.id, **evaluate_result(result)
+
+      when :completions
+        fid, text = args
+        frame = @target_frames[fid]
+
+        if (b = frame&.binding) && word = text&.split(/[\s\{]/)&.last
+          words = IRB::InputCompletor::retrieve_completion_data(word, bind: b).compact
+        end
+
+        event! :dap_result, :completions, req, targets: (words || []).map{|phrase|
+          if /\b([_a-zA-Z]\w*[!\?]?)\z/ =~ phrase
+            w = $1
+          else
+            w = phrase
+          end
+
+          begin
+            if b&.local_variable_defined?(w)
+              v = b.local_variable_get(w)
+              phrase += " (variable:#{DEBUGGER__.safe_inspect(v)})"
+            end
+          rescue NameError
+          end
+
+          {
+            label: phrase,
+            text: w,
+          }
+        }
+
       else
         raise "Unknown req: #{args.inspect}"
       end
