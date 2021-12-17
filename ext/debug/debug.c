@@ -32,7 +32,10 @@ di_entry(VALUE loc, VALUE self, VALUE binding, VALUE iseq, VALUE klass, VALUE de
                          // :show_line, :local_variables
                          Qnil,
                          // :_local_variables, :_callee # for recorder
-                         Qnil, Qnil);
+                         Qnil, Qnil,
+                         // :dupped_binding
+                         Qnil
+                         );
 }
 
 static int

@@ -5,7 +5,8 @@ module DEBUGGER__
                           :has_return_value,     :return_value,
                           :has_raised_exception, :raised_exception,
                           :show_line,
-                          :_local_variables, :_callee # for recorder
+                          :_local_variables, :_callee, # for recorder
+                          :dupped_binding,
                         )
 
   # extend FrameInfo with debug.so
@@ -118,19 +119,13 @@ module DEBUGGER__
       "#{pretty_path}:#{location.lineno}"
     end
 
-    private def make_binding
-      __newb__ = self.self.instance_eval('binding')
-      self.local_variables.each{|var, val|
-        __newb__.local_variable_set(var, val)
-      }
-      __newb__
-    end
-
     def eval_binding
-      if b = self.binding
+      if b = self.dupped_binding
         b
-      elsif self.local_variables
-        make_binding
+      else
+        b = TOPLEVEL_BINDING unless b = self.binding
+        b = self.binding || TOPLEVEL_BINDING
+        self.dupped_binding = b.dup
       end
     end
 
