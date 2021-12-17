@@ -14,6 +14,8 @@ module DEBUGGER__
 
     class << self
       def setup_chrome addr
+        return if CONFIG[:chrome_path] == ''
+
         port, path, pid = run_new_chrome
         begin
           s = Socket.tcp '127.0.0.1', port
