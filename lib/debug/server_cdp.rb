@@ -27,7 +27,7 @@ module DEBUGGER__
         ws_client.handshake port, path
         ws_client.send id: 1, method: 'Target.getTargets'
 
-        3.times do
+        4.times do
           res = ws_client.extract_data
           case
           when res['id'] == 1 && target_info = res.dig('result', 'targetInfos')
