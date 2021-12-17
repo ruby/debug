@@ -265,7 +265,7 @@ module DEBUGGER__
       end
 
       if event != :pause
-        show_src max_lines: (CONFIG[:show_src_lines] || 10)
+        show_src
         show_frames CONFIG[:show_frames] || 2
 
         set_mode :waiting
@@ -382,7 +382,7 @@ module DEBUGGER__
 
     def show_src(frame_index: @current_frame_index,
                  update_line: false,
-                 max_lines: 10,
+                 max_lines: CONFIG[:show_src_lines] || 10,
                  start_line: nil,
                  end_line: nil,
                  dir: +1)
