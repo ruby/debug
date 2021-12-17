@@ -52,12 +52,14 @@ module DEBUGGER__
   CONFIG_MAP = CONFIG_SET.map{|k, (ev, _)| [k, ev]}.to_h.freeze
 
   class Config
+    @config = nil
+
     def self.config
       @config
     end
 
     def initialize argv
-      if self.class.instance_variable_defined? :@config
+      if self.class.config
         raise 'Can not make multiple configurations in one process'
       end
 

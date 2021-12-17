@@ -35,7 +35,7 @@ module DEBUGGER__
       DEBUGGER_MSG
 
       last_msg = msgs.reverse[0..3].map{|m|
-        h = m.sub /(D|V)(<|>)(D|V)\s/, ''
+        h = m.sub(/(D|V)(<|>)(D|V)\s/, '')
         JSON.pretty_generate(JSON.parse h)
       }.reverse.join("\n")
 
