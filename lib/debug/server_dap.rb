@@ -440,7 +440,6 @@ module DEBUGGER__
           case ref[0]
           when :globals
             vars = global_variables.map do |name|
-              File.write('/tmp/x', "#{name}\n")
               gv = 'Not implemented yet...'
               {
                 name: name,
