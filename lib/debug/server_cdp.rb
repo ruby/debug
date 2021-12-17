@@ -83,6 +83,7 @@ module DEBUGGER__
         stderr.close
 
         at_exit{
+          CONFIG[:skip_path] = [//] # skip all
           FileUtils.rm_rf dir
         }
 
