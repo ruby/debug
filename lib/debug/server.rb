@@ -184,7 +184,7 @@ module DEBUGGER__
 
     def sigurg_overridden? prev_handler
       case prev_handler
-      when "SYSTEM_DEFAULT"
+      when "SYSTEM_DEFAULT", "DEFAULT"
         false
       when Proc
         if prev_handler.source_location[0] == __FILE__
@@ -197,10 +197,19 @@ module DEBUGGER__
       end
     end
 
+    begin
+      prev = trap(:SIGURG, nil)
+      trap(:SIGURG, prev)
+      TRAP_SIGNAL = :SIGURG
+    rescue ArgumentError
+      # maybe Windows?
+      TRAP_SIGNAL = :SIGINT
+    end
+
     def setup_interrupt
-      prev_handler = trap(:SIGURG) do
+      prev_handler = trap(TRAP_SIGNAL) do
         # $stderr.puts "trapped SIGINT"
-        ThreadClient.current.on_trap :SIGURG
+        ThreadClient.current.on_trap TRAP_SIGNAL
 
         case prev_handler
         when Proc
@@ -215,7 +224,7 @@ module DEBUGGER__
       end
       yield
     ensure
-      trap(:SIGURG, prev_handler)
+      trap(TRAP_SIGNAL, prev_handler)
     end
 
     attr_reader :reader_thread
@@ -303,7 +312,7 @@ module DEBUGGER__
 
     def pause
       # $stderr.puts "DEBUG: pause request"
-      Process.kill(:SIGURG, Process.pid)
+      Process.kill(TRAP_SIGNAL, Process.pid)
     end
 
     def quit n

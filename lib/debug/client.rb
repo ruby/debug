@@ -170,9 +170,14 @@ module DEBUGGER__
       trap(:SIGINT){
         send "pause"
       }
-      trap(:SIGWINCH){
-        @width = IO.console_size[1]
-      }
+
+      begin
+        trap(:SIGWINCH){
+          @width = IO.console_size[1]
+        }
+      rescue ArgumentError => e
+        @width = 80
+      end
 
       while line = @s.gets
         p recv: line if $VERBOSE
