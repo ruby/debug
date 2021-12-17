@@ -401,61 +401,8 @@ module DEBUGGER__
     end
 
     def vscode_setup
-      require 'tmpdir'
-      require 'json'
-      require 'fileutils'
-
-      dir = Dir.mktmpdir("ruby-debug-vscode-")
-      at_exit{
-        FileUtils.rm_rf dir
-      }
-      Dir.chdir(dir) do
-        Dir.mkdir('.vscode')
-        open('README.rb', 'w'){|f|
-          f.puts <<~MSG
-          # Wait for starting the attaching to the Ruby process
-          # This file will be removed at the end of the debuggee process.
-          #
-          # Note that vscode-rdbg extension is needed. Please install if you don't have.
-          MSG
-        }
-        open('.vscode/launch.json', 'w'){|f|
-          f.puts JSON.pretty_generate({
-            version: '0.2.0',
-            configurations: [
-            {
-              type: "rdbg",
-              name: "Attach with rdbg",
-              request: "attach",
-              rdbgPath: File.expand_path('../../exe/rdbg', __dir__),
-              debugPort: @sock_path,
-              autoAttach: true,
-            }
-            ]
-          })
-        }
-      end
-
-      cmds = ['code', "#{dir}/", "#{dir}/README.rb"]
-      cmdline = cmds.join(' ')
-      ssh_cmdline = "code --remote ssh-remote+[SSH hostname] #{dir}/ #{dir}/README.rb"
-
-      STDERR.puts "Launching: #{cmdline}"
-      env = ENV.delete_if{|k, h| /RUBY/ =~ k}.to_h
-
-      unless system(env, *cmds)
-        DEBUGGER__.warn <<~MESSAGE
-        Can not invoke the command.
-        Use the command-line on your terminal (with modification if you need).
-
-          #{cmdline}
-
-        If your application is running on a SSH remote host, please try:
-
-          #{ssh_cmdline}
-
-        MESSAGE
-      end
+      require_relative 'server_dap'
+      UI_DAP.setup @sock_path
     end
 
     def accept
