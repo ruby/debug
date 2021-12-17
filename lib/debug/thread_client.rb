@@ -352,8 +352,7 @@ module DEBUGGER__
     def frame_eval src, re_raise: false
       @success_last_eval = false
 
-      b = current_frame&.eval_binding || TOPLEVEL_BINDING
-      b = b.dup
+      b = current_frame.eval_binding
 
       special_local_variables current_frame do |name, var|
         b.local_variable_set(name, var) if /\%/ !~ name
@@ -445,7 +444,7 @@ module DEBUGGER__
     def special_local_variables frame
       SPECIAL_LOCAL_VARS.each do |mid, name|
         next unless frame&.send("has_#{mid}")
-        name = name.sub('_', '%') if frame.binding.local_variable_defined? name
+        name = name.sub('_', '%') if frame.eval_binding.local_variable_defined?(name)
         yield name, frame.send(mid)
       end
     end
@@ -653,7 +652,7 @@ module DEBUGGER__
       case args.first
       when :method
         klass_name, op, method_name, cond, cmd, path = args[1..]
-        bp = MethodBreakpoint.new(current_frame.binding, klass_name, op, method_name, cond: cond, command: cmd, path: path)
+        bp = MethodBreakpoint.new(current_frame.eval_binding, klass_name, op, method_name, cond: cond, command: cmd, path: path)
         begin
           bp.enable
         rescue Exception => e
