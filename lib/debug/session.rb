@@ -56,22 +56,22 @@ class RubyVM::InstructionSequence
 
   def type
     self.to_a[9]
-  end
+  end unless method_defined?(:type)
 
   def parameters_symbols
     ary = self.to_a
     argc = ary[4][:arg_size]
     locals = ary.to_a[10]
     locals[0...argc]
-  end
+  end unless method_defined?(:parameters_symbols)
 
   def last_line
     self.to_a[4][:code_location][2]
-  end
+  end unless method_defined?(:last_line)
 
   def first_line
     self.to_a[4][:code_location][0]
-  end
+  end unless method_defined?(:first_line)
 end
 
 module DEBUGGER__

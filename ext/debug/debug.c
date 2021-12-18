@@ -118,11 +118,82 @@ create_method_added_tracker(VALUE self)
     return rb_tracepoint_new(0, RUBY_EVENT_CALL, method_added_tracker, NULL);
 }
 
+// iseq
+
+const struct rb_iseq *rb_iseqw_to_iseq(VALUE iseqw);
+
+#ifdef HAVE_ISEQ_TYPE
+VALUE rb_iseq_type(const struct rb_iseq *);
+
+static VALUE
+iseq_type(VALUE iseqw)
+{
+    const struct rb_iseq *iseq = rb_iseqw_to_iseq(iseqw);
+    return rb_iseq_type(iseq);
+}
+#endif
+
+#ifdef HAVE_ISEQ_PARAMETERS
+VALUE rb_iseq_parameters(const struct rb_iseq *, int is_proc);
+
+static VALUE
+iseq_parameters_symbols(VALUE iseqw)
+{
+    const struct rb_iseq *iseq = rb_iseqw_to_iseq(iseqw);
+    VALUE params = rb_iseq_parameters(iseq, 0);
+    VALUE ary = rb_ary_new();
+
+    static VALUE sym_ast, sym_astast, sym_amp;
+
+    if (sym_ast == 0) {
+        sym_ast = ID2SYM(rb_intern("*"));
+        sym_astast = ID2SYM(rb_intern("**"));
+        sym_amp = ID2SYM(rb_intern("&"));
+    }
+
+    for (long i=0; i<RARRAY_LEN(params); i++) {
+        VALUE e = RARRAY_AREF(params, i);
+        if (RARRAY_LEN(e) == 2) {
+            VALUE sym = RARRAY_AREF(e, 1);
+            if (sym != sym_ast &&
+                sym != sym_astast &&
+                sym != sym_amp) rb_ary_push(ary, RARRAY_AREF(e, 1));
+        }
+    }
+
+    return ary;
+}
+#endif
+
+#ifdef HAVE_ISEQ_CODE_LOCATION
+void rb_iseq_code_location(const struct rb_iseq *, int *first_lineno, int *first_column, int *last_lineno, int *last_column);
+
+static VALUE
+iseq_first_line(VALUE iseqw)
+{
+    const struct rb_iseq *iseq = rb_iseqw_to_iseq(iseqw);
+    int line;
+    rb_iseq_code_location(iseq, &line, NULL, NULL, NULL);
+    return INT2NUM(line);
+}
+
+static VALUE
+iseq_last_line(VALUE iseqw)
+{
+    const struct rb_iseq *iseq = rb_iseqw_to_iseq(iseqw);
+    int line;
+    rb_iseq_code_location(iseq, NULL, NULL, &line, NULL);
+    return INT2NUM(line);
+}
+#endif
+
 void Init_iseq_collector(void);
 
 void
 Init_debug(void)
 {
+    VALUE rb_mRubyVM = rb_const_get(rb_cObject, rb_intern("RubyVM"));
+    VALUE rb_cISeq = rb_const_get(rb_mRubyVM, rb_intern("InstructionSequence"));
     rb_mDebugger = rb_const_get(rb_cObject, rb_intern("DEBUGGER__"));
     rb_cFrameInfo = rb_const_get(rb_mDebugger, rb_intern("FrameInfo"));
 
@@ -134,5 +205,18 @@ Init_debug(void)
     rb_define_singleton_method(rb_mDebugger, "frame_depth", frame_depth, 0);
     rb_define_singleton_method(rb_mDebugger, "create_method_added_tracker", create_method_added_tracker, 0);
     rb_define_const(rb_mDebugger, "SO_VERSION", rb_str_new2(RUBY_DEBUG_VERSION));
+
+    // iseq
+#ifdef HAVE_ISEQ_TYPE
+    rb_define_method(rb_cISeq, "type", iseq_type, 0);
+#endif
+#ifdef HAVE_ISEQ_PARAMETERS
+    rb_define_method(rb_cISeq, "parameters_symbols", iseq_parameters_symbols, 0);
+#endif
+#ifdef HAVE_ISEQ_CODE_LOCATION
+    rb_define_method(rb_cISeq, "first_line", iseq_first_line, 0);
+    rb_define_method(rb_cISeq, "last_line", iseq_last_line, 0);
+#endif
+
     Init_iseq_collector();
 }
