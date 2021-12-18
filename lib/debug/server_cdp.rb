@@ -27,7 +27,7 @@ module DEBUGGER__
         ws_client.handshake port, path
         ws_client.send id: 1, method: 'Target.getTargets'
 
-        4.times do
+        loop do
           res = ws_client.extract_data
           case
           when res['id'] == 1 && target_info = res.dig('result', 'targetInfos')
@@ -39,12 +39,17 @@ module DEBUGGER__
                           }
           when res['id'] == 2
             s_id = res.dig('result', 'sessionId')
-            sleep 0.1
-            ws_client.send sessionId: s_id, id: 1,
+            ws_client.send sessionId: s_id, id: 3,
+                          method: 'Page.enable'
+          when res['id'] == 3
+            s_id = res['sessionId']
+            ws_client.send sessionId: s_id, id: 4,
                           method: 'Page.navigate',
                           params: {
                             url: "devtools://devtools/bundled/inspector.html?ws=#{addr}"
                           }
+          when res['method'] == 'Page.loadEventFired'
+            break
           end
         end
         pid
