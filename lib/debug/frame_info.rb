@@ -123,7 +123,6 @@ module DEBUGGER__
       if b = self.dupped_binding
         b
       else
-        b = TOPLEVEL_BINDING unless b = self.binding
         b = self.binding || TOPLEVEL_BINDING
         self.dupped_binding = b.dup
       end
