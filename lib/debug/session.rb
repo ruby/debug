@@ -58,12 +58,11 @@ class RubyVM::InstructionSequence
     self.to_a[9]
   end
 
-  def argc
-    self.to_a[4][:arg_size]
-  end
-
-  def locals
-    self.to_a[10]
+  def parameters_symbols
+    ary = self.to_a
+    argc = ary[4][:arg_size]
+    locals = ary.to_a[10]
+    locals[0...argc]
   end
 
   def last_line

@@ -83,14 +83,14 @@ module DEBUGGER__
 
     def block_identifier
       return unless frame_type == :block
-      args = parameters_info(iseq.argc)
+      args = parameters_info
       _, level, block_loc = location.label.match(BLOCK_LABL_REGEXP).to_a
       [level || "", block_loc, args]
     end
 
     def method_identifier
       return unless frame_type == :method
-      args = parameters_info(iseq.argc)
+      args = parameters_info
       ci = "#{klass_sig}#{callee}"
       [ci, args]
     end
@@ -150,8 +150,8 @@ module DEBUGGER__
       local_variables[var]
     end
 
-    def parameters_info(argc)
-      vars = iseq.locals[0...argc]
+    def parameters_info
+      vars = iseq.parameters_symbols
       vars.map{|var|
         begin
           { name: var, value: DEBUGGER__.safe_inspect(local_variable_get(var), short: true) }
