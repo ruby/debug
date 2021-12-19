@@ -906,8 +906,6 @@ module DEBUGGER__
         variable_ name, obj, 'object', description: "Hash(#{obj.size})", subtype: 'map'
       when String
         variable_ name, obj, 'string', description: obj
-      when Class, Module, Struct, Range, Time, Method
-        variable_ name, obj, 'object'
       when TrueClass, FalseClass
         variable_ name, obj, 'boolean'
       when Symbol
@@ -921,7 +919,7 @@ module DEBUGGER__
         end
         variable_ name, obj, 'object', description: "#{obj.inspect}\n#{bt}", subtype: 'error'
       else
-        variable_ name, obj, 'undefined'
+        variable_ name, obj, 'object'
       end
     end
   end
