@@ -175,7 +175,7 @@ module DEBUGGER__
         trap(:SIGWINCH){
           @width = IO.console_size[1]
         }
-      rescue ArgumentError => e
+      rescue ArgumentError
         @width = 80
       end
 
