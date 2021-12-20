@@ -122,7 +122,7 @@ create_method_added_tracker(VALUE self)
 
 const struct rb_iseq *rb_iseqw_to_iseq(VALUE iseqw);
 
-#ifdef HAVE_ISEQ_TYPE
+#ifdef HAVE_RB_ISEQ_TYPE
 VALUE rb_iseq_type(const struct rb_iseq *);
 
 static VALUE
@@ -133,7 +133,7 @@ iseq_type(VALUE iseqw)
 }
 #endif
 
-#ifdef HAVE_ISEQ_PARAMETERS
+#ifdef HAVE_RB_ISEQ_PARAMETERS
 VALUE rb_iseq_parameters(const struct rb_iseq *, int is_proc);
 
 static VALUE
@@ -165,7 +165,7 @@ iseq_parameters_symbols(VALUE iseqw)
 }
 #endif
 
-#ifdef HAVE_ISEQ_CODE_LOCATION
+#ifdef HAVE_RB_ISEQ_CODE_LOCATION
 void rb_iseq_code_location(const struct rb_iseq *, int *first_lineno, int *first_column, int *last_lineno, int *last_column);
 
 static VALUE
@@ -207,13 +207,13 @@ Init_debug(void)
     rb_define_const(rb_mDebugger, "SO_VERSION", rb_str_new2(RUBY_DEBUG_VERSION));
 
     // iseq
-#ifdef HAVE_ISEQ_TYPE
+#ifdef HAVE_RB_ISEQ_TYPE
     rb_define_method(rb_cISeq, "type", iseq_type, 0);
 #endif
-#ifdef HAVE_ISEQ_PARAMETERS
+#ifdef HAVE_RB_ISEQ_PARAMETERS
     rb_define_method(rb_cISeq, "parameters_symbols", iseq_parameters_symbols, 0);
 #endif
-#ifdef HAVE_ISEQ_CODE_LOCATION
+#ifdef HAVE_RB_ISEQ_CODE_LOCATION
     rb_define_method(rb_cISeq, "first_line", iseq_first_line, 0);
     rb_define_method(rb_cISeq, "last_line", iseq_last_line, 0);
 #endif
