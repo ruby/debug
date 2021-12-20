@@ -66,15 +66,7 @@ module DEBUGGER__
     end
 
     def skip? tp
-      if tp.path.start_with?(__dir__) ||
-         tp.path.start_with?('<internal:') ||
-         ThreadClient.current.management? ||
-         skip_path?(tp.path) ||
-         skip_with_pattern?(tp)
-        true
-      else
-        false
-      end
+      ThreadClient.current.management? || skip_internal_path?(tp.path) || skip_path?(tp.path) || skip_with_pattern?(tp)
     end
 
     def skip_with_pattern?(tp)
