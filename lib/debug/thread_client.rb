@@ -11,6 +11,10 @@ module DEBUGGER__
       (skip_paths = CONFIG[:skip_path]) && skip_paths.any?{|skip_path| path.match?(skip_path)}
     end
 
+    def skip_internal_path?(path)
+      path.start_with?(__dir__) || path.start_with?('<internal:')
+    end
+
     def skip_location?(loc)
       loc_path = loc.absolute_path || "!eval:#{loc.path}"
       skip_path?(loc_path)
