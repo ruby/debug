@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["ko1@atdot.net"]
 
   spec.summary       = %q{Debugging functionality for Ruby}
-  spec.description   = %q{Debugging functionality for Ruby. This is completely rewritten debug.rb which was contained by the encient Ruby versions.}
+  spec.description   = %q{Debugging functionality for Ruby. This is completely rewritten debug.rb which was contained by the ancient Ruby versions.}
   spec.homepage      = "https://github.com/ruby/debug"
   spec.licenses      = ["Ruby", "BSD-2-Clause"]
   spec.required_ruby_version = Gem::Requirement.new(">= 2.6.0")
