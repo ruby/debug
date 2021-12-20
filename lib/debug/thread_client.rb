@@ -1005,8 +1005,7 @@ module DEBUGGER__
 
         @tp_recorder ||= TracePoint.new(:line){|tp|
           next unless Thread.current == thread
-          next if tp.path.start_with? __dir__
-          next if tp.path.start_with? '<internal:'
+          next if skip_internal_path?(tp.path)
           loc = caller_locations(1, 1).first
           next if skip_location?(loc)
 
