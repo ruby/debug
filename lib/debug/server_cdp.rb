@@ -732,7 +732,7 @@ module DEBUGGER__
                   break false
                 end
               } and (message = "Error: Not defined global variable: #{expr.inspect}")
-            when /(\A[A-Z][a-zA-Z]*)/
+            when /(\A[A-Z]\w*)/
               unless result = search_const(b, $1)
                 message = "Error: Not defined constant: #{expr.inspect}"
               end
