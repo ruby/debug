@@ -66,7 +66,7 @@ module DEBUGGER__
     end
 
     def skip? tp
-      ThreadClient.current.management? || skip_internal_path?(tp.path) || skip_path?(tp.path) || skip_with_pattern?(tp)
+      ThreadClient.current.management? || skip_path?(tp.path) || skip_with_pattern?(tp)
     end
 
     def skip_with_pattern?(tp)

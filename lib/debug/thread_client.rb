@@ -8,7 +8,7 @@ require_relative 'color'
 module DEBUGGER__
   module SkipPathHelper
     def skip_path?(path)
-      (skip_paths = CONFIG[:skip_path]) && skip_paths.any?{|skip_path| path.match?(skip_path)}
+      skip_internal_path?(path) || (skip_paths = CONFIG[:skip_path]) && skip_paths.any?{|skip_path| path.match?(skip_path)}
     end
 
     def skip_internal_path?(path)
@@ -1005,6 +1005,7 @@ module DEBUGGER__
 
         @tp_recorder ||= TracePoint.new(:line){|tp|
           next unless Thread.current == thread
+          # can't be replaced by skip_location
           next if skip_internal_path?(tp.path)
           loc = caller_locations(1, 1).first
           next if skip_location?(loc)
