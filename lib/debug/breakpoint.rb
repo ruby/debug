@@ -288,7 +288,6 @@ module DEBUGGER__
       @tp = TracePoint.new(:raise){|tp|
         exc = tp.raised_exception
         next if SystemExit === exc
-        next if skip_internal_path?(tp.path)
         next if skip_path?(tp.path)
 
         next if !safe_eval(tp.binding, @cond) if @cond
@@ -326,7 +325,6 @@ module DEBUGGER__
     def setup
       @tp = TracePoint.new(:line){|tp|
         next if ThreadClient.current.management?
-        next if skip_internal_path?(tp.path)
         next if skip_path?(tp.path)
 
         if safe_eval tp.binding, @expr
@@ -374,7 +372,6 @@ module DEBUGGER__
 
     def setup
       @tp = TracePoint.new(:line, :return, :b_return){|tp|
-        next if skip_internal_path?(tp.path)
 
         watch_eval(tp)
       }
@@ -418,7 +415,6 @@ module DEBUGGER__
         next if @cond_class && !tp.self.kind_of?(@cond_class)
 
         caller_location = caller_locations(2, 1).first.to_s
-        next if skip_internal_path?(caller_location)
         next if skip_path?(caller_location)
 
         suspend
