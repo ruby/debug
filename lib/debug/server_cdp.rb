@@ -496,6 +496,7 @@ module DEBUGGER__
     end
 
     def cleanup_reader
+      super
       Process.kill :KILL, @chrome_pid if @chrome_pid
     end
 
