@@ -14,13 +14,25 @@ module DEBUGGER__
 
     class << self
       def setup_chrome addr
-        return if CONFIG[:chrome_path] == ''
+        return output_url addr if CONFIG[:chrome_path] == ''
 
-        port, path, pid = run_new_chrome
+        retry_flag = false
+        if debug_port = ENV['RUBY_DEBUG_REMOTE_DEBUGGING_PORT']
+          _, port, path = debug_port.match(/(\d+)(.*)/).to_a
+          retry_flag = true
+        else
+          port, path = run_new_chrome
+        end
+
         begin
           s = Socket.tcp '127.0.0.1', port
         rescue Errno::ECONNREFUSED, Errno::EADDRNOTAVAIL
-          return
+          return output_url addr unless retry_flag
+
+          DEBUGGER__.warn 'failed to connect to opened Chrome browser with the specified port.'
+          port, path = run_new_chrome
+          retry_flag = false
+          retry
         end
 
         ws_client = WebSocketClient.new(s)
@@ -32,6 +44,11 @@ module DEBUGGER__
           case
           when res['id'] == 1 && target_info = res.dig('result', 'targetInfos')
             page = target_info.find{|t| t['type'] == 'page'}
+            unless page
+              DEBUGGER__.warn 'failed to connect to opened Chrome browser with the specified port.'
+              return output_url addr
+            end
+
             ws_client.send id: 2, method: 'Target.attachToTarget',
                           params: {
                             targetId: page['targetId'],
@@ -52,9 +69,24 @@ module DEBUGGER__
             break
           end
         end
-        pid
+        DEBUGGER__.warn <<~EOS
+        Run the following command if you want to debug again with opened Chrome browser's process:
+
+            RUBY_DEBUG_REMOTE_DEBUGGING_PORT=#{port}#{path} rdbg --open=chrome #{$0}
+
+        *NOTE*: DO NOT use `RUBY_DEBUG_REMOTE_DEBUGGING_PORT` without opened one.
+        EOS
       rescue Errno::ENOENT
-        nil
+        output_url addr
+      end
+
+      def output_url addr
+        DEBUGGER__.warn <<~EOS
+        With Chrome browser, type the following URL in the address-bar:
+        
+            devtools://devtools/bundled/inspector.html?ws=#{addr}
+
+        EOS
       end
 
       def get_chrome_path
@@ -75,8 +107,10 @@ module DEBUGGER__
 
       def run_new_chrome
         dir = Dir.mktmpdir
+        cmdline = "#{get_chrome_path} --remote-debugging-port=0 --no-first-run --no-default-browser-check --user-data-dir=#{dir}"
+        STDERR.puts "Launching: #{cmdline}"
         # The command line flags are based on: https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Chrome_Desktop#connecting
-        stdin, stdout, stderr, wait_thr = *Open3.popen3("#{get_chrome_path} --remote-debugging-port=0 --no-first-run --no-default-browser-check --user-data-dir=#{dir}")
+        stdin, stdout, stderr, _ = *Open3.popen3(cmdline)
         stdin.close
         stdout.close
 
@@ -92,7 +126,7 @@ module DEBUGGER__
           FileUtils.rm_rf dir
         }
 
-        [port, path, wait_thr.pid]
+        [port, path]
       end
     end
 
@@ -475,10 +509,6 @@ module DEBUGGER__
     def deactivate_bp
       @q_msg << 'del'
       @q_ans << 'y'
-    end
-
-    def cleanup_reader
-      Process.kill :KILL, @chrome_pid if @chrome_pid
     end
 
     ## Called by the SESSION thread
