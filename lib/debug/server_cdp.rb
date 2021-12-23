@@ -44,9 +44,15 @@ module DEBUGGER__
           when res['id'] == 3
             s_id = res['sessionId']
             ws_client.send sessionId: s_id, id: 4,
+                          method: 'Page.getFrameTree'
+          when res['id'] == 4
+            s_id = res['sessionId']
+            f_id = res.dig('result', 'frameTree', 'frame', 'id')
+            ws_client.send sessionId: s_id, id: 5,
                           method: 'Page.navigate',
                           params: {
-                            url: "devtools://devtools/bundled/inspector.html?ws=#{addr}"
+                            url: "devtools://devtools/bundled/inspector.html?ws=#{addr}",
+                            frameId: f_id
                           }
           when res['method'] == 'Page.loadEventFired'
             break
