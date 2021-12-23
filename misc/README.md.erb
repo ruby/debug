@@ -433,6 +433,22 @@ Type `devtools://devtools/bundled/inspector.html?ws=127.0.0.1:43633` in the addr
 
 Also `open chrome` command works like `open vscode`.
 
+Debugger tries to open Chrome browser automatically in some platforms and can attach to opened one from the second time unless you close the Chrome browser.
+
+```
+$ rdbg target.rb --open=chrome
+DEBUGGER: Debugger can attach via TCP/IP (127.0.0.1:54004)
+DEBUGGER: wait for debugger connection...
+Launching: /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=0 --no-first-run --no-default-browser-check --user-data-dir=/var/folders/kv/w1k6nh1x5fl7vx47b2pd005w0000gn/T/d20220102-83390-huc0yn
+DEBUGGER: Run the following command if you want to debug again with opened Chrome browser's process:
+
+    RUBY_DEBUG_REMOTE_DEBUGGING_PORT=54005/devtools/browser/658084a0-3d64-4049-ae2b-5e663c19685e rdbg --open=chrome target.rb
+
+*NOTE*: DO NOT use `RUBY_DEBUG_REMOTE_DEBUGGING_PORT` without opened one.
+```
+
+Run `RUBY_DEBUG_REMOTE_DEBUGGING_PORT=54005/devtools/browser/658084a0-3d64-4049-ae2b-5e663c19685e rdbg --open=chrome target.rb` in the terminal, and you can attach to existed Chrome.
+
 For more information about how to use Chrome debugging, you might want to read [here](https://developer.chrome.com/docs/devtools/).
 
 Note: If you want to maximize Chrome DevTools, click [Toggle Device Toolbar](https://developer.chrome.com/docs/devtools/device-mode/#viewport).
