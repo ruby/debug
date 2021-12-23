@@ -345,15 +345,7 @@ module DEBUGGER__
 
     def chrome_setup
       require_relative 'server_cdp'
-
-      unless @chrome_pid = UI_CDP.setup_chrome(@addr)
-        DEBUGGER__.warn <<~EOS if CONFIG[:open_frontend] == 'chrome'
-          With Chrome browser, type the following URL in the address-bar:
-          
-             devtools://devtools/bundled/inspector.html?ws=#{@addr}
-          
-          EOS
-      end
+      UI_CDP.setup_chrome(@addr)
     end
 
     def accept

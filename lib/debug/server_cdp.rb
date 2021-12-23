@@ -14,13 +14,24 @@ module DEBUGGER__
 
     class << self
       def setup_chrome addr
-        return if CONFIG[:chrome_path] == ''
+        return output_url addr if CONFIG[:chrome_path] == ''
+        
+        retry_flag = false
+        if uri = ENV['RUBY_DEBUG_CHROME_URI']
+          _, port, path = uri.match(/(\d+)(.*)/).to_a
+          retry_flag = true
+        else
+          port, path = run_new_chrome
+        end
 
-        port, path, pid = run_new_chrome
         begin
           s = Socket.tcp '127.0.0.1', port
         rescue Errno::ECONNREFUSED, Errno::EADDRNOTAVAIL
-          return
+          return output_url addr unless retry_flag
+
+          port, path = run_new_chrome
+          retry_flag = false
+          retry
         end
 
         ws_client = WebSocketClient.new(s)
@@ -32,6 +43,8 @@ module DEBUGGER__
           case
           when res['id'] == 1 && target_info = res.dig('result', 'targetInfos')
             page = target_info.find{|t| t['type'] == 'page'}
+            return output_url addr unless page
+
             ws_client.send id: 2, method: 'Target.attachToTarget',
                           params: {
                             targetId: page['targetId'],
@@ -58,9 +71,23 @@ module DEBUGGER__
             break
           end
         end
-        pid
+        DEBUGGER__.warn <<~EOS
+        Run the following command if you want to debug again with opened Chrome process:
+        
+            RUBY_DEBUG_CHROME_URI=#{port}#{path} rdbg --open=chrome #{$0}
+        
+        EOS
       rescue Errno::ENOENT
-        nil
+        output_url addr
+      end
+
+      def output_url addr
+        DEBUGGER__.warn <<~EOS
+        With Chrome browser, type the following URL in the address-bar:
+        
+            devtools://devtools/bundled/inspector.html?ws=#{addr}
+        
+        EOS
       end
 
       def get_chrome_path
@@ -98,7 +125,7 @@ module DEBUGGER__
           FileUtils.rm_rf dir
         }
 
-        [port, path, wait_thr.pid]
+        [port, path]
       end
     end
 
@@ -481,10 +508,6 @@ module DEBUGGER__
     def deactivate_bp
       @q_msg << 'del'
       @q_ans << 'y'
-    end
-
-    def cleanup_reader
-      Process.kill :KILL, @chrome_pid if @chrome_pid
     end
 
     ## Called by the SESSION thread
