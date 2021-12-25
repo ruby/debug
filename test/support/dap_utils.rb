@@ -17,7 +17,7 @@ module DEBUGGER__
       when nil
         nil
       when /out/, /input/
-        recv_request sock
+        recv_request sock, backlog
       else
         raise "unrecognized line: #{header} (#{l.nil?} bytes)"
       end
