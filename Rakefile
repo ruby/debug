@@ -25,8 +25,3 @@ file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
   File.write 'README.md', ERB.new(File.read('misc/README.md.erb')).result
   puts 'README.md is updated.'
 end
-
-task :run => :compile do
-  system(RbConfig.ruby, *%w(-I ./lib test.rb))
-end
-
