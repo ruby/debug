@@ -611,7 +611,7 @@ module DEBUGGER__
         }
       when :scopes
         fid = args.shift
-        frame = @target_frames[fid]
+        frame = get_frame(fid)
 
         lnum =
           if frame.binding
@@ -639,28 +639,12 @@ module DEBUGGER__
         }]
       when :scope
         fid = args.shift
-        frame = @target_frames[fid]
-        if b = frame.binding
-          vars = b.local_variables.map{|name|
-            v = b.local_variable_get(name)
-            variable(name, v)
-          }
-          special_local_variables frame do |name, val|
-            vars.unshift variable(name, val)
-          end
-          vars.unshift variable('%self', b.receiver)
-        elsif lvars = frame.local_variables
-          vars = lvars.map{|var, val|
-            variable(var, val)
-          }
-        else
-          vars = [variable('%self', frame.self)]
-          special_local_variables frame do |name, val|
-            vars.push variable(name, val)
-          end
+        frame = get_frame(fid)
+        vars = collect_locals(frame).map do |var, val|
+          variable(var, val)
         end
-        event! :dap_result, :scope, req, variables: vars, tid: self.id
 
+        event! :dap_result, :scope, req, variables: vars, tid: self.id
       when :variable
         vid = args.shift
         obj = @var_map[vid]
@@ -711,7 +695,7 @@ module DEBUGGER__
 
       when :evaluate
         fid, expr, context = args
-        frame = @target_frames[fid]
+        frame = get_frame(fid)
         message = nil
 
         if frame && (b = frame.binding)
@@ -773,7 +757,7 @@ module DEBUGGER__
 
       when :completions
         fid, text = args
-        frame = @target_frames[fid]
+        frame = get_frame(fid)
 
         if (b = frame&.binding) && word = text&.split(/[\s\{]/)&.last
           words = IRB::InputCompletor::retrieve_completion_data(word, bind: b).compact
