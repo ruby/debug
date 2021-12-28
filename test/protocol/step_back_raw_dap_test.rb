@@ -3,11 +3,11 @@
 require_relative '../support/test_case'
 
 module DEBUGGER__
-  
+
   class StepBackTest1638698086 < TestCase
     PROGRAM = <<~RUBY
        1| binding.b do: 'record on'
-       2| 
+       2|
        3| module Foo
        4|   class Bar
        5|     def self.a
@@ -18,7 +18,7 @@ module DEBUGGER__
       10|   bar = Bar.new
       11| end
     RUBY
-    
+
     def test_step_back_works_correctly
       run_dap_scenario PROGRAM do
         [
@@ -608,10 +608,18 @@ module DEBUGGER__
             body: {
               variables: [
                 {
+                  name: "%self",
+                  value: "Foo",
+                  type: "Module",
+                  variablesReference: 8,
+                  indexedVariables: 0,
+                  namedVariables: /\d+/
+                },
+                {
                   name: "bar",
                   value: "nil",
                   type: "NilClass",
-                  variablesReference: 8,
+                  variablesReference: 9,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 }
@@ -735,7 +743,7 @@ module DEBUGGER__
                   namedVariables: /\d+/,
                   indexedVariables: 0,
                   expensive: false,
-                  variablesReference: 9
+                  variablesReference: 10
                 },
                 {
                   name: "Global variables",
@@ -765,7 +773,7 @@ module DEBUGGER__
             message: "Success",
             body: {
               variables: [
-          
+
               ]
             }
           },
@@ -875,7 +883,7 @@ module DEBUGGER__
                   namedVariables: /\d+/,
                   indexedVariables: 0,
                   expensive: false,
-                  variablesReference: 10
+                  variablesReference: 11
                 },
                 {
                   name: "Global variables",
@@ -906,10 +914,18 @@ module DEBUGGER__
             body: {
               variables: [
                 {
+                  name: "%self",
+                  value: "Foo",
+                  type: "Module",
+                  variablesReference: 12,
+                  indexedVariables: 0,
+                  namedVariables: /\d+/
+                },
+                {
                   name: "bar",
                   value: "nil",
                   type: "NilClass",
-                  variablesReference: 11,
+                  variablesReference: 13,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 }

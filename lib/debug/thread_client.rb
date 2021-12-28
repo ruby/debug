@@ -459,11 +459,34 @@ module DEBUGGER__
     end
 
     def current_frame
+      get_frame(@current_frame_index)
+    end
+
+    def get_frame(index)
       if @target_frames
-        @target_frames[@current_frame_index]
+        @target_frames[index]
       else
         nil
       end
+    end
+
+    def collect_locals(frame)
+      locals = []
+
+      if s = frame&.self
+        locals << ["%self", s]
+      end
+      special_local_variables frame do |name, val|
+        locals << [name, val]
+      end
+
+      if vars = frame&.local_variables
+        vars.each{|var, val|
+          locals << [var, val]
+        }
+      end
+
+      locals
     end
 
     ## cmd: show
@@ -477,17 +500,8 @@ module DEBUGGER__
     end
 
     def show_locals pat
-      if s = current_frame&.self
-        puts_variable_info '%self', s, pat
-      end
-      special_local_variables current_frame do |name, val|
-        puts_variable_info name, val, pat
-      end
-
-      if vars = current_frame&.local_variables
-        vars.each{|var, val|
-          puts_variable_info var, val, pat
-        }
+      collect_locals(current_frame).each do |var, val|
+        puts_variable_info(var, val, pat)
       end
     end
 
