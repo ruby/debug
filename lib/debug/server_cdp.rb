@@ -71,7 +71,7 @@ module DEBUGGER__
             break
           end
         end
-        DEBUGGER__.warn <<~EOS
+        DEBUGGER__.warn <<~EOS if CONFIG[:open_frontend] == 'chrome'
         Run the following command if you want to debug again with opened Chrome process:
         
             RUBY_DEBUG_CHROME_URI=#{port}#{path} rdbg --open=chrome #{$0}
@@ -671,7 +671,7 @@ module DEBUGGER__
     end
   end
 
-  class ThreadClient
+  module ThreadClient_CDP
     def process_cdp args
       type = args.shift
       req = args.shift
@@ -831,47 +831,52 @@ module DEBUGGER__
         event! :cdp_result, :scope, req, vars
       when :properties
         oid = args.shift
-        result = []
-        prop = []
-
-        if obj = @obj_map[oid]
-          case obj
-          when Array
-            result = obj.map.with_index{|o, i|
-              variable i.to_s, o
-            }
-          when Hash
-            result = obj.map{|k, v|
-              variable(k, v)
-            }
-          when Struct
-            result = obj.members.map{|m|
-              variable(m, obj[m])
-            }
-          when String
-            prop = [
-              property('#length', obj.length),
-              property('#encoding', obj.encoding)
-            ]
-          when Class, Module
-            result = obj.instance_variables.map{|iv|
-              variable(iv, obj.instance_variable_get(iv))
-            }
-            prop = [property('%ancestors', obj.ancestors[1..])]
-          when Range
-            prop = [
-              property('#begin', obj.begin),
-              property('#end', obj.end),
-            ]
-          end
-
-          result += obj.instance_variables.map{|iv|
-            variable(iv, obj.instance_variable_get(iv))
-          }
-          prop += [property('#class', obj.class)]
-        end
+        result, prop = analyze_obj oid
         event! :cdp_result, :properties, req, result: result, internalProperties: prop
       end
+    end
+
+    def analyze_obj oid
+      result = []
+      prop = []
+
+      if obj = @obj_map[oid]
+        case obj
+        when Array
+          result = obj.map.with_index{|o, i|
+            variable i.to_s, o
+          }
+        when Hash
+          result = obj.map{|k, v|
+            variable(k, v)
+          }
+        when Struct
+          result = obj.members.map{|m|
+            variable(m, obj[m])
+          }
+        when String
+          prop = [
+            property('#length', obj.length),
+            property('#encoding', obj.encoding)
+          ]
+        when Class, Module
+          result = obj.instance_variables.map{|iv|
+            variable(iv, obj.instance_variable_get(iv))
+          }
+          prop = [property('%ancestors', obj.ancestors[1..])]
+        when Range
+          prop = [
+            property('#begin', obj.begin),
+            property('#end', obj.end),
+          ]
+        end
+
+        result += obj.instance_variables.map{|iv|
+          variable(iv, obj.instance_variable_get(iv))
+        }
+        prop += [property('#class', obj.class)]
+      end
+      [result, prop]
     end
 
     def search_const b, expr
@@ -951,5 +956,9 @@ module DEBUGGER__
         variable_ name, obj, 'object'
       end
     end
+  end
+
+  class ThreadClient
+    include ThreadClient_CDP
   end
 end
