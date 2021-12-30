@@ -517,7 +517,7 @@ module DEBUGGER__
 
   class Session
     def fail_response req, **result
-      @ui.respond_fail req, result
+      @ui.respond_fail req, **result
       return :retry
     end
 
