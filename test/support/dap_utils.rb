@@ -115,7 +115,7 @@ module DEBUGGER__
         command: "setFunctionBreakpoints",
         arguments: {
           breakpoints: [
-      
+
           ]
         },
         type: "request"
@@ -125,7 +125,7 @@ module DEBUGGER__
         command: "setExceptionBreakpoints",
         arguments: {
           filters: [
-      
+
           ],
           filterOptions: [
             {
@@ -205,16 +205,8 @@ module DEBUGGER__
             end
 
             msg.delete :seq
-            hash = ProtocolParser.new.parse msg
-            hash.each{|r|
-              k, v = r
-              case v
-              when Regexp
-                assert_match v, result.dig(*k).to_s, FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
-              else
-                assert_equal v, result.dig(*k), FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
-              end
-            }
+            verify_result(result, msg)
+
             if msg[:command] == 'disconnect'
               res_log.clear
               reader_thread.raise Detach
@@ -238,16 +230,8 @@ module DEBUGGER__
             end
 
             msg.delete :seq
-            hash = ProtocolParser.new.parse msg
-            hash.each{|r|
-              k, v = r
-              case v
-              when Regexp
-                assert_match v, result.dig(*k).to_s, FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
-              else
-                assert_equal v, result.dig(*k), FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
-              end
-            }
+            verify_result(result, msg)
+
             res_log.delete result
           end
         }
@@ -259,6 +243,20 @@ module DEBUGGER__
         kill_safely remote_info.pid, :debuggee, test_info
         if test_info.failed_process
           flunk create_protocol_msg backlog, remote_info, "Expected the debuggee program to finish"
+        end
+      end
+    end
+
+    def verify_result(result, msg)
+      expected = ProtocolParser.new.parse msg
+      expected.each do |key, expected_value|
+        failure_msg = FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
+
+        case expected_value
+        when Regexp
+          assert_match expected_value, result.dig(*key).to_s, failure_msg
+        else
+          assert_equal expected_value, result.dig(*key), failure_msg
         end
       end
     end
