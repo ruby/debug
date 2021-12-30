@@ -25,7 +25,9 @@ module DEBUGGER__
       retry
     end
 
-    def create_protocol_msg msgs, remote_info, fail_msg
+    def create_protocol_msg test_info, fail_msg
+      msgs = test_info.backlog
+      remote_info = test_info.remote_info
       all_protocol_msg = <<~DEBUGGER_MSG.chomp
         -------------------------
         | All Protocol Messages |
@@ -142,22 +144,23 @@ module DEBUGGER__
       }
     ]
 
-    DAP_TestInfo = Struct.new(:res_backlog, :backlog, :failed_process)
+    DAP_TestInfo = Struct.new(:res_backlog, :backlog, :failed_process, :remote_info)
 
     class Detach < StandardError
     end
 
-    def connect_to_dap_server path, test_info
-      sock = Socket.unix path
-      reader_thread = Thread.new(sock, test_info) do |s, info|
+    def connect_to_dap_server test_info
+      remote_info = test_info.remote_info
+      sock = Socket.unix remote_info.sock_path
+      remote_info.reader_thread = Thread.new(sock, test_info) do |s, info|
         while res = recv_request(s, info.backlog)
           info.res_backlog << res
         end
       rescue Detach
       end
-      sleep 0.001 while reader_thread.status != 'sleep'
-      reader_thread.run
-      [sock, reader_thread]
+      sleep 0.001 while remote_info.reader_thread.status != 'sleep'
+      remote_info.reader_thread.run
+      sock
     end
 
     TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
@@ -171,33 +174,31 @@ module DEBUGGER__
         write_temp_file(strip_line_num(program))
 
         test_info = DAP_TestInfo.new([], [])
-        remote_info = setup_unix_doman_socket_remote_debuggee
-        sock = nil
-        reader_thread = nil
+        remote_info = test_info.remote_info = setup_unix_doman_socket_remote_debuggee
         res_log = test_info.res_backlog
-        backlog = test_info.backlog
+        sock = nil
         target_msg = nil
 
         msgs.call.each{|msg|
           case msg[:type]
           when 'request'
             if msg[:command] == 'initialize'
-              sock, reader_thread = connect_to_dap_server remote_info.sock_path, test_info
+              sock = connect_to_dap_server test_info
             end
             str = JSON.dump(msg)
             sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
-            backlog << "V>D #{str}"
+            test_info.backlog << "V>D #{str}"
           when 'response'
             target_msg = msg
 
             result = collect_result_from_res_log(res_log, :request_seq, msg)
 
             msg.delete :seq
-            verify_result(result, msg)
+            verify_result(result, msg, test_info)
 
             if msg[:command] == 'disconnect'
               res_log.clear
-              reader_thread.raise Detach
+              remote_info.reader_thread.raise Detach
               sock.close
             end
           when 'event'
@@ -206,19 +207,19 @@ module DEBUGGER__
             result = collect_result_from_res_log(res_log, :event, msg)
 
             msg.delete :seq
-            verify_result(result, msg)
+            verify_result(result, msg, test_info)
 
             res_log.delete result
           end
         }
       rescue Timeout::Error
-        flunk create_protocol_msg backlog, remote_info, "TIMEOUT ERROR (#{TIMEOUT_SEC} sec) while waiting for the following response.\n#{JSON.pretty_generate target_msg}"
+        flunk create_protocol_msg test_info, "TIMEOUT ERROR (#{TIMEOUT_SEC} sec) while waiting for the following response.\n#{JSON.pretty_generate target_msg}"
       ensure
-        reader_thread.kill
+        remote_info.reader_thread.kill
         sock.close
         kill_safely remote_info.pid, :debuggee, test_info
         if test_info.failed_process
-          flunk create_protocol_msg backlog, remote_info, "Expected the debuggee program to finish"
+          flunk create_protocol_msg test_info, "Expected the debuggee program to finish"
         end
       end
     end
@@ -243,10 +244,10 @@ module DEBUGGER__
       result
     end
 
-    def verify_result(result, msg)
+    def verify_result(result, msg, test_info)
       expected = ProtocolParser.new.parse msg
       expected.each do |key, expected_value|
-        failure_msg = FailureMessage.new{create_protocol_msg backlog, remote_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
+        failure_msg = FailureMessage.new{create_protocol_msg test_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
 
         case expected_value
         when Regexp
