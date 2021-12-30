@@ -2080,6 +2080,10 @@ module DEBUGGER__
     log :INFO, msg
   end
 
+  def self.debug msg
+    log :DEBUG, msg
+  end
+
   def self.log level, msg
     @logfile = STDERR unless defined? @logfile
 
