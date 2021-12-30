@@ -188,21 +188,9 @@ module DEBUGGER__
             sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
             backlog << "V>D #{str}"
           when 'response'
-            result = nil
             target_msg = msg
-            Timeout.timeout(TIMEOUT_SEC) do
-              loop do
-                res_log.each{|r|
-                  if r[:request_seq] == msg[:request_seq]
-                    result = r
-                    break
-                  end
-                }
-                break unless result.nil?
 
-                sleep 0.01
-              end
-            end
+            result = collect_result_from_res_log(res_log, :request_seq, msg)
 
             msg.delete :seq
             verify_result(result, msg)
@@ -213,21 +201,9 @@ module DEBUGGER__
               sock.close
             end
           when 'event'
-            result = nil
             target_msg = msg
-            Timeout.timeout(TIMEOUT_SEC) do
-              loop do
-                res_log.each{|r|
-                  if r[:event] == msg[:event]
-                    result = r
-                    break
-                  end
-                }
-                break unless result.nil?
 
-                sleep 0.01
-              end
-            end
+            result = collect_result_from_res_log(res_log, :event, msg)
 
             msg.delete :seq
             verify_result(result, msg)
@@ -245,6 +221,26 @@ module DEBUGGER__
           flunk create_protocol_msg backlog, remote_info, "Expected the debuggee program to finish"
         end
       end
+    end
+
+    def collect_result_from_res_log(res_log, identifier, msg)
+      result = nil
+
+      Timeout.timeout(TIMEOUT_SEC) do
+        loop do
+          res_log.each{|r|
+            if r[identifier] == msg[identifier]
+              result = r
+              break
+            end
+          }
+          break unless result.nil?
+
+          sleep 0.01
+        end
+      end
+
+      result
     end
 
     def verify_result(result, msg)
