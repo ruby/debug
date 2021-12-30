@@ -118,6 +118,7 @@ module DEBUGGER__
     end
 
     def set_mode mode
+      debug_mode(@mode, mode)
       # STDERR.puts "#{@mode} => #{mode} @ #{caller.inspect}"
       # pp caller
 
@@ -181,6 +182,7 @@ module DEBUGGER__
     end
 
     def << req
+      debug_cmd(req)
       @q_cmd << req
     end
 
@@ -191,6 +193,7 @@ module DEBUGGER__
     end
 
     def event! ev, *args
+      debug_event(ev, args)
       @q_evt << [self, @output, ev, generate_info, *args]
       @output = []
     end
@@ -236,6 +239,7 @@ module DEBUGGER__
 
     def suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil, replay_frames: nil, postmortem_exc: nil
       return if management?
+      debug_suspend(event)
 
       @current_frame_index = 0
 
@@ -1050,6 +1054,25 @@ module DEBUGGER__
     rescue Exception => e
       pp ["DEBUGGER Exception: #{__FILE__}:#{__LINE__}", e, e.backtrace]
       raise
+    end
+
+    def debug_event(ev, args)
+      args = args.map { |arg| DEBUGGER__.safe_inspect(arg) }
+      DEBUGGER__.debug("#{inspect} sends Event { type: #{ev.inspect}, args: #{args} } to Session")
+    end
+
+    def debug_mode(old_mode, new_mode)
+      DEBUGGER__.debug("#{inspect} changes mode (#{old_mode} -> #{new_mode})")
+    end
+
+    def debug_cmd(cmds)
+      cmd, *args = *cmds
+      args = args.map { |arg| DEBUGGER__.safe_inspect(arg) }
+      DEBUGGER__.debug("#{inspect} receives Cmd { type: #{cmd.inspect}, args: #{args} } from Session")
+    end
+
+    def debug_suspend(event)
+      DEBUGGER__.debug("#{inspect} is suspended for #{event.inspect}")
     end
 
     class Recorder

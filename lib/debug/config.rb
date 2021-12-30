@@ -7,6 +7,7 @@ module DEBUGGER__
     ERROR:   2,
     WARN:    3,
     INFO:    4,
+    DEBUG:   5
   }.freeze
 
   CONFIG_SET = {
