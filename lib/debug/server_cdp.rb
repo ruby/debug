@@ -660,12 +660,18 @@ module DEBUGGER__
               path = $1
             end
 
+            if frame.iseq.nil?
+              lineno = 0
+            else
+              lineno = frame.iseq.first_line - 1
+            end
+
             {
               callFrameId: SecureRandom.hex(16),
               functionName: frame.name,
               functionLocation: {
                 scriptId: path,
-                lineNumber: 0
+                lineNumber: lineno
               },
               location: {
                 scriptId: path,
