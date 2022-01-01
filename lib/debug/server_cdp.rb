@@ -880,7 +880,8 @@ module DEBUGGER__
       v
     end
 
-    def variable_ name, obj, type, description: obj.inspect, subtype: nil
+    def variable_ name, obj, type, description: nil, subtype: nil
+      description = DEBUGGER__.safe_inspect(obj) if description.nil?
       oid = rand.to_s
       @obj_map[oid] = obj
       prop = {
