@@ -359,7 +359,10 @@ module DEBUGGER__
         b.local_variable_set(name, var) if /\%/ !~ name
       end
 
-      b.local_variable_set(:_, @prev_evaled_value)
+      # this check needs to be performed on the original binding
+      if !current_frame.binding&.local_variable_defined?(:_)
+        b.local_variable_set(:_, @prev_evaled_value)
+      end
 
       result = if b
                   f, _l = b.source_location

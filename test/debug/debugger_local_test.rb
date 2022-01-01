@@ -214,6 +214,24 @@ module DEBUGGER__
           type "c"
         end
       end
+
+      def test_underscore_doesnt_override_program_value
+        program = <<~RUBY
+         1| def foo(_)
+         2|   binding.b
+         3| end
+         4|
+         5| foo(100)
+        RUBY
+
+        debug_code(program) do
+          type "a = 50"
+          type "c"
+          type "_"
+          assert_line_text(/100/)
+          type "c"
+        end
+      end
     end
   end
 end
