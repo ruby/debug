@@ -745,7 +745,7 @@ module DEBUGGER__
                   break false
                 end
               } and (message = "Error: Not defined global variable: #{expr.inspect}")
-            when /(\A[A-Z]\w*)/
+            when /(\A((::[A-Z]|[A-Z])\w*)+)/
               unless result = search_const(b, $1)
                 message = "Error: Not defined constants: #{expr.inspect}"
               end
@@ -807,7 +807,7 @@ module DEBUGGER__
     end
 
     def search_const b, expr
-      cs = expr.split('::')
+      cs = expr.delete_prefix('::').split('::')
       [Object, *b.eval('Module.nesting')].reverse_each{|mod|
         if cs.all?{|c|
              if mod.const_defined?(c)
