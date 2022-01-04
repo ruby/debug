@@ -1344,7 +1344,7 @@ module DEBUGGER__
                 },
                 {
                   name: "%ancestors",
-                  value: "[Object, JSON::Ext::Generator::GeneratorMethods::Object, PP::ObjectMixin, DEBUGGER__::TrapInterceptor, DEBUGGER__::ForkInterceptor, Kernel, BasicObject]",
+                  value: /Object/,
                   type: "Array",
                   variablesReference: 12,
                   indexedVariables: 7,
@@ -1466,7 +1466,7 @@ module DEBUGGER__
                 },
                 {
                   name: "%ancestors",
-                  value: "[Object, JSON::Ext::Generator::GeneratorMethods::Object, PP::ObjectMixin, DEBUGGER__::TrapInterceptor, DEBUGGER__::ForkInterceptor, Kernel, BasicObject]",
+                  value: /Object/,
                   type: "Array",
                   variablesReference: 17,
                   indexedVariables: 7,
@@ -1527,7 +1527,7 @@ module DEBUGGER__
                 },
                 {
                   name: "%ancestors",
-                  value: "[Object, JSON::Ext::Generator::GeneratorMethods::Object, PP::ObjectMixin, DEBUGGER__::TrapInterceptor, DEBUGGER__::ForkInterceptor, Kernel, BasicObject]",
+                  value: /Object/,
                   type: "Array",
                   variablesReference: 20,
                   indexedVariables: 7,
@@ -1588,7 +1588,7 @@ module DEBUGGER__
                 },
                 {
                   name: "%ancestors",
-                  value: "[Object, JSON::Ext::Generator::GeneratorMethods::Object, PP::ObjectMixin, DEBUGGER__::TrapInterceptor, DEBUGGER__::ForkInterceptor, Kernel, BasicObject]",
+                  value: /Object/,
                   type: "Array",
                   variablesReference: 23,
                   indexedVariables: 7,
@@ -1710,7 +1710,7 @@ module DEBUGGER__
                 },
                 {
                   name: "%ancestors",
-                  value: "[Object, JSON::Ext::Generator::GeneratorMethods::Object, PP::ObjectMixin, DEBUGGER__::TrapInterceptor, DEBUGGER__::ForkInterceptor, Kernel, BasicObject]",
+                  value: /Object/,
                   type: "Array",
                   variablesReference: 28,
                   indexedVariables: 7,
@@ -1771,7 +1771,7 @@ module DEBUGGER__
                 },
                 {
                   name: "%ancestors",
-                  value: "[Object, JSON::Ext::Generator::GeneratorMethods::Object, PP::ObjectMixin, DEBUGGER__::TrapInterceptor, DEBUGGER__::ForkInterceptor, Kernel, BasicObject]",
+                  value: /Object/,
                   type: "Array",
                   variablesReference: 31,
                   indexedVariables: 7,
