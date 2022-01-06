@@ -27,8 +27,10 @@ module DEBUGGER__
       @temp_file = nil
     end
 
-    def with_extra_tempfile
-      t = Tempfile.create([SecureRandom.hex(5), '.rb']).tap do |f|
+    def with_extra_tempfile(*additional_words)
+      name = SecureRandom.hex(5) + additional_words.join
+
+      t = Tempfile.create([name, '.rb']).tap do |f|
         f.write(extra_file)
         f.close
       end

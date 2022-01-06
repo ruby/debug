@@ -82,8 +82,11 @@ module DEBUGGER__
     end
 
     def skip_path?(path)
-      if @path
+      case @path
+      when Regexp
         !path.match?(@path)
+      when String
+        !path.include?(@path)
       else
         super
       end
