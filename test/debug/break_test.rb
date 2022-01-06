@@ -224,11 +224,32 @@ module DEBUGGER__
       end
 
       def test_break_only_stops_when_path_matches
-        with_extra_tempfile do |extra_file|
+        with_extra_tempfile("foopy") do |extra_file|
+          # exact path match should work in both Regexp and String form
+          debug_code(program(extra_file.path)) do
+            type "break Foo#bar path: /#{extra_file.path}/"
+            type 'c'
+            assert_line_text(/#{extra_file.path}/)
+            type 'c'
+          end
+
           debug_code(program(extra_file.path)) do
             type "break Foo#bar path: #{extra_file.path}"
             type 'c'
             assert_line_text(/#{extra_file.path}/)
+            type 'c'
+          end
+
+          # special characters should be treated differently in Regexp/String form
+          debug_code(program(extra_file.path)) do
+            type "break Foo#bar path: /.py/"
+            type 'c'
+            assert_line_text(/#{extra_file.path}/)
+            type 'c'
+          end
+
+          debug_code(program(extra_file.path)) do
+            type "break Foo#bar path: .py"
             type 'c'
           end
         end

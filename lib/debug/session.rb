@@ -1303,14 +1303,20 @@ module DEBUGGER__
         end
       }
       expr.default_proc = nil
-      expr.transform_values{|v| v.join(' ')}
+      expr = expr.transform_values{|v| v.join(' ')}
+
+      if (path = expr[:path]) && path =~ /\A\/(.*)\/\z/
+        expr[:path] = Regexp.compile($1)
+      end
+
+      expr
     end
 
     def repl_add_breakpoint arg
       expr = parse_break arg.strip
       cond = expr[:if]
       cmd = ['break', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
-      path = Regexp.compile(expr[:path]) if expr[:path]
+      path = expr[:path]
 
       case expr[:sig]
       when /\A(\d+)\z/
@@ -1333,7 +1339,7 @@ module DEBUGGER__
       expr = parse_break arg.strip
       cond = expr[:if]
       cmd = ['catch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
-      path = Regexp.compile(expr[:path]) if expr[:path]
+      path = expr[:path]
 
       bp = CatchBreakpoint.new(expr[:sig], cond: cond, command: cmd, path: path)
       add_bp bp
