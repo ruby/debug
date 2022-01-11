@@ -115,7 +115,7 @@ module DEBUGGER__
         command: "setFunctionBreakpoints",
         arguments: {
           breakpoints: [
-      
+
           ]
         },
         type: "request"
@@ -125,7 +125,7 @@ module DEBUGGER__
         command: "setExceptionBreakpoints",
         arguments: {
           filters: [
-      
+
           ],
           filterOptions: [
             {
@@ -165,7 +165,7 @@ module DEBUGGER__
     DAP_TEST = dt == 'true' || dt == '1'
 
     def run_dap_scenario program, &msgs
-      pend 'Tests for DAP were skipped. You can enable them with RUBY_DEBUG_DAP_TEST=1.' unless DAP_TEST
+      omit 'Tests for DAP were skipped. You can enable them with RUBY_DEBUG_DAP_TEST=1.' unless DAP_TEST
 
       begin
         write_temp_file(strip_line_num(program))
