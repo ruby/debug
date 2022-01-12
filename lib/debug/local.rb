@@ -98,7 +98,7 @@ module DEBUGGER__
           # only check child process from its parent
           begin
             # wait for all child processes to keep terminal
-            loop{ Process.waitpid }
+            Process.waitpid
           rescue Errno::ESRCH, Errno::ECHILD
           end
         end
