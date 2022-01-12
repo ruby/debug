@@ -113,7 +113,7 @@ d => nil
       5| binding.break
       6| c = 3
       7| d = 4
-=>    8| binding.break                 # Again the program stops at here
+=>    8| binding.break                 # Again the program stops here
       9| p [a, b, c, d]
      10|
      11| __END__
