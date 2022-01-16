@@ -317,10 +317,10 @@ module DEBUGGER__
   end
 
   class CheckBreakpoint < Breakpoint
-    def initialize expr, path, command
-      @expr = expr.freeze
+    def initialize cond:, command: nil, path: nil
+      @cond = cond
       @command = command
-      @key = [:check, @expr].freeze
+      @key = [:check, @cond].freeze
       @path = path
 
       super()
@@ -332,14 +332,14 @@ module DEBUGGER__
         next if ThreadClient.current.management?
         next if skip_path?(tp.path)
 
-        if safe_eval tp.binding, @expr
+        if safe_eval tp.binding, @cond
           suspend
         end
       }
     end
 
     def to_s
-      s = "#{generate_label("Check")} #{@expr}"
+      s = "#{generate_label("Check")} #{@cond}"
       s << " pre: #{@command[1]}" if defined?(@command) && @command && @command[1]
       s << " do: #{@command[2]}"  if defined?(@command) && @command && @command[2]
       s

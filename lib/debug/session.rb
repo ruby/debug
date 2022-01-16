@@ -1356,8 +1356,8 @@ module DEBUGGER__
       add_bp bp
     end
 
-    def add_check_breakpoint expr, path, command
-      bp = CheckBreakpoint.new(expr, path, command)
+    def add_check_breakpoint cond, path, command
+      bp = CheckBreakpoint.new(cond: cond, path: path, command: command)
       add_bp bp
     end
 
