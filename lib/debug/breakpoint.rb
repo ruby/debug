@@ -8,8 +8,12 @@ module DEBUGGER__
 
     attr_reader :key
 
-    def initialize do_enable = true
+    def initialize cond, command, path, do_enable: true
       @deleted = false
+
+      @cond = cond
+      @command = command
+      @path = path
 
       setup
       enable if do_enable
@@ -111,7 +115,7 @@ module DEBUGGER__
       @oneshot = oneshot
       @key = [:iseq, @iseq.path, @iseq.first_lineno].freeze
 
-      super()
+      super(nil, nil, nil)
     end
 
     def setup
@@ -130,20 +134,17 @@ module DEBUGGER__
     attr_reader :path, :line, :iseq
 
     def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil
-      @path = path
       @line = line
-      @cond = cond
       @oneshot = oneshot
       @hook_call = hook_call
-      @command = command
       @pending = false
 
       @iseq = nil
       @type = nil
 
-      @key = [@path, @line].freeze
+      @key = [path, @line].freeze
 
-      super()
+      super(cond, command, path)
 
       try_activate
       @pending = !@iseq
@@ -280,11 +281,7 @@ module DEBUGGER__
       @key = [:catch, @pat].freeze
       @last_exc = nil
 
-      @cond = cond
-      @command = command
-      @path = path
-
-      super()
+      super(cond, command, path)
     end
 
     def setup
@@ -318,12 +315,9 @@ module DEBUGGER__
 
   class CheckBreakpoint < Breakpoint
     def initialize cond:, command: nil, path: nil
-      @cond = cond
-      @command = command
-      @key = [:check, @cond].freeze
-      @path = path
+      @key = [:check, cond].freeze
 
-      super()
+      super(cond, command, path)
     end
 
     def setup
@@ -353,10 +347,7 @@ module DEBUGGER__
 
       @current = current
 
-      @cond = cond
-      @command = command
-      @path = path
-      super()
+      super(cond, command, path)
     end
 
     def watch_eval(tp)
@@ -407,13 +398,10 @@ module DEBUGGER__
 
       @klass = nil
       @method = nil
-      @cond = cond
       @cond_class = nil
-      @command = command
-      @path = path
       @key = "#{klass_name}#{op}#{method_name}".freeze
 
-      super(false)
+      super(cond, command, path, do_enable: false)
     end
 
     def setup
