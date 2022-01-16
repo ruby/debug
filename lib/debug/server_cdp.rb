@@ -7,9 +7,248 @@ require 'securerandom'
 require 'stringio'
 require 'open3'
 require 'tmpdir'
+require 'set'
 
 module DEBUGGER__
+  module CDP_Utils
+    # def eval_expr_on_global objectGroup, expr
+    #   if expr == "(async function(){ await 1; })()"
+    #     # To get `Runtime.callFunctionOn` from Chrome, this message is required.
+    #     return {
+    #       result: {
+    #         type: "object",
+    #         subtype: "error",
+    #         className: "EvalError",
+    #         description: "EvalError: Possible side-effect in debug-evaluate",
+    #         objectId: SecureRandom.hex
+    #       },
+    #       exceptionDetails: {
+    #         exceptionId: SecureRandom.hex,
+    #         text: "Uncaught",
+    #         lineNumber: -1,
+    #         columnNumber: -1,
+    #         scriptId: SecureRandom.hex,
+    #         exception: {
+    #           type: "object",
+    #           subtype: "error",
+    #           className: "EvalError",
+    #           description: "EvalError: Possible side-effect in debug-evaluate",
+    #           objectId: SecureRandom.hex
+    #         }
+    #       }
+    #     }
+    #   end
+    #   result, exc, output = safe_eval objectGroup, expr
+    #   res = { result: evaluate_result(result) }
+    #   res[:exceptionDetails] = exc unless exc.nil?
+    #   res
+    # end
+
+    def safe_eval objectGroup, expr, bind: nil
+      if objectGroup == 'completion'
+        case expr
+        when 'this'
+          return {
+            className: "Window",
+            description: "Window",
+            objectId: SecureRandom.hex,
+            type: "object"
+          }, nil, nil
+        when /\(function\si\(e\).*\(\"string\"\)/
+          return {
+            type: 'object',
+            value: [
+              {
+                items: String.instance_methods,
+              }
+            ]
+          }, nil, nil
+        when /\(function\si\(e\).*\(\"number\"\)/
+          return {
+            type: 'object',
+            value: [
+              {
+                items: Integer.instance_methods,
+              }
+            ]
+          }, nil, nil
+        when /\(function\si\(e\).*\(\"boolean\"\)/
+          items = Set.new
+          TrueClass.instance_methods.each{|m| items << m}
+          FalseClass.instance_methods.each{|m| items << m}
+          return {
+            type: 'object',
+            value: [
+              {
+                items: items.to_a,
+              }
+            ]
+          }, nil, nil
+        end
+      end
+      if expr == "(async function(){ await 1; })()"
+        # To get `Runtime.callFunctionOn` from Chrome, this message is required.
+        return {
+          type: "object",
+          subtype: "error",
+          className: "EvalError",
+          description: "EvalError: Possible side-effect in debug-evaluate",
+          objectId: SecureRandom.hex
+        },
+        {
+          exceptionId: SecureRandom.hex,
+          text: "Uncaught",
+          lineNumber: -1,
+          columnNumber: -1,
+          scriptId: SecureRandom.hex,
+          exception: {
+            type: "object",
+            subtype: "error",
+            className: "EvalError",
+            description: "EvalError: Possible side-effect in debug-evaluate",
+            objectId: SecureRandom.hex
+          }
+        }, nil
+      end
+      b = bind || @bind
+      result = {}
+      exc = nil
+      begin
+        orig_stdout = $stdout
+        $stdout = StringIO.new
+        result = b.eval expr
+      rescue Exception => e
+        result = e
+        bt = result.backtrace.map{|e| "    #{e}\n"}
+        lineno = 0
+        if l = bt.first.match('.*:(\d+):in .*')
+          lineno = l[1].to_i
+        end
+        exc = {
+          exceptionId: 1,
+          text: 'Uncaught',
+          lineNumber: lineno - 1,
+          columnNumber: 0,
+          exception: evaluate_result(result),
+        }
+      ensure
+        output = $stdout.string
+        $stdout = orig_stdout
+      end
+      [evaluate_result(result), exc, output]
+    end
+
+    def evaluate_result r
+      v = variable nil, r
+      v[:value]
+    end
+
+    def getProperties oid
+      result = []
+      prop = []
+
+      if obj = @obj_map[oid]
+        case obj
+        when Array
+          result = obj.map.with_index{|o, i|
+            variable i.to_s, o
+          }
+        when Hash
+          result = obj.map{|k, v|
+            variable(k, v)
+          }
+        when Struct
+          result = obj.members.map{|m|
+            variable(m, obj[m])
+          }
+        when String
+          prop = [
+            internalProperty('#length', obj.length),
+            internalProperty('#encoding', obj.encoding)
+          ]
+        when Class, Module
+          result = obj.instance_variables.map{|iv|
+            variable(iv, obj.instance_variable_get(iv))
+          }
+          prop = [internalProperty('%ancestors', obj.ancestors[1..])]
+        when Range
+          prop = [
+            internalProperty('#begin', obj.begin),
+            internalProperty('#end', obj.end),
+          ]
+        end
+
+        result += obj.instance_variables.map{|iv|
+          variable(iv, obj.instance_variable_get(iv))
+        }
+        prop += [internalProperty('#class', obj.class)]
+      end
+      [result, prop]
+    end
+
+    def variable_ name, obj, type, description: nil, subtype: nil
+      description = DEBUGGER__.safe_inspect(obj) if description.nil?
+      oid = rand.to_s
+      @obj_map[oid] = obj
+      prop = {
+        name: name,
+        value: {
+          type: type,
+          description: description,
+          value: obj,
+          objectId: oid
+        },
+        configurable: true, # TODO: Change these parts because
+        enumerable: true    #       they are not necessarily `true`.
+      }
+
+      if type == 'object'
+        v = prop[:value]
+        v.delete :value
+        v[:subtype] = subtype if subtype
+        v[:className] = obj.class
+      end
+      prop
+    end
+
+    def internalProperty name, obj
+      v = variable name, obj
+      v.delete :configurable
+      v.delete :enumerable
+      v
+    end
+
+    def variable name, obj
+      case obj
+      when Array
+        variable_ name, obj, 'object', description: "Array(#{obj.size})", subtype: 'array'
+      when Hash
+        variable_ name, obj, 'object', description: "Hash(#{obj.size})", subtype: 'map'
+      when String
+        variable_ name, obj, 'string', description: obj
+      when TrueClass, FalseClass
+        variable_ name, obj, 'boolean'
+      when Symbol
+        variable_ name, obj, 'symbol'
+      when Integer, Float
+        variable_ name, obj, 'number'
+      when Regexp
+        variable_ name, obj, 'object', subtype: 'regexp'
+      when Exception
+        bt = nil
+        if log = obj.backtrace
+          bt = log.map{|e| "    #{e}\n"}.join
+        end
+        variable_ name, obj, 'object', description: "#{obj.inspect}\n#{bt}", subtype: 'error'
+      else
+        variable_ name, obj, 'object'
+      end
+    end
+  end
+
   module UI_CDP
+    include CDP_Utils
+
     SHOW_PROTOCOL = ENV['RUBY_DEBUG_CDP_SHOW_PROTOCOL'] == '1'
 
     class << self
@@ -209,9 +448,11 @@ module DEBUGGER__
         elsif bytesize < 2 ** 16
           payload_len = 0b01111110
           ex_payload_len = [bytesize].pack('n*').bytes
-        else
+        elsif bytesize < 2 ** 64
           payload_len = 0b01111111
           ex_payload_len = [bytesize].pack('Q>').bytes
+        else
+          raise 'Over size'
         end
 
         frame << mask + payload_len
@@ -270,10 +511,21 @@ module DEBUGGER__
     end
 
     INVALID_REQUEST = -32600
+    RESERVED_WORDS = %w[
+      BEGIN    class    ensure   nil      self     when
+      END      def      false    not      super    while
+      alias    defined? for      or       then     yield
+      and      do       if       redo     true     __LINE__
+      begin    else     in       rescue   undef    __FILE__
+      break    elsif    module   retry    unless   __ENCODING__
+      case     end      next     return   until
+    ].freeze
 
     def process
       bps = {}
       @src_map = {}
+      @obj_map = {}
+      @bind = TOPLEVEL_BINDING.dup
       loop do
         req = @ws_server.extract_data
         $stderr.puts '[>]' + req.inspect if SHOW_PROTOCOL
@@ -307,9 +559,10 @@ module DEBUGGER__
                       hash: src.hash
           send_event 'Runtime.executionContextCreated',
                       context: {
-                        id: SecureRandom.hex(16),
+                        id: 1,
                         origin: "http://#{@addr}",
-                        name: ''
+                        name: '',
+                        uniqueId: SecureRandom.hex
                       }
         when 'Debugger.getScriptSource'
           s_id = req.dig('params', 'scriptId')
@@ -318,7 +571,7 @@ module DEBUGGER__
           @q_msg << req
         when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
           'Runtime.compileScript', 'Page.getResourceContent', 'Overlay.setPausedInDebuggerMessage',
-          'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries', 'Log.clear'
+          'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries', 'Log.clear', 'Runtime.releaseObject'
           send_response req
 
         ## control
@@ -441,8 +694,76 @@ module DEBUGGER__
           end
           send_response req
 
-        when 'Debugger.evaluateOnCallFrame', 'Runtime.getProperties'
+        when 'Debugger.evaluateOnCallFrame'
           @q_msg << req
+        when 'Runtime.getProperties'
+          oid = req.dig('params', 'objectId')
+          if @obj_map.has_key? oid
+            result, internalProperties = getProperties oid
+            send_response req,
+                          result: result,
+                          internalProperties: internalProperties
+          else
+            @q_msg << req
+          end
+        when 'Runtime.callFunctionOn'
+          args = req.dig('params', 'arguments', 0, 'value')
+          oid = req.dig('params', 'objectId')
+          value = []
+          case args
+          when 'array'
+            value = [
+              {
+                items: Array.instance_methods,
+              }
+            ]
+          when 'map'
+            value = [
+              {
+                items: Hash.instance_methods,
+              }
+            ]
+          when 'regexp'
+            value = [
+              {
+                items: Regexp.instance_methods,
+              }
+            ]
+          else
+            if obj = @obj_map[oid]
+              value = [
+                {
+                  items: obj.methods,
+                  title: 'keywords'
+                }
+              ]
+            else
+              value = [
+                {
+                  items: Object.constants.map{|c| c.to_s}
+                },
+                {
+                  items: RESERVED_WORDS,
+                  title: 'keywords'
+                }
+              ]
+            end
+          end
+          send_response req,
+                        result: {
+                          type: 'object',
+                          value: value
+                        }
+        when 'Runtime.globalLexicalScopeNames'
+          send_response req,
+                        names: global_variables
+        when 'Runtime.evaluate'
+          og = req.dig('params', 'objectGroup')
+          expr = req.dig('params', 'expression')
+          result, exc, output = safe_eval og, expr
+          send_response req,
+                        result: result,
+                        exceptionDetails: exc
         end
       end
     rescue Detach
@@ -535,9 +856,10 @@ module DEBUGGER__
         @tc << [:cdp, :backtrace, req]
       when 'Debugger.evaluateOnCallFrame'
         frame_id = req.dig('params', 'callFrameId')
+        objectGroup = req.dig('params', 'objectGroup')
         if fid = @frame_map[frame_id]
           expr = req.dig('params', 'expression')
-          @tc << [:cdp, :evaluate, req, fid, expr]
+          @tc << [:cdp, :evaluate, req, fid, expr, objectGroup]
         else
           fail_response req,
                         code: INVALID_PARAMS,
@@ -649,6 +971,8 @@ module DEBUGGER__
   end
 
   class ThreadClient
+    include CDP_Utils
+
     def process_cdp args
       type = args.shift
       req = args.shift
@@ -721,7 +1045,7 @@ module DEBUGGER__
         event! :cdp_result, :backtrace, req, result
       when :evaluate
         res = {}
-        fid, expr = args
+        fid, expr, objectGroup = args
         frame = @target_frames[fid]
         message = nil
 
@@ -746,7 +1070,7 @@ module DEBUGGER__
               } and (message = "Error: Not defined global variable: #{expr.inspect}")
             when /(\A((::[A-Z]|[A-Z])\w*)+)/
               unless result = search_const(b, $1)
-                message = "Error: Not defined constant: #{expr.inspect}"
+                message = "Error: Not defined constants: #{expr.inspect}"
               end
             else
               begin
@@ -762,32 +1086,16 @@ module DEBUGGER__
                 end
               end
             end
+            result = evaluate_result result
           else
-            begin
-              orig_stdout = $stdout
-              $stdout = StringIO.new
-              result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
-            rescue Exception => e
-              result = e
-              b = result.backtrace.map{|e| "    #{e}\n"}
-              line = b.first.match('.*:(\d+):in .*')[1].to_i
-              res[:exceptionDetails] = {
-                exceptionId: 1,
-                text: 'Uncaught',
-                lineNumber: line - 1,
-                columnNumber: 0,
-                exception: evaluate_result(result),
-              }
-            ensure
-              output = $stdout.string
-              $stdout = orig_stdout
-            end
+            result, exc, output = safe_eval objectGroup, expr, bind: b
+            res[:exceptionDetails] = exc unless exc.nil?
           end
         else
-          result = Exception.new("Error: Can not evaluate on this frame")
+          result = evaluate_result Exception.new("Error: Can not evaluate on this frame")
         end
 
-        res[:result] = evaluate_result(result)
+        res[:result] = result
         event! :cdp_result, :evaluate, req, message: message, response: res, output: output
       when :scope
         fid = args.shift
@@ -814,46 +1122,8 @@ module DEBUGGER__
         event! :cdp_result, :scope, req, vars
       when :properties
         oid = args.shift
-        result = []
-        prop = []
-
-        if obj = @obj_map[oid]
-          case obj
-          when Array
-            result = obj.map.with_index{|o, i|
-              variable i.to_s, o
-            }
-          when Hash
-            result = obj.map{|k, v|
-              variable(k, v)
-            }
-          when Struct
-            result = obj.members.map{|m|
-              variable(m, obj[m])
-            }
-          when String
-            prop = [
-              property('#length', obj.length),
-              property('#encoding', obj.encoding)
-            ]
-          when Class, Module
-            result = obj.instance_variables.map{|iv|
-              variable(iv, obj.instance_variable_get(iv))
-            }
-            prop = [property('%ancestors', obj.ancestors[1..])]
-          when Range
-            prop = [
-              property('#begin', obj.begin),
-              property('#end', obj.end),
-            ]
-          end
-
-          result += obj.instance_variables.map{|iv|
-            variable(iv, obj.instance_variable_get(iv))
-          }
-          prop += [property('#class', obj.class)]
-        end
-        event! :cdp_result, :properties, req, result: result, internalProperties: prop
+        result, internalProperties = getProperties oid
+        event! :cdp_result, :properties, req, result: result, internalProperties: internalProperties
       end
     end
 
@@ -872,68 +1142,6 @@ module DEBUGGER__
         end
       }
       false
-    end
-
-    def evaluate_result r
-      v = variable nil, r
-      v[:value]
-    end
-
-    def property name, obj
-      v = variable name, obj
-      v.delete :configurable
-      v.delete :enumerable
-      v
-    end
-
-    def variable_ name, obj, type, description: nil, subtype: nil
-      description = DEBUGGER__.safe_inspect(obj) if description.nil?
-      oid = rand.to_s
-      @obj_map[oid] = obj
-      prop = {
-        name: name,
-        value: {
-          type: type,
-          description: description,
-          value: obj,
-          objectId: oid
-        },
-        configurable: true, # TODO: Change these parts because
-        enumerable: true    #       they are not necessarily `true`.
-      }
-
-      if type == 'object'
-        v = prop[:value]
-        v.delete :value
-        v[:subtype] = subtype if subtype
-        v[:className] = obj.class
-      end
-      prop
-    end
-
-    def variable name, obj
-      case obj
-      when Array
-        variable_ name, obj, 'object', description: "Array(#{obj.size})", subtype: 'array'
-      when Hash
-        variable_ name, obj, 'object', description: "Hash(#{obj.size})", subtype: 'map'
-      when String
-        variable_ name, obj, 'string', description: obj
-      when TrueClass, FalseClass
-        variable_ name, obj, 'boolean'
-      when Symbol
-        variable_ name, obj, 'symbol'
-      when Integer, Float
-        variable_ name, obj, 'number'
-      when Exception
-        bt = nil
-        if log = obj.backtrace
-          bt = log.map{|e| "    #{e}\n"}.join
-        end
-        variable_ name, obj, 'object', description: "#{obj.inspect}\n#{bt}", subtype: 'error'
-      else
-        variable_ name, obj, 'object'
-      end
     end
   end
 end
