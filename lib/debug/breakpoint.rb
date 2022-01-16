@@ -333,9 +333,8 @@ module DEBUGGER__
     end
 
     def to_s
-      s = "#{generate_label("Check")} #{@cond}"
-      s << " pre: #{@command[1]}" if defined?(@command) && @command && @command[1]
-      s << " do: #{@command[2]}"  if defined?(@command) && @command && @command[2]
+      s = "#{generate_label("Check")}"
+      s += super
       s
     end
   end
