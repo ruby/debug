@@ -138,4 +138,29 @@ module DEBUGGER__
       end
     end
   end
+
+  class StepInTest <  TestCase
+    def program
+      <<~RUBY
+     1| def foo(num)
+     2|   num
+     3| end
+     4|
+     5| DEBUGGER__.step_in do
+     6|   foo(10)
+     7| end
+      RUBY
+    end
+
+    def test_step_in_stops_the_program
+      run_ruby(program, options: "-Ilib -rdebug") do
+        assert_line_num(6)
+        type "s"
+        assert_line_num(2)
+        type "num"
+        assert_line_text(/10/)
+        type "c"
+      end
+    end
+  end
 end
