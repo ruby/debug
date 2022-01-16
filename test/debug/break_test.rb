@@ -460,6 +460,17 @@ module DEBUGGER__
         type 'c'
       end
     end
+
+    def test_break_command_executes_do_option_and_continues_with_check_bp
+      debug_code(program) do
+        type 'break if: s.is_a?(String) do: p "foobar"'
+        assert_line_text(/BP - Check  s\.is_a\?\(String\) do: p "foobar"/)
+        type 'break 9'
+        type 'c'
+        assert_line_text(/foobar/)
+        type 'c'
+      end
+    end
   end
 
   #

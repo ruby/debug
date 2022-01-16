@@ -1324,7 +1324,7 @@ module DEBUGGER__
         @tc << [:breakpoint, :method, $1, $2, $3, cond, cmd, path]
         return :noretry
       when nil
-        add_check_breakpoint cond, path
+        add_check_breakpoint cond, path, cmd
       else
         @ui.puts "Unknown breakpoint format: #{arg}"
         @ui.puts
@@ -1356,8 +1356,8 @@ module DEBUGGER__
       add_bp bp
     end
 
-    def add_check_breakpoint expr, path
-      bp = CheckBreakpoint.new(expr, path)
+    def add_check_breakpoint expr, path, command
+      bp = CheckBreakpoint.new(expr, path, command)
       add_bp bp
     end
 
