@@ -464,7 +464,7 @@ module DEBUGGER__
     def test_break_command_executes_do_option_and_continues_with_check_bp
       debug_code(program) do
         type 'break if: s.is_a?(String) do: p "foobar"'
-        assert_line_text(/BP - Check  s\.is_a\?\(String\) do: p "foobar"/)
+        assert_line_text(/BP - Check  if: s\.is_a\?\(String\) do: p "foobar"/)
         type 'break 9'
         type 'c'
         assert_line_text(/foobar/)
@@ -654,7 +654,7 @@ module DEBUGGER__
     def test_conditional_breakpoint_stops_if_condition_is_true
       debug_code program do
         type 'break if: a == 4'
-        assert_line_text(/#0  BP - Check  a == 4/)
+        assert_line_text(/#0  BP - Check  if: a == 4/)
         type 'c'
         assert_line_num 4
         type 'c'
