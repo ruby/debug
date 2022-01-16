@@ -317,8 +317,9 @@ module DEBUGGER__
   end
 
   class CheckBreakpoint < Breakpoint
-    def initialize expr, path
+    def initialize expr, path, command
       @expr = expr.freeze
+      @command = command
       @key = [:check, @expr].freeze
       @path = path
 
@@ -337,7 +338,10 @@ module DEBUGGER__
     end
 
     def to_s
-      "#{generate_label("Check")} #{@expr}"
+      s = "#{generate_label("Check")} #{@expr}"
+      s << " pre: #{@command[1]}" if defined?(@command) && @command && @command[1]
+      s << " do: #{@command[2]}"  if defined?(@command) && @command && @command[2]
+      s
     end
   end
 
