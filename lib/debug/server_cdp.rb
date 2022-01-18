@@ -11,39 +11,6 @@ require 'set'
 
 module DEBUGGER__
   module CDP_Utils
-    # def eval_expr_on_global objectGroup, expr
-    #   if expr == "(async function(){ await 1; })()"
-    #     # To get `Runtime.callFunctionOn` from Chrome, this message is required.
-    #     return {
-    #       result: {
-    #         type: "object",
-    #         subtype: "error",
-    #         className: "EvalError",
-    #         description: "EvalError: Possible side-effect in debug-evaluate",
-    #         objectId: SecureRandom.hex
-    #       },
-    #       exceptionDetails: {
-    #         exceptionId: SecureRandom.hex,
-    #         text: "Uncaught",
-    #         lineNumber: -1,
-    #         columnNumber: -1,
-    #         scriptId: SecureRandom.hex,
-    #         exception: {
-    #           type: "object",
-    #           subtype: "error",
-    #           className: "EvalError",
-    #           description: "EvalError: Possible side-effect in debug-evaluate",
-    #           objectId: SecureRandom.hex
-    #         }
-    #       }
-    #     }
-    #   end
-    #   result, exc, output = safe_eval objectGroup, expr
-    #   res = { result: evaluate_result(result) }
-    #   res[:exceptionDetails] = exc unless exc.nil?
-    #   res
-    # end
-
     def safe_eval objectGroup, expr, bind: nil
       if objectGroup == 'completion'
         case expr
