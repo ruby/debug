@@ -52,7 +52,7 @@ module DEBUGGER__
             end
             files
           else
-            commands.keys.grep(/\A#{given}/)
+            commands.keys.grep(/\A#{Regexp.escape(given)}/)
           end
         end
 
