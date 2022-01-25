@@ -252,7 +252,6 @@ module DEBUGGER__
         else
           tc << [:eval, :display, @displays]
         end
-
       when :result
         raise "[BUG] not in subsession" if @subsession_stack.empty?
 
