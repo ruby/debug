@@ -415,55 +415,64 @@ module DEBUGGER__
       raise if re_raise
     end
 
-    def show_src(frame_index: @current_frame_index,
-                 update_line: false,
-                 max_lines: CONFIG[:show_src_lines] || 10,
+    def get_src(frame:,
+                 max_lines:,
                  start_line: nil,
                  end_line: nil,
                  dir: +1)
-      if @target_frames && frame = @target_frames[frame_index]
-        if file_lines = frame.file_lines
-          frame_line = frame.location.lineno - 1
+      if file_lines = frame.file_lines
+        frame_line = frame.location.lineno - 1
 
-          lines = file_lines.map.with_index do |e, i|
-            cur = i == frame_line ? '=>' : '  '
-            line = colorize_dim('%4d|' % (i+1))
-            "#{cur}#{line} #{e}"
-          end
-
-          unless start_line
-            if frame.show_line
-              if dir > 0
-                start_line = frame.show_line
-              else
-                end_line = frame.show_line - max_lines
-                start_line = [end_line - max_lines, 0].max
-              end
-            else
-              start_line = [frame_line - max_lines/2, 0].max
-            end
-          end
-
-          unless end_line
-            end_line = [start_line + max_lines, lines.size].min
-          end
-
-          if update_line
-            frame.show_line = end_line
-          end
-
-          if start_line != end_line && max_lines
-            puts "[#{start_line+1}, #{end_line}] in #{frame.pretty_path}" if !update_line && max_lines != 1
-            puts lines[start_line ... end_line]
-          end
-        else # no file lines
-          puts "# No sourcefile available for #{frame.path}"
+        lines = file_lines.map.with_index do |e, i|
+          cur = i == frame_line ? '=>' : '  '
+          line = colorize_dim('%4d|' % (i+1))
+          "#{cur}#{line} #{e}"
         end
+
+        unless start_line
+          if frame.show_line
+            if dir > 0
+              start_line = frame.show_line
+            else
+              end_line = frame.show_line - max_lines
+              start_line = [end_line - max_lines, 0].max
+            end
+          else
+            start_line = [frame_line - max_lines/2, 0].max
+          end
+        end
+
+        unless end_line
+          end_line = [start_line + max_lines, lines.size].min
+        end
+
+        if start_line != end_line && max_lines
+          [start_line, end_line, lines]
+        end
+      else # no file lines
+        nil
       end
     rescue Exception => e
       p e
       pp e.backtrace
       exit!
+    end
+
+    def show_src(frame_index: @current_frame_index, update_line: false, max_lines: CONFIG[:show_src_lines] || 10, **options)
+      if frame = get_frame(frame_index)
+        start_line, end_line, lines = *get_src(frame: frame, max_lines: max_lines, **options)
+
+        if start_line
+          if update_line
+            frame.show_line = end_line
+          end
+
+          puts "[#{start_line+1}, #{end_line}] in #{frame.pretty_path}" if !update_line && max_lines != 1
+          puts lines[start_line...end_line]
+        else
+          puts "# No sourcefile available for #{frame.path}"
+        end
+      end
     end
 
     def current_frame
