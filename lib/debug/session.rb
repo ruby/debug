@@ -198,12 +198,19 @@ module DEBUGGER__
     end
 
     def request_tc(req)
-      @tc << req
+      metadata = {}
+
+      if @ui.tui?
+        metadata[:tui] = @ui.windows_metadata
+      end
+
+      @tc << [req, metadata]
     end
 
     def process_event evt
-      # variable `@internal_info` is only used for test
       @tc, output, ev, @internal_info, *ev_args = evt
+
+      capture_tui_data(@internal_info[:tui]) if @ui.tui? && @internal_info
 
       output.each{|str| @ui.puts str} if ev != :suspend
 
@@ -367,7 +374,7 @@ module DEBUGGER__
           @ui.puts "(rdbg:#{@preset_command.source}) #{line}"
         end
       else
-        @ui.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}" if ENV['RUBY_DEBUG_TEST_UI'] == 'terminal'
+        @ui.puts_internal_test_info(JSON.generate(@internal_info[:test])) if ENV['RUBY_DEBUG_TEST_UI'] == 'terminal'
         line = @ui.readline prompt
       end
 
@@ -390,6 +397,10 @@ module DEBUGGER__
         end
       else
         @repl_prev_line = line
+      end
+
+      if @ui.tui?
+        @ui.store_prev_line("#{prompt}#{@repl_prev_line}")
       end
 
       /([^\s]+)(?:\s+(.+))?/ =~ line
@@ -1004,6 +1015,19 @@ module DEBUGGER__
         show_help arg
         return :retry
 
+      when 'tui'
+        case arg
+        when 'on', nil
+          start_tui([:locals])
+        when /on\s(.+)/
+          type = $1
+          types = type.split(",").map(&:to_sym)
+          start_tui(types)
+        when 'off'
+          reset_ui(UI_LocalConsole.new)
+        end
+
+        return :retry
       ### END
       else
         request_tc [:eval, :pp, line]
@@ -1771,6 +1795,38 @@ module DEBUGGER__
     def after_fork_parent
       @ui.after_fork_parent
     end
+
+    def capture_tui_data(tui_data)
+      @ui.store_tui_data(tui_data) if tui_data
+    end
+
+    SUPPORTED_WINDOWS = {
+      src: { height: 15 },
+      locals: { height: 15 }
+    }
+
+    def start_tui(types)
+      if defined?(UI_LocalTuiConsole)
+        unsupported_types = types - SUPPORTED_WINDOWS.keys
+        unless unsupported_types.empty?
+          unsupported_types.each do |type|
+            @ui.puts("#{type} is not a supported TUI type")
+          end
+          return
+        end
+
+        windows = types.map do |type|
+          UI_LocalTuiConsole::FramedWindow.new(type, @ui.width, SUPPORTED_WINDOWS[type][:height])
+        end
+
+        reset_ui(UI_LocalTuiConsole.new(windows))
+        tui_data = @tc.generate_tui_data(@ui.windows_metadata)
+        capture_tui_data(tui_data)
+        @ui.puts
+      else
+        @ui.puts("TUI can't be activated under this mode")
+      end
+    end
   end
 
   class ProcessGroup
@@ -1905,6 +1961,10 @@ module DEBUGGER__
   end
 
   class UI_Base
+    def tui?
+      false
+    end
+
     def event type, *args
       case type
       when :suspend_bp
@@ -1916,6 +1976,10 @@ module DEBUGGER__
     end
 
     def flush
+    end
+
+    def puts_internal_test_info(internal_info)
+      puts("INTERNAL_INFO: #{internal_info}")
     end
   end
 

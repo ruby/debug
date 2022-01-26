@@ -180,10 +180,40 @@ module DEBUGGER__
       @q_cmd << req
     end
 
-    def generate_info
-      return unless current_frame
+    def generate_tui_data(metadata)
+      metadata.each_with_object({}) do |(tui_name, options), result|
+        tui_method = "generate_tui_#{tui_name}"
 
-      { location: current_frame.location_str, line: current_frame.location.lineno }
+        if respond_to?(tui_method)
+          result[tui_name] = send(tui_method, options)
+        end
+      end
+    end
+
+    def generate_tui_src(options)
+      frame = current_frame
+      start_line, end_line, lines = get_src(frame: frame, max_lines: options[:height])
+
+      if start_line
+        lines[start_line, end_line]
+      else
+        ["# No sourcefile available for #{frame.path}"]
+      end
+    end
+
+    def generate_tui_locals(_options)
+      collect_locals(current_frame).map do |var, val|
+        variable_info(var,  val, nil)
+      end
+    end
+
+    def generate_info
+      return {} unless current_frame
+
+      result = { test: { location: current_frame.location_str, line: current_frame.location.lineno } }
+      result[:tui] = generate_tui_data(@tui_metadata) if @tui_metadata
+
+      result
     end
 
     def event! ev, *args
@@ -571,7 +601,7 @@ module DEBUGGER__
       }
     end
 
-    def puts_variable_info label, obj, pat
+    def variable_info label, obj, pat
       return if pat && pat !~ label
 
       begin
@@ -591,9 +621,11 @@ module DEBUGGER__
         valstr = inspected if valstr.lines.size > 1
       end
 
-      info = "#{colorize_cyan(label)} = #{valstr}"
+      "#{colorize_cyan(label)} = #{valstr}"
+    end
 
-      puts info
+    def puts_variable_info label, obj, pat
+      puts variable_info(label, obj, pat)
     end
 
     def truncate(string, width:)
@@ -753,13 +785,14 @@ module DEBUGGER__
       while true
         begin
           set_mode :waiting if !waiting?
-          cmds = @q_cmd.pop
+          cmds, metadata = @q_cmd.pop
           # pp [self, cmds: cmds]
           break unless cmds
         ensure
           set_mode :running
         end
 
+        @tui_metadata = metadata[:tui]
         cmd, *args = *cmds
 
         case cmd
@@ -962,7 +995,6 @@ module DEBUGGER__
           end
 
           event! :result, nil
-
         when :breakpoint
           case args[0]
           when :method
