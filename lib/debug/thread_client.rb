@@ -34,7 +34,11 @@ module DEBUGGER__
     include Color
     include SkipPathHelper
 
-    attr_reader :location, :thread, :id, :recorder
+    attr_reader :thread, :id, :recorder
+
+    def location
+      current_frame&.location
+    end
 
     def assemble_arguments(args)
       args.map do |arg|
@@ -250,7 +254,6 @@ module DEBUGGER__
 
       cf = @target_frames.first
       if cf
-        @location = cf.location
         case event
         when :return, :b_return, :c_return
           cf.has_return_value = true
@@ -857,8 +860,6 @@ module DEBUGGER__
           else
             raise "unsupported frame operation: #{arg.inspect}"
           end
-
-          @location = current_frame.location
 
           event! :result, nil
 
