@@ -399,6 +399,14 @@ module DEBUGGER__
       # p cmd: [cmd, *arg]
 
       case cmd
+
+      ### Instructions without reserved words
+
+      # * `~ <instructions>`
+      #   * Run instructions without debugger reserved words.
+      when '~'
+        @tc << [:eval, :pp, arg || '']
+
       ### Control flow
 
       # * `s[tep]`

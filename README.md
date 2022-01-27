@@ -521,6 +521,11 @@ You can use the following debug commands. Each command should be written in 1 li
 The `[...]` notation means this part can be eliminate. For example, `s[tep]` means `s` or `step` are valid command. `ste` is not valid.
 The `<...>` notation means the argument.
 
+### Instructions without reserved words
+
+* `~ <instructions>`
+  * Run instructions without debugger reserved words.
+
 ### Control flow
 
 * `s[tep]`
