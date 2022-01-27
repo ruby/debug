@@ -857,6 +857,9 @@ module DEBUGGER__
           else
             raise "unsupported frame operation: #{arg.inspect}"
           end
+
+          @location = current_frame.location
+
           event! :result, nil
 
         when :show
