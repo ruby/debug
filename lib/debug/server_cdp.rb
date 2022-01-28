@@ -572,13 +572,13 @@ module DEBUGGER__
     def process_protocol_request req
       case req['method']
       when 'Debugger.stepOver', 'Debugger.stepInto', 'Debugger.stepOut', 'Debugger.resume', 'Debugger.enable'
-        @tc << [:cdp, :backtrace, req]
+        request_tc [:cdp, :backtrace, req]
       when 'Debugger.evaluateOnCallFrame'
         frame_id = req.dig('params', 'callFrameId')
         group = req.dig('params', 'objectGroup')
         if fid = @frame_map[frame_id]
           expr = req.dig('params', 'expression')
-          @tc << [:cdp, :evaluate, req, fid, expr, group]
+          request_tc [:cdp, :evaluate, req, fid, expr, group]
         else
           fail_response req,
                         code: INVALID_PARAMS,
@@ -591,9 +591,9 @@ module DEBUGGER__
           when 'local'
             frame_id = ref[1]
             fid = @frame_map[frame_id]
-            @tc << [:cdp, :scope, req, fid]
+            request_tc [:cdp, :scope, req, fid]
           when 'properties'
-            @tc << [:cdp, :properties, req, oid]
+            request_tc [:cdp, :properties, req, oid]
           when 'script', 'global'
             # TODO: Support script and global types
             @ui.respond req, result: []
