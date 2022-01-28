@@ -197,9 +197,14 @@ module DEBUGGER__
       deactivate
     end
 
+    def request_tc(req)
+      @tc << req
+    end
+
     def process_event evt
       # variable `@internal_info` is only used for test
-      tc, output, ev, @internal_info, *ev_args = evt
+      @tc, output, ev, @internal_info, *ev_args = evt
+
       output.each{|str| @ui.puts str} if ev != :suspend
 
       case ev
@@ -212,20 +217,19 @@ module DEBUGGER__
 
       when :init
         enter_subsession
-        wait_command_loop tc
-
+        wait_command_loop
       when :load
         iseq, src = ev_args
         on_load iseq, src
         @ui.event :load
-        tc << :continue
+        request_tc :continue
 
       when :trace
         trace_id, msg = ev_args
         if t = @tracers.values.find{|t| t.object_id == trace_id}
           t.puts msg
         end
-        tc << :continue
+        request_tc :continue
 
       when :suspend
         enter_subsession if ev_args.first != :replay
@@ -235,22 +239,22 @@ module DEBUGGER__
         when :breakpoint
           bp, i = bp_index ev_args[1]
           clean_bps unless bp
-          @ui.event :suspend_bp, i, bp, tc.id
+          @ui.event :suspend_bp, i, bp, @tc.id
         when :trap
-          @ui.event :suspend_trap, sig = ev_args[1], tc.id
+          @ui.event :suspend_trap, sig = ev_args[1], @tc.id
 
           if sig == :SIGINT && (@intercepted_sigint_cmd.kind_of?(Proc) || @intercepted_sigint_cmd.kind_of?(String))
             @ui.puts "#{@intercepted_sigint_cmd.inspect} is registered as SIGINT handler."
             @ui.puts "`sigint` command execute it."
           end
         else
-          @ui.event :suspended, tc.id
+          @ui.event :suspended, @tc.id
         end
 
         if @displays.empty?
-          wait_command_loop tc
+          wait_command_loop
         else
-          tc << [:eval, :display, @displays]
+          request_tc [:eval, :display, @displays]
         end
       when :result
         raise "[BUG] not in subsession" if @subsession_stack.empty?
@@ -282,14 +286,14 @@ module DEBUGGER__
           # ignore
         end
 
-        wait_command_loop tc
+        wait_command_loop
 
       when :dap_result
         dap_event ev_args # server.rb
-        wait_command_loop tc
+        wait_command_loop
       when :cdp_result
         cdp_event ev_args
-        wait_command_loop tc
+        wait_command_loop
       end
     end
 
@@ -322,9 +326,7 @@ module DEBUGGER__
       "DEBUGGER__::SESSION"
     end
 
-    def wait_command_loop tc
-      @tc = tc
-
+    def wait_command_loop
       loop do
         case wait_command
         when :retry
@@ -605,15 +607,15 @@ module DEBUGGER__
       when 'bt', 'backtrace'
         case arg
         when /\A(\d+)\z/
-          @tc << [:show, :backtrace, arg.to_i, nil]
+          request_tc [:show, :backtrace, arg.to_i, nil]
         when /\A\/(.*)\/\z/
           pattern = $1
-          @tc << [:show, :backtrace, nil, Regexp.compile(pattern)]
+          request_tc [:show, :backtrace, nil, Regexp.compile(pattern)]
         when /\A(\d+)\s+\/(.*)\/\z/
           max, pattern = $1, $2
-          @tc << [:show, :backtrace, max.to_i, Regexp.compile(pattern)]
+          request_tc [:show, :backtrace, max.to_i, Regexp.compile(pattern)]
         else
-          @tc << [:show, :backtrace, nil, nil]
+          request_tc [:show, :backtrace, nil, nil]
         end
 
       # * `l[ist]`
@@ -626,13 +628,13 @@ module DEBUGGER__
       when 'l', 'list'
         case arg ? arg.strip : nil
         when /\A(\d+)\z/
-          @tc << [:show, :list, {start_line: arg.to_i - 1}]
+          request_tc [:show, :list, {start_line: arg.to_i - 1}]
         when /\A-\z/
-          @tc << [:show, :list, {dir: -1}]
+          request_tc [:show, :list, {dir: -1}]
         when /\A(\d+)-(\d+)\z/
-          @tc << [:show, :list, {start_line: $1.to_i - 1, end_line: $2.to_i}]
+          request_tc [:show, :list, {start_line: $1.to_i - 1, end_line: $2.to_i}]
         when nil
-          @tc << [:show, :list]
+          request_tc [:show, :list]
         else
           @ui.puts "Can not handle list argument: #{arg}"
           return :retry
@@ -656,7 +658,7 @@ module DEBUGGER__
           return :retry
         end
 
-        @tc << [:show, :edit, arg]
+        request_tc [:show, :edit, arg]
 
       # * `i[nfo]`
       #    * Show information about current frame (local/instance variables and defined constants).
@@ -683,15 +685,15 @@ module DEBUGGER__
 
         case sub
         when nil
-          @tc << [:show, :default, pat] # something useful
+          request_tc [:show, :default, pat] # something useful
         when 'l', /^locals?/
-          @tc << [:show, :locals, pat]
+          request_tc [:show, :locals, pat]
         when 'i', /^ivars?/i, /^instance[_ ]variables?/i
-          @tc << [:show, :ivars, pat]
+          request_tc [:show, :ivars, pat]
         when 'c', /^consts?/i, /^constants?/i
-          @tc << [:show, :consts, pat]
+          request_tc [:show, :consts, pat]
         when 'g', /^globals?/i, /^global[_ ]variables?/i
-          @tc << [:show, :globals, pat]
+          request_tc [:show, :globals, pat]
         when 'th', /threads?/
           thread_list
           return :retry
@@ -707,7 +709,7 @@ module DEBUGGER__
       #   * Show you available methods and instance variables of the given object.
       #   * If the object is a class/module, it also lists its constants.
       when 'outline', 'o', 'ls'
-        @tc << [:show, :outline, arg]
+        request_tc [:show, :outline, arg]
 
       # * `display`
       #   * Show display setting.
@@ -716,9 +718,9 @@ module DEBUGGER__
       when 'display'
         if arg && !arg.empty?
           @displays << arg
-          @tc << [:eval, :try_display, @displays]
+          request_tc [:eval, :try_display, @displays]
         else
-          @tc << [:eval, :display, @displays]
+          request_tc [:eval, :display, @displays]
         end
 
       # * `undisplay`
@@ -731,7 +733,7 @@ module DEBUGGER__
           if @displays[n = $1.to_i]
             @displays.delete_at n
           end
-          @tc << [:eval, :display, @displays]
+          request_tc [:eval, :display, @displays]
         when nil
           if ask "clear all?", 'N'
             @displays.clear
@@ -746,29 +748,29 @@ module DEBUGGER__
       # * `f[rame] <framenum>`
       #   * Specify a current frame. Evaluation are run on specified frame.
       when 'frame', 'f'
-        @tc << [:frame, :set, arg]
+        request_tc [:frame, :set, arg]
 
       # * `up`
       #   * Specify the upper frame.
       when 'up'
-        @tc << [:frame, :up]
+        request_tc [:frame, :up]
 
       # * `down`
       #   * Specify the lower frame.
       when 'down'
-        @tc << [:frame, :down]
+        request_tc [:frame, :down]
 
       ### Evaluate
 
       # * `p <expr>`
       #   * Evaluate like `p <expr>` on the current frame.
       when 'p'
-        @tc << [:eval, :p, arg.to_s]
+        request_tc [:eval, :p, arg.to_s]
 
       # * `pp <expr>`
       #   * Evaluate like `pp <expr>` on the current frame.
       when 'pp'
-        @tc << [:eval, :pp, arg.to_s]
+        request_tc [:eval, :pp, arg.to_s]
 
       # * `eval <expr>`
       #   * Evaluate `<expr>` on the current frame.
@@ -778,7 +780,7 @@ module DEBUGGER__
           @ui.puts "\nTo evaluate the variable `#{cmd}`, use `pp #{cmd}` instead."
           return :retry
         else
-          @tc << [:eval, :call, arg]
+          request_tc [:eval, :call, arg]
         end
 
       # * `irb`
@@ -788,7 +790,7 @@ module DEBUGGER__
           @ui.puts "not supported on the remote console."
           return :retry
         end
-        @tc << [:eval, :irb]
+        request_tc [:eval, :irb]
 
         # don't repeat irb command
         @repl_prev_line = nil
@@ -845,7 +847,7 @@ module DEBUGGER__
           return :retry
 
         when /\Aobject\s+(.+)/
-          @tc << [:trace, :object, $1.strip, {pattern: pattern, into: into}]
+          request_tc [:trace, :object, $1.strip, {pattern: pattern, into: into}]
 
         when /\Aoff\s+(\d+)\z/
           if t = @tracers.values[$1.to_i]
@@ -883,7 +885,7 @@ module DEBUGGER__
       when 'record'
         case arg
         when nil, 'on', 'off'
-          @tc << [:record, arg&.to_sym]
+          request_tc [:record, arg&.to_sym]
         else
           @ui.puts "unknown command: #{arg}"
           return :retry
@@ -978,7 +980,7 @@ module DEBUGGER__
 
       ### END
       else
-        @tc << [:eval, :pp, line]
+        request_tc [:eval, :pp, line]
 =begin
         @repl_prev_line = nil
         @ui.puts "unknown command: #{line}"
@@ -1035,7 +1037,7 @@ module DEBUGGER__
       case arg
       when nil, /\A\d+\z/
         if type == :in && @tc.recorder&.replaying?
-          @tc << [:step, type, arg&.to_i]
+          request_tc [:step, type, arg&.to_i]
         else
           leave_subsession [:step, type, arg&.to_i]
         end
@@ -1044,7 +1046,7 @@ module DEBUGGER__
           @ui.puts "only `step #{arg}` is supported."
           :retry
         else
-          @tc << [:step, arg.to_sym]
+          request_tc [:step, arg.to_sym]
         end
       else
         @ui.puts "Unknown option: #{arg}"
@@ -1293,7 +1295,7 @@ module DEBUGGER__
       when /\A(.+)[:\s+](\d+)\z/
         add_line_breakpoint $1, $2.to_i, cond: cond, command: cmd
       when /\A(.+)([\.\#])(.+)\z/
-        @tc << [:breakpoint, :method, $1, $2, $3, cond, cmd, path]
+        request_tc [:breakpoint, :method, $1, $2, $3, cond, cmd, path]
         return :noretry
       when nil
         add_check_breakpoint cond, path, cmd
@@ -1320,7 +1322,7 @@ module DEBUGGER__
       cmd = ['watch', expr[:pre], expr[:do]] if expr[:pre] || expr[:do]
       path = Regexp.compile(expr[:path]) if expr[:path]
 
-      @tc << [:breakpoint, :watch, expr[:sig], cond, cmd, path]
+      request_tc [:breakpoint, :watch, expr[:sig], cond, cmd, path]
     end
 
     def add_catch_breakpoint pat
@@ -1513,7 +1515,7 @@ module DEBUGGER__
 
       waiting_thread_clients.each{|tc|
         next if @tc == tc
-        tc << :continue
+        request_tc :continue
       }
     end
 
@@ -1541,7 +1543,7 @@ module DEBUGGER__
         DEBUGGER__.info "Leave subsession (nested #{@subsession_stack.size})"
       end
 
-      @tc << type if type
+      request_tc type if type
       @tc = nil
     rescue Exception => e
       STDERR.puts PP.pp([e, e.backtrace], ''.dup)
