@@ -81,6 +81,8 @@ module DEBUGGER__
   class Session
     attr_reader :intercepted_sigint_cmd, :process_group
 
+    include Color
+
     def initialize ui
       @ui = ui
       @sr = SourceRepository.new
@@ -1002,11 +1004,7 @@ module DEBUGGER__
       # * `h[elp] <command>`
       #   * Show help for the given command.
       when 'h', 'help', '?'
-        if arg
-          show_help arg
-        else
-          @ui.puts DEBUGGER__.help
-        end
+        show_help arg
         return :retry
 
       ### END
@@ -1158,16 +1156,50 @@ module DEBUGGER__
       end
     end
 
-    def show_help arg
-      DEBUGGER__.helps.each{|cat, cs|
-        cs.each{|ws, desc|
-          if ws.include? arg
-            @ui.puts desc
-            return
+    def show_help arg = nil
+      instructions = (DEBUGGER__.commands.keys + DEBUGGER__.commands.values).uniq
+      print_instructions = proc do |desc|
+        desc.split("\n").each do |line|
+          next if line.start_with?(" ") # workaround for step back
+          formatted_line = line.gsub(/[\[\]\*]/, "").strip
+          instructions.each do |inst|
+            if formatted_line.start_with?("`#{inst}")
+              desc.sub!(line, colorize(line, [:CYAN, :BOLD]))
+            end
+          end
+        end
+        @ui.puts desc
+      end
+
+      print_category = proc do |cat|
+        @ui.puts "\n"
+        @ui.puts colorize("### #{cat}", [:GREEN, :BOLD])
+        @ui.puts "\n"
+      end
+
+      DEBUGGER__.helps.each { |cat, cs|
+        # categories
+        if arg.nil?
+          print_category.call(cat)
+        else
+          cs.each { |ws, _|
+            if ws.include?(arg)
+              print_category.call(cat)
+              break
+            end
+          }
+        end
+
+        # instructions
+        cs.each { |ws, desc|
+          if arg.nil? || ws.include?(arg)
+            print_instructions.call(desc.dup)
+            return if arg
           end
         }
       }
-      @ui.puts "not found: #{arg}"
+
+      @ui.puts "not found: #{arg}" if arg
     end
 
     def ask msg, default = 'Y'
