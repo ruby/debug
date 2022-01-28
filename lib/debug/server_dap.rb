@@ -425,7 +425,7 @@ module DEBUGGER__
       case req['command']
       when 'stepBack'
         if @tc.recorder&.can_step_back?
-          @tc << [:step, :back]
+          request_tc [:step, :back]
         else
           fail_response req, message: 'cancelled'
         end
@@ -433,7 +433,7 @@ module DEBUGGER__
       when 'stackTrace'
         tid = req.dig('arguments', 'threadId')
         if tc = find_waiting_tc(tid)
-          tc << [:dap, :backtrace, req]
+          request_tc [:dap, :backtrace, req]
         else
           fail_response req
         end
@@ -442,7 +442,7 @@ module DEBUGGER__
         if @frame_map[frame_id]
           tid, fid = @frame_map[frame_id]
           if tc = find_waiting_tc(tid)
-            tc << [:dap, :scopes, req, fid]
+            request_tc [:dap, :scopes, req, fid]
           else
             fail_response req
           end
@@ -474,7 +474,7 @@ module DEBUGGER__
             tid, fid = @frame_map[frame_id]
 
             if tc = find_waiting_tc(tid)
-              tc << [:dap, :scope, req, fid]
+              request_tc [:dap, :scope, req, fid]
             else
               fail_response req
             end
@@ -483,7 +483,7 @@ module DEBUGGER__
             tid, vid = ref[1], ref[2]
 
             if tc = find_waiting_tc(tid)
-              tc << [:dap, :variable, req, vid]
+              request_tc [:dap, :variable, req, vid]
             else
               fail_response req
             end
@@ -501,7 +501,7 @@ module DEBUGGER__
           tid, fid = @frame_map[frame_id]
           expr = req.dig('arguments', 'expression')
           if tc = find_waiting_tc(tid)
-            tc << [:dap, :evaluate, req, fid, expr, context]
+            request_tc [:dap, :evaluate, req, fid, expr, context]
           else
             fail_response req
           end
@@ -527,7 +527,7 @@ module DEBUGGER__
           if col  = req.dig('arguments', 'column')
             text = text.split(/\n/)[line.to_i - 1][0...(col.to_i - 1)]
           end
-          tc << [:dap, :completions, req, fid, text]
+          request_tc [:dap, :completions, req, fid, text]
         else
           fail_response req
         end
