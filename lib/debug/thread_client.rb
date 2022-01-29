@@ -530,12 +530,14 @@ module DEBUGGER__
       w = SESSION::width
 
       if mono_info.length >= w
-        info = truncate(mono_info, width: w)
+        maximum_value_width = w - "#{label} = ".length
+        valstr = truncate(inspected, width: maximum_value_width)
       else
         valstr = colored_inspect(obj, width: 2 ** 30)
         valstr = inspected if valstr.lines.size > 1
-        info = "#{colorize_cyan(label)} = #{valstr}"
       end
+
+      info = "#{colorize_cyan(label)} = #{valstr}"
 
       puts info
     end
