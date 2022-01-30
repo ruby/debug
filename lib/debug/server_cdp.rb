@@ -51,7 +51,7 @@ module DEBUGGER__
             ws_client.send sessionId: s_id, id: 5,
                           method: 'Page.navigate',
                           params: {
-                            url: "devtools://devtools/bundled/inspector.html?ws=#{addr}",
+                            url: "devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{addr}/#{SecureRandom.uuid}",
                             frameId: f_id
                           }
           when res['method'] == 'Page.loadEventFired'
@@ -281,21 +281,17 @@ module DEBUGGER__
         case req['method']
 
         ## boot/configuration
-        when 'Page.getResourceTree'
+        when 'Debugger.getScriptSource'
+          s_id = req.dig('params', 'scriptId')
+          src = get_source_code s_id
+          send_response req, scriptSource: src
+          @q_msg << req
+        when 'Debugger.enable'
+          send_response req
+          @q_msg << req
           path = File.absolute_path($0)
           src = File.read(path)
           @src_map[path] = src
-          send_response req,
-                        frameTree: {
-                          frame: {
-                            id: SecureRandom.hex(16),
-                            loaderId: SecureRandom.hex(16),
-                            url: 'http://debuggee/',
-                            securityOrigin: 'http://debuggee',
-                            mimeType: 'text/plain' },
-                          resources: [
-                          ]
-                        }
           send_event 'Debugger.scriptParsed',
                       scriptId: path,
                       url: "http://debuggee#{path}",
@@ -305,17 +301,17 @@ module DEBUGGER__
                       endColumn: 0,
                       executionContextId: 1,
                       hash: src.hash
+        when 'Runtime.enable'
+          send_response req
           send_event 'Runtime.executionContextCreated',
                       context: {
                         id: SecureRandom.hex(16),
                         origin: "http://#{@addr}",
                         name: ''
                       }
-        when 'Debugger.getScriptSource'
-          s_id = req.dig('params', 'scriptId')
-          src = get_source_code s_id
-          send_response req, scriptSource: src
-          @q_msg << req
+        when 'Runtime.getIsolateId'
+          send_response req,
+                        id: SecureRandom.hex
         when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
           'Runtime.compileScript', 'Page.getResourceContent', 'Overlay.setPausedInDebuggerMessage',
           'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries', 'Log.clear'
@@ -531,7 +527,7 @@ module DEBUGGER__
 
     def process_protocol_request req
       case req['method']
-      when 'Debugger.stepOver', 'Debugger.stepInto', 'Debugger.stepOut', 'Debugger.resume', 'Debugger.getScriptSource'
+      when 'Debugger.stepOver', 'Debugger.stepInto', 'Debugger.stepOut', 'Debugger.resume', 'Debugger.getScriptSource', 'Debugger.enable'
         @tc << [:cdp, :backtrace, req]
       when 'Debugger.evaluateOnCallFrame'
         frame_id = req.dig('params', 'callFrameId')
