@@ -217,7 +217,7 @@ module DEBUGGER__
       ensure
         test_info.reader_thread.kill
         sock.close
-        kill_safely remote_info.pid, :debuggee, test_info
+        kill_remote_debuggee test_info
         if test_info.failed_process
           flunk create_protocol_msg test_info, "Expected the debuggee program to finish"
         end
