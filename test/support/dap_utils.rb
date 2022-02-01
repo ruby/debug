@@ -144,7 +144,7 @@ module DEBUGGER__
       }
     ]
 
-    DAP_TestInfo = Struct.new(:res_backlog, :backlog, :failed_process, :remote_info)
+    DAP_TestInfo = Struct.new(:res_backlog, :backlog, :failed_process, :reader_thread, :remote_info)
 
     class Detach < StandardError
     end
@@ -152,14 +152,14 @@ module DEBUGGER__
     def connect_to_dap_server test_info
       remote_info = test_info.remote_info
       sock = Socket.unix remote_info.sock_path
-      remote_info.reader_thread = Thread.new(sock, test_info) do |s, info|
+      test_info.reader_thread = Thread.new(sock, test_info) do |s, info|
         while res = recv_request(s, info.backlog)
           info.res_backlog << res
         end
       rescue Detach
       end
-      sleep 0.001 while remote_info.reader_thread.status != 'sleep'
-      remote_info.reader_thread.run
+      sleep 0.001 while test_info.reader_thread.status != 'sleep'
+      test_info.reader_thread.run
       sock
     end
 
@@ -198,7 +198,7 @@ module DEBUGGER__
 
             if msg[:command] == 'disconnect'
               res_log.clear
-              remote_info.reader_thread.raise Detach
+              test_info.reader_thread.raise Detach
               sock.close
             end
           when 'event'
@@ -215,7 +215,7 @@ module DEBUGGER__
       rescue Timeout::Error
         flunk create_protocol_msg test_info, "TIMEOUT ERROR (#{TIMEOUT_SEC} sec) while waiting for the following response.\n#{JSON.pretty_generate target_msg}"
       ensure
-        remote_info.reader_thread.kill
+        test_info.reader_thread.kill
         sock.close
         kill_safely remote_info.pid, :debuggee, test_info
         if test_info.failed_process
