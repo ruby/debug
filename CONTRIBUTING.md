@@ -220,6 +220,7 @@ end
 
 If you want to write tests for DAP, you should use the test generator.
 After running `$ bin/gentest target.rb --open=vscode` in the terminal, VSCode will be executed.
+If you need to modify existing tests, it is basically a good idea to regenerate them by the test generator instead of rewriting them directly.
 Please refer to [the Microsoft "Debug Adapter Protocol" article](https://microsoft.github.io/debug-adapter-protocol/specification) to learn more about DAP formats.
 
 #### gentest options
