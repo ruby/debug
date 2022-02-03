@@ -202,6 +202,7 @@ module DEBUGGER__
     end
 
     def process
+      bps = []
       while req = recv_request
         raise "not a request: #{req.inpsect}" unless req['type'] == 'request'
         args = req.dig('arguments')
@@ -217,9 +218,10 @@ module DEBUGGER__
           Process.kill(:SIGURG, Process.pid)
           @is_attach = true
         when 'setBreakpoints'
+          bps.each{@q_msg << 'del 0'}
           path = args.dig('source', 'path')
           bp_args = args['breakpoints']
-          bps = []
+          bps.clear
           bp_args.each{|bp|
             line = bp['line']
             if cond = bp['condition']
