@@ -829,4 +829,398 @@ module DEBUGGER__
       end
     end
   end
+  class BreakTest1643981380 < TestCase
+    PROGRAM = <<~RUBY
+       1| module Foo
+       2|    class Bar
+       3|      def self.a
+       4|        "hello"
+       5|      end
+       6|    end
+       7|  puts :hoge
+       8|    Bar.a
+       9|    bar = Bar.new
+      10|  end
+    RUBY
+    
+    def test_check_run_to_line_works_correctly
+      run_dap_scenario PROGRAM do
+        [
+          *INITIALIZE_MSG,
+          {
+            seq: 7,
+            type: "event",
+            event: "stopped",
+            body: {
+              reason: "pause",
+              threadId: 1,
+              allThreadsStopped: true
+            }
+          },
+          {
+            seq: 6,
+            command: "threads",
+            type: "request"
+          },
+          {
+            seq: 8,
+            type: "response",
+            command: "threads",
+            request_seq: 6,
+            success: true,
+            message: "Success",
+            body: {
+              threads: [
+                {
+                  id: 1,
+                  name: /#1 .*/
+                }
+              ]
+            }
+          },
+          {
+            seq: 7,
+            command: "threads",
+            type: "request"
+          },
+          {
+            seq: 9,
+            type: "response",
+            command: "threads",
+            request_seq: 7,
+            success: true,
+            message: "Success",
+            body: {
+              threads: [
+                {
+                  id: 1,
+                  name: /#1 .*/
+                }
+              ]
+            }
+          },
+          {
+            seq: 8,
+            command: "stackTrace",
+            arguments: {
+              threadId: 1,
+              startFrame: 0,
+              levels: 20
+            },
+            type: "request"
+          },
+          {
+            seq: 10,
+            type: "response",
+            command: "stackTrace",
+            request_seq: 8,
+            success: true,
+            message: "Success",
+            body: {
+              stackFrames: [
+                {
+                  name: "<main>",
+                  line: 1,
+                  column: 1,
+                  source: {
+                    name: /#{File.basename temp_file_path}/,
+                    path: /#{temp_file_path}/,
+                    sourceReference: nil
+                  },
+                  id: 1
+                }
+              ]
+            }
+          },
+          {
+            seq: 9,
+            command: "scopes",
+            arguments: {
+              frameId: 1
+            },
+            type: "request"
+          },
+          {
+            seq: 11,
+            type: "response",
+            command: "scopes",
+            request_seq: 9,
+            success: true,
+            message: "Success",
+            body: {
+              scopes: [
+                {
+                  name: "Local variables",
+                  presentationHint: "locals",
+                  namedVariables: /\d+/,
+                  indexedVariables: 0,
+                  expensive: false,
+                  variablesReference: 2
+                },
+                {
+                  name: "Global variables",
+                  presentationHint: "globals",
+                  variablesReference: 1,
+                  namedVariables: /\d+/,
+                  indexedVariables: 0,
+                  expensive: false
+                }
+              ]
+            }
+          },
+          {
+            seq: 10,
+            command: "variables",
+            arguments: {
+              variablesReference: 2
+            },
+            type: "request"
+          },
+          {
+            seq: 12,
+            type: "response",
+            command: "variables",
+            request_seq: 10,
+            success: true,
+            message: "Success",
+            body: {
+              variables: [
+                {
+                  name: "%self",
+                  value: "main",
+                  type: "Object",
+                  variablesReference: 3,
+                  indexedVariables: 0,
+                  namedVariables: /\d+/
+                }
+              ]
+            }
+          },
+          {
+            seq: 11,
+            command: "setBreakpoints",
+            arguments: {
+              source: {
+                name: "target.rb",
+                path: temp_file_path,
+                sourceReference: nil
+              },
+              lines: [
+                8
+              ],
+              breakpoints: [
+                {
+                  line: 8
+                }
+              ],
+              sourceModified: false
+            },
+            type: "request"
+          },
+          {
+            seq: 13,
+            type: "response",
+            command: "setBreakpoints",
+            request_seq: 11,
+            success: true,
+            message: "Success",
+            body: {
+              breakpoints: [
+                {
+                  verified: true
+                }
+              ]
+            }
+          },
+          {
+            seq: 12,
+            command: "continue",
+            arguments: {
+              threadId: 1
+            },
+            type: "request"
+          },
+          {
+            seq: 14,
+            type: "response",
+            command: "continue",
+            request_seq: 12,
+            success: true,
+            message: "Success",
+            body: {
+              allThreadsContinued: true
+            }
+          },
+          {
+            seq: 15,
+            type: "event",
+            event: "stopped",
+            body: {
+              reason: "breakpoint",
+              description: / BP - Line  .*/,
+              text: / BP - Line  .*/,
+              threadId: 1,
+              allThreadsStopped: true
+            }
+          },
+          {
+            seq: 13,
+            command: "threads",
+            type: "request"
+          },
+          {
+            seq: 16,
+            type: "response",
+            command: "threads",
+            request_seq: 13,
+            success: true,
+            message: "Success",
+            body: {
+              threads: [
+                {
+                  id: 1,
+                  name: /#1 .*/
+                }
+              ]
+            }
+          },
+          {
+            seq: 14,
+            command: "stackTrace",
+            arguments: {
+              threadId: 1,
+              startFrame: 0,
+              levels: 20
+            },
+            type: "request"
+          },
+          {
+            seq: 17,
+            type: "response",
+            command: "stackTrace",
+            request_seq: 14,
+            success: true,
+            message: "Success",
+            body: {
+              stackFrames: [
+                {
+                  name: "<module:Foo>",
+                  line: 8,
+                  column: 1,
+                  source: {
+                    name: /#{File.basename temp_file_path}/,
+                    path: /#{temp_file_path}/,
+                    sourceReference: nil
+                  },
+                  id: 2
+                },
+                {
+                  name: "<main>",
+                  line: 1,
+                  column: 1,
+                  source: {
+                    name: /#{File.basename temp_file_path}/,
+                    path: /#{temp_file_path}/,
+                    sourceReference: nil
+                  },
+                  id: 3
+                }
+              ]
+            }
+          },
+          {
+            seq: 15,
+            command: "scopes",
+            arguments: {
+              frameId: 2
+            },
+            type: "request"
+          },
+          {
+            seq: 18,
+            type: "response",
+            command: "scopes",
+            request_seq: 15,
+            success: true,
+            message: "Success",
+            body: {
+              scopes: [
+                {
+                  name: "Local variables",
+                  presentationHint: "locals",
+                  namedVariables: /\d+/,
+                  indexedVariables: 0,
+                  expensive: false,
+                  variablesReference: 4
+                },
+                {
+                  name: "Global variables",
+                  presentationHint: "globals",
+                  variablesReference: 1,
+                  namedVariables: /\d+/,
+                  indexedVariables: 0,
+                  expensive: false
+                }
+              ]
+            }
+          },
+          {
+            seq: 16,
+            command: "variables",
+            arguments: {
+              variablesReference: 4
+            },
+            type: "request"
+          },
+          {
+            seq: 19,
+            type: "response",
+            command: "variables",
+            request_seq: 16,
+            success: true,
+            message: "Success",
+            body: {
+              variables: [
+                {
+                  name: "%self",
+                  value: "Foo",
+                  type: "Module",
+                  variablesReference: 5,
+                  indexedVariables: 0,
+                  namedVariables: /\d+/
+                },
+                {
+                  name: "bar",
+                  value: "nil",
+                  type: "NilClass",
+                  variablesReference: 6,
+                  indexedVariables: 0,
+                  namedVariables: /\d+/
+                }
+              ]
+            }
+          },
+          {
+            seq: 17,
+            command: "continue",
+            arguments: {
+              threadId: 1
+            },
+            type: "request"
+          },
+          {
+            seq: 20,
+            type: "response",
+            command: "continue",
+            request_seq: 17,
+            success: true,
+            message: "Success",
+            body: {
+              allThreadsContinued: true
+            }
+          }
+        ]
+      end
+    end
+  end
 end
