@@ -26,6 +26,7 @@ module DEBUGGER__
     postmortem:     ['RUBY_DEBUG_POSTMORTEM',     "CONTROL: Enable postmortem debug (default: false)",                   :bool],
     fork_mode:      ['RUBY_DEBUG_FORK_MODE',      "CONTROL: Control which process activates a debugger after fork (both/parent/child) (default: both)", :forkmode],
     sigdump_sig:    ['RUBY_DEBUG_SIGDUMP_SIG',    "CONTROL: Sigdump signal (default: disabled)"],
+    no_confirm_quit:['RUBY_DEBUG_NO_CONFIRM_QUIT',"CONTROL: Do not ask for confirmation on q[uit] or Crtl-D (default: false)", :bool],
 
     # boot setting
     nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool],

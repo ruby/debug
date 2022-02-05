@@ -470,6 +470,7 @@ config set no_color true
   * `RUBY_DEBUG_POSTMORTEM` (`postmortem`): Enable postmortem debug (default: false)
   * `RUBY_DEBUG_FORK_MODE` (`fork_mode`): Control which process activates a debugger after fork (both/parent/child) (default: both)
   * `RUBY_DEBUG_SIGDUMP_SIG` (`sigdump_sig`): Sigdump signal (default: disabled)
+  * `RUBY_DEBUG_NO_CONFIRM_QUIT` (`no_confirm_quit`): Do not ask for confirmation on q[uit] or Crtl-D (default: false)
 
 * BOOT
   * `RUBY_DEBUG_NONSTOP` (`nonstop`): Nonstop mode

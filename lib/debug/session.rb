@@ -444,7 +444,7 @@ module DEBUGGER__
       # * `q[uit]` or `Ctrl-D`
       #   * Finish debugger (with the debuggee process on non-remote debugging).
       when 'q', 'quit'
-        if ask 'Really quit?'
+        if CONFIG[:no_confirm_quit] || ask('Really quit?')
           @ui.quit arg.to_i
           leave_subsession :continue
         else
