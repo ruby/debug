@@ -567,8 +567,10 @@ The `<...>` notation means the argument.
   * break and run `<command>` before stopping.
 * `b[reak] ... do: <command>`
   * break and run `<command>`, and continue.
-* `b[reak] ... path: <path_regexp>`
-  * break if the triggering event's path matches <path_regexp>.
+* `b[reak] ... path: </path_regexp/>`
+  * break if the triggering event's path matches </path_regexp/>.
+* `b[reak] ... path: <path_string>`
+  * break if the triggering event's path matches <path_string>.
 * `b[reak] if: <expr>`
   * break if: `<expr>` is true at any lines.
   * Note that this feature is super slow.
@@ -580,8 +582,10 @@ The `<...>` notation means the argument.
   * runs `<command>` before stopping.
 * `catch ... do: <command>`
   * stops and run `<command>`, and continue.
-* `catch ... path: <path_regexp>`
-  * stops if the exception is raised from a path that matches <path_regexp>.
+* `catch ... path: </path_regexp/>`
+  * stops if the exception is raised from a path that matches </path_regexp/>.
+* `catch ... path: <path_string>`
+  * stops if the exception is raised from a path that matches <path_string>.
 * `watch @ivar`
   * Stop the execution when the result of current scope's `@ivar` is changed.
   * Note that this feature is super slow.
@@ -591,8 +595,10 @@ The `<...>` notation means the argument.
   * runs `<command>` before stopping.
 * `watch ... do: <command>`
   * stops and run `<command>`, and continue.
-* `watch ... path: <path_regexp>`
-  * stops if the triggering event's path matches <path_regexp>.
+* `watch ... path: </path_regexp/>`
+  * stops if the triggering event's path matches </path_regexp/>.
+* `watch ... path: <path_string>`
+  * stops if the triggering event's path matches <path_string>.
 * `del[ete]`
   * delete all breakpoints.
 * `del[ete] <bpnum>`
