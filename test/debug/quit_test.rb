@@ -27,6 +27,13 @@ module DEBUGGER__
       end
     end
 
+    def test_quit_quits_immediately_if_no_confirm_quit_is_set_to_true
+      debug_code(program) do
+        type 'config set no_confirm_quit true'
+        type 'q'
+      end
+    end
+
     def test_quit_with_exclamation_mark_quits_immediately_debugger_process
       debug_code(program) do
         type 'q!'
