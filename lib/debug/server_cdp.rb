@@ -179,6 +179,35 @@ module DEBUGGER__
     end
 
     class WebSocketServer
+      class Frame
+        attr_reader :b
+
+        def initialize
+          @b = ''.b
+        end
+
+        def << obj
+          case obj
+          when String
+            @b << obj.b
+          when Enumerable
+            obj.each{|e| self << e}
+          end
+        end
+
+        def char bytes
+          @b << bytes
+        end
+
+        def ulonglong bytes
+          @b << [bytes].pack('Q>')
+        end
+
+        def uint16 bytes
+          @b << [bytes].pack('n*')
+        end
+      end
+
       def initialize s
         @sock = s
       end
@@ -197,27 +226,30 @@ module DEBUGGER__
 
       def send **msg
         msg = JSON.generate(msg)
-        frame = []
+        frame = Frame.new
         fin = 0b10000000
         opcode = 0b00000001
-        frame << fin + opcode
+        frame.char fin + opcode
 
         mask = 0b00000000 # A server must not mask any frames in a WebSocket Protocol.
         bytesize = msg.bytesize
         if bytesize < 126
           payload_len = bytesize
+          frame.char mask + payload_len
         elsif bytesize < 2 ** 16
           payload_len = 0b01111110
-          ex_payload_len = [bytesize].pack('n*').bytes
-        else
+          frame.char mask + payload_len
+          frame.uint16 bytesize
+        elsif bytesize < 2 ** 64
           payload_len = 0b01111111
-          ex_payload_len = [bytesize].pack('Q>').bytes
+          frame.char mask + payload_len
+          frame.ulonglong bytesize
+        else
+          raise 'Bytesize is too big.'
         end
 
-        frame << mask + payload_len
-        frame.push *ex_payload_len if ex_payload_len
-        frame.push *msg.bytes
-        @sock.print frame.pack 'c*'
+        frame << msg
+        @sock.print frame.b
       end
 
       def extract_data
