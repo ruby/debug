@@ -609,6 +609,16 @@ module DEBUGGER__
             if oid = obj[:objectId]
               @obj_map[oid] = ['properties']
             end
+            if rs[:preview] && req.dig('params', 'objectGroup') == 'console'
+              @ui.fire_event 'Runtime.consoleAPICalled',
+                            type: 'table',
+                            args: [
+                              rs
+                            ],
+                            executionContextId: 1, # Change this number if something goes wrong.
+                            timestamp: Time.now.to_f
+              result[:response] = {}
+            end
           }
           @ui.respond req, **result[:response]
 
