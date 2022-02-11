@@ -861,25 +861,25 @@ module DEBUGGER__
             }
           when String
             prop = [
-              property('#length', obj.length),
-              property('#encoding', obj.encoding)
+              internalProperty('#length', obj.length),
+              internalProperty('#encoding', obj.encoding)
             ]
           when Class, Module
             result = obj.instance_variables.map{|iv|
               variable(iv, obj.instance_variable_get(iv))
             }
-            prop = [property('%ancestors', obj.ancestors[1..])]
+            prop = [internalProperty('%ancestors', obj.ancestors[1..])]
           when Range
             prop = [
-              property('#begin', obj.begin),
-              property('#end', obj.end),
+              internalProperty('#begin', obj.begin),
+              internalProperty('#end', obj.end),
             ]
           end
 
           result += obj.instance_variables.map{|iv|
             variable(iv, obj.instance_variable_get(iv))
           }
-          prop += [property('#class', obj.class)]
+          prop += [internalProperty('#class', obj.class)]
         end
         event! :cdp_result, :properties, req, result: result, internalProperties: prop
       end
@@ -907,15 +907,15 @@ module DEBUGGER__
       v[:value]
     end
 
-    def property name, obj
+    def internalProperty name, obj
       v = variable name, obj
       v.delete :configurable
       v.delete :enumerable
       v
     end
 
-    def variable_ name, obj, type, description: nil, subtype: nil
-      description = DEBUGGER__.safe_inspect(obj) if description.nil?
+    def propertyDescriptor_ name, obj, type, description: nil, subtype: nil
+      description = DEBUGGER__.safe_inspect(obj, short: true) if description.nil?
       oid = rand.to_s
       @obj_map[oid] = obj
       prop = {
@@ -939,28 +939,91 @@ module DEBUGGER__
       prop
     end
 
+    def preview_ value, hash, overflow
+      {
+        type: value[:type],
+        subtype: value[:subtype],
+        description: value[:description],
+        overflow: overflow,
+        properties: hash.map{|k, v|
+          pd = propertyDescriptor k, v
+          {
+            name: pd[:name],
+            type: pd[:value][:type],
+            value: pd[:value][:description]
+          }
+        }
+      }
+    end
+
     def variable name, obj
+      pd = propertyDescriptor name, obj
       case obj
       when Array
-        variable_ name, obj, 'object', description: "Array(#{obj.size})", subtype: 'array'
+        pd[:value][:preview] = preview name, obj
+        obj.each_with_index{|item, idx|
+          if valuePreview = preview(idx.to_s, item)
+            pd[:value][:preview][:properties][idx][:valuePreview] = valuePreview
+          end
+        }
       when Hash
-        variable_ name, obj, 'object', description: "Hash(#{obj.size})", subtype: 'map'
+        pd[:value][:preview] = preview name, obj
+        obj.each_with_index{|item, idx|
+          key, val = item
+          if valuePreview = preview(key, val)
+            pd[:value][:preview][:properties][idx][:valuePreview] = valuePreview
+          end
+        }
+      end
+      pd
+    end
+
+    def preview name, obj
+      case obj
+      when Array
+        pd = propertyDescriptor name, obj
+        overflow = false
+        if obj.size > 100
+          obj = obj[0..99]
+          overflow = true
+        end
+        hash = obj.each_with_index.to_h{|o, i| [i.to_s, o]}
+        preview_ pd[:value], hash, overflow
+      when Hash
+        pd = propertyDescriptor name, obj
+        overflow = false
+        if obj.size > 100
+          obj = obj.to_a[0..99].to_h
+          overflow = true
+        end
+        preview_ pd[:value], obj, overflow
+      else
+        nil
+      end
+    end
+
+    def propertyDescriptor name, obj
+      case obj
+      when Array
+        propertyDescriptor_ name, obj, 'object', subtype: 'array'
+      when Hash
+        propertyDescriptor_ name, obj, 'object', subtype: 'map'
       when String
-        variable_ name, obj, 'string', description: obj
+        propertyDescriptor_ name, obj, 'string', description: obj
       when TrueClass, FalseClass
-        variable_ name, obj, 'boolean'
+        propertyDescriptor_ name, obj, 'boolean'
       when Symbol
-        variable_ name, obj, 'symbol'
+        propertyDescriptor_ name, obj, 'symbol'
       when Integer, Float
-        variable_ name, obj, 'number'
+        propertyDescriptor_ name, obj, 'number'
       when Exception
         bt = nil
         if log = obj.backtrace
           bt = log.map{|e| "    #{e}\n"}.join
         end
-        variable_ name, obj, 'object', description: "#{obj.inspect}\n#{bt}", subtype: 'error'
+        propertyDescriptor_ name, obj, 'object', description: "#{obj.inspect}\n#{bt}", subtype: 'error'
       else
-        variable_ name, obj, 'object'
+        propertyDescriptor_ name, obj, 'object'
       end
     end
   end
