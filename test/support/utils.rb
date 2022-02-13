@@ -95,7 +95,7 @@ module DEBUGGER__
 
     private def debug_code_on_unix_domain_socket
       test_info = TestInfo.new(dup_scenario, 'UNIX Domain Socket', /\(rdbg:remote\)/)
-      test_info.remote_info = setup_unix_doman_socket_remote_debuggee
+      test_info.remote_info = setup_unix_domain_socket_remote_debuggee
       cmd = "#{RDBG_EXECUTABLE} -A #{test_info.remote_info.sock_path}"
       run_test_scenario cmd, test_info
     end
@@ -314,7 +314,7 @@ module DEBUGGER__
     def manual_debug_code(program)
       print("[Starting a Debug Session with @#{caller.first}]\n")
       write_temp_file(strip_line_num(program))
-      remote_info = setup_unix_doman_socket_remote_debuggee
+      remote_info = setup_unix_domain_socket_remote_debuggee
 
       while !File.exist?(remote_info.sock_path)
         sleep 0.1
@@ -341,7 +341,7 @@ module DEBUGGER__
 
     $ruby_debug_test_num = 0
 
-    def setup_unix_doman_socket_remote_debuggee
+    def setup_unix_domain_socket_remote_debuggee
       sock_path = DEBUGGER__.create_unix_domain_socket_name + "-#{$ruby_debug_test_num += 1}"
       remote_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{sock_path} #{temp_file_path}")
       remote_info.sock_path = sock_path
