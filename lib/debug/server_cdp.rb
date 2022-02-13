@@ -639,6 +639,33 @@ module DEBUGGER__
                         code: INVALID_PARAMS,
                         message: message
         else
+          src = req.dig('params', 'expression')
+          s_id = (@src_map.size + 1).to_s
+          @src_map[s_id] = src
+          lineno = src.lines.count
+          @ui.fire_event 'Debugger.scriptParsed',
+                            scriptId: s_id,
+                            url: '',
+                            startLine: 0,
+                            startColumn: 0,
+                            endLine: lineno,
+                            endColumn: 0,
+                            executionContextId: 1,
+                            hash: src.hash
+          if exc = result.dig(:response, :exceptionDetails)
+            exc[:stackTrace][:callFrames].each{|frame|
+              if frame[:url].empty?
+                frame[:scriptId] = s_id
+              else
+                path = frame[:url]
+                unless s_id = @scr_id_map[path]
+                  s_id = (@scr_id_map.size + 1).to_s
+                  @scr_id_map[path] = s_id
+                end
+                frame[:scriptId] = s_id
+              end
+            }
+          end
           rs = result.dig(:response, :result)
           [rs].each{|obj|
             if oid = obj[:objectId]
@@ -798,13 +825,33 @@ module DEBUGGER__
             rescue Exception => e
               result = e
               b = result.backtrace.map{|e| "    #{e}\n"}
-              line = b.first.match('.*:(\d+):in .*')[1].to_i
+              frames = [
+                {
+                  columnNumber: 0,
+                  functionName: 'eval',
+                  lineNumber: 0,
+                  url: ''
+                }
+              ]
+              e.backtrace_locations&.each do |loc|
+                break if loc.path == __FILE__
+                path = loc.absolute_path || loc.path
+                frames << {
+                  columnNumber: 0,
+                  functionName: loc.base_label,
+                  lineNumber: loc.lineno - 1,
+                  url: path
+                }
+              end
               res[:exceptionDetails] = {
                 exceptionId: 1,
                 text: 'Uncaught',
-                lineNumber: line - 1,
+                lineNumber: 0,
                 columnNumber: 0,
                 exception: evaluate_result(result),
+                stackTrace: {
+                  callFrames: frames
+                }
               }
             ensure
               output = $stdout.string
@@ -954,9 +1001,12 @@ module DEBUGGER__
       when Integer, Float
         variable_ name, obj, 'number'
       when Exception
-        bt = nil
-        if log = obj.backtrace
-          bt = log.map{|e| "    #{e}\n"}.join
+        bt = ''
+        if log = obj.backtrace_locations
+          log.each do |loc|
+            break if loc.path == __FILE__
+            bt += "    #{loc}\n"
+          end
         end
         variable_ name, obj, 'object', description: "#{obj.inspect}\n#{bt}", subtype: 'error'
       else
