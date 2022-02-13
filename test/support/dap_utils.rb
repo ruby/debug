@@ -174,7 +174,7 @@ module DEBUGGER__
         write_temp_file(strip_line_num(program))
 
         test_info = DAP_TestInfo.new([], [])
-        remote_info = test_info.remote_info = setup_unix_doman_socket_remote_debuggee
+        test_info.remote_info = setup_unix_doman_socket_remote_debuggee
         res_log = test_info.res_backlog
         sock = nil
         target_msg = nil
