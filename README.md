@@ -417,7 +417,7 @@ Note that you can attach with `rdbg --attach` and continue REPL debugging.
 
 #### Chrome DevTool integration
 
-With `rdbg --open=chrome` command will shows the following message.
+With `rdbg --open=chrome` command will show the following message.
 
 ```
 $ rdbg target.rb --open=chrome
