@@ -111,7 +111,7 @@ module DEBUGGER__
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
       @src_map   = {} # {id => src}
 
-      @script_paths = [File.absolute_path($0)] # for CDP
+      @scr_id_map = {} # for CDP
       @obj_map = {} # { object_id => ... } for CDP
 
       @tp_thread_begin = nil

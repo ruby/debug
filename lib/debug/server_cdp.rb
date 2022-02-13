@@ -314,25 +314,10 @@ module DEBUGGER__
 
         ## boot/configuration
         when 'Debugger.getScriptSource'
-          s_id = req.dig('params', 'scriptId')
-          src = get_source_code s_id
-          send_response req, scriptSource: src
           @q_msg << req
         when 'Debugger.enable'
           send_response req
           @q_msg << req
-          path = File.absolute_path($0)
-          src = File.read(path)
-          @src_map[path] = src
-          send_event 'Debugger.scriptParsed',
-                      scriptId: path,
-                      url: "http://debuggee#{path}",
-                      startLine: 0,
-                      startColumn: 0,
-                      endLine: src.count("\n"),
-                      endColumn: 0,
-                      executionContextId: 1,
-                      hash: src.hash
         when 'Runtime.enable'
           send_response req
           send_event 'Runtime.executionContextCreated',
@@ -405,26 +390,15 @@ module DEBUGGER__
 
         # breakpoint
         when 'Debugger.getPossibleBreakpoints'
-          s_id = req.dig('params', 'start', 'scriptId')
-          line = req.dig('params', 'start', 'lineNumber')
-          src = get_source_code s_id
-          end_line = src.count("\n")
-          line = end_line  if line > end_line
-          send_response req,
-                        locations: [
-                          { scriptId: s_id,
-                            lineNumber: line,
-                          }
-                        ]
+          @q_msg << req
         when 'Debugger.setBreakpointByUrl'
           line = req.dig('params', 'lineNumber')
           url = req.dig('params', 'url')
-          locations = []
           if url.match /http:\/\/debuggee(.*)/
             path = $1
             cond = req.dig('params', 'condition')
             src = get_source_code path
-            end_line = src.count("\n")
+            end_line = src.lines.count
             line = end_line  if line > end_line
             b_id = "1:#{line}:#{path}"
             if cond != ''
@@ -433,13 +407,17 @@ module DEBUGGER__
               SESSION.add_line_breakpoint(path, line + 1)
             end
             bps[b_id] = bps.size
-            locations << {scriptId: path, lineNumber: line}
+            # Because we need to return scriptId, responses are returned in SESSION thread.
+            req['params']['scriptId'] = path
+            req['params']['lineNumber'] = line
+            req['params']['breakpointId'] = b_id
+            @q_msg << req
           else
-            b_id = "1:#{line}:#{url}"
+            b_id = "#{line}:#{url}"
+            send_response req,
+                          breakpointId: b_id,
+                          locations: []
           end
-          send_response req,
-                        breakpointId: b_id,
-                        locations: locations
         when 'Debugger.removeBreakpoint'
           b_id = req.dig('params', 'breakpointId')
           bps = del_bp bps, b_id
@@ -556,10 +534,11 @@ module DEBUGGER__
     end
 
     INVALID_PARAMS = -32602
+    INTERNAL_ERROR = -32603
 
     def process_protocol_request req
       case req['method']
-      when 'Debugger.stepOver', 'Debugger.stepInto', 'Debugger.stepOut', 'Debugger.resume', 'Debugger.getScriptSource', 'Debugger.enable'
+      when 'Debugger.stepOver', 'Debugger.stepInto', 'Debugger.stepOut', 'Debugger.resume', 'Debugger.enable'
         @tc << [:cdp, :backtrace, req]
       when 'Debugger.evaluateOnCallFrame'
         frame_id = req.dig('params', 'callFrameId')
@@ -593,6 +572,50 @@ module DEBUGGER__
                         code: INVALID_PARAMS,
                         message: "'objectId' is an invalid"
         end
+      when 'Debugger.getScriptSource'
+        s_id = req.dig('params', 'scriptId')
+        if src = @src_map[s_id]
+          @ui.respond req, scriptSource: src
+        else
+          fail_response req,
+                        code: INVALID_PARAMS,
+                        message: "'scriptId' is an invalid"
+        end
+        return :retry
+      when 'Debugger.getPossibleBreakpoints'
+        s_id = req.dig('params', 'start', 'scriptId')
+        if src = @src_map[s_id]
+          lineno = req.dig('params', 'start', 'lineNumber')
+          end_line = src.lines.count
+          lineno = end_line  if lineno > end_line
+          @ui.respond req,
+                      locations: [{
+                        scriptId: s_id,
+                        lineNumber: lineno
+                      }]
+        else
+          fail_response req,
+                        code: INVALID_PARAMS,
+                        message: "'scriptId' is an invalid"
+        end
+        return :retry
+      when 'Debugger.setBreakpointByUrl'
+        path = req.dig('params', 'scriptId')
+        if s_id = @scr_id_map[path]
+          lineno = req.dig('params', 'lineNumber')
+          b_id = req.dig('params', 'breakpointId')
+          @ui.respond req,
+                      breakpointId: b_id,
+                      locations: [{
+                          scriptId: s_id,
+                          lineNumber: lineno
+                      }]
+        else
+          fail_response req,
+                        code: INTERNAL_ERROR,
+                        message: 'The target script is not found...'
+        end
+        return :retry
       end
     end
 
@@ -604,20 +627,32 @@ module DEBUGGER__
         result[:callFrames].each.with_index do |frame, i|
           frame_id = frame[:callFrameId]
           @frame_map[frame_id] = i
-          s_id = frame.dig(:location, :scriptId)
-          if File.exist?(s_id) && !@script_paths.include?(s_id)
-            src = File.read(s_id)
-            @ui.fire_event 'Debugger.scriptParsed',
-                            scriptId: s_id,
-                            url: frame[:url],
-                            startLine: 0,
-                            startColumn: 0,
-                            endLine: src.count("\n"),
-                            endColumn: 0,
-                            executionContextId: @script_paths.size + 1,
-                            hash: src.hash
-            @script_paths << s_id
+          path = frame[:url]
+          unless s_id = @scr_id_map[path]
+            s_id = (@scr_id_map.size + 1).to_s
+            @scr_id_map[path] = s_id
+            if path && File.exist?(path)
+              src = File.read(path)
+            end
+            @src_map[s_id] = src
           end
+          if src = @src_map[s_id]
+            lineno = src.lines.count
+          else
+            lineno = 0
+          end
+          frame[:location][:scriptId] = s_id
+          frame[:functionLocation][:scriptId] = s_id
+          frame[:url] = "http://debuggee#{path}"
+          @ui.fire_event 'Debugger.scriptParsed',
+                          scriptId: s_id,
+                          url: frame[:url],
+                          startLine: 0,
+                          startColumn: 0,
+                          endLine: lineno,
+                          endColumn: 0,
+                          executionContextId: 1,
+                          hash: src.hash
 
           frame[:scopeChain].each {|s|
             oid = s.dig(:object, :objectId)
@@ -690,9 +725,6 @@ module DEBUGGER__
             exception = frame.raised_exception if frame == current_frame && frame.has_raised_exception
 
             path = frame.realpath || frame.path
-            if path.match /<internal:(.*)>/
-              path = $1
-            end
 
             if frame.iseq.nil?
               lineno = 0
@@ -704,14 +736,14 @@ module DEBUGGER__
               callFrameId: SecureRandom.hex(16),
               functionName: frame.name,
               functionLocation: {
-                scriptId: path,
+                # scriptId: N, # filled by SESSION
                 lineNumber: lineno
               },
               location: {
-                scriptId: path,
+                # scriptId: N, # filled by SESSION
                 lineNumber: frame.location.lineno - 1 # The line number is 0-based.
               },
-              url: "http://debuggee#{path}",
+              url: path,
               scopeChain: [
                 {
                   type: 'local',
