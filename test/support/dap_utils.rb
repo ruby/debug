@@ -212,15 +212,15 @@ module DEBUGGER__
             res_log.delete result
           end
         }
+        flunk create_protocol_msg test_info, "Expected the debuggee program to finish" unless wait_pid remote_info.pid, 3
       rescue Timeout::Error
         flunk create_protocol_msg test_info, "TIMEOUT ERROR (#{TIMEOUT_SEC} sec) while waiting for the following response.\n#{JSON.pretty_generate target_msg}"
       ensure
         test_info.reader_thread.kill
         sock.close
-        kill_remote_debuggee test_info
-        if test_info.failed_process
-          flunk create_protocol_msg test_info, "Expected the debuggee program to finish"
-        end
+        remote_info.reader_thread.kill
+        remote_info.r.close
+        remote_info.w.close
       end
     end
 
