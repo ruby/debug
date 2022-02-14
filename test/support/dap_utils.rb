@@ -167,7 +167,7 @@ module DEBUGGER__
     dt = ENV['RUBY_DEBUG_DAP_TEST']
     DAP_TEST = dt == 'true' || dt == '1'
 
-    def run_dap_scenario program, &msgs
+    def run_dap_scenario program, &scenario
       omit 'Tests for DAP were skipped. You can enable them with RUBY_DEBUG_DAP_TEST=1.' unless DAP_TEST
 
       begin
@@ -179,7 +179,15 @@ module DEBUGGER__
         sock = nil
         target_msg = nil
 
-        msgs.call.each{|msg|
+        @seq = 6 # for unit tests
+        @msgs = [] # for unit tests
+        msgs = scenario.call
+
+        unless @msgs.empty?
+          msgs.unshift *INITIALIZE_MSG
+        end
+
+        msgs.each{|msg|
           case msg[:type]
           when 'request'
             if msg[:command] == 'initialize'
@@ -256,6 +264,19 @@ module DEBUGGER__
           assert_equal expected_value, result.dig(*key), failure_msg
         end
       end
+    end
+
+    def dap_req **msg
+      msg[:seq] = @seq = @seq + 1
+      msg[:type] = 'request'
+      @msgs << msg
+    end
+
+    def assert_dap_res **msg
+      msg[:request_seq] = @seq
+      msg[:seq] = @seq = @seq + 1
+      msg[:type] = 'response'
+      @msgs << msg
     end
   end
 end
