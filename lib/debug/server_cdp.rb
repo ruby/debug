@@ -309,6 +309,24 @@ module DEBUGGER__
                         origin: "http://#{@addr}",
                         name: ''
                       }
+          send_event 'Runtime.consoleAPICalled',
+                      type: 'log',
+                      args: [
+                        {
+                          type: 'string',
+                          value: '%cWelcome to debug.rb!%ca'
+                        },
+                        {
+                          type: 'string',
+                          value: 'color: red; font-size: 30px; font-weight: bold;'
+                        },
+                        {
+                          type: 'string',
+                          value: "color: transparent; background: url(https://1.bp.blogspot.com/-9jufP_s7RQk/X9GX8hoyYdI/AAAAAAABcrU/-2qUflYQuNk2kAdcro0FtD_k21Mb67bwACNcBGAsYHQ/s910/computer_tokui_boy.png); background-size: cover; padding: 100px;"
+                        }
+                      ],
+                      executionContextId: 1, # Change this number if something goes wrong.
+                      timestamp: Time.now.to_f
         when 'Runtime.getIsolateId'
           send_response req,
                         id: SecureRandom.hex
