@@ -347,7 +347,7 @@ module DEBUGGER__
       require_relative 'server_cdp'
 
       unless @chrome_pid = UI_CDP.setup_chrome(@addr)
-        DEBUGGER__.warn <<~EOS if CONFIG[:open_frontend] == 'chrome'
+        DEBUGGER__.warn <<~EOS
           With Chrome browser, type the following URL in the address-bar:
 
              devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{@addr}/#{SecureRandom.uuid}
