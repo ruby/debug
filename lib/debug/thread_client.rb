@@ -356,6 +356,16 @@ module DEBUGGER__
       [:return_value,     "_return"],
     ]
 
+    def eval_with_binding(binding, src)
+      if binding
+        f, _l = binding.source_location
+        binding.eval(src, "(rdbg)/#{f}")
+      else
+        frame_self = current_frame.self
+        instance_eval_for_cmethod(frame_self, src)
+      end
+    end
+
     def frame_eval src, re_raise: false
       @success_last_eval = false
 
@@ -365,13 +375,12 @@ module DEBUGGER__
         b.local_variable_set(name, var) if /\%/ !~ name
       end
 
-      result = if b
-                  f, _l = b.source_location
-                  b.eval(src, "(rdbg)/#{f}")
-                else
-                  frame_self = current_frame.self
-                  instance_eval_for_cmethod(frame_self, src)
-                end
+      result = if TracePoint.respond_to?(:allow_reentry)
+        TracePoint.allow_reentry { eval_with_binding(b, src) }
+      else
+        eval_with_binding(b, src)
+      end
+
       @success_last_eval = true
       result
 
