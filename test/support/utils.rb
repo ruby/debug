@@ -285,16 +285,6 @@ module DEBUGGER__
     rescue Errno::EPERM, Errno::ESRCH
     end
 
-    def temp_file_path
-      @temp_file.path
-    end
-
-    def write_temp_file(program)
-      @temp_file = Tempfile.create(%w[debug- .rb])
-      @temp_file.write(program)
-      @temp_file.close
-    end
-
     def check_error(error, test_info)
       if error_index = test_info.last_backlog.index { |l| l.match?(error) }
         assert_block(create_message("Debugger terminated because of: #{test_info.last_backlog[error_index..-1].join}", test_info)) { false }
@@ -364,8 +354,6 @@ module DEBUGGER__
       ENV['RUBYOPT'] = "-I #{__dir__}/../../lib"
     end
 
-    LINE_NUMBER_REGEX = /^\s*\d+\| ?/
-
     def assert_empty_queue test_info, exception: nil
       message = "Expected all commands/assertions to be executed. Still have #{test_info.queue.length} left."
       if exception
@@ -373,26 +361,6 @@ module DEBUGGER__
                    exception.backtrace.map{|l| "  #{l}\n"}.join
       end
       assert_block(FailureMessage.new { create_message message, test_info }) { test_info.queue.empty? }
-    end
-
-    def strip_line_num(str)
-      str.gsub(LINE_NUMBER_REGEX, '')
-    end
-
-    def check_line_num!(program)
-      unless program.match?(LINE_NUMBER_REGEX)
-        new_program = program_with_line_numbers(program)
-        raise "line numbers are required in test script. please update the script with:\n\n#{new_program}"
-      end
-    end
-
-    def program_with_line_numbers(program)
-      lines = program.split("\n")
-      lines_with_number = lines.map.with_index do |line, i|
-        "#{'%4d' % (i+1)}| #{line}"
-      end
-
-      lines_with_number.join("\n")
     end
   end
 end
