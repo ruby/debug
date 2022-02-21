@@ -42,7 +42,7 @@ module DEBUGGER__
         end
       end
     else
-      # ruby 3.0 or erlier
+      # ruby 3.0 or earlier
       SrcInfo = Struct.new(:src, :colored)
 
       def initialize
