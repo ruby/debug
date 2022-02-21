@@ -139,11 +139,7 @@ module DEBUGGER__
       @tp_thread_begin&.disable
       @tp_thread_begin = nil
 
-      if on_fork
-        @ui.activate self, on_fork: true
-      else
-        @ui.activate self, on_fork: false
-      end
+      @ui.activate self, on_fork: on_fork
 
       q = Queue.new
       @session_server = Thread.new do
