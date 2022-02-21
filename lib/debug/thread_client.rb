@@ -550,8 +550,8 @@ module DEBUGGER__
 
     def show_by_editor path = nil
       unless path
-        if @target_frames && frame = @target_frames[@current_frame_index]
-          path = frame.path
+        if current_frame
+          path = current_frame.path
         else
           return # can't get path
         end
