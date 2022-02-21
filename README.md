@@ -567,10 +567,8 @@ The `<...>` notation means the argument.
   * break and run `<command>` before stopping.
 * `b[reak] ... do: <command>`
   * break and run `<command>`, and continue.
-* `b[reak] ... path: </path_regexp/>`
-  * break if the triggering event's path matches </path_regexp/>.
-* `b[reak] ... path: <path_string>`
-  * break if the triggering event's path matches <path_string>.
+* `b[reak] ... path: <path>`
+  * break if the path matches to `<path>`. `<path>` can be a regexp with `/regexp/`.
 * `b[reak] if: <expr>`
   * break if: `<expr>` is true at any lines.
   * Note that this feature is super slow.
@@ -582,10 +580,8 @@ The `<...>` notation means the argument.
   * runs `<command>` before stopping.
 * `catch ... do: <command>`
   * stops and run `<command>`, and continue.
-* `catch ... path: </path_regexp/>`
-  * stops if the exception is raised from a path that matches </path_regexp/>.
-* `catch ... path: <path_string>`
-  * stops if the exception is raised from a path that matches <path_string>.
+* `catch ... path: <path>`
+  * stops if the exception is raised from a `<path>`. `<path>` can be a regexp with `/regexp/`.
 * `watch @ivar`
   * Stop the execution when the result of current scope's `@ivar` is changed.
   * Note that this feature is super slow.
@@ -595,10 +591,8 @@ The `<...>` notation means the argument.
   * runs `<command>` before stopping.
 * `watch ... do: <command>`
   * stops and run `<command>`, and continue.
-* `watch ... path: </path_regexp/>`
-  * stops if the triggering event's path matches </path_regexp/>.
-* `watch ... path: <path_string>`
-  * stops if the triggering event's path matches <path_string>.
+* `watch ... path: <path>`
+  * stops if the path matches `<path>`. `<path>` can be a regexp with `/regexp/`.
 * `del[ete]`
   * delete all breakpoints.
 * `del[ete] <bpnum>`
@@ -637,8 +631,8 @@ The `<...>` notation means the argument.
   * Show information about accessible constants except toplevel constants.
 * `i[nfo] g[lobal[s]]`
   * Show information about global variables
-* `i[nfo] ... </pattern/>`
-  * Filter the output with `</pattern/>`.
+* `i[nfo] ... /regexp/`
+  * Filter the output with `/regexp/`.
 * `i[nfo] th[read[s]]`
   * Show all threads (same as `th[read]`).
 * `o[utline]` or `ls`
@@ -689,8 +683,8 @@ The `<...>` notation means the argument.
   * Add an exception tracer. It indicates raising exceptions.
 * `trace object <expr>`
   * Add an object tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
-* `trace ... </pattern/>`
-  * Indicates only matched events to `</pattern/>` (RegExp).
+* `trace ... /regexp/`
+  * Indicates only matched events to `/regexp/`.
 * `trace ... into: <file>`
   * Save trace information into: `<file>`.
 * `trace off <num>`
