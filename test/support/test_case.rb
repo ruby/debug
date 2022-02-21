@@ -22,9 +22,19 @@ module DEBUGGER__
       remove_temp_file
     end
 
+    def temp_file_path
+      @temp_file.path
+    end
+
     def remove_temp_file
       File.unlink(@temp_file) if @temp_file
       @temp_file = nil
+    end
+
+    def write_temp_file(program)
+      @temp_file = Tempfile.create(%w[debug- .rb])
+      @temp_file.write(program)
+      @temp_file.close
     end
 
     def with_extra_tempfile(*additional_words)
@@ -37,6 +47,28 @@ module DEBUGGER__
       yield t
     ensure
       File.unlink t if t
+    end
+
+    LINE_NUMBER_REGEX = /^\s*\d+\| ?/
+
+    def strip_line_num(str)
+      str.gsub(LINE_NUMBER_REGEX, '')
+    end
+
+    def check_line_num!(program)
+      unless program.match?(LINE_NUMBER_REGEX)
+        new_program = program_with_line_numbers(program)
+        raise "line numbers are required in test script. please update the script with:\n\n#{new_program}"
+      end
+    end
+
+    def program_with_line_numbers(program)
+      lines = program.split("\n")
+      lines_with_number = lines.map.with_index do |line, i|
+        "#{'%4d' % (i+1)}| #{line}"
+      end
+
+      lines_with_number.join("\n")
     end
   end
 end
