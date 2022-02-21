@@ -157,14 +157,7 @@ module DEBUGGER__
     end
 
     def to_s
-      loc = current_frame&.location
-
-      if loc
-        str = "(#{@thread.name || @thread.status})@#{loc}"
-      else
-        str = "(#{@thread.name || @thread.status})@#{@thread.to_s}"
-      end
-
+      str = "(#{@thread.name || @thread.status})@#{current_frame&.location || @thread.to_s}"
       str += " (not under control)" unless self.waiting?
       str
     end
