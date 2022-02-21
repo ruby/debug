@@ -3,13 +3,18 @@
 module DEBUGGER__
   module AssertionHelpers
     def assert_line_num(expected)
-      @scenario.push(Proc.new { |test_info|
-        msg = "Expected line number to be #{expected.inspect}, but was #{test_info.internal_info['line']}\n"
+      case ENV['RUBY_DEBUG_TEST_UI']
+      when 'terminal'
+        @scenario.push(Proc.new { |test_info|
+          msg = "Expected line number to be #{expected.inspect}, but was #{test_info.internal_info['line']}\n"
 
-        assert_block(FailureMessage.new { create_message(msg, test_info) }) do
-          expected == test_info.internal_info['line']
-        end
-      })
+          assert_block(FailureMessage.new { create_message(msg, test_info) }) do
+            expected == test_info.internal_info['line']
+          end
+        })
+      else
+        raise 'Invalid environment variable'
+      end
     end
 
     def assert_line_text(text)
