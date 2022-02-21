@@ -157,16 +157,16 @@ module DEBUGGER__
     end
 
     def prepare_test_environment(program, test_steps, &block)
+      ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
+      ENV['RUBY_DEBUG_TEST_UI'] = 'terminal'
+      ENV['RUBY_DEBUG_NO_RELINE'] = 'true'
+      ENV['RUBY_DEBUG_HISTORY_FILE'] = ''
+
       write_temp_file(strip_line_num(program))
       @scenario = []
       test_steps.call
       @scenario.freeze
       inject_lib_to_load_path
-
-      ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
-      ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
-      ENV['RUBY_DEBUG_NO_RELINE'] = 'true'
-      ENV['RUBY_DEBUG_HISTORY_FILE'] = ''
 
       block.call
 

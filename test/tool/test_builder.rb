@@ -78,7 +78,7 @@ module DEBUGGER__
     def activate_debugger
       ENV['RUBYOPT'] = "-I #{__dir__}/../../lib"
       ENV['RUBY_DEBUG_NO_COLOR'] = 'true'
-      ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
+      ENV['RUBY_DEBUG_TEST_UI'] = 'terminal'
       ENV['RUBY_DEBUG_TEST_ASSERT_AS_STRING'] ||= 'false'
       ENV['RUBY_DEBUG_TEST_ASSERT_AS_REGEXP'] ||= 'true'
       ENV['RUBY_DEBUG_NO_RELINE'] = 'true'

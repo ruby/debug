@@ -31,7 +31,7 @@ $LOADED_FEATURES << 'debug.rb'
 $LOADED_FEATURES << File.expand_path(File.join(__dir__, '..', 'debug.rb'))
 require 'debug' # invalidate the $LOADED_FEATURE cache
 
-require 'json' if ENV['RUBY_DEBUG_TEST_MODE']
+require 'json' if ENV['RUBY_DEBUG_TEST_UI'] == 'terminal'
 
 class RubyVM::InstructionSequence
   def traceable_lines_norec lines
@@ -370,7 +370,7 @@ module DEBUGGER__
           @ui.puts "(rdbg:#{@preset_command.source}) #{line}"
         end
       else
-        @ui.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}" if ENV['RUBY_DEBUG_TEST_MODE']
+        @ui.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}" if ENV['RUBY_DEBUG_TEST_UI'] == 'terminal'
         line = @ui.readline prompt
       end
 
