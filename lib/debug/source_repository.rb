@@ -26,7 +26,11 @@ module DEBUGGER__
         if lines = iseq.script_lines&.map(&:chomp)
           lines
         else
-          nil
+          if (path = (iseq.absolute_path || iseq.path)) && File.exist?(path)
+            File.readlines(path, chomp: true)
+          else
+            nil
+          end
         end
       end
 
@@ -50,7 +54,7 @@ module DEBUGGER__
       end
 
       def add iseq, src
-        if (path = iseq.absolute_path) && File.exist?(path)
+        if (path = (iseq.absolute_path || iseq.path)) && File.exist?(path)
           add_path path
         elsif src
           add_iseq iseq, src
@@ -78,9 +82,8 @@ module DEBUGGER__
       end
 
       private def add_path path
-        src = File.read(path)
-        src = src.gsub("\r\n", "\n") # CRLF -> LF
-        @files[path] = SrcInfo.new(src.lines)
+        src_lines = File.readlines(path, chomp: true)
+        @files[path] = SrcInfo.new(src_lines)
       rescue SystemCallError
       end
 
@@ -89,7 +92,7 @@ module DEBUGGER__
       
         if iseq.instance_variable_defined?(:@debugger_si)
           iseq.instance_variable_get(:@debugger_si)
-        elsif @files.has_key?(path = iseq.absolute_path)
+        elsif @files.has_key?(path = (iseq.absolute_path || iseq.path))
           @files[path]
         elsif path
           add_path(path)
@@ -105,7 +108,7 @@ module DEBUGGER__
       def get_colored iseq
         if si = get_si(iseq)
           si.colored || begin
-            si.colored = colorize_code(si.src.join).lines
+            si.colored = colorize_code(si.src.join("\n")).lines
           end
         end
       end
