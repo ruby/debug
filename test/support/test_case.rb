@@ -71,4 +71,72 @@ module DEBUGGER__
       lines_with_number.join("\n")
     end
   end
+
+  # When constant variables are referred from modules, they have to be defined outside the class.
+  INITIALIZE_DAP_MSGS = [
+    {
+      seq: 1,
+      command: "initialize",
+      arguments: {
+        clientID: "vscode",
+        clientName: "Visual Studio Code",
+        adapterID: "rdbg",
+        pathFormat: "path",
+        linesStartAt1: true,
+        columnsStartAt1: true,
+        supportsVariableType: true,
+        supportsVariablePaging: true,
+        supportsRunInTerminalRequest: true,
+        locale: "en-us",
+        supportsProgressReporting: true,
+        supportsInvalidatedEvent: true,
+        supportsMemoryReferences: true
+      },
+      type: "request"
+    },
+    {
+      seq: 2,
+      command: "attach",
+      arguments: {
+        type: "rdbg",
+        name: "Attach with rdbg",
+        request: "attach",
+        rdbgPath: File.expand_path('../../exe/rdbg', __dir__),
+        debugPort: "/var/folders/kv/w1k6nh1x5fl7vx47b2pd005w0000gn/T/ruby-debug-sock-501/ruby-debug-naotto-8845",
+        autoAttach: true,
+        __sessionId: "141d9c79-3669-43ec-ac1f-e62598c5a65a"
+      },
+      type: "request"
+    },
+    {
+      seq: 3,
+      command: "setFunctionBreakpoints",
+      arguments: {
+        breakpoints: [
+
+        ]
+      },
+      type: "request"
+    },
+    {
+      seq: 4,
+      command: "setExceptionBreakpoints",
+      arguments: {
+        filters: [
+
+        ],
+        filterOptions: [
+          {
+            filterId: "RuntimeError"
+          }
+        ]
+      },
+      type: "request"
+    },
+    {
+      seq: 5,
+      command: "configurationDone",
+      type: "request"
+    }
+  ]
 end

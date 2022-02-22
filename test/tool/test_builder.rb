@@ -354,7 +354,7 @@ module DEBUGGER__
     def #{@method}
       run_dap_scenario PROGRAM do
         [
-          *INITIALIZE_MSG,
+          *INITIALIZE_DAP_MSGS,
           #{format_scenario}
         ]
       end

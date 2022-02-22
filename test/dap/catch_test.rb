@@ -19,7 +19,7 @@ module DEBUGGER__
     def test_catching_runtime_error_works_correctly_1643891417
       run_dap_scenario PROGRAM do
         [
-          *INITIALIZE_MSG,
+          *INITIALIZE_DAP_MSGS,
           {
             seq: 7,
             type: "event",
@@ -388,7 +388,7 @@ module DEBUGGER__
     def test_catching_any_exception_works_correctly
       run_dap_scenario PROGRAM do
         [
-          *INITIALIZE_MSG,
+          *INITIALIZE_DAP_MSGS,
           {
             seq: 7,
             type: "event",

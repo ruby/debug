@@ -20,7 +20,7 @@ module DEBUGGER__
     def test_finish_works_correctly
       run_dap_scenario PROGRAM do
         [
-          *INITIALIZE_MSG,
+          *INITIALIZE_DAP_MSGS,
           {
             seq: 7,
             type: "event",
