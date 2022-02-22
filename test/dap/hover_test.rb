@@ -16,7 +16,7 @@ module DEBUGGER__
     def test_hover_works_correctly
       run_dap_scenario PROGRAM do
         [
-          *INITIALIZE_MSG,
+          *INITIALIZE_DAP_MSGS,
           {
             seq: 7,
             type: "event",
@@ -880,7 +880,7 @@ module DEBUGGER__
     def test_1641198331
       run_dap_scenario PROGRAM do
         [
-          *INITIALIZE_MSG,
+          *INITIALIZE_DAP_MSGS,
           {
             seq: 7,
             type: "event",
