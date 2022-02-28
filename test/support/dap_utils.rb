@@ -2,9 +2,6 @@
 
 module DEBUGGER__
   module DAP_TestUtils
-    class RetryBecauseCantRead < Exception
-    end
-
     def recv_request sock, backlog
       case sock.gets
       when /Content-Length: (\d+)/
@@ -21,8 +18,6 @@ module DEBUGGER__
       else
         raise "unrecognized line: #{header} (#{l.nil?} bytes)"
       end
-    rescue RetryBecauseCantRead
-      retry
     end
 
     def create_protocol_msg test_info, fail_msg
