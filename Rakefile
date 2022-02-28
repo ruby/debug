@@ -25,10 +25,10 @@ file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
   puts 'README.md is updated.'
 end
 
-task :test_dap do
+task :test_protocol do
   ENV['RUBY_DEBUG_DAP_TEST'] = '1'
 end
 
-Rake::TestTask.new(:test_dap) do |t|
-  t.test_files = FileList["test/dap/*_test.rb"]
+Rake::TestTask.new(:test_protocol) do |t|
+  t.test_files = FileList["test/protocol/*_test.rb"]
 end

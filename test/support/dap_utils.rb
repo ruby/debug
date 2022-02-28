@@ -97,11 +97,11 @@ module DEBUGGER__
     end
 
     TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
-    dt = ENV['RUBY_DEBUG_DAP_TEST']
+    dt = ENV['RUBY_DEBUG_PROTOCOL_TEST']
     DAP_TEST = dt == 'true' || dt == '1'
 
     def run_dap_scenario program, &msgs
-      omit 'Tests for DAP were skipped. You can enable them with RUBY_DEBUG_DAP_TEST=1.' unless DAP_TEST
+      omit 'Tests for DAP were skipped. You can enable them with RUBY_DEBUG_PROTOCOL_TEST=1.' unless DAP_TEST
 
       begin
         write_temp_file(strip_line_num(program))
