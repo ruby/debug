@@ -12,6 +12,19 @@ module DEBUGGER__
             expected == test_info.internal_info['line']
           end
         })
+      when 'vscode'
+        send_request 'stackTrace',
+                      threadId: 1,
+                      startFrame: 0,
+                      levels: 20
+        res = find_crt_dap_response
+        failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
+        result = res.dig(:body, :stackFrames, 0, :line)
+        assert_equal expected, result, failure_msg
+      when 'chrome'
+        failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate @crt_frames}"}
+        result = @crt_frames.dig(0, :location, :lineNumber) + 1
+        assert_equal expected, result, failure_msg
       else
         raise 'Invalid environment variable'
       end

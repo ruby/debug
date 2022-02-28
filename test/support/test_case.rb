@@ -6,12 +6,14 @@ require 'securerandom'
 
 require_relative 'utils'
 require_relative 'dap_utils'
+require_relative 'protocol_utils'
 require_relative 'assertions'
 
 module DEBUGGER__
   class TestCase < Test::Unit::TestCase
     include TestUtils
     include DAP_TestUtils
+    include Protocol_TestUtils
     include AssertionHelpers
 
     def setup
