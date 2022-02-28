@@ -216,13 +216,6 @@ module DEBUGGER__
 end
 ```
 
-### Tests for DAP
-
-If you want to write tests for DAP, you should use the test generator.
-After running `$ bin/gentest target.rb --open=vscode` in the terminal, VSCode will be executed.
-If you need to modify existing tests, it is basically a good idea to regenerate them by the test generator instead of rewriting them directly.
-Please refer to [the Microsoft "Debug Adapter Protocol" article](https://microsoft.github.io/debug-adapter-protocol/specification) to learn more about DAP formats.
-
 #### gentest options
 
 You can get more information about `gentest` here.
@@ -255,6 +248,120 @@ Passes if `text` is not included in the last debugger log.
 - assert_debuggee_line_text(text)
 
 Passes if `text` is included in the debuggee log.
+
+### Tests for DAP
+
+Currently, there are 2 kinds of test frameworks for DAP.
+
+1. Protocol-based tests
+
+If you want to write protocol-based tests, you should use the test generator.
+After running `$ bin/gentest target.rb --open=vscode` in the terminal, VSCode will be executed.
+If you need to modify existing tests, it is basically a good idea to regenerate them by the test generator instead of rewriting them directly.
+Please refer to [the Microsoft "Debug Adapter Protocol" article](https://microsoft.github.io/debug-adapter-protocol/specification) to learn more about DAP formats.
+
+2. High-level tests
+
+High-level tests are designed to test both DAP and CDP for a single method.
+You can write tests as follows:
+**NOTE:** Use `req_terminate_debuggee` to finish debugging. You can't use any methods such as `req_continue`, `req_next` and so on.
+
+```ruby
+require_relative '../support/test_case'
+module DEBUGGER__
+  class BreakTest < TestCase
+    # PROGRAM is the target script.
+    PROGRAM = <<~RUBY
+      1| module Foo
+      2|   class Bar
+      3|     def self.a
+      4|       "hello"
+      5|     end
+      6|   end
+      7|   Bar.a
+      8|   bar = Bar.new
+      9| end
+    RUBY
+
+    def test_break1
+      run_protocol_scenario PROGRAM do # Start debugging with DAP and CDP
+        req_add_breakpoint 5 # Set a breakpoint on line 5.
+        req_add_breakpoint 8 # Set a breakpoint on line 8.
+        req_continue # Resume the program.
+        assert_line_num 5 # Check if debugger stops at line 5.
+        req_continue # Resume the program.
+        assert_line_num 8 # Check if debugger stops at line 8.
+        req_terminate_debuggee # Terminate debugging.
+      end
+    end
+  end
+end
+```
+
+#### API
+
+- run_protocol_scenario program, dap: true, cdp: true, &scenario
+
+Execute debugging `program` with `&scenario`. If you want to test it only for DAP, you can write as follows:
+
+`run_protocol_scenario program, cdp: false ...`
+
+- req_add_breakpoint(lineno, path: temp_file_path, cond: nil)
+
+Sends request to rdbg to add a breakpoint.
+
+- req_delete_breakpoint bpnum
+
+Sends request to rdbg to delete a breakpoint.
+
+- req_set_exception_breakpoints
+
+Sends request to rdbg to set exception breakpoints.
+
+- req_continue
+
+Sends request to rdbg to resume the program.
+
+- req_step
+
+Sends request to rdbg to step into next method.
+
+- req_next
+
+Sends request to rdbg to step over next method.
+
+- req_finish
+
+Sends request to rdbg to step out of current method.
+
+- req_step_back
+
+Sends request to rdbg to step back from current method.
+
+- req_terminate_debuggee
+
+Sends request to rdbg to terminate the debuggee.
+
+- assert_reattach
+
+Passes if reattaching to rdbg is successful.
+
+- assert_hover_result(expected, expression: nil)
+
+Passes if result of `expression` is equal to `expected`.
+
+- assert_repl_result(expected, expression: nil)
+
+Passes if result of `expression` is equal to `expected`.
+
+- assert_watch_result(expected, expression: nil)
+
+Passes if result of `expression` is equal to `expected`.
+
+- assert_line_num(expected)
+
+Passes if `expected` is equal to the location where debugger stops.
+
 
 ## To Update README
 
