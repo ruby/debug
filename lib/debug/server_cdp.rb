@@ -14,6 +14,14 @@ module DEBUGGER__
 
     class << self
       def setup_chrome addr
+        env = ENV.to_h{|name, value|
+          if name.match? /RUBY.*/
+            [name, nil]
+          else
+            [name, value]
+          end
+        }
+        foo = spawn(env, "/Users/s15236/.rbenv/versions/3.1.0/bin/ruby  #{__dir__}/../../foo.rb")
         return if CONFIG[:chrome_path] == ''
 
         port, path, pid = run_new_chrome
@@ -720,9 +728,31 @@ module DEBUGGER__
         end
       when :scope
         result.each{|obj|
-          if oid = obj.dig(:value, :objectId)
-            @obj_map[oid] = ['properties']
-          end
+          val = obj[:value]
+          oid = val[:objectId]
+          @obj_map[oid] = ['properties']
+          a = {oid => val[:value]}
+          # require 'json'
+          json = JSON.generate a
+            require 'net/http'
+            require 'uri'
+            url = URI.parse('http://127.0.0.1:20080/object')
+            http = Net::HTTP.new(url.host, url.port)
+            http.post(url.path, json)
+          @ui.fire_event 'Runtime.consoleAPICalled',
+                        type: 'log',
+                        args: [
+                          {
+                            type: 'string',
+                            value: '%ca'
+                          },
+                          {
+                            type: 'string',
+                            value: "color: transparent; background: url(http://127.0.0.1:20080/svg?id=#{oid}); background-size: cover; padding: 100px;"
+                          }
+                        ],
+                        executionContextId: 1, # Change this number if something goes wrong.
+                        timestamp: Time.now.to_f
         }
         @ui.respond req, result: result
       when :properties
@@ -1011,7 +1041,7 @@ module DEBUGGER__
 
       if type == 'object'
         v = prop[:value]
-        v.delete :value
+        # v.delete :value
         v[:subtype] = subtype if subtype
         v[:className] = obj.class
       end
