@@ -10,3 +10,5 @@
 /Gemfile.lock
 /lib/debug/debug.so
 .ruby-version
+/debugAdapterProtocol.json
+/chromeDevToolsProtocol.json
