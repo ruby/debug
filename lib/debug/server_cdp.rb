@@ -733,25 +733,27 @@ module DEBUGGER__
           val = obj[:value]
           oid = val[:objectId]
           @obj_map[oid] = ['properties']
-          hash = {oid => val[:description]}
-          json = JSON.generate hash
-          url = URI.parse('http://127.0.0.1:20080/object')
-          http = Net::HTTP.new(url.host, url.port)
-          http.post(url.path, json)
-          @ui.fire_event 'Runtime.consoleAPICalled',
-                        type: 'log',
-                        args: [
-                          {
-                            type: 'string',
-                            value: '%ca'
-                          },
-                          {
-                            type: 'string',
-                            value: "color: transparent; background: url(http://127.0.0.1:20080/svg?id=#{oid}); background-size: cover; padding: 100px;"
-                          }
-                        ],
-                        executionContextId: 1, # Change this number if something goes wrong.
-                        timestamp: Time.now.to_f
+          if val[:className] == Array
+            hash = {oid => val[:description]}
+            json = JSON.generate hash
+            url = URI.parse('http://127.0.0.1:20080/object')
+            http = Net::HTTP.new(url.host, url.port)
+            http.post(url.path, json)
+            @ui.fire_event 'Runtime.consoleAPICalled',
+                          type: 'log',
+                          args: [
+                            {
+                              type: 'string',
+                              value: '%ca'
+                            },
+                            {
+                              type: 'string',
+                              value: "color: transparent; background: url(http://127.0.0.1:20080/svg?id=#{oid}); background-size: cover; padding: 100px;"
+                            }
+                          ],
+                          executionContextId: 1, # Change this number if something goes wrong.
+                          timestamp: Time.now.to_f
+          end
         }
         @ui.respond req, result: result
       when :properties
@@ -1024,8 +1026,10 @@ module DEBUGGER__
 
     def propertyDescriptor_ name, obj, type, description: nil, subtype: nil
       description = DEBUGGER__.safe_inspect(obj, short: true) if description.nil?
-      oid = rand.to_s
-      @obj_map[oid] = obj
+      unless oid = @obj_map.key(obj)
+        oid = rand.to_s
+        @obj_map[oid] = obj
+      end
       prop = {
         name: name,
         value: {
