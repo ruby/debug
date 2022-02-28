@@ -423,7 +423,7 @@ module DEBUGGER__
     end
 
     def create_file
-      path = "#{__dir__}/../dap/#{file_name}_test.rb"
+      path = "#{__dir__}/../protocol/#{file_name}_test.rb"
       if File.exist?(path)
         @inserted_src = File.read(path)
         content = @inserted_src.split("\n")[0..-3].join("\n") + "\n#{make_content}\nend\n" if @inserted_src.include? @class
