@@ -7,6 +7,8 @@ require 'securerandom'
 require 'stringio'
 require 'open3'
 require 'tmpdir'
+require 'net/http'
+require 'uri'
 
 module DEBUGGER__
   module UI_CDP
@@ -21,7 +23,7 @@ module DEBUGGER__
             [name, value]
           end
         }
-        foo = spawn(env, "/Users/s15236/.rbenv/versions/3.1.0/bin/ruby  #{__dir__}/../../foo.rb")
+        pid = spawn(env, "/Users/s15236/.rbenv/versions/3.1.0/bin/ruby  #{__dir__}/../../foo.rb")
         return if CONFIG[:chrome_path] == ''
 
         port, path, pid = run_new_chrome
@@ -731,14 +733,11 @@ module DEBUGGER__
           val = obj[:value]
           oid = val[:objectId]
           @obj_map[oid] = ['properties']
-          a = {oid => val[:value]}
-          # require 'json'
-          json = JSON.generate a
-            require 'net/http'
-            require 'uri'
-            url = URI.parse('http://127.0.0.1:20080/object')
-            http = Net::HTTP.new(url.host, url.port)
-            http.post(url.path, json)
+          hash = {oid => val[:description]}
+          json = JSON.generate hash
+          url = URI.parse('http://127.0.0.1:20080/object')
+          http = Net::HTTP.new(url.host, url.port)
+          http.post(url.path, json)
           @ui.fire_event 'Runtime.consoleAPICalled',
                         type: 'log',
                         args: [
@@ -1041,7 +1040,7 @@ module DEBUGGER__
 
       if type == 'object'
         v = prop[:value]
-        # v.delete :value
+        v.delete :value
         v[:subtype] = subtype if subtype
         v[:className] = obj.class
       end

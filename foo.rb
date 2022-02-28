@@ -9,19 +9,12 @@ obj_map = {}
     oid = req.query['id']
     if obj = obj_map[oid]
       res.content_type = 'image/svg+xml'
-      if obj.is_a? Array
-        foo = 
-      else
-        foo = <<~SVG
-          <circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />
-          <text x="0" y="35" font-family="Verdana" font-size="20">
-            #{obj.inspect}
-          </text>
-        SVG
-      end
       res.body = <<~SVG
       <svg xmlns="http://www.w3.org/2000/svg" height="100" width="100">
-        #{foo}
+        <circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />
+        <text x="0" y="35" font-family="Verdana" font-size="20">
+          #{obj.inspect}
+        </text>
       </svg>
       SVG
     else
