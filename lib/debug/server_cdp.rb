@@ -393,14 +393,13 @@ module DEBUGGER__
           @q_msg << req
         when 'Debugger.setBreakpointByUrl'
           line = req.dig('params', 'lineNumber')
-          url = req.dig('params', 'url')
-          if url.match /http:\/\/debuggee(.*)/
-            path = $1
+          if regexp = req.dig('params', 'urlRegex')
+            path = regexp.match(/(.*)\|/)[1].gsub("\\", "")
             cond = req.dig('params', 'condition')
             src = get_source_code path
             end_line = src.lines.count
             line = end_line  if line > end_line
-            b_id = "1:#{line}:#{path}"
+            b_id = "1:#{line}:#{regexp}"
             if cond != ''
               SESSION.add_line_breakpoint(path, line + 1, cond: cond)
             else
@@ -412,11 +411,18 @@ module DEBUGGER__
             req['params']['lineNumber'] = line
             req['params']['breakpointId'] = b_id
             @q_msg << req
-          else
+          elsif url = req.dig('params', 'url')
             b_id = "#{line}:#{url}"
             send_response req,
                           breakpointId: b_id,
                           locations: []
+          elsif hash = req.dig('params', 'scriptHash')
+            b_id = "#{line}:#{hash}"
+            send_response req,
+                          breakpointId: b_id,
+                          locations: []
+          else
+            raise 'Unsupported'
           end
         when 'Debugger.removeBreakpoint'
           b_id = req.dig('params', 'breakpointId')
@@ -643,7 +649,6 @@ module DEBUGGER__
           end
           frame[:location][:scriptId] = s_id
           frame[:functionLocation][:scriptId] = s_id
-          frame[:url] = "http://debuggee#{path}"
           @ui.fire_event 'Debugger.scriptParsed',
                           scriptId: s_id,
                           url: frame[:url],
