@@ -139,7 +139,7 @@ module DEBUGGER__
       }
     ]
 
-    DAP_TestInfo = Struct.new(:res_backlog, :backlog, :failed_process, :reader_thread, :remote_info)
+    DAP_TestInfo = Struct.new(:res_backlog, :backlog, :queue, :failed_process, :reader_thread, :remote_info)
 
     class Detach < StandardError
     end
@@ -149,7 +149,7 @@ module DEBUGGER__
       sock = Socket.unix remote_info.sock_path
       test_info.reader_thread = Thread.new(sock, test_info) do |s, info|
         while res = recv_request(s, info.backlog)
-          info.res_backlog << res
+          info.queue.push res
         end
       rescue Detach
       end
@@ -168,7 +168,7 @@ module DEBUGGER__
       begin
         write_temp_file(strip_line_num(program))
 
-        test_info = DAP_TestInfo.new([], [])
+        test_info = DAP_TestInfo.new([], [], Queue.new)
         remote_info = test_info.remote_info = setup_unix_domain_socket_remote_debuggee
         res_log = test_info.res_backlog
         sock = nil
@@ -186,7 +186,7 @@ module DEBUGGER__
           when 'response'
             target_msg = msg
 
-            result = collect_result_from_res_log(res_log, :request_seq, msg)
+            result = collect_result_from_res_log(test_info, :request_seq, msg)
 
             msg.delete :seq
             verify_result(result, msg, test_info)
@@ -199,7 +199,7 @@ module DEBUGGER__
           when 'event'
             target_msg = msg
 
-            result = collect_result_from_res_log(res_log, :event, msg)
+            result = collect_result_from_res_log(test_info, :event, msg)
 
             msg.delete :seq
             verify_result(result, msg, test_info)
@@ -219,24 +219,21 @@ module DEBUGGER__
       end
     end
 
-    def collect_result_from_res_log(res_log, identifier, msg)
-      result = nil
-
+    def collect_result_from_res_log(test_info, identifier, msg)
+      test_info.res_backlog.each{|res|
+        if res[identifier] == msg[identifier]
+          return res
+        end
+      }
       Timeout.timeout(TIMEOUT_SEC) do
         loop do
-          res_log.each{|r|
-            if r[identifier] == msg[identifier]
-              result = r
-              break
-            end
-          }
-          break unless result.nil?
-
-          sleep 0.01
+          res = test_info.queue.pop
+          if res[identifier] == msg[identifier]
+            return res
+          end
+          test_info.res_backlog << res
         end
       end
-
-      result
     end
 
     def verify_result(result, msg, test_info)
