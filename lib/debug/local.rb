@@ -114,13 +114,33 @@ module DEBUGGER__
     attr_reader :screen
 
     def initialize(windows)
-      @screen = Screen.new(width, height, windows)
       super()
+
+      @original_stdout = $stdout.dup
+      @original_stderr = $stderr.dup
+      @screen = Screen.new(width, height, windows, @original_stdout)
+
+      tui_console = self
+      original_stdout = @original_stdout
+      original_stderr = @original_stderr
+      Reline.output = original_stdout if defined?(Reline)
+
+      $stdout.define_singleton_method(:write) do |*args|
+        original_stdout.write(*args)
+        tui_console.puts(args.join)
+      end
+
+      $stderr.define_singleton_method(:write) do |*args|
+        original_stderr.write(*args)
+        tui_console.puts(args.join)
+      end
     end
 
     def deactivate
       super
       clear_screen!
+      $stdout.reopen(@original_stdout)
+      $stderr.reopen(@original_stderr)
     end
 
     def height
@@ -141,6 +161,10 @@ module DEBUGGER__
 
     def store_tui_data(data)
       @ui_data = data
+    end
+
+    def puts_internal_test_info(internal_info)
+      @original_stdout.puts("INTERNAL_INFO: #{internal_info}")
     end
 
     def puts str = nil
@@ -166,10 +190,11 @@ module DEBUGGER__
     class Screen
       attr_reader :width, :height, :windows, :repl
 
-      def initialize(width, height, windows)
+      def initialize(width, height, windows, output)
         @height = height
         @width = width
         @windows = windows
+        @output = output
         # we need to leave 1 line for the input and 1 line for overflow buffer
         @repl = REPL.new("REPL", @width, height - windows.sum(&:height) - 2)
         @windows << @repl
@@ -177,7 +202,7 @@ module DEBUGGER__
 
       def render!
         clear_screen!
-        @windows.each { |w| w.render!($stdout) }
+        @windows.each { |w| w.render!(@output) }
       end
 
       def draw_windows(data)
@@ -206,7 +231,7 @@ module DEBUGGER__
       end
 
       def clear_screen!
-        $stdout.print("\033c")
+        @output.print("\033c")
       end
     end
 
