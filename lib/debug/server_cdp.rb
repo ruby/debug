@@ -329,6 +329,9 @@ module DEBUGGER__
         when 'Runtime.getIsolateId'
           send_response req,
                         id: SecureRandom.hex
+        when 'Runtime.terminateExecution'
+          @q_msg << 'kill!'
+          send_response req
         when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
           'Runtime.compileScript', 'Page.getResourceContent', 'Overlay.setPausedInDebuggerMessage',
           'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries', 'Log.clear'
