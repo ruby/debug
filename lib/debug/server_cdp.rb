@@ -102,83 +102,7 @@ module DEBUGGER__
       end
     end
 
-    class WebSocketClient
-      def initialize s
-        @sock = s
-      end
-
-      def handshake port, path
-        key = SecureRandom.hex(11)
-        @sock.print "GET #{path} HTTP/1.1\r\nHost: 127.0.0.1:#{port}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: #{key}==\r\n\r\n"
-        res = @sock.readpartial 4092
-        $stderr.puts '[>]' + res if SHOW_PROTOCOL
-
-        if res.match /^Sec-WebSocket-Accept: (.*)\r\n/
-          correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-          raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless $1 == correct_key
-        else
-          raise "Unknown response: #{res}"
-        end
-      end
-
-      def send **msg
-        msg = JSON.generate(msg)
-        frame = []
-        fin = 0b10000000
-        opcode = 0b00000001
-        frame << fin + opcode
-
-        mask = 0b10000000 # A client must mask all frames in a WebSocket Protocol.
-        bytesize = msg.bytesize
-        if bytesize < 126
-          payload_len = bytesize
-        elsif bytesize < 2 ** 16
-          payload_len = 0b01111110
-          ex_payload_len = [bytesize].pack('n*').bytes
-        else
-          payload_len = 0b01111111
-          ex_payload_len = [bytesize].pack('Q>').bytes
-        end
-
-        frame << mask + payload_len
-        frame.push *ex_payload_len if ex_payload_len
-
-        frame.push *masking_key = 4.times.map{rand(1..255)}
-        masked = []
-        msg.bytes.each_with_index do |b, i|
-          masked << (b ^ masking_key[i % 4])
-        end
-
-        frame.push *masked
-        @sock.print frame.pack 'c*'
-      end
-
-      def extract_data
-        first_group = @sock.getbyte
-        fin = first_group & 0b10000000 != 128
-        raise 'Unsupported' if fin
-        opcode = first_group & 0b00001111
-        raise "Unsupported: #{opcode}" unless opcode == 1
-
-        second_group = @sock.getbyte
-        mask = second_group & 0b10000000 == 128
-        raise 'The server must not mask any frames' if mask
-        payload_len = second_group & 0b01111111
-        # TODO: Support other payload_lengths
-        if payload_len == 126
-          payload_len = @sock.read(2).unpack('n*')[0]
-        end
-
-        data = JSON.parse @sock.read payload_len
-        $stderr.puts '[>]' + data.inspect if SHOW_PROTOCOL
-        data
-      end
-    end
-
-    class Detach < StandardError
-    end
-
-    class WebSocketServer
+    module WebSocketUtils
       class Frame
         attr_reader :b
 
@@ -208,17 +132,114 @@ module DEBUGGER__
         end
       end
 
+      def show_protocol dir, msg
+        if DEBUGGER__::UI_CDP::SHOW_PROTOCOL
+          $stderr.puts "\#[#{dir}] #{msg}"
+        end
+      end
+    end
+
+    class WebSocketClient
+      include WebSocketUtils
+
+      def initialize s
+        @sock = s
+      end
+
+      def handshake port, path
+        key = SecureRandom.hex(11)
+        req = "GET #{path} HTTP/1.1\r\nHost: 127.0.0.1:#{port}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: #{key}==\r\n\r\n"
+        show_protocol :>, req
+        @sock.print req
+        res = @sock.readpartial 4092
+        show_protocol :<, res
+
+        if res.match /^Sec-WebSocket-Accept: (.*)\r\n/
+          correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+          raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless $1 == correct_key
+        else
+          raise "Unknown response: #{res}"
+        end
+      end
+
+      def send **msg
+        msg = JSON.generate(msg)
+        show_protocol :>, msg
+        frame = Frame.new
+        fin = 0b10000000
+        opcode = 0b00000001
+        frame.char fin + opcode
+
+        mask = 0b10000000 # A client must mask all frames in a WebSocket Protocol.
+        bytesize = msg.bytesize
+        if bytesize < 126
+          payload_len = bytesize
+          frame.char mask + payload_len
+        elsif bytesize < 2 ** 16
+          payload_len = 0b01111110
+          frame.char mask + payload_len
+          frame.uint16 bytesize
+        elsif bytesize < 2 ** 64
+          payload_len = 0b01111111
+          frame.char mask + payload_len
+          frame.ulonglong bytesize
+        else
+          raise 'Bytesize is too big.'
+        end
+
+        masking_key = 4.times.map{
+          key = rand(1..255)
+          frame.char key
+          key
+        }
+        msg.bytes.each_with_index do |b, i|
+          frame.char(b ^ masking_key[i % 4])
+        end
+
+        @sock.print frame.b
+      end
+
+      def extract_data
+        first_group = @sock.getbyte
+        fin = first_group & 0b10000000 != 128
+        raise 'Unsupported' if fin
+        opcode = first_group & 0b00001111
+        raise "Unsupported: #{opcode}" unless opcode == 1
+
+        second_group = @sock.getbyte
+        mask = second_group & 0b10000000 == 128
+        raise 'The server must not mask any frames' if mask
+        payload_len = second_group & 0b01111111
+        # TODO: Support other payload_lengths
+        if payload_len == 126
+          payload_len = @sock.read(2).unpack('n*')[0]
+        end
+
+        msg = @sock.read payload_len
+        show_protocol :<, msg
+        JSON.parse msg
+      end
+    end
+
+    class Detach < StandardError
+    end
+
+    class WebSocketServer
+      include WebSocketUtils
+
       def initialize s
         @sock = s
       end
 
       def handshake
         req = @sock.readpartial 4096
-        $stderr.puts '[>]' + req if SHOW_PROTOCOL
+        show_protocol '>', req
 
         if req.match /^Sec-WebSocket-Key: (.*)\r\n/
           accept = Base64.strict_encode64 Digest::SHA1.digest "#{$1}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-          @sock.print "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: #{accept}\r\n\r\n"
+          res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: #{accept}\r\n\r\n"
+          @sock.print res
+          show_protocol :<, res
         else
           "Unknown request: #{req}"
         end
@@ -226,6 +247,7 @@ module DEBUGGER__
 
       def send **msg
         msg = JSON.generate(msg)
+        show_protocol :<, msg
         frame = Frame.new
         fin = 0b10000000
         opcode = 0b00000001
@@ -277,7 +299,9 @@ module DEBUGGER__
           masked = @sock.getbyte
           unmasked << (masked ^ masking_key[n % 4])
         end
-        JSON.parse unmasked.pack 'c*'
+        msg = unmasked.pack 'c*'
+        show_protocol :>, msg
+        JSON.parse msg
       end
     end
 
