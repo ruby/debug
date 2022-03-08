@@ -34,9 +34,14 @@ module DEBUGGER__
     end
     CDP_HASH = JSON.parse(json, symbolize_names: true)
 
+    pt = ENV['RUBY_DEBUG_PROTOCOL_TEST']
+    PROTOCOL_TEST = pt == 'true' || pt == '1'
+
     # API
 
     def run_protocol_scenario program, dap: true, cdp: true, &scenario
+      omit 'Tests for CDP and DAP were skipped. You can enable them with RUBY_DEBUG_PROTOCOL_TEST=1.' unless PROTOCOL_TEST
+
       write_temp_file(strip_line_num(program))
       execute_dap_scenario scenario if dap
       execute_cdp_scenario scenario if cdp
