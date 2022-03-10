@@ -656,7 +656,7 @@ module DEBUGGER__
         end
       end
 
-      def send **msg
+      def send msg
         msg = JSON.generate(msg)
         frame = Frame.new
         fin = 0b10000000
