@@ -180,9 +180,7 @@ module DEBUGGER__
     def req_terminate_debuggee
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'disconnect',
-                      restart: true,
-                      terminateDebuggee: true
+        send_request 'terminate'
         assert_disconnect_result
       when 'chrome'
         send_request 'Runtime.terminateExecution'
