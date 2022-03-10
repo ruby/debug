@@ -364,7 +364,7 @@ module DEBUGGER__
       res = find_response :method, 'Debugger.paused', 'C<D'
       @crt_frames = res.dig(:params, :callFrames)
     end
-    
+
     def assert_eval_result context, expression, expected, frame_idx
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
@@ -538,7 +538,7 @@ module DEBUGGER__
 
         #{@backlog.join("\n")}
       DEBUGGER_MSG
-      
+
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
         pattern = /(D|V)(<|>)(D|V)\s/
@@ -606,6 +606,35 @@ module DEBUGGER__
     end
 
     class WebSocketClient
+      class Frame
+        attr_reader :b
+
+        def initialize
+          @b = ''.b
+        end
+
+        def << obj
+          case obj
+          when String
+            @b << obj.b
+          when Enumerable
+            obj.each{|e| self << e}
+          end
+        end
+
+        def char bytes
+          @b << bytes
+        end
+
+        def ulonglong bytes
+          @b << [bytes].pack('Q>')
+        end
+
+        def uint16 bytes
+          @b << [bytes].pack('n*')
+        end
+      end
+
       def initialize s
         @sock = s
       end
@@ -697,7 +726,7 @@ module DEBUGGER__
     class CDP_Validator
       class ValidationError < Exception
       end
-    
+
       def validate res, domain, command
         @seen = []
         pattern = get_cmd_pattern(domain, command)
@@ -705,7 +734,7 @@ module DEBUGGER__
         validate_ res[:result], pattern[:returns]
         true
       end
-    
+
       def validate_ res, props
         return if props.nil?
 
@@ -722,7 +751,7 @@ module DEBUGGER__
           end
         }
       end
-    
+
       def get_ruby_type type
         case type
         when 'string'
@@ -739,7 +768,7 @@ module DEBUGGER__
           [Object]
         end
       end
-    
+
       def get_cmd_pattern domain, command
         cmd = nil
         # FIXME: Commonalize this part.
@@ -764,7 +793,7 @@ module DEBUGGER__
         end
         cmd
       end
-    
+
       def collect_ref crt_domain, ref
         if ref.include? "."
           tar_domain, tar_cmd = ref.split(".")
