@@ -26,7 +26,7 @@ file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
 end
 
 task :test_protocol do
-  ENV['RUBY_DEBUG_DAP_TEST'] = '1'
+  ENV['RUBY_DEBUG_PROTOCOL_TEST'] = '1'
 end
 
 Rake::TestTask.new(:test_protocol) do |t|
