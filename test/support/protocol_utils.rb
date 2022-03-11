@@ -605,31 +605,31 @@ module DEBUGGER__
 
     class WebSocketClient
       class Frame
-        attr_reader :b
+        attr_reader :binary
 
         def initialize
-          @b = ''.b
+          @binary = ''.b
         end
 
         def << obj
           case obj
           when String
-            @b << obj.b
+            @binary << obj.b
           when Enumerable
             obj.each{|e| self << e}
           end
         end
 
         def char bytes
-          @b << bytes
+          @binary << bytes
         end
 
         def ulonglong bytes
-          @b << [bytes].pack('Q>')
+          @binary << [bytes].pack('Q>')
         end
 
         def uint16 bytes
-          @b << [bytes].pack('n*')
+          @binary << [bytes].pack('n*')
         end
       end
 
@@ -687,7 +687,7 @@ module DEBUGGER__
           frame.char(b ^ masking_key[i % 4])
         end
 
-        @sock.print frame.b
+        @sock.print frame.binary
       end
 
       def extract_data
@@ -800,7 +800,7 @@ module DEBUGGER__
           tar_cmd = ref
         end
         return {} if @seen.include?(tar_domain + '.' + tar_cmd)
-    
+
         type = nil
         # FIXME: Commonalize this part.
         CDP_HASH[:domains].each{|domain|
