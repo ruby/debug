@@ -327,6 +327,7 @@ module DEBUGGER__
 
     def setup
       @tp = TracePoint.new(:line){|tp|
+        next if SESSION.in_subsession? # TODO: Ractor support
         next if ThreadClient.current.management?
         next if skip_path?(tp.path)
 
@@ -375,7 +376,6 @@ module DEBUGGER__
 
     def setup
       @tp = TracePoint.new(:line, :return, :b_return){|tp|
-
         watch_eval(tp)
       }
     end
