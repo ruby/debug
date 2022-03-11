@@ -203,6 +203,41 @@ module DEBUGGER__
       end
     end
 
+    def assert_locals_result expected, frame_idx: 0
+      case ENV['RUBY_DEBUG_TEST_UI']
+      when 'vscode'
+        # get frameId
+        send_request 'stackTrace',
+                      threadId: 1,
+                      startFrame: 0,
+                      levels: 20
+        res = find_crt_dap_response
+        f_id = res.dig(:body, :stackFrames, frame_idx, :id)
+
+        # get variablesReference
+        send_request 'scopes', frameId: f_id
+        res = find_crt_dap_response
+        locals_scope = res.dig(:body, :scopes).find { |d| d[:presentationHint] == "locals" }
+        locals_reference = locals_scope[:variablesReference]
+
+        # get variables
+        send_request 'variables', variablesReference: locals_reference
+        res = find_crt_dap_response
+
+        expected.each do |exp|
+          if exp[:type] == "String"
+            exp[:value] = exp[:value].inspect
+          end
+        end
+
+        actual_locals = res.dig(:body, :variables).map { |loc| { name: loc[:name], value: loc[:value], type: loc[:type] } }
+
+        assert_equal(expected, actual_locals)
+      when 'chrome'
+        omit "locals assertion from CDP protocol is not supported yet"
+      end
+    end
+
     def assert_hover_result expected,  expression: nil, frame_idx: 0
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'

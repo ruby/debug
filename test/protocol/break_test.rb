@@ -15,12 +15,20 @@ module DEBUGGER__
       8|   bar = Bar.new
       9| end
     RUBY
-    
+
     def test_break_stops_at_correct_place
       run_protocol_scenario PROGRAM do
         req_add_breakpoint 5
         req_continue
         assert_line_num 5
+
+        assert_locals_result(
+          [
+            { name: "%self", value: "Foo::Bar", type: "Class" },
+            { name: "_return", value: "hello", type: "String" }
+          ]
+        )
+
         req_add_breakpoint 8
         req_continue
         assert_line_num 8
@@ -52,7 +60,7 @@ module DEBUGGER__
         end
       RUBY
     end
-    
+
     def test_break_stops_at_the_extra_file
       with_extra_tempfile do |extra_file|
         run_protocol_scenario(program(extra_file.path), cdp: false) do
