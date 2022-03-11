@@ -346,9 +346,39 @@ module DEBUGGER__
 
     ## cmd helpers
 
-    # this method is extracted to hide frame_eval's local variables from C method eval's binding
-    def instance_eval_for_cmethod frame_self, src
-      frame_self.instance_eval(src)
+    if TracePoint.respond_to? :allow_reentry
+      def tp_allow_reentry
+        TracePoint.allow_reentry do
+          yield
+        end
+      rescue RuntimeError => e
+        # on the postmortem mode, it is not stopped in TracePoint
+        if e.message == 'No need to allow reentrance.'
+          yield
+        else
+          raise
+        end
+      end
+    else
+      def tp_allow_reentry
+        yield
+      end
+    end
+
+    def frame_eval_core src, b
+      if b
+        f, _l = b.source_location
+
+        tp_allow_reentry do
+          b.eval(src, "(rdbg)/#{f}")
+        end
+      else
+        frame_self = current_frame.self
+
+        tp_allow_reentry do
+          frame_self.instance_eval(src)
+        end
+      end
     end
 
     SPECIAL_LOCAL_VARS = [
@@ -365,16 +395,13 @@ module DEBUGGER__
         b.local_variable_set(name, var) if /\%/ !~ name
       end
 
-      result = if b
-                  f, _l = b.source_location
-                  b.eval(src, "(rdbg)/#{f}")
-                else
-                  frame_self = current_frame.self
-                  instance_eval_for_cmethod(frame_self, src)
-                end
+      result = frame_eval_core(src, b)
+
       @success_last_eval = true
       result
 
+    rescue SystemExit
+      raise
     rescue Exception => e
       return yield(e) if block_given?
 

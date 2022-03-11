@@ -105,7 +105,7 @@ module DEBUGGER__
       @intercept_trap_sigint = false
       @intercepted_sigint_cmd = 'DEFAULT'
       @process_group = ProcessGroup.new
-      @subsession = nil
+      @subsession_stack = []
 
       @frame_map = {} # for DAP: {id => [threadId, frame_depth]} and CDP: {id => frame_depth}
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
@@ -216,6 +216,7 @@ module DEBUGGER__
         q << true
 
       when :init
+        enter_subsession
         wait_command_loop tc
 
       when :load
@@ -258,7 +259,7 @@ module DEBUGGER__
         end
 
       when :result
-        raise "[BUG] not in subsession" unless @subsession
+        raise "[BUG] not in subsession" if @subsession_stack.empty?
 
         case ev_args.first
         when :try_display
@@ -1540,27 +1541,38 @@ module DEBUGGER__
     end
 
     private def enter_subsession
-      raise "already in subsession" if @subsession
-      @subsession = true
-      stop_all_threads
-      @process_group.lock
-      DEBUGGER__.info "enter_subsession"
+      if !@subsession_stack.empty?
+        DEBUGGER__.info "Enter subsession (nested #{@subsession_stack.size})"
+      else
+        DEBUGGER__.info "Enter subsession"
+        stop_all_threads
+        @process_group.lock
+      end
+
+      @subsession_stack << true
     end
 
     private def leave_subsession type
-      DEBUGGER__.info "leave_subsession"
-      @process_group.unlock
-      restart_all_threads
+      raise '[BUG] leave_subsession: not entered' if @subsession_stack.empty?
+      @subsession_stack.pop
+
+      if @subsession_stack.empty?
+        DEBUGGER__.info "Leave subsession"
+        @process_group.unlock
+        restart_all_threads
+      else
+        DEBUGGER__.info "Leave subsession (nested #{@subsession_stack.size})"
+      end
+
       @tc << type if type
       @tc = nil
-      @subsession = false
     rescue Exception => e
-      STDERR.puts [e, e.backtrace].inspect
+      STDERR.puts PP.pp([e, e.backtrace], ''.dup)
       raise
     end
 
     def in_subsession?
-      @subsession
+      !@subsession_stack.empty?
     end
 
     ## event
