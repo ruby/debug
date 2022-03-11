@@ -77,7 +77,6 @@ module DEBUGGER__
       def cleanup_unix_domain_sockets
         Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*') do |file|
           if /-(\d+)-\d+$/ =~ file || /-(\d+)$/ =~ file
-            p [$1, file]
             begin
               Process.kill(0, $1.to_i)
             rescue Errno::EPERM
