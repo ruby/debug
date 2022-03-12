@@ -217,12 +217,15 @@ module DEBUGGER__
         # get variablesReference
         send_request 'scopes', frameId: f_id
         res = find_crt_dap_response
+        assert_dap_response :ScopesResponse, res
+
         locals_scope = res.dig(:body, :scopes).find { |d| d[:presentationHint] == "locals" }
         locals_reference = locals_scope[:variablesReference]
 
         # get variables
         send_request 'variables', variablesReference: locals_reference
         res = find_crt_dap_response
+        assert_dap_response :VariablesResponse, res
 
         expected.each do |exp|
           if exp[:type] == "String"
@@ -231,11 +234,25 @@ module DEBUGGER__
         end
 
         actual_locals = res.dig(:body, :variables).map { |loc| { name: loc[:name], value: loc[:value], type: loc[:type] } }
-
-        assert_equal(expected, actual_locals)
       when 'chrome'
-        omit "locals assertion from CDP protocol is not supported yet"
+        current_frame = @crt_frames.first
+        locals_scope = current_frame[:scopeChain].find { |f| f[:type] == "local" }
+        object_id = locals_scope.dig(:object, :objectId)
+
+        send_request "Runtime.getProperties", objectId: object_id
+        res = find_crt_cdp_response
+        assert_cdp_response 'Runtime.getProperties', res
+
+        actual_locals = res.dig(:result, :result).map do |loc|
+          type = loc.dig(:value, :className) || loc.dig(:value, :type).capitalize # TODO: sync this with get_ruby_type
+
+          { name: loc[:name], value: loc.dig(:value, :description), type: type }
+        end
       end
+
+      failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
+
+      assert_equal(expected.sort_by { |h| h[:name] }, actual_locals.sort_by { |h| h[:name] }, failure_msg)
     end
 
     def assert_hover_result expected,  expression: nil, frame_idx: 0
