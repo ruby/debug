@@ -6,7 +6,7 @@ module DEBUGGER__
   class StepBackTest < TestCase
     PROGRAM = <<~RUBY
        1| binding.b do: 'record on'
-       2| 
+       2|
        3| module Foo
        4|   class Bar
        5|     def self.a
@@ -17,17 +17,32 @@ module DEBUGGER__
       10|   bar = Bar.new
       11| end
     RUBY
-    
+
     def test_step_back_goes_back_to_the_previous_statement
       run_protocol_scenario PROGRAM, cdp: false do
         req_add_breakpoint 9
         req_continue
         req_step_back
         assert_line_num 9
+        assert_locals_result(
+          [
+            { name: "%self", value: "Foo", type: "Module" },
+            { name: "bar", value: "nil", type: "NilClass" }
+          ]
+        )
         req_step_back
         assert_line_num 5
+        assert_locals_result([
+          { name: "%self", value: "Foo::Bar", type: "Class" }
+        ])
         req_step_back
         assert_line_num 4
+        assert_locals_result(
+          [
+            { name: "%self", value: "Foo", type: "Module" },
+            { name: "bar", value: "nil", type: "NilClass" }
+          ]
+        )
         req_terminate_debuggee
       end
     end

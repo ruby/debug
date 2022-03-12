@@ -32,6 +32,13 @@ module DEBUGGER__
         req_add_breakpoint 8
         req_continue
         assert_line_num 8
+
+        assert_locals_result(
+          [
+            { name: "%self", value: "Foo", type: "Module" },
+            { name: "bar", value: "nil", type: "NilClass" }
+          ]
+        )
         req_terminate_debuggee
       end
     end
