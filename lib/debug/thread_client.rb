@@ -85,7 +85,8 @@ module DEBUGGER__
       @is_management = false
       @id = id
       @thread = thr
-      @target_frames = nil
+      @frame_index_stack = []
+      @frames_stack = []
       @q_evt = q_evt
       @q_cmd = q_cmd
       @step_tp = nil
@@ -102,19 +103,27 @@ module DEBUGGER__
     end
 
     def target_frames
-      @target_frames
+      @frames_stack.last
     end
 
     def set_target_frames(frames)
-      @target_frames = frames
+      @frames_stack << frames
+    end
+
+    def pop_target_frames
+      @frames_stack.pop
     end
 
     def current_frame_index
-      @current_frame_index
+      @frame_index_stack.last
     end
 
     def set_current_frame_index(i)
-      @current_frame_index = i
+      @frame_index_stack << i
+    end
+
+    def pop_current_frame_index
+      @frame_index_stack.pop
     end
 
     def deactivate
@@ -298,6 +307,9 @@ module DEBUGGER__
       end
 
       wait_next_action
+    ensure
+      pop_target_frames
+      pop_current_frame_index
     end
 
     def replay_suspend

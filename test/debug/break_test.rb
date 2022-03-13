@@ -722,4 +722,65 @@ module DEBUGGER__
       end
     end
   end
+
+  class NestedBreakTest < TestCase
+    def program
+      <<~RUBY
+     1| class Foo
+     2|   def self.bar(num)
+     3|     num
+     4|   end
+     5| end
+     6|
+     7| a = 10
+     8| binding.b
+      RUBY
+    end
+
+    if RUBY_VERSION >= "3.1.0"
+      def test_method_breakpoint_can_be_triggered_inside_another_breakpoint
+        debug_code(program) do
+          type "break Foo.bar"
+          type "c"
+
+          # stops at the first breakpoint
+          assert_line_num(8)
+
+          # enters the second breakpoint
+          type "Foo.bar(a)"
+          assert_line_num(3)
+          type "num + 10"
+          assert_line_text(/20/)
+          type "c"
+
+          # returns to the first breakpoint
+          assert_line_num(8)
+          type "a + 100"
+          assert_line_text(/110/)
+
+          type "c"
+        end
+      end
+    else
+      def test_nested_breakpoint_will_be_ignored
+        debug_code(program) do
+          type "break Foo.bar"
+          type "c"
+
+          # stops at the first breakpoint
+          assert_line_num(8)
+
+          # doesn't enter the another subsession
+          type "Foo.bar(a)"
+
+          # returns to the first breakpoint
+          assert_line_num(8)
+          type "a + 100"
+          assert_line_text(/110/)
+
+          type "c"
+        end
+      end
+    end
+  end
 end
