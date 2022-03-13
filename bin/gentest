@@ -14,6 +14,9 @@ OptionParser.new do |opt|
   opt.on('-c CLASS', 'Class name in the test file') do |c|
     options[:class] = c
   end
+  opt.on('-f FILENAME', 'File name of the test file') do |name|
+    options[:file_name] = name
+  end
   opt.on('--open=FRONTEND', 'Start remote debugging with opening the network port.',
                             'Prepare for the given FRONTEND.') do |f|
     options[:open] = f.downcase
@@ -25,9 +28,9 @@ exit if ARGV.empty?
 
 case options[:open]
 when 'vscode'
-  DEBUGGER__::DAPTestBuilder.new(ARGV, options[:method], options[:class]).start
+  DEBUGGER__::DAPTestBuilder.new(ARGV, options[:method], options[:class], options[:file_name]).start
 when 'chrome'
-  DEBUGGER__::CDPTestBuilder.new(ARGV, options[:method], options[:class]).start
+  DEBUGGER__::CDPTestBuilder.new(ARGV, options[:method], options[:class], options[:file_name]).start
 else
-  DEBUGGER__::LocalTestBuilder.new(ARGV, options[:method], options[:class]).start
+  DEBUGGER__::LocalTestBuilder.new(ARGV, options[:method], options[:class], options[:file_name]).start
 end

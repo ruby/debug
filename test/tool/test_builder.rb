@@ -11,7 +11,7 @@ module DEBUGGER__
   end
 
   class LocalTestBuilder < TestBuilderBase
-    def initialize(target, m, c)
+    def initialize(target, m, c, name)
       @target_path = File.absolute_path(target[0])
       @current_time = Time.now.to_i
       m = "test_#{@current_time}" if m.nil?
@@ -23,6 +23,7 @@ module DEBUGGER__
       else
         @class = "#{c_upcase}Test"
       end
+      @file_name = name || @class.sub(/(?i:t)est/, '').gsub(/([[:upper:]])/) {"_#{$1.downcase}"}.delete_prefix('_')
     end
 
     def start
@@ -211,12 +212,8 @@ module DEBUGGER__
       "  end" + create_scenario_and_program
     end
 
-    def file_name
-      @class.sub(/(?i:t)est/, '').gsub(/([[:upper:]])/) {"_#{$1.downcase}"}.delete_prefix('_')
-    end
-
     def create_file
-      path = "#{__dir__}/../debug/#{file_name}_test.rb"
+      path = "#{__dir__}/../debug/#{@file_name}_test.rb"
       if File.exist?(path)
         @inserted_src = File.read(path)
         content = @inserted_src.split("\n")[0..-3].join("\n") + "\n#{make_content}\nend\n" if @inserted_src.include? @class
@@ -239,7 +236,7 @@ module DEBUGGER__
     RUBY = ENV['RUBY'] || RbConfig.ruby
     RDBG_EXECUTABLE = "#{RUBY} #{__dir__}/../../exe/rdbg"
 
-    def initialize(target, m, c)
+    def initialize(target, m, c, name)
       @target_path = File.absolute_path(target[0])
       @current_time = Time.now.to_i
       m = "test_#{@current_time}" if m.nil?
@@ -251,6 +248,7 @@ module DEBUGGER__
       else
         @class = "#{c_upcase}Test"
       end
+      @file_name = name || @class.sub(/(?i:t)est/, '').gsub(/([[:upper:]])/) {"_#{$1.downcase}"}.delete_prefix('_')
     end
 
     def start
@@ -423,7 +421,7 @@ module DEBUGGER__
     end
 
     def create_file
-      path = "#{__dir__}/../protocol/#{file_name}_test.rb"
+      path = "#{__dir__}/../protocol/#{@file_name}_test.rb"
       if File.exist?(path)
         @inserted_src = File.read(path)
         content = @inserted_src.split("\n")[0..-3].join("\n") + "\n#{make_content}\nend\n" if @inserted_src.include? @class
@@ -446,7 +444,7 @@ module DEBUGGER__
     RUBY = ENV['RUBY'] || RbConfig.ruby
     RDBG_EXECUTABLE = "#{RUBY} #{__dir__}/../../exe/rdbg"
 
-    def initialize(target, m, c)
+    def initialize(target, m, c, name)
       @target_path = File.absolute_path(target[0])
       @current_time = Time.now.to_i
       m = "test_#{@current_time}" if m.nil?
@@ -458,6 +456,7 @@ module DEBUGGER__
       else
         @class = "#{c_upcase}Test"
       end
+      @file_name = name || @class.sub(/(?i:t)est/, '').gsub(/([[:upper:]])/) {"_#{$1.downcase}"}.delete_prefix('_')
     end
 
     def start
@@ -658,12 +657,8 @@ module DEBUGGER__
       "  end" + create_scenario_and_program
     end
 
-    def file_name
-      @class.sub(/(?i:t)est/, '').gsub(/([[:upper:]])/) {"_#{$1.downcase}"}.delete_prefix('_')
-    end
-
     def create_file
-      path = "#{__dir__}/../protocol/#{file_name}_test.rb"
+      path = "#{__dir__}/../protocol/#{@file_name}_test.rb"
       if File.exist?(path)
         @inserted_src = File.read(path)
         content = @inserted_src.split("\n")[0..-3].join("\n") + "\n#{make_content}\nend\n" if @inserted_src.include? @class
