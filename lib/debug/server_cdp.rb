@@ -332,7 +332,6 @@ module DEBUGGER__
       @src_map = {}
       loop do
         req = @ws_server.extract_data
-        $stderr.puts '[>]' + req.inspect if SHOW_PROTOCOL
 
         case req['method']
 
