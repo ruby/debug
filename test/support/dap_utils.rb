@@ -178,7 +178,7 @@ module DEBUGGER__
     end
 
     def verify_result(result, msg, test_info)
-      expected = ProtocolParser.new.parse msg
+      expected = ResponsePattern.new.parse msg
       expected.each do |key, expected_value|
         failure_msg = FailureMessage.new{create_protocol_msg test_info, "expected:\n#{JSON.pretty_generate msg}\n\nresult:\n#{JSON.pretty_generate result}"}
 
@@ -189,39 +189,6 @@ module DEBUGGER__
           assert_equal expected_value, result.dig(*key), failure_msg
         end
       end
-    end
-  end
-end
-
-class ProtocolParser
-  def initialize
-    @result = []
-    @keys = []
-  end
-
-  def parse objs
-    objs.each{|k, v|
-      parse_ k, v
-      @keys.pop
-    }
-    @result
-  end
-
-  def parse_ k, v
-    @keys << k
-    case v
-    when Array
-      v.each.with_index{|v, i|
-        parse_ i, v
-        @keys.pop
-      }
-    when Hash
-      v.each{|k, v|
-        parse_ k, v
-        @keys.pop
-      }
-    else
-      @result << [@keys.dup, v]
     end
   end
 end

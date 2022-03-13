@@ -15,7 +15,7 @@ OptionParser.new do |opt|
     options[:class] = c
   end
   opt.on('--open=FRONTEND', 'Start remote debugging with opening the network port.',
-                            'Currently, only vscode is supported.') do |f|
+                            'Prepare for the given FRONTEND.') do |f|
     options[:open] = f.downcase
   end
   opt.parse!(ARGV)
@@ -23,8 +23,11 @@ end
 
 exit if ARGV.empty?
 
-if options[:open] == 'vscode'
+case options[:open]
+when 'vscode'
   DEBUGGER__::DAPTestBuilder.new(ARGV, options[:method], options[:class]).start
+when 'chrome'
+  DEBUGGER__::CDPTestBuilder.new(ARGV, options[:method], options[:class]).start
 else
   DEBUGGER__::LocalTestBuilder.new(ARGV, options[:method], options[:class]).start
 end
