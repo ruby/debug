@@ -781,7 +781,7 @@ module DEBUGGER__
         exception = nil
         result = {
           reason: 'other',
-          callFrames: @target_frames.map.with_index{|frame, i|
+          callFrames: target_frames.map.with_index{|frame, i|
             exception = frame.raised_exception if frame == current_frame && frame.has_raised_exception
 
             path = frame.realpath || frame.path
@@ -842,7 +842,7 @@ module DEBUGGER__
       when :evaluate
         res = {}
         fid, expr, group = args
-        frame = @target_frames[fid]
+        frame = target_frames[fid]
         message = nil
 
         if frame && (b = frame.binding)
@@ -933,7 +933,7 @@ module DEBUGGER__
         event! :cdp_result, :evaluate, req, message: message, response: res, output: output
       when :scope
         fid = args.shift
-        frame = @target_frames[fid]
+        frame = target_frames[fid]
         if b = frame.binding
           vars = b.local_variables.map{|name|
             v = b.local_variable_get(name)

@@ -101,6 +101,22 @@ module DEBUGGER__
       ::DEBUGGER__.info("Thread \##{@id} is created.")
     end
 
+    def target_frames
+      @target_frames
+    end
+
+    def set_target_frames(frames)
+      @target_frames = frames
+    end
+
+    def current_frame_index
+      @current_frame_index
+    end
+
+    def set_current_frame_index(i)
+      @current_frame_index = i
+    end
+
     def deactivate
       @step_tp.disable if @step_tp
     end
@@ -233,19 +249,19 @@ module DEBUGGER__
     def suspend event, tp = nil, bp: nil, sig: nil, postmortem_frames: nil, replay_frames: nil, postmortem_exc: nil
       return if management?
 
-      @current_frame_index = 0
+      set_current_frame_index(0)
 
       case
       when postmortem_frames
-        @target_frames = postmortem_frames
+        set_target_frames(postmortem_frames)
         @postmortem = true
       when replay_frames
-        @target_frames = replay_frames
+        set_target_frames(replay_frames)
       else
-        @target_frames = DEBUGGER__.capture_frames(__dir__)
+        set_target_frames(DEBUGGER__.capture_frames(__dir__))
       end
 
-      cf = @target_frames.first
+      cf = target_frames.first
       if cf
         case event
         when :return, :b_return, :c_return
@@ -407,13 +423,13 @@ module DEBUGGER__
       raise if re_raise
     end
 
-    def show_src(frame_index: @current_frame_index,
+    def show_src(frame_index: current_frame_index,
                  update_line: false,
                  max_lines: CONFIG[:show_src_lines] || 10,
                  start_line: nil,
                  end_line: nil,
                  dir: +1)
-      if @target_frames && frame = @target_frames[frame_index]
+      if target_frames && frame = target_frames[frame_index]
         if file_lines = frame.file_lines
           frame_line = frame.location.lineno - 1
 
@@ -459,8 +475,8 @@ module DEBUGGER__
     end
 
     def current_frame
-      if @target_frames
-        @target_frames[@current_frame_index]
+      if target_frames
+        target_frames[current_frame_index]
       else
         nil
       end
@@ -600,9 +616,9 @@ module DEBUGGER__
     ### cmd: show frames
 
     def show_frames max = nil, pattern = nil
-      if @target_frames && (max ||= @target_frames.size) > 0
+      if target_frames && (max ||= target_frames.size) > 0
         frames = []
-        @target_frames.each_with_index{|f, i|
+        target_frames.each_with_index{|f, i|
           next if pattern && !(f.name.match?(pattern) || f.location_str.match?(pattern))
           next if CONFIG[:skip_path] && CONFIG[:skip_path].any?{|pat|
             case pat
@@ -630,8 +646,8 @@ module DEBUGGER__
       puts frame_str(i)
     end
 
-    def frame_str(i, frame: @target_frames[i])
-      cur_str = (@current_frame_index == i ? '=>' : '  ')
+    def frame_str(i, frame: target_frames[i])
+      cur_str = (current_frame_index == i ? '=>' : '  ')
       prefix = "#{cur_str}##{i}"
       frame_string = @frame_formatter.call(frame)
       "#{prefix}\t#{frame_string}"
@@ -752,7 +768,7 @@ module DEBUGGER__
             end
 
           when :next
-            frame = @target_frames.first
+            frame = target_frames.first
             path = frame.location.absolute_path || "!eval:#{frame.path}"
             line = frame.location.lineno
 
@@ -764,7 +780,7 @@ module DEBUGGER__
               end
             end
 
-            depth = @target_frames.first.frame_depth
+            depth = target_frames.first.frame_depth
 
             step_tp iter do
               loc = caller_locations(2, 1).first
@@ -782,7 +798,7 @@ module DEBUGGER__
 
           when :finish
             finish_frames = (iter || 1) - 1
-            goal_depth = @target_frames.first.frame_depth - finish_frames
+            goal_depth = target_frames.first.frame_depth - finish_frames
 
             step_tp nil, [:return, :b_return] do
               DEBUGGER__.frame_depth - 3 <= goal_depth ? true : false
@@ -792,7 +808,7 @@ module DEBUGGER__
           when :back
             if @recorder&.can_step_back?
               unless @recorder.backup_frames
-                @recorder.backup_frames = @target_frames
+                @recorder.backup_frames = target_frames
               end
               @recorder.step_back
               raise SuspendReplay
@@ -859,28 +875,28 @@ module DEBUGGER__
           type, arg = *args
           case type
           when :up
-            if @current_frame_index + 1 < @target_frames.size
-              @current_frame_index += 1
+            if current_frame_index + 1 < target_frames.size
+              set_current_frame_index(current_frame_index + 1)
               show_src max_lines: 1
-              show_frame(@current_frame_index)
+              show_frame(current_frame_index)
             end
           when :down
-            if @current_frame_index > 0
-              @current_frame_index -= 1
+            if current_frame_index > 0
+              set_current_frame_index(current_frame_index - 1)
               show_src max_lines: 1
-              show_frame(@current_frame_index)
+              show_frame(current_frame_index)
             end
           when :set
             if arg
               index = arg.to_i
-              if index >= 0 && index < @target_frames.size
-                @current_frame_index = index
+              if index >= 0 && index < target_frames.size
+                set_current_frame_index(index)
               else
                 puts "out of frame index: #{index}"
               end
             end
             show_src max_lines: 1
-            show_frame(@current_frame_index)
+            show_frame(current_frame_index)
           else
             raise "unsupported frame operation: #{arg.inspect}"
           end

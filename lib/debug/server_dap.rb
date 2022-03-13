@@ -593,7 +593,7 @@ module DEBUGGER__
       case type
       when :backtrace
         event! :dap_result, :backtrace, req, {
-          stackFrames: @target_frames.map{|frame|
+          stackFrames: target_frames.map{|frame|
             path = frame.realpath || frame.path
             ref = frame.file_lines unless path && File.exist?(path)
 
@@ -612,7 +612,7 @@ module DEBUGGER__
         }
       when :scopes
         fid = args.shift
-        frame = @target_frames[fid]
+        frame = target_frames[fid]
 
         lnum =
           if frame.binding
@@ -640,7 +640,7 @@ module DEBUGGER__
         }]
       when :scope
         fid = args.shift
-        frame = @target_frames[fid]
+        frame = target_frames[fid]
         if b = frame.binding
           vars = b.local_variables.map{|name|
             v = b.local_variable_get(name)
@@ -712,7 +712,7 @@ module DEBUGGER__
 
       when :evaluate
         fid, expr, context = args
-        frame = @target_frames[fid]
+        frame = target_frames[fid]
         message = nil
 
         if frame && (b = frame.binding)
@@ -774,7 +774,7 @@ module DEBUGGER__
 
       when :completions
         fid, text = args
-        frame = @target_frames[fid]
+        frame = target_frames[fid]
 
         if (b = frame&.binding) && word = text&.split(/[\s\{]/)&.last
           words = IRB::InputCompletor::retrieve_completion_data(word, bind: b).compact
