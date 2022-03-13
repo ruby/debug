@@ -358,21 +358,21 @@ module DEBUGGER__
           exit
         when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
           'Runtime.compileScript', 'Page.getResourceContent', 'Overlay.setPausedInDebuggerMessage',
-          'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries', 'Log.clear'
+          'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries', 'Log.clear', 'Runtime.runIfWaitingForDebugger'
           send_response req
 
         ## control
         when 'Debugger.resume'
-          @q_msg << 'c'
-          @q_msg << req
           send_response req
           send_event 'Debugger.resumed'
+          @q_msg << 'c'
+          @q_msg << req
         when 'Debugger.stepOver'
           begin
             @session.check_postmortem
-            @q_msg << 'n'
             send_response req
             send_event 'Debugger.resumed'
+            @q_msg << 'n'
           rescue PostmortemError
             send_fail_response req,
                               code: INVALID_REQUEST,
@@ -383,9 +383,9 @@ module DEBUGGER__
         when 'Debugger.stepInto'
           begin
             @session.check_postmortem
-            @q_msg << 's'
             send_response req
             send_event 'Debugger.resumed'
+            @q_msg << 's'
           rescue PostmortemError
             send_fail_response req,
                               code: INVALID_REQUEST,
@@ -396,9 +396,9 @@ module DEBUGGER__
         when 'Debugger.stepOut'
           begin
             @session.check_postmortem
-            @q_msg << 'fin'
             send_response req
             send_event 'Debugger.resumed'
+            @q_msg << 'fin'
           rescue PostmortemError
             send_fail_response req,
                               code: INVALID_REQUEST,
@@ -576,9 +576,10 @@ module DEBUGGER__
         @tc << [:cdp, :backtrace, req]
       when 'Debugger.evaluateOnCallFrame'
         frame_id = req.dig('params', 'callFrameId')
+        group = req.dig('params', 'objectGroup')
         if fid = @frame_map[frame_id]
           expr = req.dig('params', 'expression')
-          @tc << [:cdp, :evaluate, req, fid, expr]
+          @tc << [:cdp, :evaluate, req, fid, expr, group]
         else
           fail_response req,
                         code: INVALID_PARAMS,
@@ -596,7 +597,7 @@ module DEBUGGER__
             @tc << [:cdp, :properties, req, oid]
           when 'script', 'global'
             # TODO: Support script and global types
-            @ui.respond req
+            @ui.respond req, result: []
             return :retry
           else
             raise "Unknown type: #{ref.inspect}"
@@ -685,7 +686,7 @@ module DEBUGGER__
                           endLine: lineno,
                           endColumn: 0,
                           executionContextId: 1,
-                          hash: src.hash
+                          hash: src.hash.inspect
 
           frame[:scopeChain].each {|s|
             oid = s.dig(:object, :objectId)
@@ -716,7 +717,7 @@ module DEBUGGER__
                             endLine: lineno,
                             endColumn: 0,
                             executionContextId: 1,
-                            hash: src.hash
+                            hash: src.hash.inspect
           if exc = result.dig(:response, :exceptionDetails)
             exc[:stackTrace][:callFrames].each{|frame|
               if frame[:url].empty?
@@ -841,7 +842,7 @@ module DEBUGGER__
         event! :cdp_result, :backtrace, req, result
       when :evaluate
         res = {}
-        fid, expr = args
+        fid, expr, group = args
         frame = @target_frames[fid]
         message = nil
 
@@ -853,7 +854,7 @@ module DEBUGGER__
 
           result = nil
 
-          case req.dig('params', 'objectGroup')
+          case group
           when 'popover'
             case expr
             # Chrome doesn't read instance variables
@@ -882,7 +883,7 @@ module DEBUGGER__
                 end
               end
             end
-          else
+          when 'console', 'watch-group'
             begin
               orig_stdout = $stdout
               $stdout = StringIO.new
@@ -922,6 +923,8 @@ module DEBUGGER__
               output = $stdout.string
               $stdout = orig_stdout
             end
+          else
+            message = "Error: unknown objectGroup: #{group}"
           end
         else
           result = Exception.new("Error: Can not evaluate on this frame")

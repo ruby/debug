@@ -440,4 +440,244 @@ module DEBUGGER__
       File.write(path, content)
     end
   end
+
+  class CDPTestBuilder < TestBuilderBase
+    INDENT = '          '
+    RUBY = ENV['RUBY'] || RbConfig.ruby
+    RDBG_EXECUTABLE = "#{RUBY} #{__dir__}/../../exe/rdbg"
+
+    def initialize(target, m, c)
+      @target_path = File.absolute_path(target[0])
+      @current_time = Time.now.to_i
+      m = "test_#{@current_time}" if m.nil?
+      @method = m
+      c = 'FooTest' if c.nil?
+      c_upcase = c.sub(/(^[a-z])/) { Regexp.last_match(1).upcase }
+      if c_upcase.match? /(?i:t)est/
+        @class = c_upcase
+      else
+        @class = "#{c_upcase}Test"
+      end
+    end
+
+    def start
+      activate_debugger
+      create_file
+    end
+
+    def activate_debugger
+      ENV['RUBY_DEBUG_CDP_SHOW_PROTOCOL'] = '1'
+
+      @scenario = []
+      req_setup_done = false
+      res_setup_done = false
+      obj_map = {}
+      Open3.popen3("#{RDBG_EXECUTABLE} --open=chrome -- #{@target_path}") {|_, _, stderr, _|
+        while data = stderr.gets
+          case data
+          when /\[\>\]\s(.*)/
+            begin
+              req = JSON.parse $1
+            rescue JSON::ParserError => e
+              $stderr.print data
+              next
+            end
+            unless req_setup_done
+              if req['method'] == 'Runtime.runIfWaitingForDebugger'
+                req_setup_done = true
+                runIfWaitingForDebugger_id = req['id']
+              end
+              next
+            end
+            case req['method']
+            when 'Runtime.getProperties'
+              o_id = req.dig('params', 'objectId')
+              req['params']['objectId'] = obj_map[o_id]
+              getProperties_id = req['id']
+            when 'Debugger.evaluateOnCallFrame'
+              expression = req.dig('params', 'expression')
+              evaluateOnCallFrame_id = req['id']
+            end
+
+            sorted_req = {'id'=> req['id']}
+            req = sorted_req.merge req
+            @scenario << format_req(req)
+          when /\[\<\]\s(.*)/
+            begin
+              res = JSON.parse $1
+            rescue JSON::ParserError => e
+              $stderr.print data
+              next
+            end
+            unless res_setup_done
+              res_setup_done = true if res['id'] && runIfWaitingForDebugger_id && res['id'] == runIfWaitingForDebugger_id
+              next
+            end
+            case res['method']
+            when 'Debugger.paused'
+              callFrames = res.dig('params', 'callFrames')
+              callFrames.each_with_index{|frame, idx|
+                frame['scopeChain'].each{|scope|
+                  o_id = scope.dig('object', 'objectId')
+                  obj_map[o_id] =  "#{idx}:#{scope['type']}"
+                }
+              }
+            end
+
+            if res.key? 'id'
+              case res['id']
+              when getProperties_id
+                result = res.dig('result', 'result')
+                result.each{|r|
+                  o_id = r.dig('value', 'objectId')
+                  v = r.dig('value', 'value')
+                  obj_map[o_id] = v
+                }
+                internalProperties = res.dig('result', 'internalProperties')
+                internalProperties.each{|p|
+                  o_id = p.dig('value', 'objectId')
+                  description = p.dig('value', 'description')
+                  obj_map[o_id] = description
+                } unless internalProperties.nil?
+              when evaluateOnCallFrame_id
+                o_id = res.dig('result', 'result', 'objectId')
+                obj_map[o_id] = expression
+              end
+              sorted_res = {'id'=> res['id']}
+              res = sorted_res.merge res
+            end
+            @scenario << format_res(res)
+          else
+            $stderr.print data
+          end
+        end
+      }
+    rescue EOFError
+    end
+
+    def format_res hash
+      protocol = JSON.pretty_generate(hash).split("\n")
+      "#{protocol[0]}\n" + protocol[1..].map{|p|
+        src = p.sub(/"(.*)":\s/) {"#{$1}: "}
+        case src
+        when /(.*(?i:i)d:\s)".+"(,?)/
+          src = "#{$1}/.+/#{$2}"
+        when /(.*(hash|description|value|origin|url):\s)".+"(,?)/
+          src = "#{$1}/.+/#{$3}"
+        end
+        "#{INDENT}#{src}"
+      }.join("\n")
+    end
+
+    def format_req hash
+      protocol = JSON.pretty_generate(hash).split("\n")
+      "#{protocol[0]}\n" + protocol[1..].map{|p|
+        src = p.sub(/"(.*)":\s/) {"#{$1}: "}
+        case src
+        when /(.*urlRegex:\s)".+"(,?)/
+          src = "#{$1}\"\#{File.realpath(temp_file_path)}|file://\#{File.realpath(temp_file_path)}\"#{$2}"
+        end
+        "#{INDENT}#{src}"
+      }.join("\n")
+    end
+
+    def format_scenario
+      first_s = "#{@scenario[0]},\n"
+      first_s + @scenario[1..].map{|s|
+        "#{INDENT}#{s}"
+      }.join(",\n")
+    end
+
+    def create_scenario
+      <<-TEST.chomp
+
+    def #{@method}
+      run_cdp_scenario PROGRAM do
+        [
+          *INITIALIZE_CDP_MSGS,
+          #{format_scenario}
+        ]
+      end
+    end
+      TEST
+    end
+
+    def create_scenario_and_program
+      <<-TEST.chomp
+
+  class #{@class}#{@current_time} < TestCase
+    PROGRAM = <<~RUBY
+      #{format_program}
+    RUBY
+    #{create_scenario}
+  end
+      TEST
+    end
+
+    def format_program
+      src = @target_src || File.read(@target_path)
+      lines = src.lines
+      indent_num = 6
+      if lines.length > 9
+        first_l = " 1| #{lines[0]}"
+        first_l + lines[1..].map.with_index{|l, i|
+          if i < 8
+            line_num_temp(indent_num + 1, i, l)
+          else
+            line_num_temp(indent_num, i, l)
+          end
+        }.join
+      else
+        first_l = "1| #{lines[0]}"
+        first_l + lines[1..].map.with_index{ |l, i| line_num_temp(indent_num, i, l) }.join
+      end
+    end
+
+    def line_num_temp(indent_num, index, line)
+      "#{' ' * indent_num}#{index + 2}| #{line}"
+    end
+
+    def create_initialized_content
+      <<~TEST
+        # frozen_string_literal: true
+
+        require_relative '../support/test_case'
+
+        module DEBUGGER__
+          #{create_scenario_and_program}
+        end
+      TEST
+    end
+
+    def make_content
+      @target_src = File.read(@target_path)
+      target = @target_src.gsub(/\r|\n|\s/, '')
+      @inserted_src.scan(/<<~RUBY(.*?)RUBY/m).each do |p|
+        return create_scenario + "\n  end" if p[0].gsub(/\r|\n|\s|\d+\|/, '') == target
+      end
+      "  end" + create_scenario_and_program
+    end
+
+    def file_name
+      @class.sub(/(?i:t)est/, '').gsub(/([[:upper:]])/) {"_#{$1.downcase}"}.delete_prefix('_')
+    end
+
+    def create_file
+      path = "#{__dir__}/../protocol/#{file_name}_test.rb"
+      if File.exist?(path)
+        @inserted_src = File.read(path)
+        content = @inserted_src.split("\n")[0..-3].join("\n") + "\n#{make_content}\nend\n" if @inserted_src.include? @class
+      end
+      if content
+        puts "appended: #{path}"
+      else
+        content = create_initialized_content
+        puts "created: #{path}"
+        puts "    class: #{@class}"
+      end
+      puts "    method: #{@method}"
+
+      File.write(path, content)
+    end
+  end
 end
