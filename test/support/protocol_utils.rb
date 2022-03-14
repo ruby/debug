@@ -236,6 +236,10 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_TEST_UI'] = 'vscode'
 
       @remote_info = setup_unix_domain_socket_remote_debuggee
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'connection...'
+      end
+
       @bps = [] # [[path, lineno, condition], ...]
       @res_backlog = []
       @queue = Queue.new

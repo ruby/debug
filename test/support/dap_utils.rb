@@ -108,6 +108,10 @@ module DEBUGGER__
 
         test_info = DAP_TestInfo.new([], [])
         remote_info = test_info.remote_info = setup_unix_domain_socket_remote_debuggee
+        Timeout.timeout(TIMEOUT_SEC) do
+          sleep 0.001 until remote_info.debuggee_backlog.join.include? 'connection...'
+        end
+
         res_log = test_info.res_backlog
         sock = nil
         target_msg = nil
