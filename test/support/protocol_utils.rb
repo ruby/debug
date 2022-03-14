@@ -268,7 +268,7 @@ module DEBUGGER__
       flunk create_protocol_message "Expected the debuggee program to finish" unless wait_pid @remote_info.pid, TIMEOUT_SEC
     ensure
       @reader_thread.kill
-      @sock.close
+      @web_sock.cleanup
       @remote_info.reader_thread.kill
       @remote_info.r.close
       @remote_info.w.close
@@ -322,7 +322,7 @@ module DEBUGGER__
         @sock.close
       when 'chrome'
         @reader_thread.raise Detach
-        @sock.close
+        @web_sock.cleanup
       end
     end
 
@@ -718,6 +718,10 @@ module DEBUGGER__
         frame << fin + opcode
 
         @sock.print frame.pack 'c*'
+      end
+
+      def cleanup
+        @sock.close
       end
     end
 
