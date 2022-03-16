@@ -7,7 +7,7 @@ return if ENV['RUBY_DEBUG_ENABLE'] == '0'
 if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
   trace_var(:$0) do |file|
     trace_var(:$0, nil)
-    if /-r (#{__dir__}\S+)/ =~ ENV['RUBYOPT']
+    if /-r (#{Regexp.escape(__dir__)}\S+)/ =~ ENV['RUBYOPT']
       lib = $1
       $LOADED_FEATURES.delete_if{|path| path.start_with?(__dir__)}
       ENV['RUBY_DEBUG_INITIAL_SUSPEND_PATH'] = file
@@ -1921,7 +1921,7 @@ module DEBUGGER__
   # nil for -r
   def self.require_location
     locs = caller_locations
-    dir_prefix = /#{__dir__}/
+    dir_prefix = /#{Regexp.escape(__dir__)}/
 
     locs.each do |loc|
       case loc.absolute_path
