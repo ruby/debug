@@ -363,7 +363,7 @@ If you don't run a debuggee Ruby process on VSCode, you can attach with VSCode l
 `rdbg --open=vscode` opens the debug port and tries to invoke the VSCode (`code` command).
 
 On windows need to use port
-`rdbg --open=vscode port 12345`
+`rdbg --open=vscode port 1234`
 
 and need to add port to launch.json file
 ```
