@@ -3,7 +3,6 @@
 require 'json'
 require 'irb/completion'
 require 'tmpdir'
-require 'json'
 require 'fileutils'
 
 module DEBUGGER__
