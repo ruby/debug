@@ -30,6 +30,18 @@ module DEBUGGER__
         prepend m
       end if SIGWINCH_SUPPORTED
 
+      def parse_input buff, commands
+        c, rest = get_command buff
+        case
+        when commands.keys.include?(c)
+          :command
+        when !rest && /\A\s*[a-z]*\z/ =~ c
+          nil
+        else
+          :ruby
+        end
+      end
+
       def readline_setup prompt
         load_history_if_not_loaded
         commands = DEBUGGER__.commands
@@ -38,7 +50,17 @@ module DEBUGGER__
         prev_output_modifier_proc = Reline.output_modifier_proc
         prev_prompt_proc = Reline.prompt_proc
 
-        Reline.prompt_proc = nil
+        # prompt state
+        state = nil # :command, :ruby, nil (unknown)
+
+        Reline.prompt_proc = -> args, *kw do
+          case state = parse_input(args.first, commands)
+          when nil, :command
+            [prompt, prompt]
+          when :ruby
+            [prompt.sub('rdbg'){colorize('ruby', [:RED])}] * 2
+          end
+        end
 
         Reline.completion_proc = -> given do
           buff = Reline.line_buffer
@@ -59,10 +81,9 @@ module DEBUGGER__
         Reline.output_modifier_proc = -> buff, **kw do
           c, rest = get_command buff
 
-          case
-          when commands.keys.include?(c = c.strip)
-            # [:DIM, :CYAN, :BLUE, :CLEAR, :UNDERLINE, :REVERSE, :RED, :GREEN, :MAGENTA, :BOLD, :YELLOW]
-            cmd = colorize(c.strip, [:CYAN, :UNDERLINE])
+          case state
+          when :command
+            cmd = colorize(c, [:CYAN, :UNDERLINE])
 
             if commands[c] == c
               rprompt = colorize("    # command", [:DIM])
@@ -70,12 +91,12 @@ module DEBUGGER__
               rprompt = colorize("    # #{commands[c]} command", [:DIM])
             end
 
-            rest = (rest ? colorize_code(rest) : '') + rprompt
-            cmd + rest
-          when !rest && /\A\s*[a-z]*\z/ =~ c
+            rest = rest ? colorize_code(rest) : ''
+            cmd + rest + rprompt
+          when nil
             buff
-          else
-            colorize_code(buff.chomp) + colorize("    # ruby", [:DIM])
+          when :ruby
+            colorize_code(buff.chomp)
           end
         end
 
@@ -90,9 +111,9 @@ module DEBUGGER__
       private def get_command line
         case line.chomp
         when /\A(\s*[a-z]+)(\s.*)?\z$/
-          return $1, $2
+          return $1.strip, $2
         else
-          line.chomp
+          line.strip
         end
       end
 
