@@ -359,6 +359,9 @@ module DEBUGGER__
     end
 
     def frame_eval_core src, b
+      saved_target_frames = @target_frames
+      saved_current_frame_index = @current_frame_index
+
       if b
         f, _l = b.source_location
 
@@ -372,6 +375,9 @@ module DEBUGGER__
           frame_self.instance_eval(src)
         end
       end
+    ensure
+      @target_frames = saved_target_frames
+      @current_frame_index = saved_current_frame_index
     end
 
     SPECIAL_LOCAL_VARS = [
