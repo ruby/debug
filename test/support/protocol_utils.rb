@@ -326,6 +326,10 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_TEST_UI'] = 'chrome'
 
       @remote_info = setup_tcpip_remote_debuggee
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.001 until @remote_info.debuggee_backlog.join.include? @remote_info.port.to_s
+      end
+
       @res_backlog = []
       @bps = [] # [b_id, ...]
       @queue = Queue.new
@@ -413,9 +417,11 @@ module DEBUGGER__
 
     def attach_to_cdp_server
       sock = Socket.tcp HOST, @remote_info.port
+
       Timeout.timeout(TIMEOUT_SEC) do
         sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Connected'
       end
+
       @web_sock = WebSocketClient.new sock
       @web_sock.handshake @remote_info.port, '/'
       @id = 1
