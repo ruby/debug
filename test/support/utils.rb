@@ -274,7 +274,7 @@ module DEBUGGER__
 
     def kill_safely pid, name, test_info
       return if wait_pid pid, 3
-      
+
       test_info.failed_process = name
 
       Process.kill :TERM, pid
