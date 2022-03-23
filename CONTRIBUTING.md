@@ -364,6 +364,14 @@ Passes if result of `expression` is equal to `expected`.
 
 Passes if `expected` is equal to the location where debugger stops.
 
+- assert_locals_result(expected)
+
+Passes if all of `expected` local variable entries match the ones returned by debugger.
+
+An variable entry looks like this: `{ name: "bar", value: "nil", type: "NilClass" }`.
+
+Please note that both `value` and `type` need to be strings.
+
 
 ## To Update README
 
