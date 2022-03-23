@@ -220,7 +220,7 @@ module DEBUGGER__
       nearest = nil # NearestISeq
 
       ObjectSpace.each_iseq{|iseq|
-        if (iseq.absolute_path || iseq.path) == self.path &&
+        if DEBUGGER__.compare_path((iseq.absolute_path || iseq.path), self.path) &&
             iseq.first_lineno <= self.line &&
             iseq.type != :ensure # ensure iseq is copied (duplicated)
 
