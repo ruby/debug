@@ -1582,7 +1582,7 @@ module DEBUGGER__
       end
 
       pending_line_breakpoints.each do |_key, bp|
-        if bp.path == (iseq.absolute_path || iseq.path)
+        if DEBUGGER__.compare_path(bp.path, (iseq.absolute_path || iseq.path))
           bp.try_activate
         end
       end
@@ -2105,6 +2105,20 @@ module DEBUGGER__
     end
 
     yield
+  end
+
+  if File.identical?(__FILE__.upcase, __FILE__.downcase)
+    # For case insensitive file system (like Windows)
+    # Note that this check is not enough because case sensitive/insensitive is
+    # depend on the file system. So this check is only roughly estimation.
+
+    def self.compare_path(a, b)
+      a.downcase == b.downcase
+    end
+  else
+    def self.compare_path(a, b)
+      a == b
+    end
   end
 
   module ForkInterceptor
