@@ -717,8 +717,7 @@ module DEBUGGER__
             case expr
             when /\A\@\S/
               begin
-                (r = b.receiver).instance_variable_defined?(expr) or raise(NameError)
-                result = r.instance_variable_get(expr)
+                result = b.receiver.instance_variable_get(expr)
               rescue NameError
                 message = "Error: Not defined instance variable: #{expr.inspect}"
               end
@@ -735,8 +734,6 @@ module DEBUGGER__
               end
             else
               begin
-                # try to check local variables
-                b.local_variable_defined?(expr) or raise NameError
                 result = b.local_variable_get(expr)
               rescue NameError
                 # try to check method
