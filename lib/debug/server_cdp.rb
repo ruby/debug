@@ -1048,7 +1048,7 @@ module DEBUGGER__
         v = prop[:value]
         v.delete :value
         v[:subtype] = subtype if subtype
-        v[:className] = obj.class
+        v[:className] = obj.class.inspect
       end
       prop
     end
