@@ -1370,6 +1370,14 @@ module DEBUGGER__
       @ui.puts e.message
     end
 
+    def clear_line_breakpoints file
+      @bps.delete_if do |k, bp|
+        if (Array === k) && DEBUGGER__.compare_path(k.first, file)
+          bp.delete
+        end
+      end
+    end
+
     def add_iseq_breakpoint iseq, **kw
       bp = ISeqBreakpoint.new(iseq, [:line], **kw)
       add_bp bp

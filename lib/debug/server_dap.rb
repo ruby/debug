@@ -217,9 +217,10 @@ module DEBUGGER__
           @is_attach = true
         when 'setBreakpoints'
           path = args.dig('source', 'path')
-          bp_args = args['breakpoints']
+          SESSION.clear_line_breakpoints path
+
           bps = []
-          bp_args.each{|bp|
+          args['breakpoints'].each{|bp|
             line = bp['line']
             if cond = bp['condition']
               bps << SESSION.add_line_breakpoint(path, line, cond: cond)
