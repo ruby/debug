@@ -886,7 +886,7 @@ module DEBUGGER__
             begin
               orig_stdout = $stdout
               $stdout = StringIO.new
-              result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
+              result = frame_eval_core(expr.to_s, current_frame.eval_binding)
             rescue Exception => e
               result = e
               b = result.backtrace.map{|e| "    #{e}\n"}

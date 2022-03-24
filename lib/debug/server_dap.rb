@@ -699,8 +699,7 @@ module DEBUGGER__
         frame = get_frame(fid)
         message = nil
 
-        if frame && (b = frame.binding)
-          b = b.dup
+        if frame && (b = frame.eval_binding)
           special_local_variables current_frame do |name, var|
             b.local_variable_set(name, var) if /\%/ !~ name
           end
@@ -708,7 +707,7 @@ module DEBUGGER__
           case context
           when 'repl', 'watch'
             begin
-              result = b.eval(expr.to_s, '(DEBUG CONSOLE)')
+              result = frame_eval_core(expr, b)
             rescue Exception => e
               result = e
             end
