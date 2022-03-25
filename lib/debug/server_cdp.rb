@@ -870,8 +870,6 @@ module DEBUGGER__
               end
             else
               begin
-                # try to check local variables
-                b.local_variable_defined?(expr) or raise NameError
                 result = b.local_variable_get(expr)
               rescue NameError
                 # try to check method
