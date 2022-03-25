@@ -769,10 +769,8 @@ module DEBUGGER__
           end
 
           begin
-            if b&.local_variable_defined?(w)
-              v = b.local_variable_get(w)
-              phrase += " (variable:#{DEBUGGER__.safe_inspect(v)})"
-            end
+            v = b.local_variable_get(w)
+            phrase += " (variable:#{DEBUGGER__.safe_inspect(v)})"
           rescue NameError
           end
 
