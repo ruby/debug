@@ -213,7 +213,7 @@ module DEBUGGER__
           @is_attach = false
         when 'attach'
           send_response req
-          Process.kill(:SIGURG, Process.pid)
+          Process.kill(UI_ServerBase::TRAP_SIGNAL, Process.pid)
           @is_attach = true
         when 'setBreakpoints'
           path = args.dig('source', 'path')
@@ -313,7 +313,7 @@ module DEBUGGER__
           exit
         when 'pause'
           send_response req
-          Process.kill(:SIGURG, Process.pid)
+          Process.kill(UI_ServerBase::TRAP_SIGNAL, Process.pid)
         when 'reverseContinue'
           send_response req,
                         success: false, message: 'cancelled',
