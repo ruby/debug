@@ -83,8 +83,8 @@ module DEBUGGER__
 
     include Color
 
-    def initialize ui
-      @ui = ui
+    def initialize
+      @ui = nil
       @sr = SourceRepository.new
       @bps = {} # bp.key => bp
                 #   [file, line] => LineBreakpoint
@@ -121,9 +121,6 @@ module DEBUGGER__
       @tp_load_script.enable
 
       @thread_stopper = thread_stopper
-
-      activate
-
       self.postmortem = CONFIG[:postmortem]
     end
 
@@ -135,7 +132,9 @@ module DEBUGGER__
       @bps.has_key? [file, line]
     end
 
-    def activate on_fork: false
+    def activate ui = nil, on_fork: false
+      @ui = ui if ui
+
       @tp_thread_begin&.disable
       @tp_thread_begin = nil
 
@@ -1949,7 +1948,7 @@ module DEBUGGER__
 
     unless defined? SESSION
       require_relative 'local'
-      initialize_session UI_LocalConsole.new
+      initialize_session{ UI_LocalConsole.new }
     end
 
     setup_initial_suspend unless nonstop
@@ -1972,7 +1971,7 @@ module DEBUGGER__
     if defined? SESSION
       SESSION.reset_ui UI_TcpServer.new(host: host, port: port)
     else
-      initialize_session UI_TcpServer.new(host: host, port: port)
+      initialize_session{ UI_TcpServer.new(host: host, port: port) }
     end
 
     setup_initial_suspend unless nonstop
@@ -1985,7 +1984,7 @@ module DEBUGGER__
     if defined? SESSION
       SESSION.reset_ui UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
     else
-      initialize_session UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
+      initialize_session{ UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path) }
     end
 
     setup_initial_suspend unless nonstop
@@ -2012,9 +2011,10 @@ module DEBUGGER__
   end
 
   class << self
-    define_method :initialize_session do |ui|
+    define_method :initialize_session do |&init_ui|
       DEBUGGER__.info "Session start (pid: #{Process.pid})"
-      ::DEBUGGER__.const_set(:SESSION, Session.new(ui))
+      ::DEBUGGER__.const_set(:SESSION, Session.new)
+      SESSION.activate init_ui.call
       load_rc
     end
   end
