@@ -845,9 +845,8 @@ module DEBUGGER__
         frame = @target_frames[fid]
         message = nil
 
-        if frame && (b = frame.binding)
-          b = b.dup
-          special_local_variables current_frame do |name, var|
+        if frame && (b = frame.eval_binding)
+          special_local_variables frame do |name, var|
             b.local_variable_set(name, var) if /\%/ !~name
           end
 
