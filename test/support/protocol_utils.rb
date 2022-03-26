@@ -553,6 +553,15 @@ module DEBUGGER__
       class ValidationError < Exception
       end
 
+      JSON_TYPE_TO_CLASS_MAPS = {
+        'string' => String,
+        'integer' => Integer,
+        'boolean' => [TrueClass, FalseClass],
+        'object' => Hash,
+        'array' => Array,
+        'any' => Object
+      }
+
       def validate res, domain, command
         @seen = []
         pattern = get_cmd_pattern(domain, command)
@@ -567,32 +576,15 @@ module DEBUGGER__
         props.each{|prop|
           name = prop[:name].to_sym
           if property = res[name]
-            types = get_ruby_type prop[:type]
-            types.each{|type|
-              raise ValidationError, "Expected #{property} to be kind of #{types.join}" unless property.is_a? type
-            }
+            cs = Array JSON_TYPE_TO_CLASS_MAPS[prop[:type]]
+            unless cs.any?{|c| property.is_a? c}
+              raise ValidationError, "Expected property `#{name}` to be kind of #{cs.join}, but it was #{property.class}"
+            end
             validate_ property, prop[:properties]
           else
             raise ValidationError, "Expected to include `#{name}` in responses" unless prop.fetch(:optional, false)
           end
         }
-      end
-
-      def get_ruby_type type
-        case type
-        when 'string'
-          [String]
-        when 'integer'
-          [Integer]
-        when 'boolean'
-          [TrueClass, FalseClass]
-        when 'object'
-          [Hash]
-        when 'array'
-          [Array]
-        when 'any'
-          [Object]
-        end
       end
 
       def get_cmd_pattern domain, command
