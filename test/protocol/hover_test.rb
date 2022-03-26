@@ -17,9 +17,9 @@ module DEBUGGER__
       run_protocol_scenario PROGRAM do
         req_add_breakpoint 4
         req_continue
-        assert_hover_result 2, expression: 'b'
-        assert_hover_result 3, expression: 'c'
-        assert_hover_result 1, expression: 'a'
+        assert_hover_result({value: '2', type: 'Integer'}, 'b')
+        assert_hover_result({value: '3', type: 'Integer'}, 'c')
+        assert_hover_result({value: '1', type: 'Integer'}, 'a')
         req_terminate_debuggee
       end
     end
@@ -32,8 +32,7 @@ module DEBUGGER__
     
     def test_hover_returns_method_info
       run_protocol_scenario PROGRAM do
-        b = TOPLEVEL_BINDING.dup
-        assert_hover_result b.eval('self').method(:p), expression: 'p'
+        assert_hover_result({value: /\#<Method:\s.*p.*/, type: 'Method'}, 'p')
         req_terminate_debuggee
       end
     end
@@ -79,13 +78,13 @@ module DEBUGGER__
       run_protocol_scenario PROGRAM do
         req_add_breakpoint 31
         req_continue
-        assert_hover_result Object.const_set('Abc', Module.new), expression: 'Abc'
-        assert_hover_result Abc.const_set('Def123', Class.new), expression: 'Abc::Def123'
-        assert_hover_result Abc::Def123.const_set('Ghi', Class.new), expression: 'Abc::Def123::Ghi'
-        assert_hover_result Abc::Def123::Ghi, expression: 'Abc::Def123::Ghi.new'
-        assert_hover_result Abc, expression: '::Abc.foo'
-        assert_hover_result Abc::Def123, expression: '::Abc::Def123'
-        assert_hover_result Abc::Def123, expression: '::Abc::Def123.bar'
+        assert_hover_result({value: 'Abc', type: 'Module'}, 'Abc')
+        assert_hover_result({value: 'Abc::Def123', type: 'Class'}, 'Abc::Def123')
+        assert_hover_result({value: 'Abc::Def123::Ghi', type: 'Class'}, 'Abc::Def123::Ghi')
+        assert_hover_result({value: 'Abc::Def123::Ghi', type: 'Class'}, 'Abc::Def123::Ghi.new')
+        assert_hover_result({value: 'Abc', type: 'Module'}, '::Abc.foo')
+        assert_hover_result({value: 'Abc::Def123', type: 'Class'}, '::Abc::Def123')
+        assert_hover_result({value: 'Abc::Def123', type: 'Class'}, '::Abc::Def123.bar')
         req_terminate_debuggee
       end
     end

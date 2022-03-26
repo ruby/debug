@@ -250,7 +250,7 @@ module DEBUGGER__
       end
     end
 
-    def assert_hover_result expected,  expression: nil, frame_idx: 0
+    def assert_hover_result expected, expression, frame_idx: 0
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
         assert_eval_result 'hover', expression, expected, frame_idx
@@ -259,7 +259,7 @@ module DEBUGGER__
       end
     end
 
-    def assert_repl_result expected,  expression: nil, frame_idx: 0
+    def assert_repl_result expected,  expression, frame_idx: 0
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
         assert_eval_result 'repl', expression, expected, frame_idx
@@ -268,7 +268,7 @@ module DEBUGGER__
       end
     end
 
-    def assert_watch_result expected,  expression: nil, frame_idx: 0
+    def assert_watch_result expected,  expression, frame_idx: 0
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
         assert_eval_result 'watch', expression, expected, frame_idx
@@ -416,6 +416,13 @@ module DEBUGGER__
       @crt_frames = res.dig(:params, :callFrames)
     end
 
+    JAVASCRIPT_TYPE_TO_CLASS_MAPS = {
+      'string' => String,
+      'number' => Integer,
+      'boolean' => [TrueClass, FalseClass],
+      'symbol' => Symbol
+    }
+
     def assert_eval_result context, expression, expected, frame_idx
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
@@ -430,17 +437,19 @@ module DEBUGGER__
                       context: context
 
         failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
-        if expected.is_a? String
-          expected_val = expected
-        else
-          expected_val = expected.inspect
+        if expected[:type] == 'String'
+          expected[:value] = expected[:value].inspect
         end
-        result_val = res.dig(:body, :result)
-        assert_equal expected_val, result_val, failure_msg
 
-        expected_type = expected.class.inspect
         result_type = res.dig(:body, :type)
-        assert_equal expected_type, result_type, failure_msg
+        assert_equal expected[:type], result_type, failure_msg
+
+        result_val = res.dig(:body, :result)
+        if expected[:value].is_a? Regexp
+          assert_match expected[:value], result_val, failure_msg
+        else
+          assert_equal expected[:value], result_val, failure_msg
+        end
       when 'chrome'
         f_id = @crt_frames.dig(frame_idx, :callFrameId)
         res = send_cdp_request 'Debugger.evaluateOnCallFrame',
@@ -449,35 +458,17 @@ module DEBUGGER__
                       objectGroup: context
 
         failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
-        if expected.is_a? String
-          expected_val = expected
-        else
-          expected_val = expected.inspect
-        end
+
+        cl = res.dig(:result, :result, :className) || JAVASCRIPT_TYPE_TO_CLASS_MAPS[res.dig(:result, :result, :type)].inspect
+        result_type = Array cl
+        assert_include result_type, expected[:type], failure_msg
+
         result_val = res.dig(:result, :result, :description)
-        assert_equal expected_val, result_val, failure_msg
-
-        expected_type = get_expected_type expected
-        result_type = res.dig(:result, :result, :type)
-        if result_type == 'object'
-          result_type = res.dig(:result, :result, :className)
+        if expected[:value].is_a? Regexp
+          assert_match expected[:value], result_val, failure_msg
+        else
+          assert_equal expected[:value], result_val, failure_msg
         end
-        assert_equal expected_type, result_type, failure_msg
-      end
-    end
-
-    def get_expected_type obj
-      case obj
-      when String
-        'string'
-      when TrueClass, FalseClass
-        'boolean'
-      when Symbol
-        'symbol'
-      when Integer, Float
-        'number'
-      else
-        obj.class.inspect
       end
     end
 

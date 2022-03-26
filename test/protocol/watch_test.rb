@@ -17,11 +17,11 @@ module DEBUGGER__
     def test_watch_matches_with_stopped_place
       run_protocol_scenario PROGRAM do
         req_next
-        assert_watch_result 2, expression: 'a'
+        assert_watch_result({value: '2', type: 'Integer'}, 'a')
         req_next
-        assert_watch_result 3, expression: 'a'
+        assert_watch_result({value: '3', type: 'Integer'}, 'a')
         req_next
-        assert_watch_result 4, expression: 'a'
+        assert_watch_result({value: '4', type: 'Integer'}, 'a')
         req_terminate_debuggee
       end
     end
