@@ -381,17 +381,35 @@ Sends request to rdbg to terminate the debuggee.
 
 Passes if reattaching to rdbg is successful.
 
-- assert_hover_result(expected, expression: nil)
+- assert_hover_result(expected, expression)
 
-Passes if result of `expression` is equal to `expected`.
+Passes if result of `expression` matches `expected`.
 
-- assert_repl_result(expected, expression: nil)
+`expected` need to be a Hash object as follows:
 
-Passes if result of `expression` is equal to `expected`.
+`assert_hover_result({value: '2', type: 'Integer'}, 'a')`
 
-- assert_watch_result(expected, expression: nil)
+NOTE: `value` and `type` need to be strings.
 
-Passes if result of `expression` is equal to `expected`.
+- assert_repl_result(expected, expression)
+
+Passes if result of `expression` matches `expected`.
+
+`expected` need to be a Hash object as follows:
+
+`assert_repl_result({value: '2', type: 'Integer'}, 'a')`
+
+NOTE: `value` and `type` need to be strings.
+
+- assert_watch_result(expected, expression)
+
+Passes if result of `expression` matches `expected`.
+
+`expected` need to be a Hash object as follows:
+
+`assert_watch_result({value: '2', type: 'Integer'}, 'a')`
+
+NOTE: `value` and `type` need to be strings.
 
 - assert_line_num(expected)
 
