@@ -252,7 +252,20 @@ module DEBUGGER__
 
       failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
 
-      assert_equal(expected.sort_by { |h| h[:name] }, actual_locals.sort_by { |h| h[:name] }, failure_msg)
+      actual_locals = actual_locals.sort_by { |h| h[:name] }
+      expected = expected.sort_by { |h| h[:name] }
+
+      expected.each_with_index do |expect, index|
+        actual = actual_locals[index]
+        assert_equal(expect[:name], actual[:name], failure_msg)
+        assert_equal(expect[:type], actual[:type], failure_msg)
+
+        if expect[:value].is_a?(Regexp)
+          assert_match(expect[:value], actual[:value], failure_msg)
+        else
+          assert_equal(expect[:value], actual[:value], failure_msg)
+        end
+      end
     end
 
     def assert_hover_result expected,  expression: nil, frame_idx: 0

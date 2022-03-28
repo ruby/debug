@@ -29,14 +29,14 @@ module DEBUGGER__
           ]
         )
 
-        req_add_breakpoint 8
+        req_add_breakpoint 9
         req_continue
-        assert_line_num 8
+        assert_line_num 9
 
         assert_locals_result(
           [
             { name: "%self", value: "Foo", type: "Module" },
-            { name: "bar", value: "nil", type: "NilClass" }
+            { name: "bar", value: /#<Foo::Bar/, type: "Foo::Bar" }
           ]
         )
         req_terminate_debuggee
