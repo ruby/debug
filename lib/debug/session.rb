@@ -1369,9 +1369,10 @@ module DEBUGGER__
       @ui.puts e.message
     end
 
-    def clear_line_breakpoints file
+    def clear_line_breakpoints path
+      path = resolve_path(path)
       @bps.delete_if do |k, bp|
-        if (Array === k) && DEBUGGER__.compare_path(k.first, file)
+        if (Array === k) && DEBUGGER__.compare_path(k.first, path)
           bp.delete
         end
       end
