@@ -341,6 +341,8 @@ module DEBUGGER__
           raise "Unknown request: #{req.inspect}"
         end
       end
+    ensure
+      send_event :terminated unless @sock.closed?
     end
 
     ## called by the SESSION thread
