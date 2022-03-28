@@ -18,6 +18,10 @@ module DEBUGGER__
         case name
         when 'gen-sockpath'
           puts DEBUGGER__.create_unix_domain_socket_name
+        when 'gen-portpath'
+          port_path = File.join(DEBUGGER__.unix_domain_socket_dir, 'tcp_port')
+          File.unlink port_path if File.exist?(port_path)
+          puts port_path
         when 'list-socks'
           cleanup_unix_domain_sockets
           puts list_connections
@@ -76,7 +80,7 @@ module DEBUGGER__
 
       def cleanup_unix_domain_sockets
         Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*') do |file|
-          if /-(\d+)-\d+$/ =~ file || /-(\d+)$/ =~ file
+          if File.socket?(file) && (/-(\d+)-\d+$/ =~ file || /-(\d+)$/ =~ file)
             begin
               Process.kill(0, $1.to_i)
             rescue Errno::EPERM
@@ -88,7 +92,9 @@ module DEBUGGER__
       end
 
       def list_connections
-        Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*')
+        Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*').find_all do |path|
+          File.socket?(path)
+        end
       end
     end
 

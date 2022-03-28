@@ -350,12 +350,17 @@ module DEBUGGER__
     def initialize host: nil, port: nil
       @addr = nil
       @host = host || CONFIG[:host] || '127.0.0.1'
-      @port = port || begin
-        port_str = CONFIG[:port] || raise("Specify listening port by RUBY_DEBUG_PORT environment variable.")
-        if /\A\d+\z/ !~ port_str
-          raise "Specify digits for port number"
-        else
+      @port_save_file = nil
+      @port = begin
+        port_str = (port && port.to_s) || CONFIG[:port] || raise("Specify listening port by RUBY_DEBUG_PORT environment variable.")
+        case port_str
+        when /\A\d+\z/
           port_str.to_i
+        when /\A(\d+):(.+)\z/
+          @port_save_file = $2
+          $1.to_i
+        else
+          raise "Specify digits for port number"
         end
       end
 
@@ -383,8 +388,13 @@ module DEBUGGER__
         Socket.tcp_server_sockets @host, @port do |socks|
           @addr = socks[0].local_address.inspect_sockaddr # Change this part if `socks` are multiple.
           rdbg = File.expand_path('../../exe/rdbg', __dir__)
-
           DEBUGGER__.warn "Debugger can attach via TCP/IP (#{@addr})"
+
+          if @port_save_file
+            File.write(@port_save_file, "#{socks[0].local_address.ip_port.to_s}\n")
+            DEBUGGER__.warn "Port is saved into #{@port_save_file}"
+          end
+
           DEBUGGER__.info <<~EOS
           With rdbg, use the following command line:
           #
@@ -416,6 +426,10 @@ module DEBUGGER__
       end
     ensure
       @sock_for_fork = nil
+
+      if @port_save_file && File.exist?(@port_save_file)
+        File.unlink(@port_save_file)
+      end
     end
   end
 
