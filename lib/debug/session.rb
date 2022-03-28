@@ -975,7 +975,7 @@ module DEBUGGER__
       when 'open'
         case arg&.downcase
         when '', nil
-          repl_open_unix
+          repl_open
         when 'vscode'
           repl_open_vscode
         when /\A(.+):(\d+)\z/
@@ -1048,14 +1048,14 @@ module DEBUGGER__
       repl_open_setup
     end
 
-    def repl_open_unix
-      DEBUGGER__.open_unix nonstop: true
+    def repl_open
+      DEBUGGER__.open nonstop: true
       repl_open_setup
     end
 
     def repl_open_vscode
       CONFIG[:open_frontend] = 'vscode'
-      repl_open_unix
+      repl_open
     end
 
     def step_command type, arg
@@ -1957,8 +1957,9 @@ module DEBUGGER__
 
   def self.open host: nil, port: CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false, **kw
     CONFIG.set_config(**kw)
+    require_relative 'server'
 
-    if port || CONFIG[:open_frontend] == 'chrome'
+    if port || CONFIG[:open_frontend] == 'chrome' || (!::Addrinfo.respond_to?(:unix))
       open_tcp host: host, port: (port || 0), nonstop: nonstop
     else
       open_unix sock_path: sock_path, sock_dir: sock_dir, nonstop: nonstop

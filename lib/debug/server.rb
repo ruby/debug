@@ -344,6 +344,11 @@ module DEBUGGER__
     def after_fork_parent
       # do nothing
     end
+
+    def vscode_setup debug_port
+      require_relative 'server_dap'
+      UI_DAP.setup debug_port
+    end
   end
 
   class UI_TcpServer < UI_ServerBase
@@ -402,7 +407,12 @@ module DEBUGGER__
           #
           EOS
 
-          chrome_setup if CONFIG[:open_frontend] == 'chrome'
+          case CONFIG[:open_frontend]
+          when 'chrome'
+            chrome_setup
+          when 'vscode'
+            vscode_setup @addr
+          end
 
           Socket.accept_loop(socks) do |sock, client|
             @client_addr = client
@@ -442,11 +452,6 @@ module DEBUGGER__
       super()
     end
 
-    def vscode_setup
-      require_relative 'server_dap'
-      UI_DAP.setup @sock_path
-    end
-
     def accept
       super # for fork
 
@@ -459,7 +464,7 @@ module DEBUGGER__
       end
 
       ::DEBUGGER__.warn "Debugger can attach via UNIX domain socket (#{@sock_path})"
-      vscode_setup if CONFIG[:open_frontend] == 'vscode'
+      vscode_setup @sock_path if CONFIG[:open_frontend] == 'vscode'
 
       begin
         Socket.unix_server_loop @sock_path do |sock, client|
