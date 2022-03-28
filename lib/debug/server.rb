@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'socket'
+require 'etc'
 require_relative 'config'
 require_relative 'version'
 
@@ -107,6 +108,14 @@ module DEBUGGER__
 
     def greeting
       case g = @sock.gets
+      when /^info cookie:\s+(.*)$/
+        check_cookie $1
+        @sock.puts "PID: #{Process.pid}, $0: #{$0}"
+        @sock.puts "debug #{VERSION} on #{RUBY_DESCRIPTION}"
+        @sock.puts "uname: #{Etc.uname.inspect}"
+        @sock.close
+        raise GreetingError, "HEAD request"
+
       when /^version:\s+(.+)\s+width: (\d+) cookie:\s+(.*)$/
         v, w, c = $1, $2, $3
         # TODO: protocol version
