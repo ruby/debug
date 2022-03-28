@@ -19,8 +19,8 @@ module DEBUGGER__
       @session = nil
     end
 
-    class Terminate < StandardError
-    end
+    class Terminate < StandardError; end
+    class GreetingError < StandardError; end
 
     def deactivate
       @reader_thread.raise Terminate
@@ -47,10 +47,12 @@ module DEBUGGER__
 
         accept do |server, already_connected: false|
           DEBUGGER__.warn "Connected."
+          greeting_done = false
 
           @accept_m.synchronize{
             @sock = server
             greeting
+            greeting_done = true
 
             @accept_cv.signal
 
@@ -69,13 +71,17 @@ module DEBUGGER__
             process
           end
 
+        rescue GreetingError => e
+          DEBUGGER__.warn "GreetingError: #{e.message}"
+          next
         rescue Terminate
           raise # should catch at outer scope
         rescue => e
           DEBUGGER__.warn "ReaderThreadError: #{e}"
           pp e.backtrace
         ensure
-          cleanup_reader
+          DEBUGGER__.warn "Disconnected."
+          cleanup_reader if greeting_done
         end # accept
 
       rescue Terminate
@@ -84,12 +90,19 @@ module DEBUGGER__
     end
 
     def cleanup_reader
-      DEBUGGER__.warn "Disconnected."
+      @sock.close if @sock
       @sock = nil
       @q_msg.close
       @q_msg = nil
       @q_ans.close
       @q_ans = nil
+    end
+
+    def check_cookie c
+      cookie = CONFIG[:cookie]
+      if cookie && cookie != c
+        raise GreetingError, "Cookie mismatch (#{$2.inspect} was sent)"
+      end
     end
 
     def greeting
@@ -98,13 +111,10 @@ module DEBUGGER__
         v, w, c = $1, $2, $3
         # TODO: protocol version
         if v != VERSION
-          raise "Incompatible version (#{VERSION} client:#{$1})"
+          raise GreetingError, "Incompatible version (server:#{VERSION} and client:#{$1})"
         end
 
-        cookie = CONFIG[:cookie]
-        if cookie && cookie != c
-          raise "Cookie mismatch (#{$2.inspect} was sent)"
-        end
+        check_cookie c
 
         @width = w.to_i
 
@@ -125,7 +135,7 @@ module DEBUGGER__
         @ws_server = UI_CDP::WebSocketServer.new(@sock)
         @ws_server.handshake
       else
-        raise "Greeting message error: #{g}"
+        raise GreetingError, "Unknown greeting message: #{g}"
       end
     end
 
