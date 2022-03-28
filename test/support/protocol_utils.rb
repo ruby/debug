@@ -57,13 +57,13 @@ module DEBUGGER__
       when 'chrome'
         escaped = Regexp.escape File.realpath path
         regexp = "#{escaped}|file://#{escaped}"
-        @bps << "1:#{lineno}:#{regexp}"
         send_request 'Debugger.setBreakpointByUrl',
                       lineNumber: lineno - 1,
                       urlRegex: regexp,
                       columnNumber: 0,
                       condition: cond
         res = find_crt_cdp_response
+        @bps << res.dig(:result, :breakpointId)
         assert_cdp_response 'Debugger.setBreakpointByUrl', res
       end
     end
