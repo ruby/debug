@@ -2131,9 +2131,49 @@ module DEBUGGER__
   end
 
   module ForkInterceptor
-    def fork(&given_block)
-      return super unless defined?(SESSION) && SESSION.active?
+    if Process.respond_to? :_fork
+      def _fork
+        return yield unless defined?(SESSION) && SESSION.active?
 
+        parent_hook, child_hook = __fork_setup_for_debugger
+
+        super.tap do |pid|
+          if pid != 0
+            # after fork: parent
+            parent_hook.call pid
+          else
+            # after fork: child
+            child_hook.call
+          end
+        end
+      end
+    else
+      def fork(&given_block)
+        return yield unless defined?(SESSION) && SESSION.active?
+        parent_hook, child_hook = __fork_setup_for_debugger
+
+        if given_block
+          new_block = proc {
+            # after fork: child
+            child_hook.call
+            given_block.call
+          }
+          super(&new_block).tap{|pid| parent_hook.call(pid)}
+        else
+          super.tap do |pid|
+            if pid
+              # after fork: parent
+              parent_hook.call pid
+            else
+              # after fork: child
+              child_hook.call
+            end
+          end
+        end
+      end
+    end
+
+    private def __fork_setup_for_debugger
       unless fork_mode = CONFIG[:fork_mode]
         if CONFIG[:parent_on_fork]
           fork_mode = :parent
@@ -2180,26 +2220,7 @@ module DEBUGGER__
         }
       end
 
-      if given_block
-        new_block = proc {
-          # after fork: child
-          child_hook.call
-          given_block.call
-        }
-        pid = super(&new_block)
-        parent_hook.call(pid)
-        pid
-      else
-        if pid = super
-          # after fork: parent
-          parent_hook.call pid
-        else
-          # after fork: child
-          child_hook.call
-        end
-
-        pid
-      end
+      return parent_hook, child_hook
     end
   end
 
@@ -2216,28 +2237,46 @@ module DEBUGGER__
     end
   end
 
-  if RUBY_VERSION >= '3.0.0'
+  if Process.respond_to? :_fork
+    module ::Process
+      class << self
+        prepend ForkInterceptor
+      end
+    end
+
+    # trap
     module ::Kernel
-      prepend ForkInterceptor
       prepend TrapInterceptor
+    end
+    module ::Signal
+      class << self
+        prepend TrapInterceptor
+      end
     end
   else
-    class ::Object
-      include ForkInterceptor
-      include TrapInterceptor
+    if RUBY_VERSION >= '3.0.0'
+      module ::Kernel
+        prepend ForkInterceptor
+        prepend TrapInterceptor
+      end
+    else
+      class ::Object
+        include ForkInterceptor
+        include TrapInterceptor
+      end
     end
-  end
 
-  module ::Kernel
-    class << self
-      prepend ForkInterceptor
-      prepend TrapInterceptor
+    module ::Kernel
+      class << self
+        prepend ForkInterceptor
+        prepend TrapInterceptor
+      end
     end
-  end
 
-  module ::Process
-    class << self
-      prepend ForkInterceptor
+    module ::Process
+      class << self
+        prepend ForkInterceptor
+      end
     end
   end
 

@@ -514,7 +514,7 @@ module DEBUGGER__
                   value: /JSON::Ext::Generator::GeneratorMethods::Integer/,
                   type: "Array",
                   variablesReference: 19,
-                  indexedVariables: 10,
+                  indexedVariables: /(9|10)/,
                   namedVariables: /\d+/
                 }
               ]
@@ -550,7 +550,7 @@ module DEBUGGER__
                   value: /Module/,
                   type: "Array",
                   variablesReference: 21,
-                  indexedVariables: 8,
+                  indexedVariables: /(7|8)/,
                   namedVariables: /\d+/
                 }
               ]
@@ -1347,7 +1347,7 @@ module DEBUGGER__
                   value: /Object/,
                   type: "Array",
                   variablesReference: 12,
-                  indexedVariables: 7,
+                  indexedVariables: /(6|7)/,
                   namedVariables: /\d+/
                 }
               ]
@@ -1469,7 +1469,7 @@ module DEBUGGER__
                   value: /Object/,
                   type: "Array",
                   variablesReference: 17,
-                  indexedVariables: 7,
+                  indexedVariables: /(6|7)/,
                   namedVariables: /\d+/
                 }
               ]
@@ -1530,7 +1530,7 @@ module DEBUGGER__
                   value: /Object/,
                   type: "Array",
                   variablesReference: 20,
-                  indexedVariables: 7,
+                  indexedVariables: /(6|7)/,
                   namedVariables: /\d+/
                 }
               ]
@@ -1591,7 +1591,7 @@ module DEBUGGER__
                   value: /Object/,
                   type: "Array",
                   variablesReference: 23,
-                  indexedVariables: 7,
+                  indexedVariables: /(6|7)/,
                   namedVariables: /\d+/
                 }
               ]
@@ -1713,7 +1713,7 @@ module DEBUGGER__
                   value: /Object/,
                   type: "Array",
                   variablesReference: 28,
-                  indexedVariables: 7,
+                  indexedVariables: /(6|7)/,
                   namedVariables: /\d+/
                 }
               ]
@@ -1774,7 +1774,7 @@ module DEBUGGER__
                   value: /Object/,
                   type: "Array",
                   variablesReference: 31,
-                  indexedVariables: 7,
+                  indexedVariables: /(6|7)/,
                   namedVariables: /\d+/
                 }
               ]
