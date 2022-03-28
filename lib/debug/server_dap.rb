@@ -9,7 +9,7 @@ module DEBUGGER__
   module UI_DAP
     SHOW_PROTOCOL = ENV['DEBUG_DAP_SHOW_PROTOCOL'] == '1' || ENV['RUBY_DEBUG_DAP_SHOW_PROTOCOL'] == '1'
 
-    def self.setup sock_path
+    def self.setup debug_port
       dir = Dir.mktmpdir("ruby-debug-vscode-")
       at_exit{
         CONFIG[:skip_path] = [//] # skip all
@@ -34,7 +34,7 @@ module DEBUGGER__
               name: "Attach with rdbg",
               request: "attach",
               rdbgPath: File.expand_path('../../exe/rdbg', __dir__),
-              debugPort: sock_path,
+              debugPort: debug_port,
               autoAttach: true,
             }
             ]
