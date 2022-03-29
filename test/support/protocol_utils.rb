@@ -89,10 +89,7 @@ module DEBUGGER__
     def req_continue
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'continue',
-                      threadId: 1
-        res = find_crt_dap_response
-        assert_dap_response :ContinueResponse, res
+        send_dap_request 'continue', threadId: 1
       when 'chrome'
         send_request 'Debugger.resume'
         res = find_crt_cdp_response
@@ -105,10 +102,7 @@ module DEBUGGER__
     def req_step
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'stepIn',
-                      threadId: 1
-        res = find_crt_dap_response
-        assert_dap_response :StepInResponse, res
+        send_dap_request 'stepIn', threadId: 1
       when 'chrome'
         send_request 'Debugger.stepInto'
         res = find_crt_cdp_response
@@ -121,10 +115,7 @@ module DEBUGGER__
     def req_next
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'next',
-                      threadId: 1
-        res = find_crt_dap_response
-        assert_dap_response :NextResponse, res
+        send_dap_request 'next', threadId: 1
       when 'chrome'
         send_request 'Debugger.stepOver'
         res = find_crt_cdp_response
@@ -137,10 +128,7 @@ module DEBUGGER__
     def req_finish
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'stepOut',
-                      threadId: 1
-        res = find_crt_dap_response
-        assert_dap_response :StepOutResponse, res
+        send_dap_request 'stepOut', threadId: 1
       when 'chrome'
         send_request 'Debugger.stepOut'
         res = find_crt_cdp_response
@@ -153,15 +141,13 @@ module DEBUGGER__
     def req_set_exception_breakpoints
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'setExceptionBreakpoints',
+        send_dap_request 'setExceptionBreakpoints',
                       filters: [],
                       filterOptions: [
                         {
                           filterId: 'RuntimeError'
                         }
                       ]
-        res = find_crt_dap_response
-        assert_dap_response :SetExceptionBreakpointsResponse, res
       when 'chrome'
         send_request 'Debugger.setPauseOnExceptions',
                       state: 'all'
@@ -173,18 +159,14 @@ module DEBUGGER__
     def req_step_back
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'stepBack',
-                      threadId: 1
-        # TODO: Return the response for "stepBack"
-        # res = find_crt_dap_response
-        # assert_dap_response :StepBackResponse, res
+        send_dap_request 'stepBack', threadId: 1
       end
     end
 
     def req_terminate_debuggee
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'terminate'
+        send_dap_request 'terminate'
         assert_disconnect_result
       when 'chrome'
         send_request 'Runtime.terminateExecution'
@@ -211,25 +193,20 @@ module DEBUGGER__
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
         # get frameId
-        send_request 'stackTrace',
+        res = send_dap_request 'stackTrace',
                       threadId: 1,
                       startFrame: 0,
                       levels: 20
-        res = find_crt_dap_response
         f_id = res.dig(:body, :stackFrames, frame_idx, :id)
 
         # get variablesReference
-        send_request 'scopes', frameId: f_id
-        res = find_crt_dap_response
-        assert_dap_response :ScopesResponse, res
+        res = send_dap_request 'scopes', frameId: f_id
 
         locals_scope = res.dig(:body, :scopes).find { |d| d[:presentationHint] == "locals" }
         locals_reference = locals_scope[:variablesReference]
 
         # get variables
-        send_request 'variables', variablesReference: locals_reference
-        res = find_crt_dap_response
-        assert_dap_response :VariablesResponse, res
+        res = send_dap_request 'variables', variablesReference: locals_reference
 
         expected.each do |exp|
           if exp[:type] == "String"
@@ -354,7 +331,7 @@ module DEBUGGER__
     def req_disconnect
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'disconnect',
+        send_dap_request 'disconnect',
                       restart: false,
                       terminateDebuggee: false
         assert_disconnect_result
@@ -373,7 +350,7 @@ module DEBUGGER__
         bps_map[tar_path] << [tar_lineno, condition]
       }
       bps_map.each{|tar_path, bps|
-        send_request 'setBreakpoints',
+        send_dap_request 'setBreakpoints',
                       source: {
                         name: tar_path,
                         path: tar_path,
@@ -385,16 +362,12 @@ module DEBUGGER__
                           condition: condition
                         }
                       }
-        res = find_crt_dap_response
-        assert_dap_response :SetBreakpointsResponse, res
       }
     end
 
     def assert_disconnect_result
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        res = find_crt_dap_response
-        assert_dap_response :DisconnectResponse, res
         @reader_thread.raise Detach
         @sock.close
       when 'chrome'
@@ -445,18 +418,15 @@ module DEBUGGER__
     def assert_eval_result context, expression, expected, frame_idx
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_request 'stackTrace',
+        res = send_dap_request 'stackTrace',
                       threadId: 1,
                       startFrame: 0,
                       levels: 20
-        res = find_crt_dap_response
         f_id = res.dig(:body, :stackFrames, frame_idx, :id)
-        send_request 'evaluate',
+        res = send_dap_request 'evaluate',
                       expression: expression,
                       frameId: f_id,
                       context: context
-        res = find_crt_dap_response
-        assert_dap_response :EvaluateResponse, res
 
         failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
         if expected.is_a? String
@@ -522,6 +492,23 @@ module DEBUGGER__
         send method: command,
             params: kw
       end
+    end
+
+    def send_dap_request command, **kw
+      send_request command, **kw
+
+      # TODO: Return the response for "stepBack"
+      return if command == "stepBack"
+
+      res = find_crt_dap_response
+
+      # TODO: Check the reason StackTrace response fails validation
+      unless command == "stackTrace"
+        command_name = command[0].upcase + command[1..-1]
+        assert_dap_response("#{command_name}Response".to_sym, res)
+      end
+
+      res
     end
 
     def send **kw
