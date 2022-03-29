@@ -61,14 +61,12 @@ module DEBUGGER__
       when 'chrome'
         escaped = Regexp.escape File.realpath path
         regexp = "#{escaped}|file://#{escaped}"
-        send_request 'Debugger.setBreakpointByUrl',
+        res = send_cdp_request 'Debugger.setBreakpointByUrl',
                       lineNumber: lineno - 1,
                       urlRegex: regexp,
                       columnNumber: 0,
                       condition: cond
-        res = find_crt_cdp_response
         @bps << res.dig(:result, :breakpointId)
-        assert_cdp_response 'Debugger.setBreakpointByUrl', res
       end
     end
 
@@ -79,10 +77,7 @@ module DEBUGGER__
         req_set_breakpoints_on_dap
       when 'chrome'
         b_id = @bps.delete_at bpnum
-        send_request 'Debugger.removeBreakpoint',
-                      breakpointId: b_id
-        res = find_crt_cdp_response
-        assert_cdp_response 'Debugger.removeBreakpoint', res
+        send_cdp_request 'Debugger.removeBreakpoint', breakpointId: b_id
       end
     end
 
@@ -91,9 +86,7 @@ module DEBUGGER__
       when 'vscode'
         send_dap_request 'continue', threadId: 1
       when 'chrome'
-        send_request 'Debugger.resume'
-        res = find_crt_cdp_response
-        assert_cdp_response 'Debugger.resume', res
+        send_cdp_request 'Debugger.resume'
         res = find_response :method, 'Debugger.paused', 'C<D'
         @crt_frames = res.dig(:params, :callFrames)
       end
@@ -104,9 +97,7 @@ module DEBUGGER__
       when 'vscode'
         send_dap_request 'stepIn', threadId: 1
       when 'chrome'
-        send_request 'Debugger.stepInto'
-        res = find_crt_cdp_response
-        assert_cdp_response 'Debugger.stepInto', res
+        send_cdp_request 'Debugger.stepInto'
         res = find_response :method, 'Debugger.paused', 'C<D'
         @crt_frames = res.dig(:params, :callFrames)
       end
@@ -117,9 +108,7 @@ module DEBUGGER__
       when 'vscode'
         send_dap_request 'next', threadId: 1
       when 'chrome'
-        send_request 'Debugger.stepOver'
-        res = find_crt_cdp_response
-        assert_cdp_response 'Debugger.stepOver', res
+        send_cdp_request 'Debugger.stepOver'
         res = find_response :method, 'Debugger.paused', 'C<D'
         @crt_frames = res.dig(:params, :callFrames)
       end
@@ -130,9 +119,7 @@ module DEBUGGER__
       when 'vscode'
         send_dap_request 'stepOut', threadId: 1
       when 'chrome'
-        send_request 'Debugger.stepOut'
-        res = find_crt_cdp_response
-        assert_cdp_response 'Debugger.stepOut', res
+        send_cdp_request 'Debugger.stepOut'
         res = find_response :method, 'Debugger.paused', 'C<D'
         @crt_frames = res.dig(:params, :callFrames)
       end
@@ -149,10 +136,7 @@ module DEBUGGER__
                         }
                       ]
       when 'chrome'
-        send_request 'Debugger.setPauseOnExceptions',
-                      state: 'all'
-        res = find_crt_cdp_response
-        assert_cdp_response 'Debugger.setPauseOnExceptions', res
+        send_cdp_request 'Debugger.setPauseOnExceptions', state: 'all'
       end
     end
 
@@ -169,9 +153,7 @@ module DEBUGGER__
         send_dap_request 'terminate'
         assert_disconnect_result
       when 'chrome'
-        send_request 'Runtime.terminateExecution'
-        res = find_crt_cdp_response
-        assert_cdp_response 'Runtime.terminateExecution', res
+        send_cdp_request 'Runtime.terminateExecution'
       end
     end
 
@@ -220,9 +202,7 @@ module DEBUGGER__
         locals_scope = current_frame[:scopeChain].find { |f| f[:type] == "local" }
         object_id = locals_scope.dig(:object, :objectId)
 
-        send_request "Runtime.getProperties", objectId: object_id
-        res = find_crt_cdp_response
-        assert_cdp_response 'Runtime.getProperties', res
+        res = send_cdp_request "Runtime.getProperties", objectId: object_id
 
         actual_locals = res.dig(:result, :result).map do |loc|
           type = loc.dig(:value, :className) || loc.dig(:value, :type).capitalize # TODO: sync this with get_ruby_type
@@ -442,12 +422,10 @@ module DEBUGGER__
         assert_equal expected_type, result_type, failure_msg
       when 'chrome'
         f_id = @crt_frames.dig(frame_idx, :callFrameId)
-        send_request 'Debugger.evaluateOnCallFrame',
+        res = send_cdp_request 'Debugger.evaluateOnCallFrame',
                       expression: expression,
                       callFrameId: f_id,
                       objectGroup: context
-        res = find_crt_cdp_response
-        assert_cdp_response 'Debugger.evaluateOnCallFrame', res
 
         failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
         if expected.is_a? String
@@ -508,6 +486,13 @@ module DEBUGGER__
         assert_dap_response("#{command_name}Response".to_sym, res)
       end
 
+      res
+    end
+
+    def send_cdp_request command, **kw
+      send_request command, **kw
+      res = find_crt_cdp_response
+      assert_cdp_response(command, res)
       res
     end
 
