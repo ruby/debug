@@ -358,6 +358,8 @@ Also `open` command allows opening the debug port.
 
 #### VSCode integration
 
+([vscode-rdbg v0.0.9](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg) or later is required)
+
 If you don't run a debuggee Ruby process on VSCode, you can attach with VSCode later with the following steps.
 
 `rdbg --open=vscode` opens the debug port and tries to invoke the VSCode (`code` command).
