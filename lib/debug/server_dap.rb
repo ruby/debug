@@ -70,9 +70,20 @@ module DEBUGGER__
       end
     end
 
+    @local_fs = false
+
+    def self.local_fs
+      @local_fs
+    end
+
+    def self.local_fs_set
+      @local_fs = true
+    end
+
     def dap_setup bytes
       CONFIG.set_config no_color: true
       @seq = 0
+      UI_DAP.local_fs_set if self.kind_of?(UI_UnixDomainServer)
 
       show_protocol :>, bytes
       req = JSON.load(bytes)
@@ -211,10 +222,12 @@ module DEBUGGER__
         when 'launch'
           send_response req
           @is_attach = false
+          UI_DAP.local_fs_set if req.dig('arguments', 'localfs')
         when 'attach'
           send_response req
           Process.kill(UI_ServerBase::TRAP_SIGNAL, Process.pid)
           @is_attach = true
+          UI_DAP.local_fs_set if req.dig('arguments', 'localfs')
         when 'setBreakpoints'
           path = args.dig('source', 'path')
           SESSION.clear_line_breakpoints path
@@ -498,7 +511,7 @@ module DEBUGGER__
       when 'source'
         ref = req.dig('arguments', 'sourceReference')
         if src = @src_map[ref]
-          @ui.respond req, content: src.join
+          @ui.respond req, content: src.join("\n")
         else
           fail_response req, message: 'not found...'
         end
@@ -597,7 +610,9 @@ module DEBUGGER__
         event! :dap_result, :backtrace, req, {
           stackFrames: @target_frames.map{|frame|
             path = frame.realpath || frame.path
-            ref = frame.file_lines unless path && File.exist?(path)
+            if !UI_DAP.local_fs || !(path && File.exist?(path))
+              ref = frame.file_lines
+            end
 
             {
               # id: ??? # filled by SESSION
