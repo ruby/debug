@@ -3,7 +3,7 @@
 require_relative '../support/test_case'
 
 module DEBUGGER__
-  
+
   class HoverTest1638791703 < TestCase
     PROGRAM = <<~RUBY
       1| a = 1
@@ -12,7 +12,7 @@ module DEBUGGER__
       4| d = 4
       5| e = 5
     RUBY
-    
+
     def test_hover_works_correctly
       run_dap_scenario PROGRAM do
         [
@@ -95,7 +95,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 1
                 }
@@ -213,7 +213,7 @@ module DEBUGGER__
               source: {
                 name: "target.rb",
                 path: temp_file_path,
-                sourceReference: nil
+                sourceReference: 0
               },
               lines: [
                 4
@@ -320,7 +320,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 2
                 }
@@ -849,34 +849,34 @@ module DEBUGGER__
        4|       def initialize
        5|         @a = 1
        6|       end
-       7| 
+       7|
        8|       def a
        9|         ::Abc.foo
       10|         ::Abc::Def123.bar
       11|         p @a
       12|       end
       13|     end
-      14| 
+      14|
       15|     def bar
       16|       p :bar1
       17|     end
-      18| 
+      18|
       19|     def self.bar
       20|       p :bar2
       21|     end
       22|   end
-      23| 
+      23|
       24|   def self.foo
       25|     p :foo
       26|   end
       27| end
-      28| 
+      28|
       29| Abc::Def123.new.bar
-      30| 
+      30|
       31| ghi = Abc::Def123::Ghi.new
       32| ghi.a
     RUBY
-    
+
     def test_1641198331
       run_dap_scenario PROGRAM do
         [
@@ -959,7 +959,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 1
                 }
@@ -1045,7 +1045,7 @@ module DEBUGGER__
               source: {
                 name: "target.rb",
                 path: temp_file_path,
-                sourceReference: nil
+                sourceReference: 0
               },
               lines: [
                 29
@@ -1152,7 +1152,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 2
                 }

@@ -3,7 +3,7 @@
 require_relative '../support/test_case'
 
 module DEBUGGER__
-  
+
   class BootConfigTest1638611290 < TestCase
     PROGRAM = <<~RUBY
       1| module Foo
@@ -16,7 +16,7 @@ module DEBUGGER__
       8|   bar = Bar.new
       9| end
     RUBY
-    
+
     def test_boot_configuration_works_correctly
       run_dap_scenario PROGRAM do
         [
@@ -173,7 +173,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 1
                 }
