@@ -230,6 +230,22 @@ module DEBUGGER__
       end
     end
 
+    def assert_threads_result(expected_names)
+      case ENV['RUBY_DEBUG_TEST_UI']
+      when 'vscode'
+        res = send_dap_request 'threads'
+
+        threads = res.dig(:body, :threads)
+        failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
+
+        assert_equal expected_names.count, threads.count, failure_msg
+
+        expected_names.each_with_index do |expected, index|
+          assert_match expected, threads[index][:name], failure_msg
+        end
+      end
+    end
+
     def assert_hover_result expected,  expression: nil, frame_idx: 0
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
