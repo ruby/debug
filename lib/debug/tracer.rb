@@ -81,13 +81,11 @@ module DEBUGGER__
         ThreadClient.current.on_trace self.object_id, buff
       else
         @output.puts buff
-        @output.flush
       end
     end
 
     def puts msg
       @output.puts msg
-      @output.flush
     end
 
     def minfo tp
