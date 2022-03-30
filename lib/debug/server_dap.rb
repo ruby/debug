@@ -552,10 +552,14 @@ module DEBUGGER__
         result[:stackFrames].each.with_index{|fi, i|
           fi[:id] = id = @frame_map.size + 1
           @frame_map[id] = [req.dig('arguments', 'threadId'), i]
-          if fi[:source] && src = fi[:source][:sourceReference]
-            src_id = @src_map.size + 1
-            @src_map[src_id] = src
-            fi[:source][:sourceReference] = src_id
+          if fi[:source]
+            if src = fi[:source][:sourceReference]
+              src_id = @src_map.size + 1
+              @src_map[src_id] = src
+              fi[:source][:sourceReference] = src_id
+            else
+              fi[:source][:sourceReference] = 0
+            end
           end
         }
         @ui.respond req, result
