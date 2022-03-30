@@ -3,7 +3,7 @@
 require_relative '../support/test_case'
 
 module DEBUGGER__
-  
+
   class EvalTest1643807667 < TestCase
     PROGRAM = <<~RUBY
       1| a = 2
@@ -13,7 +13,7 @@ module DEBUGGER__
       5| e = 5
       6| f = 6
     RUBY
-    
+
     def test_eval_works_correctly_1643807667
       run_dap_scenario PROGRAM do
         [
@@ -96,7 +96,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 1
                 }
@@ -222,7 +222,7 @@ module DEBUGGER__
               source: {
                 name: "target.rb",
                 path: temp_file_path,
-                sourceReference: nil
+                sourceReference: 0
               },
               lines: [
                 5
@@ -329,7 +329,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 2
                 }

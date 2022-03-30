@@ -335,7 +335,7 @@ module DEBUGGER__
                       source: {
                         name: tar_path,
                         path: tar_path,
-                        sourceReference: nil
+                        sourceReference: 0
                       },
                       breakpoints: bps.map{|lineno, condition|
                         {

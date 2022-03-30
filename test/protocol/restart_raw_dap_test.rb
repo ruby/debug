@@ -3,7 +3,7 @@
 require_relative '../support/test_case'
 
 module DEBUGGER__
-  
+
   class RestartTest1644070899 < TestCase
     PROGRAM = <<~RUBY
        1| module Foo
@@ -19,7 +19,7 @@ module DEBUGGER__
       11|    bar = Bar.new
       12|  end
     RUBY
-    
+
     def test_restart_works_correctly_1644070899
       run_dap_scenario PROGRAM do
         [
@@ -102,7 +102,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 1
                 }

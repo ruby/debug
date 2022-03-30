@@ -3,7 +3,7 @@
 require_relative '../support/test_case'
 
 module DEBUGGER__
-  
+
   class DetachTest1639218122 < TestCase
     PROGRAM = <<~RUBY
        1| module Foo
@@ -19,7 +19,7 @@ module DEBUGGER__
       11|   bar = Bar.new
       12| end
     RUBY
-    
+
     def test_1639218122
       run_dap_scenario PROGRAM do
         [
@@ -102,7 +102,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 1
                 }
@@ -282,7 +282,7 @@ module DEBUGGER__
             command: "setFunctionBreakpoints",
             arguments: {
               breakpoints: [
-          
+
               ]
             },
             type: "request"
@@ -321,7 +321,7 @@ module DEBUGGER__
             command: "setExceptionBreakpoints",
             arguments: {
               filters: [
-          
+
               ],
               filterOptions: [
                 {
@@ -373,7 +373,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 2
                 },
@@ -384,7 +384,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 3
                 },
@@ -395,7 +395,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 4
                 },
@@ -406,7 +406,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 5
                 }
@@ -504,7 +504,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 6
                 },
@@ -515,7 +515,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 7
                 },
@@ -526,7 +526,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 8
                 },
@@ -537,7 +537,7 @@ module DEBUGGER__
                   source: {
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
-                    sourceReference: nil
+                    sourceReference: 0
                   },
                   id: 9
                 }
