@@ -610,6 +610,8 @@ module DEBUGGER__
         event! :dap_result, :backtrace, req, {
           stackFrames: @target_frames.map{|frame|
             path = frame.realpath || frame.path
+            source_name = path ? File.basename(path) : frame.location.to_s
+
             if !UI_DAP.local_fs || !(path && File.exist?(path))
               ref = frame.file_lines
             end
@@ -620,7 +622,7 @@ module DEBUGGER__
               line: frame.location.lineno,
               column: 1,
               source: {
-                name: File.basename(frame.path),
+                name: source_name,
                 path: path,
                 sourceReference: ref,
               },
