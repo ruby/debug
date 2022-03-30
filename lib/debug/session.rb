@@ -1913,6 +1913,9 @@ module DEBUGGER__
         puts "\nStop by #{args.first}"
       end
     end
+
+    def flush
+    end
   end
 
   # manual configuration methods
