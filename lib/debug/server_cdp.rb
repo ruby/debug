@@ -346,7 +346,7 @@ module DEBUGGER__
           send_event 'Runtime.executionContextCreated',
                       context: {
                         id: SecureRandom.hex(16),
-                        origin: "http://#{@addr}",
+                        origin: "http://#{@local_addr.inspect_sockaddr}",
                         name: ''
                       }
         when 'Runtime.getIsolateId'
