@@ -88,7 +88,8 @@ module DEBUGGER__
       when UI_UnixDomainServer
         UI_DAP.local_fs_set
       when UI_TcpServer
-        UI_DAP.local_fs_set if @local_addr.ipv4_loopback? || @local_addr.ipv6_loopback?
+        # TODO: loopback address can be used to connect other FS env, like Docker containers
+        # UI_DAP.local_fs_set if @local_addr.ipv4_loopback? || @local_addr.ipv6_loopback?
       end
 
       show_protocol :>, bytes
