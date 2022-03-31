@@ -83,7 +83,13 @@ module DEBUGGER__
     def dap_setup bytes
       CONFIG.set_config no_color: true
       @seq = 0
-      UI_DAP.local_fs_set if self.kind_of?(UI_UnixDomainServer)
+
+      case self
+      when UI_UnixDomainServer
+        UI_DAP.local_fs_set
+      when UI_TcpServer
+        UI_DAP.local_fs_set if @local_addr.ipv4_loopback? || @local_addr.ipv6_loopback?
+      end
 
       show_protocol :>, bytes
       req = JSON.load(bytes)

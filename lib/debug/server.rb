@@ -353,7 +353,7 @@ module DEBUGGER__
 
   class UI_TcpServer < UI_ServerBase
     def initialize host: nil, port: nil
-      @addr = nil
+      @local_addr = nil
       @host = host || CONFIG[:host] || '127.0.0.1'
       @port_save_file = nil
       @port = begin
@@ -375,11 +375,11 @@ module DEBUGGER__
     def chrome_setup
       require_relative 'server_cdp'
 
-      unless @chrome_pid = UI_CDP.setup_chrome(@addr)
+      unless @chrome_pid = UI_CDP.setup_chrome(@local_addr.inspect_sockaddr)
         DEBUGGER__.warn <<~EOS
           With Chrome browser, type the following URL in the address-bar:
 
-             devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{@addr}/#{SecureRandom.uuid}
+             devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{@local_addr.inspect_sockaddr}/#{SecureRandom.uuid}
           
           EOS
       end
@@ -391,9 +391,9 @@ module DEBUGGER__
 
       begin
         Socket.tcp_server_sockets @host, @port do |socks|
-          @addr = socks[0].local_address.inspect_sockaddr # Change this part if `socks` are multiple.
+          @local_addr = socks.first.local_address # Change this part if `socks` are multiple.
           rdbg = File.expand_path('../../exe/rdbg', __dir__)
-          DEBUGGER__.warn "Debugger can attach via TCP/IP (#{@addr})"
+          DEBUGGER__.warn "Debugger can attach via TCP/IP (#{@local_addr.inspect_sockaddr})"
 
           if @port_save_file
             File.write(@port_save_file, "#{socks[0].local_address.ip_port.to_s}\n")
@@ -403,7 +403,7 @@ module DEBUGGER__
           DEBUGGER__.info <<~EOS
           With rdbg, use the following command line:
           #
-          #   #{rdbg} --attach #{@addr.split(':').join(' ')}
+          #   #{rdbg} --attach #{@local_addr.ip_address} #{@local_addr.ip_port}
           #
           EOS
 
@@ -411,7 +411,7 @@ module DEBUGGER__
           when 'chrome'
             chrome_setup
           when 'vscode'
-            vscode_setup @addr
+            vscode_setup @local_addr.inspect_sockaddr
           end
 
           Socket.accept_loop(socks) do |sock, client|
