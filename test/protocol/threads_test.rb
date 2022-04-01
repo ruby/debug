@@ -15,7 +15,7 @@ module DEBUGGER__
     RUBY
 
     def test_reponse_returns_correct_threads_info
-      run_protocol_scenario PROGRAM do
+      run_protocol_scenario PROGRAM, cdp: false do
         req_continue
 
         assert_threads_result(
