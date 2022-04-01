@@ -529,32 +529,6 @@ module DEBUGGER__
           end
         end
 
-      # skip
-      when 'bv'
-        check_postmortem
-        require 'json'
-
-        h = Hash.new{|h, k| h[k] = []}
-        @bps.each_value{|bp|
-          if LineBreakpoint === bp
-            h[bp.path] << {lnum: bp.line}
-          end
-        }
-        if h.empty?
-          # TODO: clean?
-        else
-          open(".rdb_breakpoints.json", 'w'){|f| JSON.dump(h, f)}
-        end
-
-        vimsrc = File.join(__dir__, 'bp.vim')
-        system("vim -R -S #{vimsrc} #{@tc.location.path}")
-
-        if File.exist?(".rdb_breakpoints.json")
-          pp JSON.load(File.read(".rdb_breakpoints.json"))
-        end
-
-        return :retry
-
       # * `catch <Error>`
       #   * Set breakpoint on raising `<Error>`.
       # * `catch ... if: <expr>`
