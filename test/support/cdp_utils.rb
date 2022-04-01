@@ -31,12 +31,7 @@ module DEBUGGER__
       MSG
     end
 
-    pt = ENV['RUBY_DEBUG_PROTOCOL_TEST']
-    PROTOCOL_TEST = pt == 'true' || pt == '1'
-
     def connect_to_cdp_server
-      omit 'Tests for CDP were skipped. You can enable them with RUBY_DEBUG_PROTOCOL_TEST=1.' unless PROTOCOL_TEST
-
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
 
       sock = Socket.tcp HOST, @remote_info.port
@@ -69,6 +64,8 @@ module DEBUGGER__
     HOST = '127.0.0.1'
 
     def run_cdp_scenario program, &msgs
+      return unless Protocol_TestUtils::PROTOCOL_TEST
+
       ENV['RUBY_DEBUG_TEST_UI'] = 'chrome'
 
       program = program.delete_suffix "\n"
