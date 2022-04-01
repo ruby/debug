@@ -151,7 +151,7 @@ module DEBUGGER__
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
         send_dap_request 'terminate'
-        assert_disconnect_result
+        cleanup_reader
       when 'chrome'
         send_cdp_request 'Runtime.terminateExecution'
       end
@@ -314,10 +314,10 @@ module DEBUGGER__
         send_dap_request 'disconnect',
                       restart: false,
                       terminateDebuggee: false
-        assert_disconnect_result
+        cleanup_reader
       when 'chrome'
         @web_sock.send_close_connection
-        assert_disconnect_result
+        cleanup_reader
       end
     end
 
@@ -345,13 +345,13 @@ module DEBUGGER__
       }
     end
 
-    def assert_disconnect_result
+    def cleanup_reader
+      @reader_thread.raise Detach
+
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        @reader_thread.raise Detach
         @sock.close
       when 'chrome'
-        @reader_thread.raise Detach
         @web_sock.cleanup
       end
     end
