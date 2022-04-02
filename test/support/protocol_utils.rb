@@ -297,10 +297,9 @@ module DEBUGGER__
 
     # Not API
 
-    def execute_dap_scenario scenario
-      ENV['RUBY_DEBUG_TEST_UI'] = 'vscode'
-
+    def execute_protocol_scenario scenario, &attaching_strategy
       @remote_info = setup_tcpip_remote_debuggee
+
       Timeout.timeout(TIMEOUT_SEC) do
         sleep 0.001 until @remote_info.debuggee_backlog.join.include? @remote_info.port.to_s
       end
@@ -310,41 +309,30 @@ module DEBUGGER__
       @queue = Queue.new
       @backlog = []
 
-      attach_to_dap_server
+      attaching_strategy.call
+
       scenario.call
 
       flunk create_protocol_message "Expected the debuggee program to finish" unless wait_pid @remote_info.pid, TIMEOUT_SEC
     ensure
       @reader_thread.kill
       @sock.close if @sock
+      @web_sock.cleanup if @web_sock
       @remote_info.reader_thread.kill
       @remote_info.r.close
       @remote_info.w.close
     end
 
+    def execute_dap_scenario scenario
+      ENV['RUBY_DEBUG_TEST_UI'] = 'vscode'
+
+      execute_protocol_scenario(scenario) { attach_to_dap_server }
+    end
+
     def execute_cdp_scenario scenario
       ENV['RUBY_DEBUG_TEST_UI'] = 'chrome'
 
-      @remote_info = setup_tcpip_remote_debuggee
-      Timeout.timeout(TIMEOUT_SEC) do
-        sleep 0.001 until @remote_info.debuggee_backlog.join.include? @remote_info.port.to_s
-      end
-
-      @res_backlog = []
-      @bps = [] # [b_id, ...]
-      @queue = Queue.new
-      @backlog = []
-
-      attach_to_cdp_server
-      scenario.call
-
-      flunk create_protocol_message "Expected the debuggee program to finish" unless wait_pid @remote_info.pid, TIMEOUT_SEC
-    ensure
-      @reader_thread.kill
-      @web_sock.cleanup if @web_sock
-      @remote_info.reader_thread.kill
-      @remote_info.r.close
-      @remote_info.w.close
+      execute_protocol_scenario(scenario) { attach_to_cdp_server }
     end
 
     def req_disconnect
