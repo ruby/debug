@@ -151,10 +151,11 @@ module DEBUGGER__
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
         send_dap_request 'terminate'
-        cleanup_reader
       when 'chrome'
         send_cdp_request 'Runtime.terminateExecution'
       end
+
+      cleanup_reader
     end
 
     def assert_reattach
@@ -314,11 +315,11 @@ module DEBUGGER__
         send_dap_request 'disconnect',
                       restart: false,
                       terminateDebuggee: false
-        cleanup_reader
       when 'chrome'
         @web_sock.send_close_connection
-        cleanup_reader
       end
+
+      cleanup_reader
     end
 
     def req_set_breakpoints_on_dap
