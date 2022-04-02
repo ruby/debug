@@ -372,6 +372,23 @@ An variable entry looks like this: `{ name: "bar", value: "nil", type: "NilClass
 
 Please note that both `value` and `type` need to be strings.
 
+- assert_threads_result(expected)
+
+Passes if both conditions are true:
+
+1. The number of expected pattern matches the number of threads.
+2. The expected patterns match the thread names in the given order.
+
+Example:
+
+```
+assert_threads_result(
+  [
+    /\.rb:\d:in `<main>'/,
+    /\.rb:\d:in `block in foo'/
+  ]
+)
+```
 
 ## To Update README
 
