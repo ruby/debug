@@ -64,8 +64,6 @@ module DEBUGGER__
     HOST = '127.0.0.1'
 
     def run_cdp_scenario program, &msgs
-      return unless Protocol_TestUtils::PROTOCOL_TEST
-
       ENV['RUBY_DEBUG_TEST_UI'] = 'chrome'
 
       program = program.delete_suffix "\n"

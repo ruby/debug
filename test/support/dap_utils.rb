@@ -99,8 +99,6 @@ module DEBUGGER__
     TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
     def run_dap_scenario program, &msgs
-      return unless Protocol_TestUtils::PROTOCOL_TEST
-
       begin
         write_temp_file(strip_line_num(program))
 
