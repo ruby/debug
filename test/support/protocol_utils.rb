@@ -300,9 +300,9 @@ module DEBUGGER__
     def execute_dap_scenario scenario
       ENV['RUBY_DEBUG_TEST_UI'] = 'vscode'
 
-      @remote_info = setup_unix_domain_socket_remote_debuggee
+      @remote_info = setup_tcpip_remote_debuggee
       Timeout.timeout(TIMEOUT_SEC) do
-        sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'connection...'
+        sleep 0.001 until @remote_info.debuggee_backlog.join.include? @remote_info.port.to_s
       end
 
       @bps = [] # [[path, lineno, condition], ...]
@@ -400,7 +400,7 @@ module DEBUGGER__
     end
 
     def attach_to_dap_server
-      @sock = Socket.unix @remote_info.sock_path
+      @sock = Socket.tcp HOST, @remote_info.port
       @seq = 1
       @reader_thread = Thread.new do
         while res = recv_response
