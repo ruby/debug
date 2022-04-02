@@ -1,10 +1,6 @@
 require "bundler/gem_tasks"
 require "rake/testtask"
 
-Rake::TestTask.new(:test) do |t|
-  t.test_files = FileList["test/**/*_test.rb"]
-end
-
 begin
   require "rake/extensiontask"
   task :build => :compile
@@ -15,7 +11,7 @@ begin
 rescue LoadError
 end
 
-task :default => [:clobber, :compile, 'README.md', :check_readme, :test]
+task :default => [:clobber, :compile, 'README.md', :check_readme, :test_debug]
 
 file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
                      'exe/rdbg', 'misc/README.md.erb'] do
@@ -39,10 +35,14 @@ task :check_readme do
   end
 end
 
-task :test_protocol do
-  ENV['RUBY_DEBUG_PROTOCOL_TEST'] = '1'
+desc "Run all debugger console related tests"
+Rake::TestTask.new(:test_debug) do |t|
+  t.test_files = FileList["test/debug/*_test.rb", "test/*_test.rb"]
 end
 
+desc "Run all debugger procotols (CAP & DAP) related tests"
 Rake::TestTask.new(:test_protocol) do |t|
   t.test_files = FileList["test/protocol/*_test.rb"]
 end
+
+task test_all: [:test_debug, :test_protocol]
