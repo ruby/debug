@@ -14,7 +14,7 @@ If you spot any problem, please open an issue.
 ### Run all tests
 
 ```bash
-$ rake test
+$ rake test_all
 ```
 
 ### Run specific test(s)
