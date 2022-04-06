@@ -95,6 +95,8 @@ module DEBUGGER__
       @obj_map = {} # { object_id => obj } for CDP
       @recorder = nil
       @mode = :waiting
+      # every thread should maintain its own CheckBreakpoint fulfillment state
+      @check_bp_fulfillment_map = {} # { check_bp => boolean }
       set_mode :running
       thr.instance_variable_set(:@__thread_client_id, id)
 
@@ -335,6 +337,14 @@ module DEBUGGER__
         }
         @step_tp.enable
       end
+    end
+
+    def set_check_bp_state(bp, state)
+      @check_bp_fulfillment_map[bp] = state
+    end
+
+    def check_bp_fulfilled?(bp)
+      @check_bp_fulfillment_map[bp]
     end
 
     ## cmd helpers
