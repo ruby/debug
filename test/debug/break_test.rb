@@ -645,8 +645,11 @@ module DEBUGGER__
      2| a += 1
      3| a += 2
      4| a += 3
-     5|
-     6| binding.b
+     5| a = 0
+     6| a = 1
+     7| a = 2
+     8| a = 3
+     9| binding.b
       RUBY
     end
 
@@ -667,6 +670,22 @@ module DEBUGGER__
         type 'break if: xyzzy'
         type 'c'
         assert_debuggee_line_text(/EVAL ERROR/)
+        type 'c'
+      end
+    end
+
+    def test_conditional_breakpoint_ignores_unchanged_true_condition
+      debug_code(program) do
+        type 'break if: a > 0'
+        type 'c'
+        assert_line_num(2) # stopped by line 1
+        # the state remains fulfilled so the next 2 lines don't trigger stoppage
+        type 'c'
+        # line 5 changes the state. so the next true condition will stop the program again
+        assert_line_num(7) # stopped by line 6
+        type 'c'
+        # the state remains fulfilled again, so the line 7 doesn't trigger stoppage
+        assert_line_num(9)
         type 'c'
       end
     end
@@ -711,10 +730,6 @@ module DEBUGGER__
             type 'a + b'
             assert_line_num(3)
             assert_line_text(/201/)
-            type 'c'
-            # this stop is because check bp stops at every line after the condition is fulfilled, which is another issue
-            # see https://github.com/ruby/debug/issues/406 for more about the issue
-            assert_line_num(4)
             type 'c'
           end
         end
