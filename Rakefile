@@ -45,4 +45,11 @@ Rake::TestTask.new(:test_protocol) do |t|
   t.test_files = FileList["test/protocol/*_test.rb"]
 end
 
+task :test do
+  fail <<~MSG
+    `rake test` isn't supported yet because protocol tests are still unstable.
+    To run all test cases, please use `rake test_all` instead.
+  MSG
+end
+
 task test_all: [:test_debug, :test_protocol]
