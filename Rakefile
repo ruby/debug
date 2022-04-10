@@ -15,7 +15,7 @@ begin
 rescue LoadError
 end
 
-task :default => [:clobber, :compile, 'README.md', :test]
+task :default => [:clobber, :compile, 'README.md', :check_readme, :test]
 
 file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
                      'exe/rdbg', 'misc/README.md.erb'] do
@@ -23,6 +23,20 @@ file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
   require 'erb'
   File.write 'README.md', ERB.new(File.read('misc/README.md.erb')).result
   puts 'README.md is updated.'
+end
+
+task :check_readme do
+  require_relative 'lib/debug/session'
+  require 'erb'
+  current_readme = File.read("README.md")
+  generated_readme = ERB.new(File.read('misc/README.md.erb')).result
+
+  if current_readme != generated_readme
+    fail <<~MSG
+      The content of README.md doesn't match its template and/or source.
+      Please apply the changes to info source (e.g. command comments) or the template and run 'rake README.md' to update README.md.
+    MSG
+  end
 end
 
 task :test_protocol do
