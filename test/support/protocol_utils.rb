@@ -481,11 +481,8 @@ module DEBUGGER__
 
       res = find_crt_dap_response
 
-      # TODO: Check the reason StackTrace response fails validation
-      unless command == "stackTrace"
-        command_name = command[0].upcase + command[1..-1]
-        assert_dap_response("#{command_name}Response".to_sym, res)
-      end
+      command_name = command[0].upcase + command[1..-1]
+      assert_dap_response("#{command_name}Response".to_sym, res)
 
       res
     end
