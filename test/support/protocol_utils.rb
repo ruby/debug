@@ -234,15 +234,22 @@ module DEBUGGER__
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
         res = send_dap_request 'threads'
+        failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}."}
 
         threads = res.dig(:body, :threads)
-        failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
 
         assert_equal expected_names.count, threads.count, failure_msg
 
-        expected_names.each_with_index do |expected, index|
-          assert_match expected, threads[index][:name], failure_msg
+        thread_names = threads.map { |t| t[:name] }
+
+        expected_names.each do |expected|
+          thread_names.reject! do |name|
+            name.match?(expected)
+          end
         end
+
+        failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}.\nExpect all thread names to be matched. Unmatched threads:"}
+        assert_equal [], thread_names, failure_msg
       end
     end
 
