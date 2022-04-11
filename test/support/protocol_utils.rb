@@ -494,6 +494,8 @@ module DEBUGGER__
         send method: command,
             params: kw
       end
+    rescue StandardError => e
+      flunk create_protocol_message "Failed to send request because of #{e.inspect}"
     end
 
     def send_dap_request command, **kw
