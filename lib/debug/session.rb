@@ -1346,7 +1346,7 @@ module DEBUGGER__
     def clear_line_breakpoints path
       path = resolve_path(path)
       @bps.delete_if do |k, bp|
-        if (Array === k) && DEBUGGER__.compare_path(k.first, path)
+        if bp.is_a?(LineBreakpoint) && DEBUGGER__.compare_path(k.first, path)
           bp.delete
         end
       end
