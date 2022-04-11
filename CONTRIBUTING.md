@@ -376,8 +376,8 @@ Please note that both `value` and `type` need to be strings.
 
 Passes if both conditions are true:
 
-1. The number of expected pattern matches the number of threads.
-2. The expected patterns match the thread names in the given order.
+1. The number of expected patterns matches the number of threads.
+2. Every pattern matches a thread name. Notice that the order of threads info is not guaranteed.
 
 Example:
 
