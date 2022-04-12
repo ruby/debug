@@ -1346,20 +1346,25 @@ module DEBUGGER__
       @ui.puts e.message
     end
 
-    def clear_line_breakpoints path
-      path = resolve_path(path)
+    def clear_breakpoints(&condition)
       @bps.delete_if do |k, bp|
-        if bp.is_a?(LineBreakpoint) && DEBUGGER__.compare_path(k.first, path)
+        if condition.call(k, bp)
           bp.delete
+          true
         end
       end
     end
 
+    def clear_line_breakpoints path
+      path = resolve_path(path)
+      clear_breakpoints do |k, bp|
+        bp.is_a?(LineBreakpoint) && DEBUGGER__.compare_path(k.first, path)
+      end
+    end
+
     def clear_catch_breakpoints *exception_names
-      @bps.delete_if do |k, bp|
-        if bp.is_a?(CatchBreakpoint) && exception_names.include?(k[1])
-          bp.delete
-        end
+      clear_breakpoints do |k, bp|
+        bp.is_a?(CatchBreakpoint) && exception_names.include?(k[1])
       end
     end
 
