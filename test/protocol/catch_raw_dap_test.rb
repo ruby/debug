@@ -569,9 +569,11 @@ module DEBUGGER__
                   verified: true,
                   message: /#<DEBUGGER__::CatchBreakpoint:.*/
                 },
+                # RuntimeError breakpoint has been set in the INITIALIZE_DAP_MSGS before
+                # this request sets a duplicated one so it's rejected
                 {
-                  verified: true,
-                  message: "true"
+                  verified: false,
+                  message: "nil"
                 }
               ]
             }

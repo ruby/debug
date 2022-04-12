@@ -1235,9 +1235,12 @@ module DEBUGGER__
       @repl_prev_line = nil
 
       if @bps.has_key? bp.key
-        unless bp.duplicable?
+        if bp.duplicable?
+          bp
+        else
           @ui.puts "duplicated breakpoint: #{bp}"
           bp.disable
+          nil
         end
       else
         @bps[bp.key] = bp

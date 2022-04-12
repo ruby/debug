@@ -341,8 +341,10 @@ module DEBUGGER__
             body: {
               breakpoints: [
                 {
-                  verified: true,
-                  message: "true"
+                  # RuntimeError breakpoint has been set in the INITIALIZE_DAP_MSGS before
+                  # this request sets a duplicated one so it's rejected
+                  verified: false,
+                  message: "nil"
                 }
               ]
             }
