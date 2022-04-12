@@ -1327,8 +1327,8 @@ module DEBUGGER__
       @tc << [:breakpoint, :watch, expr[:sig], cond, cmd, path]
     end
 
-    def add_catch_breakpoint pat
-      bp = CatchBreakpoint.new(pat)
+    def add_catch_breakpoint pat, cond: nil
+      bp = CatchBreakpoint.new(pat, cond: cond)
       add_bp bp
     end
 
@@ -1350,6 +1350,14 @@ module DEBUGGER__
       path = resolve_path(path)
       @bps.delete_if do |k, bp|
         if bp.is_a?(LineBreakpoint) && DEBUGGER__.compare_path(k.first, path)
+          bp.delete
+        end
+      end
+    end
+
+    def clear_catch_breakpoints *exception_names
+      @bps.delete_if do |k, bp|
+        if bp.is_a?(CatchBreakpoint) && exception_names.include?(k[1])
           bp.delete
         end
       end
