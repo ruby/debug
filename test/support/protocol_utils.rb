@@ -125,16 +125,18 @@ module DEBUGGER__
       end
     end
 
-    def req_set_exception_breakpoints
+    def req_set_exception_breakpoints(exception: "RuntimeError", condition: nil)
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        send_dap_request 'setExceptionBreakpoints',
-                      filters: [],
-                      filterOptions: [
-                        {
-                          filterId: 'RuntimeError'
-                        }
-                      ]
+        filter_options = []
+
+        if exception
+          filter_option = { filterId: exception }
+          filter_option[:condition] = condition if condition
+          filter_options << filter_option
+        end
+
+        send_dap_request 'setExceptionBreakpoints', filters: [], filterOptions: filter_options
       when 'chrome'
         send_cdp_request 'Debugger.setPauseOnExceptions', state: 'all'
       end
