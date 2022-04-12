@@ -125,15 +125,13 @@ module DEBUGGER__
       end
     end
 
-    def req_set_exception_breakpoints(exception: "RuntimeError", condition: nil)
+    def req_set_exception_breakpoints(breakpoints)
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
-        filter_options = []
-
-        if exception
-          filter_option = { filterId: exception }
-          filter_option[:condition] = condition if condition
-          filter_options << filter_option
+        filter_options = breakpoints.map do |bp|
+          filter_option = { filterId: bp[:name] }
+          filter_option[:condition] = bp[:condition] if bp[:condition]
+          filter_option
         end
 
         send_dap_request 'setExceptionBreakpoints', filters: [], filterOptions: filter_options

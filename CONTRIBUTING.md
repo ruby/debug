@@ -316,9 +316,30 @@ Sends request to rdbg to add a breakpoint.
 
 Sends request to rdbg to delete a breakpoint.
 
-- req_set_exception_breakpoints
+- req_set_exception_breakpoints(breakpoints)
 
-Sends request to rdbg to set exception breakpoints.
+Sends request to rdbg to set exception breakpoints. e.g.
+
+```rb
+req_set_exception_breakpoints([{ name: "RuntimeError", condition: "a == 1" }])
+```
+
+Please note that `setExceptionBreakpoints` resets all exception breakpoints in every request. 
+
+So the following code will only set breakpoint for `Exception`.
+
+```rb
+req_set_exception_breakpoints([{ name: "RuntimeError" }])
+req_set_exception_breakpoints([{ name: "Exception" }])
+```
+
+This means you can also use
+
+```rb
+req_set_exception_breakpoints([])
+```
+
+to clear all exception breakpoints.
 
 - req_continue
 
