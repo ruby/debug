@@ -248,8 +248,6 @@ module DEBUGGER__
             end
           }
           send_response req, breakpoints: (bps.map do |bp| {verified: true,} end)
-        when 'setFunctionBreakpoints'
-          send_response req
         when 'setExceptionBreakpoints'
           process_filter = ->(filter_id, cond = nil) {
             bp =
@@ -356,7 +354,8 @@ module DEBUGGER__
              'variables',
              'evaluate',
              'source',
-             'completions'
+             'completions',
+             'setFunctionBreakpoints'
           @q_msg << req
 
         else
@@ -432,6 +431,8 @@ module DEBUGGER__
 
     def process_protocol_request req
       case req['command']
+      when 'setFunctionBreakpoints'
+        @tc << [:dap, :breakpoints, req]
       when 'stepBack'
         if @tc.recorder&.can_step_back?
           request_tc [:step, :back]
@@ -567,6 +568,17 @@ module DEBUGGER__
           end
         }
         @ui.respond req, result
+      when :breakpoints
+        breakpoints = result[:breakpoints].map do |bp|
+          if bp
+            add_bp(bp)
+            { verified: true, message: bp.inspect }
+          else
+            { verified: false, message: nil }
+          end
+        end
+
+        @ui.respond req, breakpoints: breakpoints
       when :scopes
         frame_id = req.dig('arguments', 'frameId')
         local_scope = result[:scopes].first
@@ -621,6 +633,17 @@ module DEBUGGER__
       req = args.shift
 
       case type
+      when :breakpoints
+        bps = req.dig("arguments", "breakpoints")
+        SESSION.clear_method_breakpoints
+
+        breakpoints = bps.map do |bp|
+          if bp["name"]&.match(Session::METHOD_SIGNATURE_REGEXP)
+            make_breakpoint [:method, $1, $2, $3]
+          end
+        end
+
+        event! :dap_result, :breakpoints, req, { breakpoints: breakpoints }
       when :backtrace
         start_frame = req.dig('arguments', 'startFrame') || 0
         levels = req.dig('arguments', 'levels') || 1_000

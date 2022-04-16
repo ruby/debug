@@ -1294,6 +1294,8 @@ module DEBUGGER__
       expr
     end
 
+    METHOD_SIGNATURE_REGEXP = /\A(.+)([\.\#])(.+)\z/
+
     def repl_add_breakpoint arg
       expr = parse_break arg.strip
       cond = expr[:if]
@@ -1305,7 +1307,7 @@ module DEBUGGER__
         add_line_breakpoint @tc.location.path, $1.to_i, cond: cond, command: cmd
       when /\A(.+)[:\s+](\d+)\z/
         add_line_breakpoint $1, $2.to_i, cond: cond, command: cmd
-      when /\A(.+)([\.\#])(.+)\z/
+      when METHOD_SIGNATURE_REGEXP
         request_tc [:breakpoint, :method, $1, $2, $3, cond, cmd, path]
         return :noretry
       when nil
@@ -1341,6 +1343,12 @@ module DEBUGGER__
       add_bp bp
     end
 
+    def add_method_breakpoint(method_signature)
+      if method_signature.match(METHOD_SIGNATURE_REGEXP)
+        @tc << [:breakpoint, :method, $1, $2, $3]
+      end
+    end
+
     def add_check_breakpoint cond, path, command
       bp = CheckBreakpoint.new(cond: cond, path: path, command: command)
       add_bp bp
@@ -1361,6 +1369,12 @@ module DEBUGGER__
           bp.delete
           true
         end
+      end
+    end
+
+    def clear_method_breakpoints
+      clear_breakpoints do |k, bp|
+        bp.is_a?(MethodBreakpoint)
       end
     end
 

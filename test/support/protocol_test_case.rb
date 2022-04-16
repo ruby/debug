@@ -137,6 +137,13 @@ module DEBUGGER__
       end
     end
 
+    def res_set_function_breakpoints(breakpoints)
+      case ENV['RUBY_DEBUG_TEST_UI']
+      when 'vscode'
+        send_dap_request 'setFunctionBreakpoints', breakpoints: breakpoints
+      end
+    end
+
     def req_step_back
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
