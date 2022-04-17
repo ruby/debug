@@ -11,7 +11,7 @@ begin
 rescue LoadError
 end
 
-task :default => [:clobber, :compile, 'README.md', :check_readme, :test_debug]
+task :default => [:clobber, :compile, 'README.md', :check_readme, :test_console]
 
 file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
                      'exe/rdbg', 'misc/README.md.erb'] do
@@ -36,8 +36,8 @@ task :check_readme do
 end
 
 desc "Run all debugger console related tests"
-Rake::TestTask.new(:test_debug) do |t|
-  t.test_files = FileList["test/debug/*_test.rb", "test/*_test.rb"]
+Rake::TestTask.new(:test_console) do |t|
+  t.test_files = FileList["test/console/*_test.rb", "test/*_test.rb"]
 end
 
 desc "Run all debugger procotols (CAP & DAP) related tests"
@@ -52,4 +52,4 @@ task :test do
   MSG
 end
 
-task test_all: [:test_debug, :test_protocol]
+task test_all: [:test_console, :test_protocol]

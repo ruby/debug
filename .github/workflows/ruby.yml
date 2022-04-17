@@ -34,4 +34,4 @@ jobs:
       run: |
         bundle exec rake clobber
         bundle exec rake compile
-        bundle exec rake test_debug
+        bundle exec rake test_console
