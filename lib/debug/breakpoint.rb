@@ -326,35 +326,29 @@ module DEBUGGER__
         next if ThreadClient.current.management?
         next if skip_path?(tp.path)
 
-        if safe_eval(tp.binding, @cond)
-          unless fulfilled_on_current_thread?
-            set_fulfilled_on_current_thread
-            suspend
-          end
-        else
-          set_unfulfilled_on_current_thread
+        if need_suspend? safe_eval(tp.binding, @cond)
+          suspend
         end
       }
+    end
+
+    private def need_suspend? cond_result
+      map = ThreadClient.current.check_bp_fulfillment_map
+      if cond_result
+        if map[self]
+          false
+        else
+          map[self] = true
+        end
+      else
+        map[self] = false
+      end
     end
 
     def to_s
       s = "#{generate_label("Check")}"
       s += super
       s
-    end
-
-    private
-
-    def fulfilled_on_current_thread?
-      ThreadClient.current.check_bp_fulfilled?(self)
-    end
-
-    def set_fulfilled_on_current_thread
-      ThreadClient.current.set_check_bp_state(self, true)
-    end
-
-    def set_unfulfilled_on_current_thread
-      ThreadClient.current.set_check_bp_state(self, false)
     end
   end
 
