@@ -2111,7 +2111,7 @@ module DEBUGGER__
   module ForkInterceptor
     if Process.respond_to? :_fork
       def _fork
-        return yield unless defined?(SESSION) && SESSION.active?
+        return super unless defined?(SESSION) && SESSION.active?
 
         parent_hook, child_hook = __fork_setup_for_debugger
 
@@ -2127,7 +2127,7 @@ module DEBUGGER__
       end
     else
       def fork(&given_block)
-        return yield unless defined?(SESSION) && SESSION.active?
+        return super unless defined?(SESSION) && SESSION.active?
         parent_hook, child_hook = __fork_setup_for_debugger
 
         if given_block

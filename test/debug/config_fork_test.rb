@@ -3,7 +3,7 @@
 require_relative '../support/test_case'
 
 module DEBUGGER__
-  module ForkTestTemplate
+  module ForkWithBlock
     def program
       <<~RUBY
          1| pid = #{fork_method} do
@@ -22,7 +22,31 @@ module DEBUGGER__
         14| Process.waitpid pid
       RUBY
     end
+  end
 
+  module ForkWithoutBlock
+    def program
+      <<~RUBY
+         1| if !(pid = #{fork_method})
+         2|   binding.b do: 'p :child_enter'
+         3|   a = 1
+         4|   b = 2
+         5|   c = 3
+         6|   binding.b do: 'p :child_leave'
+         7| else # parent
+         8|   sleep 0.5
+         9|   binding.b do: 'p :parent_enter'
+        10|   a = 1
+        11|   b = 2
+        12|   c = 3
+        13|   binding.b do: 'p :parent_leave'
+        14|   Process.waitpid pid
+        15| end
+      RUBY
+    end
+  end
+
+  module ForkTestTemplate
     def test_default_case
       debug_code(program) do
         # type 'config fork_mode = both' # default
@@ -124,24 +148,43 @@ module DEBUGGER__
     end
   end
 
-  class ConfigParentOnForkTest < TestCase
-    include ForkTestTemplate
-    def fork_method
-      'fork'
-    end
-  end
+  # matrix
+  [ForkWithBlock, ForkWithoutBlock].each.with_index{|program, i|
+    ['fork', 'Process.fork', 'Kernel.fork'].each{|fork_method|
+      c = Class.new TestCase do
+        include ForkTestTemplate
+        include program
+        define_method :fork_method do
+          fork_method
+        end
+      end
 
-  class ConfigParentOnForkWithProcessForkTest < TestCase
-    include ForkTestTemplate
-    def fork_method
-      'Process.fork'
-    end
-  end
+      const_set "Fork_#{fork_method.tr('.', '_')}_#{i}", c
+    }
+  }
 
-  class ConfigParentOnForkWithKernelForkTest < TestCase
-    include ForkTestTemplate
-    def fork_method
-      'Kernel.fork'
+  class NestedForkTest < TestCase
+    def program
+      <<~RUBY
+        1| DEBUGGER__::CONFIG[:fork_mode] = :parent
+        2| pid1 = fork do
+        3|   puts 'parent forked.'
+        4|   pid2 = fork do
+        5|      puts 'child forked.'
+        6|   end
+        7|   Process.waitpid(pid2)
+        8| end
+        9| Process.waitpid(pid1)
+      RUBY
+    end
+
+    def test_nested_fork
+      debug_code program do
+        type 'b 9'
+        type 'c'
+        assert_line_num 9
+        type 'c'
+      end
     end
   end
 end
