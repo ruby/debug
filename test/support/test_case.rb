@@ -22,14 +22,28 @@ module DEBUGGER__
 
     include AssertionHelpers
 
+    class << self
+      attr_reader :pty_home_dir
+
+      def startup
+        @pty_home_dir = Dir.mktmpdir
+      end
+
+      def shutdown
+        FileUtils.remove_entry @pty_home_dir
+      end
+    end
+
     def setup
       @temp_file = nil
-      @pty_home_dir = Dir.mktmpdir
     end
 
     def teardown
-      FileUtils.remove_entry @pty_home_dir
       remove_temp_file
+    end
+
+    def pty_home_dir
+      self.class.pty_home_dir
     end
 
     def temp_file_path

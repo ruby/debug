@@ -58,7 +58,7 @@ module DEBUGGER__
 
   class RCFileTest < ConsoleTestCase
     def rc_filename
-      File.join(@pty_home_dir, ".rdbgrc")
+      File.join(pty_home_dir, ".rdbgrc")
     end
 
     def rc_script

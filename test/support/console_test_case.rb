@@ -80,7 +80,7 @@ module DEBUGGER__
     end
 
     def run_test_scenario cmd, test_info
-      PTY.spawn({ "HOME" => @pty_home_dir }, cmd) do |read, write, pid|
+      PTY.spawn({ "HOME" => pty_home_dir }, cmd) do |read, write, pid|
         test_info.backlog = []
         test_info.last_backlog = []
         begin
