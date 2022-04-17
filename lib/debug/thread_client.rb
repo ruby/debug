@@ -34,7 +34,7 @@ module DEBUGGER__
     include Color
     include SkipPathHelper
 
-    attr_reader :thread, :id, :recorder
+    attr_reader :thread, :id, :recorder, :check_bp_fulfillment_map
 
     def location
       current_frame&.location
@@ -337,14 +337,6 @@ module DEBUGGER__
         }
         @step_tp.enable
       end
-    end
-
-    def set_check_bp_state(bp, state)
-      @check_bp_fulfillment_map[bp] = state
-    end
-
-    def check_bp_fulfilled?(bp)
-      @check_bp_fulfillment_map[bp]
     end
 
     ## cmd helpers
