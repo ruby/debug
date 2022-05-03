@@ -77,6 +77,22 @@ module DEBUGGER__
       end
     end
 
+    def test_next_goes_to_the_corret_line_after_stepping
+      debug_code(program) do
+        type 'b 12'
+        type 'c'
+        assert_line_num 12
+        type 's'
+        assert_line_num 7
+        type 'up'
+        assert_line_num 12
+        type 'n'
+        assert_line_num 13
+        type 'quit'
+        type 'y'
+      end
+    end
+
     def test_next_with_number_goes_to_the_next_nth_line
       debug_code(program) do
         type 'b 11'
