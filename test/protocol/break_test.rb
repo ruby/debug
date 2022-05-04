@@ -63,6 +63,13 @@ module DEBUGGER__
       end
     end
 
+    def test_set_function_breakpoints_sets_breakpoint_with_condition
+      run_protocol_scenario PROGRAM, cdp: false do
+        res_set_function_breakpoints([{ name: "Foo.bar", condition: "$foo == 1" }])
+        req_continue
+      end
+    end
+
     def test_set_function_breakpoints_sets_class_method_breakpoints
       run_protocol_scenario PROGRAM, cdp: false do
         req_add_breakpoint 13

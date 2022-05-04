@@ -639,7 +639,7 @@ module DEBUGGER__
 
         breakpoints = bps.map do |bp|
           if bp["name"]&.match(Session::METHOD_SIGNATURE_REGEXP)
-            make_breakpoint [:method, $1, $2, $3]
+            make_breakpoint [:method, $1, $2, $3, bp["condition"]]
           end
         end
 
