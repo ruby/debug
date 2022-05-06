@@ -35,7 +35,7 @@ or specify `-Ipath/to/debug/lib` in `RUBYOPT` or each ruby command-line option, 
 If you use Bundler, write the following line to your Gemfile.
 
 ```
-gem "debug", ">= 1.0.0"
+gem "debug", ">= 1.5.0"
 ```
 
 # HOW TO USE
