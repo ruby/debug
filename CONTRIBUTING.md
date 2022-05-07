@@ -353,6 +353,16 @@ req_set_exception_breakpoints([])
 
 to clear all exception breakpoints.
 
+- res_set_function_breakpoints(breakpoints)
+
+Sends request to rdbg to set function breakpoints. e.g.
+
+```rb
+req_set_function_breakpoints([{ name: "Foo#bar", condition: "a == 1" }])
+```
+
+Like `req_set_exception_breakpoints`, it also resets all function breakpoints in every request.
+
 - req_continue
 
 Sends request to rdbg to resume the program.
