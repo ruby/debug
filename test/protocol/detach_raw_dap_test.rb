@@ -230,8 +230,7 @@ module DEBUGGER__
                 },
                 {
                   filter: "RuntimeError",
-                  label: "rescue RuntimeError",
-                  default: true
+                  label: "rescue RuntimeError"
                 }
               ],
               supportsExceptionFilterOptions: true,

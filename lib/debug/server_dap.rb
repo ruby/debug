@@ -113,7 +113,6 @@ module DEBUGGER__
                {
                  filter: 'RuntimeError',
                  label: 'rescue RuntimeError',
-                 default: true,
                  supportsCondition: true,
                  #conditionDescription: '',
                },
