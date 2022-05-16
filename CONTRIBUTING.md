@@ -17,12 +17,24 @@ If you spot any problem, please open an issue.
 $ rake test_all
 ```
 
+### Run all console tests
+
+```bash
+$ rake test_console
+```
+
+### Run all protocol (DAP & CDP) tests
+
+```bash
+$ rake test_protocol
+```
+
 ### Run specific test(s)
 
 
 ```bash
-$ ruby test/debug/bp_test.rb # run all tests in the specified file
-$ ruby test/debug/bp_test.rb -h # to see all the test options
+$ ruby test/console/break_test.rb # run all tests in the specified file
+$ ruby test/console/break_test.rb -h # to see all the test options
 ```
 
 ## Generate Tests
