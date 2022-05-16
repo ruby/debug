@@ -621,8 +621,11 @@ module DEBUGGER__
 
       case type
       when :backtrace
+        levels = req.dig('arguments', 'levels') || @target_frames.length
+        startFrame = req.dig('arguments', 'startFrame') || 0
+
         event! :dap_result, :backtrace, req, {
-          stackFrames: @target_frames.map{|frame|
+          stackFrames: @target_frames[startFrame, levels].map{|frame|
             path = frame.realpath || frame.path
             source_name = path ? File.basename(path) : frame.location.to_s
 
