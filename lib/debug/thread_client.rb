@@ -50,7 +50,8 @@ module DEBUGGER__
       call_identifier_str =
         case frame.frame_type
         when :block
-          level, block_loc, args = frame.block_identifier
+          level, block_loc = frame.block_identifier
+          args = frame.parameters_info
 
           if !args.empty?
             args_str = " {|#{assemble_arguments(args)}|}"
@@ -58,7 +59,8 @@ module DEBUGGER__
 
           "#{colorize_blue("block")}#{args_str} in #{colorize_blue(block_loc + level)}"
         when :method
-          ci, args = frame.method_identifier
+          ci = frame.method_identifier
+          args = frame.parameters_info
 
           if !args.empty?
             args_str = "(#{assemble_arguments(args)})"
