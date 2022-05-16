@@ -49,11 +49,10 @@ module DEBUGGER__
       # p frame_type: frame_type, self: self
       case frame_type
       when :block
-        level, block_loc, _args = block_identifier
+        level, block_loc = block_identifier
         "block in #{block_loc}#{level}"
       when :method
-        ci, _args = method_identifier
-        "#{ci}"
+        method_identifier
       when :c
         c_identifier
       when :other
@@ -83,16 +82,13 @@ module DEBUGGER__
 
     def block_identifier
       return unless frame_type == :block
-      args = parameters_info
       _, level, block_loc = location.label.match(BLOCK_LABL_REGEXP).to_a
-      [level || "", block_loc, args]
+      [level || "", block_loc]
     end
 
     def method_identifier
       return unless frame_type == :method
-      args = parameters_info
-      ci = "#{klass_sig}#{callee}"
-      [ci, args]
+      "#{klass_sig}#{callee}"
     end
 
     def c_identifier
@@ -138,6 +134,17 @@ module DEBUGGER__
       end
     end
 
+    def parameters_info
+      vars = iseq.parameters_symbols
+      vars.map{|var|
+        begin
+          { name: var, value: DEBUGGER__.safe_inspect(local_variable_get(var), short: true) }
+        rescue NameError, TypeError
+          nil
+        end
+      }.compact
+    end
+
     private
 
     def get_singleton_class obj
@@ -148,17 +155,6 @@ module DEBUGGER__
 
     private def local_variable_get var
       local_variables[var]
-    end
-
-    def parameters_info
-      vars = iseq.parameters_symbols
-      vars.map{|var|
-        begin
-          { name: var, value: DEBUGGER__.safe_inspect(local_variable_get(var), short: true) }
-        rescue NameError, TypeError
-          nil
-        end
-      }.compact
     end
 
     def klass_sig
