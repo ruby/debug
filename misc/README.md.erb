@@ -280,7 +280,12 @@ You can run your application as a remote debuggee and the remote debugger consol
 
 ### Invoke as a remote debuggee
 
-There are two ways to invoke a script as remote debuggee: Use `rdbg --open` and require `debug/open` (or `debug/open_nonstop`).
+There are multiple ways to run your program as a debuggee:
+
+Stop at program start | [`rdbg` option](https://github.com/ruby/debug#rdbg---open-or-rdbg--o-for-short) | [require](https://github.com/ruby/debug#require-debugopen-in-a-program) | [debugger API](https://github.com/ruby/debug#start-by-method)
+---|---|---|---|
+Yes | `rdbg --open` | `require "debug/open"` | `DEBUGGER__.open`
+No | `rdbg --open --nonstop` | `require "debug/open_nonstop"` | `DEBUGGER__.open(nonstop: true)` 
 
 #### `rdbg --open` (or `rdbg -O` for short)
 
