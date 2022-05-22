@@ -1057,11 +1057,16 @@ module DEBUGGER__
 
     def config_show key
       key = key.to_sym
-      if CONFIG_SET[key]
+      if config_detail = CONFIG_SET[key]
         v = CONFIG[key]
         kv = "#{key} = #{v.inspect}"
-        desc = CONFIG_SET[key][1]
-        line = "%-30s \# %s" % [kv, desc]
+        desc = config_detail[1]
+
+        if config_default = config_detail[3]
+          desc += " (default: #{config_default})"
+        end
+
+        line = "%-34s \# %s" % [kv, desc]
         if line.size > SESSION.width
           @ui.puts "\# #{desc}\n#{kv}"
         else

@@ -174,7 +174,13 @@ module DEBUGGER__
     end
 
     def history_file
-      CONFIG[:history_file] || File.expand_path("~/.rdbg_history")
+      history_file = CONFIG[:history_file]
+
+      if !history_file.empty?
+        File.expand_path(history_file)
+      else
+        history_file
+      end
     end
 
     FH = "# Today's OMIKUJI: "

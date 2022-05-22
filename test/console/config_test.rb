@@ -21,13 +21,14 @@ module DEBUGGER__
         type 'config'
         # show all configurations with descriptions
         assert_line_text([
-          /show_src_lines = \(default\)/,
-          /show_frames = \(default\)/
+          /show_src_lines = \d+/,
+          /show_frames = \d+/
         ])
         # only show this configuration
         type 'config show_frames'
+        assert_no_line_text(/show_src_lines/)
         assert_line_text([
-          /show_frames = \(default\)/
+          /show_frames = \d+/
         ])
         type 'q!'
       end
