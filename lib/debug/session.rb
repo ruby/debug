@@ -2216,12 +2216,10 @@ module DEBUGGER__
     end
 
     private def __fork_setup_for_debugger
-      unless fork_mode = CONFIG[:fork_mode]
-        if CONFIG[:parent_on_fork]
-          fork_mode = :parent
-        else
-          fork_mode = :both
-        end
+      fork_mode = CONFIG[:fork_mode]
+
+      if fork_mode == :both && CONFIG[:parent_on_fork]
+        fork_mode = :parent
       end
 
       parent_pid = Process.pid
