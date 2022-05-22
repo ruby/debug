@@ -2120,7 +2120,7 @@ module DEBUGGER__
 
   def self.check_loglevel level
     lv = LOG_LEVELS[level]
-    config_lv = LOG_LEVELS[CONFIG[:log_level] || :WARN]
+    config_lv = LOG_LEVELS[CONFIG[:log_level]]
     lv <= config_lv
   end
 

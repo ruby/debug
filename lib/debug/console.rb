@@ -208,7 +208,7 @@ module DEBUGGER__
       if history && @init_history_lines
         added_records = history.to_a[@init_history_lines .. -1]
         path = history_file
-        max = CONFIG[:save_history] || 10_000
+        max = CONFIG[:save_history]
 
         if !added_records.empty? && !path.empty?
           orig_records = read_history_file
