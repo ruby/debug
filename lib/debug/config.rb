@@ -135,11 +135,13 @@ module DEBUGGER__
       self.class.instance_variable_set(:@config, conf.freeze)
 
       # Post process
-      if_updated old_conf, conf, :keep_alloc_site do |_, new|
-        require 'objspace'
+      if_updated old_conf, conf, :keep_alloc_site do |old, new|
         if new
+          require 'objspace'
           ObjectSpace.trace_object_allocations_start
-        else
+        end
+
+        if old && !new
           ObjectSpace.trace_object_allocations_stop
         end
       end
