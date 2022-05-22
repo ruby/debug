@@ -1059,7 +1059,7 @@ module DEBUGGER__
       key = key.to_sym
       if CONFIG_SET[key]
         v = CONFIG[key]
-        kv = "#{key} = #{v.nil? ? '(default)' : v.inspect}"
+        kv = "#{key} = #{v.inspect}"
         desc = CONFIG_SET[key][1]
         line = "%-30s \# %s" % [kv, desc]
         if line.size > SESSION.width

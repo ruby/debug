@@ -12,34 +12,34 @@ module DEBUGGER__
 
   CONFIG_SET = {
     # UI setting
-    log_level:      ['RUBY_DEBUG_LOG_LEVEL',      "UI: Log level same as Logger (default: WARN)",                   :loglevel],
-    show_src_lines: ['RUBY_DEBUG_SHOW_SRC_LINES', "UI: Show n lines source code on breakpoint (default: 10 lines)", :int],
-    show_frames:    ['RUBY_DEBUG_SHOW_FRAMES',    "UI: Show n frames on breakpoint (default: 2 frames)",            :int],
-    use_short_path: ['RUBY_DEBUG_USE_SHORT_PATH', "UI: Show shorten PATH (like $(Gem)/foo.rb)",                      :bool],
-    no_color:       ['RUBY_DEBUG_NO_COLOR',       "UI: Do not use colorize (default: false)",                       :bool],
-    no_sigint_hook: ['RUBY_DEBUG_NO_SIGINT_HOOK', "UI: Do not suspend on SIGINT (default: false)",                  :bool],
-    no_reline:      ['RUBY_DEBUG_NO_RELINE',      "UI: Do not use Reline library (default: false)",                 :bool],
+    log_level:      ['RUBY_DEBUG_LOG_LEVEL',      "UI: Log level same as Logger (default: WARN)",                   :loglevel, "WARN"],
+    show_src_lines: ['RUBY_DEBUG_SHOW_SRC_LINES', "UI: Show n lines source code on breakpoint (default: 10 lines)", :int, "10"],
+    show_frames:    ['RUBY_DEBUG_SHOW_FRAMES',    "UI: Show n frames on breakpoint (default: 2 frames)",            :int, "2"],
+    use_short_path: ['RUBY_DEBUG_USE_SHORT_PATH', "UI: Show shorten PATH (like $(Gem)/foo.rb)",                     :bool, "false"],
+    no_color:       ['RUBY_DEBUG_NO_COLOR',       "UI: Do not use colorize (default: false)",                       :bool, "false"],
+    no_sigint_hook: ['RUBY_DEBUG_NO_SIGINT_HOOK', "UI: Do not suspend on SIGINT (default: false)",                  :bool, "false"],
+    no_reline:      ['RUBY_DEBUG_NO_RELINE',      "UI: Do not use Reline library (default: false)",                 :bool, "false"],
 
     # control setting
     skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "CONTROL: Skip showing/entering frames for given paths (default: [])", :path],
-    skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "CONTROL: Skip on no source code lines (default: false)",              :bool],
-    keep_alloc_site:['RUBY_DEBUG_KEEP_ALLOC_SITE',"CONTROL: Keep allocation site and p, pp shows it (default: false)",   :bool],
-    postmortem:     ['RUBY_DEBUG_POSTMORTEM',     "CONTROL: Enable postmortem debug (default: false)",                   :bool],
-    fork_mode:      ['RUBY_DEBUG_FORK_MODE',      "CONTROL: Control which process activates a debugger after fork (both/parent/child) (default: both)", :forkmode],
+    skip_nosrc:     ['RUBY_DEBUG_SKIP_NOSRC',     "CONTROL: Skip on no source code lines (default: false)",              :bool, "false"],
+    keep_alloc_site:['RUBY_DEBUG_KEEP_ALLOC_SITE',"CONTROL: Keep allocation site and p, pp shows it (default: false)",   :bool, "false"],
+    postmortem:     ['RUBY_DEBUG_POSTMORTEM',     "CONTROL: Enable postmortem debug (default: false)",                   :bool, "false"],
+    fork_mode:      ['RUBY_DEBUG_FORK_MODE',      "CONTROL: Control which process activates a debugger after fork (both/parent/child) (default: both)", :forkmode, "both"],
     sigdump_sig:    ['RUBY_DEBUG_SIGDUMP_SIG',    "CONTROL: Sigdump signal (default: disabled)"],
 
     # boot setting
-    nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool],
-    stop_at_load:   ['RUBY_DEBUG_STOP_AT_LOAD',"BOOT: Stop at just loading location",                               :bool],
+    nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool, "false"],
+    stop_at_load:   ['RUBY_DEBUG_STOP_AT_LOAD',"BOOT: Stop at just loading location",                               :bool, "false"],
     init_script:    ['RUBY_DEBUG_INIT_SCRIPT', "BOOT: debug command script path loaded at first stop"],
     commands:       ['RUBY_DEBUG_COMMANDS',    "BOOT: debug commands invoked at first stop. commands should be separated by ';;'"],
-    no_rc:          ['RUBY_DEBUG_NO_RC',       "BOOT: ignore loading ~/.rdbgrc(.rb)",                               :bool],
-    history_file:   ['RUBY_DEBUG_HISTORY_FILE',"BOOT: history file (default: ~/.rdbg_history)"],
-    save_history:   ['RUBY_DEBUG_SAVE_HISTORY',"BOOT: maximum save history lines (default: 10,000)"],
+    no_rc:          ['RUBY_DEBUG_NO_RC',       "BOOT: ignore loading ~/.rdbgrc(.rb)",                               :bool, "false"],
+    history_file:   ['RUBY_DEBUG_HISTORY_FILE',"BOOT: history file (default: ~/.rdbg_history)", :string, File.expand_path("~/.rdbg_history")],
+    save_history:   ['RUBY_DEBUG_SAVE_HISTORY',"BOOT: maximum save history lines (default: 10,000)", :int, "1000"],
 
     # remote setting
     port:           ['RUBY_DEBUG_PORT',         "REMOTE: TCP/IP remote debugging: port"],
-    host:           ['RUBY_DEBUG_HOST',         "REMOTE: TCP/IP remote debugging: host (localhost if not given)"],
+    host:           ['RUBY_DEBUG_HOST',         "REMOTE: TCP/IP remote debugging: host", :string, "127.0.0.1"],
     sock_path:      ['RUBY_DEBUG_SOCK_PATH',    "REMOTE: UNIX Domain Socket remote debugging: socket path"],
     sock_dir:       ['RUBY_DEBUG_SOCK_DIR',     "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
     cookie:         ['RUBY_DEBUG_COOKIE',       "REMOTE: Cookie for negotiation"],
@@ -47,7 +47,7 @@ module DEBUGGER__
     chrome_path:    ['RUBY_DEBUG_CHROME_PATH',  "REMOTE: Platform dependent path of Chrome (For more information, See [here](https://github.com/ruby/debug/pull/334/files#diff-5fc3d0a901379a95bc111b86cf0090b03f857edfd0b99a0c1537e26735698453R55-R64))"],
 
     # obsolete
-    parent_on_fork: ['RUBY_DEBUG_PARENT_ON_FORK', "OBSOLETE: Keep debugging parent process on fork (default: false)",     :bool],
+    parent_on_fork: ['RUBY_DEBUG_PARENT_ON_FORK', "OBSOLETE: Keep debugging parent process on fork (default: false)",     :bool, "false"],
   }.freeze
 
   CONFIG_MAP = CONFIG_SET.map{|k, (ev, _)| [k, ev]}.to_h.freeze
@@ -66,7 +66,17 @@ module DEBUGGER__
         raise 'Can not make multiple configurations in one process'
       end
 
-      update self.class.parse_argv(argv)
+      config = self.class.parse_argv(argv)
+
+      # apply defaults
+      CONFIG_SET.each do |k, config_detail|
+        unless config.key?(k)
+          default_value = config_detail[3]
+          config[k] = parse_config_value(k, default_value)
+        end
+      end
+
+      update config
     end
 
     def inspect
@@ -126,8 +136,8 @@ module DEBUGGER__
 
       # Post process
       if_updated old_conf, conf, :keep_alloc_site do |_, new|
+        require 'objspace'
         if new
-          require 'objspace'
           ObjectSpace.trace_object_allocations_start
         else
           ObjectSpace.trace_object_allocations_stop
