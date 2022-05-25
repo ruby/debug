@@ -19,6 +19,10 @@ module DEBUGGER__
     def skip_path?(path)
       CONFIG.skip? || !path ||
       skip_internal_path?(path) ||
+      skip_config_skip_path?(path)
+    end
+
+    def skip_config_skip_path?(path)
       (skip_paths = CONFIG[:skip_path]) && skip_paths.any?{|skip_path| path.match?(skip_path)}
     end
 
