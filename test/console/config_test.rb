@@ -274,6 +274,17 @@ module DEBUGGER__
         type 'c'
       end
     end
+
+    def test_skip_path_expands_the_path
+      debug_code do
+        type "config set skip_path ~/test.rb"
+        type "config skip_path"
+        # we can't do direct compare using the expanded absolute paths here
+        # because GH Action doesn't allow modifying HOME path and the result will be different between there and local
+        assert_no_line_text /~\//
+        type "q!"
+      end
+    end
   end
 
   class ConfigKeepAllocSiteTest < ConsoleTestCase
