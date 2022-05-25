@@ -114,6 +114,27 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_frame_filtering_works_with_unexpanded_path_and_expanded_skip_path
+      foo_file = 'class Foo; def bar; debugger; end; end'
+      program = <<~RUBY
+       1| load "~/foo.rb"
+       2| Foo.new.bar
+      RUBY
+
+      debug_code(program) do
+        type "file = File.open('#{pty_home_dir}/foo.rb', 'w+') { |f| f.write('#{foo_file}') }"
+        type 'c'
+        type 'bt'
+        assert_line_text(/Foo#bar/)
+        assert_line_text(/~\/foo\.rb/)
+        type "DEBUGGER__::CONFIG[:skip_path] = '#{pty_home_dir}/foo.rb'"
+        type 'bt'
+        assert_no_line_text(/Foo#bar/) # ~/foo.rb should match foo.rb's absolute path and be skipped
+        assert_no_line_text(/~\/foo\.rb/)
+        type 'c'
+      end
+    end
   end
 
   class BlockTraceTest < ConsoleTestCase
