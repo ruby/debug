@@ -2024,11 +2024,13 @@ module DEBUGGER__
   end
 
   def self.load_rc
-    [[File.expand_path('~/.rdbgrc'), true],
-     [File.expand_path('~/.rdbgrc.rb'), true],
-     # ['./.rdbgrc', true], # disable because of security concern
-     [CONFIG[:init_script], false],
-     ].each{|(path, rc)|
+    [
+      [File.expand_path('~/.rdbgrc'), true],
+      [File.expand_path('~/.rdbgrc.rb'), true],
+      [File.join(Dir.pwd, '.rdbgrc'), true],
+      [File.join(Dir.pwd, '.rdbgrc.rb'), true],
+      [CONFIG[:init_script], false],
+    ].each{|(path, rc)|
       next unless path
       next if rc && CONFIG[:no_rc] # ignore rc
 
