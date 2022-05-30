@@ -1531,7 +1531,7 @@ module DEBUGGER__
 
       waiting_thread_clients.each{|tc|
         next if @tc == tc
-        request_tc :continue
+        tc << :continue
       }
     end
 
