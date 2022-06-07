@@ -92,7 +92,7 @@ module DEBUGGER__
               end
             rescue Exception => e
               th.each(&:kill)
-              flunk e.inspect
+              flunk "#{e.class.name}: #{e.message}"
             end
           elsif remote && !NO_REMOTE
             debug_code_on_local
