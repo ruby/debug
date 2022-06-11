@@ -306,8 +306,10 @@ module DEBUGGER__
       write_temp_file(strip_line_num(program))
       remote_info = setup_unix_domain_socket_remote_debuggee
 
-      while !File.exist?(remote_info.sock_path)
-        sleep 0.1
+      Timeout.timeout(TIMEOUT_SEC) do
+        while !File.exist?(remote_info.sock_path)
+          sleep 0.1
+        end
       end
 
       DEBUGGER__::Client.new([socket_path]).connect
@@ -335,7 +337,11 @@ module DEBUGGER__
       sock_path = DEBUGGER__.create_unix_domain_socket_name + "-#{$ruby_debug_test_num += 1}"
       remote_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --sock-path=#{sock_path} #{temp_file_path}")
       remote_info.sock_path = sock_path
-      sleep 0.1 while !File.exist?(sock_path) && Process.kill(0, remote_info.pid)
+
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.1 while !File.exist?(sock_path) && Process.kill(0, remote_info.pid)
+      end
+
       remote_info
     end
 
