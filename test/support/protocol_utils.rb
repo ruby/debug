@@ -146,7 +146,7 @@ module DEBUGGER__
         send_cdp_request 'Runtime.terminateExecution'
       end
 
-      cleanup_reader
+      close_reader
     end
 
     def assert_reattach
@@ -317,7 +317,7 @@ module DEBUGGER__
       flunk create_protocol_message "Expected the debuggee program to finish" unless wait_pid @remote_info.pid, TIMEOUT_SEC
     ensure
       @reader_thread&.kill
-      @web_sock&.cleanup
+      @web_sock&.close
       @remote_info&.reader_thread&.kill
       @remote_info&.r&.close
       @remote_info&.w&.close
@@ -333,7 +333,7 @@ module DEBUGGER__
         @web_sock.send_close_connection
       end
 
-      cleanup_reader
+      close_reader
     end
 
     def req_set_breakpoints_on_dap
@@ -360,14 +360,14 @@ module DEBUGGER__
       }
     end
 
-    def cleanup_reader
+    def close_reader
       @reader_thread.raise Detach
 
       case ENV['RUBY_DEBUG_TEST_UI']
       when 'vscode'
         @sock.close
       when 'chrome'
-        @web_sock.cleanup
+        @web_sock.close
       end
     end
 

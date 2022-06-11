@@ -157,7 +157,7 @@ module DEBUGGER__
       flunk create_protocol_message"TIMEOUT ERROR (#{TIMEOUT_SEC} sec) while waiting for the following response.\n#{JSON.pretty_generate target_msg}"
     ensure
       @reader_thread.kill
-      @web_sock.cleanup
+      @web_sock.close
       @remote_info.reader_thread.kill
       @remote_info.r.close
       @remote_info.w.close
