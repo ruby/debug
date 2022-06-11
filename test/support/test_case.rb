@@ -249,7 +249,7 @@ module DEBUGGER__
       @sock.print frame.pack 'c*'
     end
 
-    def cleanup
+    def close
       @sock.close
     end
   end
@@ -361,7 +361,7 @@ module DEBUGGER__
       method: "Debugger.setBlackboxPatterns",
       params: {
         patterns: [
-    
+
         ]
       }
     },
@@ -378,7 +378,7 @@ module DEBUGGER__
       @result = []
       @keys = []
     end
-  
+
     def parse objs
       objs.each{|k, v|
         parse_ k, v
@@ -386,7 +386,7 @@ module DEBUGGER__
       }
       @result
     end
-  
+
     def parse_ k, v
       @keys << k
       case v
