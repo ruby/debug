@@ -291,11 +291,11 @@ module DEBUGGER__
 
       flunk create_protocol_message "Expected the debuggee program to finish" unless wait_pid @remote_info.pid, TIMEOUT_SEC
     ensure
-      @reader_thread.kill
-      @sock.close if @sock
-      @remote_info.reader_thread.kill
-      @remote_info.r.close
-      @remote_info.w.close
+      @reader_thread&.kill
+      @sock&.close
+      @remote_info&.reader_thread&.kill
+      @remote_info&.r&.close
+      @remote_info&.w&.close
     end
 
     def execute_cdp_scenario scenario
@@ -316,11 +316,11 @@ module DEBUGGER__
 
       flunk create_protocol_message "Expected the debuggee program to finish" unless wait_pid @remote_info.pid, TIMEOUT_SEC
     ensure
-      @reader_thread.kill
-      @web_sock.cleanup if @web_sock
-      @remote_info.reader_thread.kill
-      @remote_info.r.close
-      @remote_info.w.close
+      @reader_thread&.kill
+      @web_sock&.cleanup
+      @remote_info&.reader_thread&.kill
+      @remote_info&.r&.close
+      @remote_info&.w&.close
     end
 
     def req_disconnect
