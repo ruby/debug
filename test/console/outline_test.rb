@@ -56,7 +56,7 @@ module DEBUGGER__
       end
     end
 
-    def test_outline_alisases
+    def test_outline_aliases
       debug_code(program) do
         type 'c'
         type 'outline'
