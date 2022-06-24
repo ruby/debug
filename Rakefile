@@ -40,7 +40,7 @@ Rake::TestTask.new(:test_console) do |t|
   t.test_files = FileList["test/console/*_test.rb", "test/*_test.rb"]
 end
 
-desc "Run all debugger procotols (CAP & DAP) related tests"
+desc "Run all debugger protocols (CAP & DAP) related tests"
 Rake::TestTask.new(:test_protocol) do |t|
   t.test_files = FileList["test/protocol/*_test.rb"]
 end

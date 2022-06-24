@@ -94,7 +94,7 @@ module DEBUGGER__
             assert_line_text(/ZeroDivisionError/)
             type "c"
 
-            # stops for NoMethodError because _raised is not defiend in the program
+            # stops for NoMethodError because _raised is not defined in the program
             type "_raised"
             assert_line_text(/NameError: undefined local variable or method `_raised' for main:Object/)
             type "c"
@@ -153,7 +153,7 @@ module DEBUGGER__
             type "_return + 'bar'"
             assert_line_text(/"foobar"/)
             type "c"
-            # stops for NoMethodError because _return is not defiend in the program
+            # stops for NoMethodError because _return is not defined in the program
             type "_raised"
             assert_line_text(/NameError: undefined local variable or method `_return' for main:Object/)
             type "c"

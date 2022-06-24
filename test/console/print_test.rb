@@ -30,7 +30,7 @@ module DEBUGGER__
     end
   end
 
-  class InpsectionFailureTest < TestCase
+  class InspectionFailureTest < TestCase
     def program
       <<~RUBY
      1| f = Object.new

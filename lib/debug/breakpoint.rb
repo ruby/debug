@@ -206,7 +206,7 @@ module DEBUGGER__
       when events.include?(:RUBY_EVENT_END)
         activate(iseq, :end, line)
       else
-        # not actiavated
+        # not activated
       end
     end
 
