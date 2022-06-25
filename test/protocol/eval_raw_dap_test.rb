@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
 
-  class EvalTest1643807667 < TestCase
+  class EvalTest1643807667 < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| a = 2
       2| b = 3

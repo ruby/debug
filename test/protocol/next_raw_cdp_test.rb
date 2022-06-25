@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
-  
-  class NextTest1647162227 < TestCase
+
+  class NextTest1647162227 < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| module Foo
       2|   class Bar
@@ -17,7 +17,7 @@ module DEBUGGER__
       9| end
 
     RUBY
-    
+
     def test_1647162227
       run_cdp_scenario PROGRAM do
         [
@@ -158,7 +158,7 @@ module DEBUGGER__
             method: "Debugger.stepOver",
             params: {
               skipList: [
-          
+
               ]
             }
           },
@@ -369,7 +369,7 @@ module DEBUGGER__
             method: "Debugger.stepOver",
             params: {
               skipList: [
-          
+
               ]
             }
           },
@@ -610,7 +610,7 @@ module DEBUGGER__
             method: "Debugger.stepOver",
             params: {
               skipList: [
-          
+
               ]
             }
           },
@@ -821,7 +821,7 @@ module DEBUGGER__
             method: "Debugger.stepOver",
             params: {
               skipList: [
-          
+
               ]
             }
           },
@@ -1032,7 +1032,7 @@ module DEBUGGER__
             method: "Debugger.stepOver",
             params: {
               skipList: [
-          
+
               ]
             }
           },

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
 
-  class StepBackTest1638698086 < TestCase
+  class StepBackTest1638698086 < ProtocolTestCase
     PROGRAM = <<~RUBY
        1| binding.b do: 'record on'
        2|
