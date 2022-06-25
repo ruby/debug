@@ -1044,8 +1044,8 @@ module DEBUGGER__
             # enable recording
             if !@recorder
               @recorder = Recorder.new
-              @recorder.enable
             end
+            @recorder.enable
           when :off
             if @recorder&.enabled?
               @recorder.disable
