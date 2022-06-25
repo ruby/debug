@@ -119,7 +119,6 @@ module DEBUGGER__
         next if skip?(tp)
 
         depth = caller.size
-        sp = ' ' * depth
 
         call_identifier_str =
           if tp.defined_class
@@ -133,9 +132,11 @@ module DEBUGGER__
         case tp.event
         when :call, :c_call, :b_call
           depth += 1 if tp.event == :c_call
+          sp = ' ' * depth
           out tp, ">#{sp}#{call_identifier_str}", depth
         when :return, :c_return, :b_return
           depth += 1 if tp.event == :c_return
+          sp = ' ' * depth
           return_str = colorize_magenta(DEBUGGER__.safe_inspect(tp.return_value, short: true))
           out tp, "<#{sp}#{call_identifier_str} #=> #{return_str}", depth
         end
