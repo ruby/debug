@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../lib/debug/color'
-require_relative '../lib/debug/config'
+require_relative '../../lib/debug/color'
+require_relative '../../lib/debug/config'
 require 'test/unit'
 require 'test/unit/rr'
 
