@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
-  class WatchTest < TestCase
+  class WatchTest < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| a = 2
       2| a += 1

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
-  class CatchTest1643891417 < TestCase
+  class CatchTest1643891417 < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| module Foo
       2|   class Bar
@@ -372,7 +372,7 @@ module DEBUGGER__
     end
   end
 
-  class CatchTest1643892185 < TestCase
+  class CatchTest1643892185 < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| module Foo
       2|   class Bar

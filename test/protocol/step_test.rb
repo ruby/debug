@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
-  class StepTest < TestCase
+  class StepTest < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| module Foo
       2|   class Bar
@@ -35,7 +35,7 @@ module DEBUGGER__
     end
   end
 
-  class StepTest2 < TestCase
+  class StepTest2 < ProtocolTestCase
     def program path
       <<~RUBY
         1| require_relative "#{path}"

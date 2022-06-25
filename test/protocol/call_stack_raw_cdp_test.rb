@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
-  
-  class CallStackTest1647167458 < TestCase
+
+  class CallStackTest1647167458 < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| module Foo
       2|   class Bar
@@ -17,7 +17,7 @@ module DEBUGGER__
       9| end
 
     RUBY
-    
+
     def test_1647167458
       run_cdp_scenario PROGRAM do
         [
