@@ -12,6 +12,13 @@ require_relative 'assertions'
 
 module DEBUGGER__
   class TestCase < Test::Unit::TestCase
+    TestInfo = Struct.new(:queue, :mode, :prompt_pattern, :remote_info,
+                          :backlog, :last_backlog, :internal_info, :failed_process)
+
+    RemoteInfo = Struct.new(:r, :w, :pid, :sock_path, :port, :reader_thread, :debuggee_backlog)
+
+    MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
+
     include TestUtils
     include DAP_TestUtils
     include CDP_TestUtils

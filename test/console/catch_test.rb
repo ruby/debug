@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class BasicCatchTest < TestCase
+  class BasicCatchTest < ConsoleTestCase
     def program
       <<~RUBY
       1| a = 1
@@ -86,7 +86,7 @@ module DEBUGGER__
     end
   end
 
-  class ReraisedExceptionCatchTest < TestCase
+  class ReraisedExceptionCatchTest < ConsoleTestCase
     def program
       <<~RUBY
       1| def foo
@@ -115,7 +115,7 @@ module DEBUGGER__
     end
   end
 
-  class NamespacedExceptionCatchTest < TestCase
+  class NamespacedExceptionCatchTest < ConsoleTestCase
     def program
       <<~RUBY
          1| class TestException < StandardError; end
@@ -149,7 +149,7 @@ module DEBUGGER__
     end
   end
 
-  class PathOptionTest < TestCase
+  class PathOptionTest < ConsoleTestCase
     def extra_file
       <<~RUBY
         def bar

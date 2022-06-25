@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class FrameControlTest < TestCase
+  class FrameControlTest < ConsoleTestCase
     def extra_file
       <<~RUBY
       class Foo

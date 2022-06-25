@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative 'support/test_case'
+require_relative 'support/console_test_case'
 require 'stringio'
 
 module DEBUGGER__
-  class ClientTest < TestCase
+  class ClientTest < ConsoleTestCase
     def test_gen_sockpath
       output = with_captured_stdout do
         Client.util("gen-sockpath")

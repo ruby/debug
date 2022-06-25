@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class HandleInspectExceptionsTest < TestCase
+  class HandleInspectExceptionsTest < ConsoleTestCase
     def program
       <<~RUBY
        1| class Baz
@@ -29,7 +29,7 @@ module DEBUGGER__
     end
   end
 
-  class BasicInfoTest < TestCase
+  class BasicInfoTest < ConsoleTestCase
     def program
       <<~RUBY
      1| def foo
@@ -89,7 +89,7 @@ module DEBUGGER__
     end
   end
 
-  class InfoThreadsTest < TestCase
+  class InfoThreadsTest < ConsoleTestCase
     def program
       <<~RUBY
        1| def foo
@@ -123,7 +123,7 @@ module DEBUGGER__
     end
   end
 
-  class InfoConstantTest < TestCase
+  class InfoConstantTest < ConsoleTestCase
     def program
       <<~RUBY
          1|

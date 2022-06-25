@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class SetTest < TestCase
+  class SetTest < ConsoleTestCase
     def program
       <<~RUBY
         1| def foo
@@ -68,7 +68,7 @@ module DEBUGGER__
     end
   end
 
-  class ShowSrcLinesTest < TestCase
+  class ShowSrcLinesTest < ConsoleTestCase
     def program
       <<~RUBY
       1| p 1
@@ -104,7 +104,7 @@ module DEBUGGER__
     end
   end
 
-  class ShowFramesTest < TestCase
+  class ShowFramesTest < ConsoleTestCase
     def program
       <<~RUBY
      1| def m1
@@ -142,7 +142,7 @@ module DEBUGGER__
     end
   end
 
-  class SkipPathTest < TestCase
+  class SkipPathTest < ConsoleTestCase
     def lib_file
       <<~RUBY
         def lib_m1
@@ -275,7 +275,7 @@ module DEBUGGER__
     end
   end
 
-  class ConfigKeepAllocSiteTest < TestCase
+  class ConfigKeepAllocSiteTest < ConsoleTestCase
     def program
       <<~RUBY
          1| a = Object.new
@@ -304,7 +304,7 @@ module DEBUGGER__
     end
   end
 
-  class LogLevelTest < TestCase
+  class LogLevelTest < ConsoleTestCase
     def program
       <<~RUBY
       1| a = 1

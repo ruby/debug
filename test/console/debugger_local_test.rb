@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class DebuggerLocalsTest < TestCase
-    class REPLLocalsTest < TestCase
+  class DebuggerLocalsTest < ConsoleTestCase
+    class REPLLocalsTest < ConsoleTestCase
       def program
         <<~RUBY
         1| a = 1
@@ -21,8 +21,8 @@ module DEBUGGER__
       end
     end
 
-    class RaisedTest < TestCase
-      class RubyMethodTest < TestCase
+    class RaisedTest < ConsoleTestCase
+      class RubyMethodTest < ConsoleTestCase
         def program
           <<~RUBY
        1| foo rescue nil
@@ -49,7 +49,7 @@ module DEBUGGER__
         end
       end
 
-      class CMethodTest < TestCase
+      class CMethodTest < ConsoleTestCase
         def program
           <<~RUBY
        1| 1/0 rescue nil
@@ -76,7 +76,7 @@ module DEBUGGER__
         end
       end
 
-      class EncapsulationTest < TestCase
+      class EncapsulationTest < ConsoleTestCase
         def program
           <<~RUBY
          1| 1/0 rescue nil
@@ -103,7 +103,7 @@ module DEBUGGER__
       end
     end
 
-    class ReturnedTest < TestCase
+    class ReturnedTest < ConsoleTestCase
       def program
         <<~RUBY
    1| def foo
@@ -133,7 +133,7 @@ module DEBUGGER__
         end
       end
 
-      class EncapsulationTest < TestCase
+      class EncapsulationTest < ConsoleTestCase
         def program
           <<~RUBY
          1| def foo

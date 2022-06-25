@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
   #
   # Tests adding breakpoints to methods
   #
-  class BreakAtMethodsTest < TestCase
+  class BreakAtMethodsTest < ConsoleTestCase
     def program
       <<~RUBY
          1| module Foo
@@ -95,7 +95,7 @@ module DEBUGGER__
     end
   end
 
-  class BreakAtClassMethodsTest < TestCase
+  class BreakAtClassMethodsTest < ConsoleTestCase
     def program
       <<~RUBY
      1| class A
@@ -138,7 +138,7 @@ module DEBUGGER__
     end
   end
 
-  class BreakAtInstanceMethodsTest < TestCase
+  class BreakAtInstanceMethodsTest < ConsoleTestCase
     def program
       <<~RUBY
      1|  class A
@@ -204,7 +204,7 @@ module DEBUGGER__
       end
     end
 
-    class PathOptionTest < TestCase
+    class PathOptionTest < ConsoleTestCase
       def extra_file
         <<~RUBY
         Foo.new.bar
@@ -283,7 +283,7 @@ module DEBUGGER__
     end
   end
 
-  class BreakAtCMethodsTest < TestCase
+  class BreakAtCMethodsTest < ConsoleTestCase
     def program
       <<~RUBY
      1| a = 1
@@ -354,7 +354,7 @@ module DEBUGGER__
       end
     end
 
-    class PathOptionTest < TestCase
+    class PathOptionTest < ConsoleTestCase
       def extra_file
         <<~RUBY
         1.abs
@@ -381,7 +381,7 @@ module DEBUGGER__
     end
   end
 
-  class BreakAtCMethod2Test < TestCase
+  class BreakAtCMethod2Test < ConsoleTestCase
     def program
       <<~RUBY
         1| binding.b(do: "b Array#each")
@@ -407,7 +407,7 @@ module DEBUGGER__
     end
   end
 
-  class BreakWithCommandTest < TestCase
+  class BreakWithCommandTest < ConsoleTestCase
     def program
       <<~RUBY
      1| def foo
@@ -476,7 +476,7 @@ module DEBUGGER__
   #
   # Tests adding breakpoints to empty methods
   #
-  class BreakAtEmptyMethodsTest < TestCase
+  class BreakAtEmptyMethodsTest < ConsoleTestCase
     def program
       <<~RUBY
          1| module Foo
@@ -530,7 +530,7 @@ module DEBUGGER__
   #
   # Tests adding breakpoints to lines
   #
-  class BreakAtLinesTest < TestCase
+  class BreakAtLinesTest < ConsoleTestCase
     def program
       <<~RUBY
          1| module Foo
@@ -638,7 +638,7 @@ module DEBUGGER__
     end
   end
 
-  class ConditionalBreakTest < TestCase
+  class ConditionalBreakTest < ConsoleTestCase
     def program
       <<~RUBY
      1| a = 1
@@ -690,7 +690,7 @@ module DEBUGGER__
       end
     end
 
-    class PathOptionTest < TestCase
+    class PathOptionTest < ConsoleTestCase
       def extra_file
         <<~RUBY
         a = 100

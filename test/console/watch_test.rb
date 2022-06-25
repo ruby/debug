@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class ObjectInstanceVariableWatchingTest < TestCase
+  class ObjectInstanceVariableWatchingTest < ConsoleTestCase
     def program
       <<~RUBY
          1| class Student
@@ -72,7 +72,7 @@ module DEBUGGER__
       end
     end
 
-    class ConditionTest < TestCase
+    class ConditionTest < ConsoleTestCase
       def program
         <<~RUBY
          1| class Student
@@ -104,7 +104,7 @@ module DEBUGGER__
       end
     end
 
-    class PathOptionTest < TestCase
+    class PathOptionTest < ConsoleTestCase
       def extra_file
         <<~RUBY
         STUDENT.age = 25

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class DebugStatementTest < TestCase
+  class DebugStatementTest < ConsoleTestCase
     STATEMENT_PLACE_HOLDER = "__BREAK_STATEMENT__"
     SUPPORTED_DEBUG_STATEMENTS = %w(binding.break binding.b debugger).freeze
 
@@ -139,7 +139,7 @@ module DEBUGGER__
     end
   end
 
-  class StepInTest <  TestCase
+  class StepInTest <  ConsoleTestCase
     def program
       <<~RUBY
      1| def foo(num)

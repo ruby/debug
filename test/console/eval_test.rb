@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class EvalTest < TestCase
+  class EvalTest < ConsoleTestCase
     def program
       <<~RUBY
      1| a = "foo"
