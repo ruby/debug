@@ -41,11 +41,13 @@ module DEBUGGER__
     # API
 
     def run_protocol_scenario program, dap: true, cdp: true, &scenario
-      write_temp_file(strip_line_num(program))
-      execute_dap_scenario scenario if dap
-      execute_cdp_scenario scenario if cdp
+      Timeout.timeout(30) do
+        write_temp_file(strip_line_num(program))
+        execute_dap_scenario scenario if dap
+        execute_cdp_scenario scenario if cdp
 
-      check_line_num!(program)
+        check_line_num!(program)
+      end
     end
 
     def req_add_breakpoint lineno, path: temp_file_path, cond: nil
