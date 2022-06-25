@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'support/console_test_case'
+require_relative '../support/console_test_case'
 require 'stringio'
 
 module DEBUGGER__
