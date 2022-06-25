@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class DebugCommandOptionTest < TestCase
+  class DebugCommandOptionTest < ConsoleTestCase
     def program
       <<~RUBY
       1| raise "foo"
@@ -19,7 +19,7 @@ module DEBUGGER__
     end
   end
 
-  class NonstopOptionTest < TestCase
+  class NonstopOptionTest < ConsoleTestCase
     def program
       <<~RUBY
       1| a = "foo"
@@ -36,7 +36,7 @@ module DEBUGGER__
     end
   end
 
-  class InitScriptTest < TestCase
+  class InitScriptTest < ConsoleTestCase
     TEMPFILE_BASENAME = __FILE__.hash.abs.to_s(16)
 
     def with_init_script(filename)

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class PostmortemTest < TestCase
+  class PostmortemTest < ConsoleTestCase
     def program
       <<~RUBY
         1| def foo y = __LINE__
@@ -51,7 +51,7 @@ module DEBUGGER__
     end
   end
 
-  class CustomPostmortemTest < TestCase
+  class CustomPostmortemTest < ConsoleTestCase
     def program
       <<~RUBY
         1| DEBUGGER__::CONFIG[:postmortem] = true

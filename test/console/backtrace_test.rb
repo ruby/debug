@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class BasicBacktraceTest < TestCase
+  class BasicBacktraceTest < ConsoleTestCase
     def program
       <<~RUBY
      1| class Foo
@@ -116,7 +116,7 @@ module DEBUGGER__
     end
   end
 
-  class BlockTraceTest < TestCase
+  class BlockTraceTest < ConsoleTestCase
     def program
       <<~RUBY
      1| tap do

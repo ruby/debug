@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
   module ForkWithBlock
@@ -151,7 +151,7 @@ module DEBUGGER__
   # matrix
   [ForkWithBlock, ForkWithoutBlock].each.with_index{|program, i|
     ['fork', 'Process.fork', 'Kernel.fork'].each{|fork_method|
-      c = Class.new TestCase do
+      c = Class.new ConsoleTestCase do
         include ForkTestTemplate
         include program
         define_method :fork_method do
@@ -163,7 +163,7 @@ module DEBUGGER__
     }
   }
 
-  class NestedForkTest < TestCase
+  class NestedForkTest < ConsoleTestCase
     def program
       <<~RUBY
         1| DEBUGGER__::CONFIG[:fork_mode] = :parent

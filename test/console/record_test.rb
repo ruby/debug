@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class RecordOnOffTest < TestCase
+  class RecordOnOffTest < ConsoleTestCase
     def program
       <<~RUBY
         1|
@@ -61,7 +61,7 @@ module DEBUGGER__
     end
   end
 
-  class RecordTest < TestCase
+  class RecordTest < ConsoleTestCase
     def program
       <<~RUBY
          1|

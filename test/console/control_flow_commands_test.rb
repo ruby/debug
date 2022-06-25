@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
   #
   # Test basic control flow commands.
   #
-  class BasicControlFlowTest < TestCase
+  class BasicControlFlowTest < ConsoleTestCase
     def program
       <<~RUBY
          1| class Student
@@ -125,7 +125,7 @@ module DEBUGGER__
   #
   # Tests control flow commands with block.
   #
-  class BlockControlFlowTest < TestCase
+  class BlockControlFlowTest < ConsoleTestCase
     def program
       <<~RUBY
         1| 2.times do |n|
@@ -170,7 +170,7 @@ module DEBUGGER__
     end
   end
 
-  class FinishControlFlowTest < TestCase
+  class FinishControlFlowTest < ConsoleTestCase
     def program
       <<~RUBY
       1| def foo
@@ -296,7 +296,7 @@ module DEBUGGER__
   #
   # Test for https://github.com/ruby/debug/issues/89
   #
-  class IfBlockControlFlowTest < TestCase
+  class IfBlockControlFlowTest < ConsoleTestCase
     def program
       <<~RUBY
         1| if foo = nil
@@ -330,7 +330,7 @@ module DEBUGGER__
   #
   # Tests control flow commands with rescue.
   #
-  class RescueControlFlowTest < TestCase
+  class RescueControlFlowTest < ConsoleTestCase
     def program
       <<~RUBY
          1| module Foo

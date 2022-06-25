@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class TraceTest < TestCase
+  class TraceTest < ConsoleTestCase
     def program
       <<~RUBY
      1| def foo a
@@ -68,7 +68,7 @@ module DEBUGGER__
     end
   end
 
-  class TraceLineTest < TestCase
+  class TraceLineTest < ConsoleTestCase
     def program
       <<~RUBY
      1| def foo
@@ -141,7 +141,7 @@ module DEBUGGER__
     end
   end
 
-  class TraceExceptionTest < TestCase
+  class TraceExceptionTest < ConsoleTestCase
     def program
       <<~RUBY
      1| def foo
@@ -239,7 +239,7 @@ module DEBUGGER__
     end
   end
 
-  class TraceCallTest < TestCase
+  class TraceCallTest < ConsoleTestCase
     def program
       <<~RUBY
      1| def foo
@@ -356,7 +356,7 @@ module DEBUGGER__
     end
   end
 
-  class TraceObjectTest < TestCase
+  class TraceObjectTest < ConsoleTestCase
     def program
       if RUBY_VERSION >= "2.7"
         <<~RUBY
@@ -473,7 +473,7 @@ module DEBUGGER__
       end
     end
 
-    class TraceCallReceiverTest < TestCase
+    class TraceCallReceiverTest < ConsoleTestCase
       def program
         <<~RUBY
          1| class Foo

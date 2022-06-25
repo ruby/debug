@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class PrintTest < TestCase
+  class PrintTest < ConsoleTestCase
     def program
       <<~RUBY
       1| h = { foo: "bar" }
@@ -30,7 +30,7 @@ module DEBUGGER__
     end
   end
 
-  class InspectionFailureTest < TestCase
+  class InspectionFailureTest < ConsoleTestCase
     def program
       <<~RUBY
      1| f = Object.new
