@@ -102,7 +102,7 @@ module DEBUGGER__
 
     def wait_pid pid, sec
       total_sec = 0.0
-      wait_sec = 0.001 # 0.1ms
+      wait_sec = 0.001 # 1ms
 
       while total_sec < sec
         if Process.waitpid(pid, Process::WNOHANG) == pid

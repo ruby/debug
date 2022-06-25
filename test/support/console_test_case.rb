@@ -48,31 +48,33 @@ module DEBUGGER__
     end
 
     def debug_code(program, remote: true, &test_steps)
-      prepare_test_environment(program, test_steps) do
-        if remote && !NO_REMOTE && MULTITHREADED_TEST
-          begin
-            th = [
-              new_thread { debug_code_on_local },
-              new_thread { debug_code_on_unix_domain_socket },
-              new_thread { debug_code_on_tcpip },
-            ]
+      Timeout.timeout(30) do
+        prepare_test_environment(program, test_steps) do
+          if remote && !NO_REMOTE && MULTITHREADED_TEST
+            begin
+              th = [
+                new_thread { debug_code_on_local },
+                new_thread { debug_code_on_unix_domain_socket },
+                new_thread { debug_code_on_tcpip },
+              ]
 
-            th.each do |t|
-              if fail_msg = t.join.value
-                th.each(&:kill)
-                flunk fail_msg
+              th.each do |t|
+                if fail_msg = t.join.value
+                  th.each(&:kill)
+                  flunk fail_msg
+                end
               end
+            rescue Exception => e
+              th.each(&:kill)
+              flunk e.inspect
             end
-          rescue Exception => e
-            th.each(&:kill)
-            flunk e.inspect
+          elsif remote && !NO_REMOTE
+            debug_code_on_local
+            debug_code_on_unix_domain_socket
+            debug_code_on_tcpip
+          else
+            debug_code_on_local
           end
-        elsif remote && !NO_REMOTE
-          debug_code_on_local
-          debug_code_on_unix_domain_socket
-          debug_code_on_tcpip
-        else
-          debug_code_on_local
         end
       end
     end
@@ -179,8 +181,10 @@ module DEBUGGER__
       write_temp_file(strip_line_num(program))
       remote_info = setup_unix_domain_socket_remote_debuggee
 
-      while !File.exist?(remote_info.sock_path)
-        sleep 0.1
+      Timeout.timeout(TIMEOUT_SEC) do
+        while !File.exist?(remote_info.sock_path)
+          sleep 0.1
+        end
       end
 
       DEBUGGER__::Client.new([socket_path]).connect
