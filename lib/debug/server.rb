@@ -164,6 +164,7 @@ module DEBUGGER__
           }
         end
 
+        return unless line
         next if line == :can_not_read
 
         case line
@@ -187,7 +188,7 @@ module DEBUGGER__
             raise "pid:#{Process.pid} but get #{line}"
           end
         else
-          STDERR.puts "unsupported: #{line}"
+          STDERR.puts "unsupported: #{line.inspect}"
           exit!
         end
       end
