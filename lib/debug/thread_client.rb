@@ -417,11 +417,11 @@ module DEBUGGER__
       raise if re_raise
     end
 
-    def get_src(frame:,
-                 max_lines:,
-                 start_line: nil,
-                 end_line: nil,
-                 dir: +1)
+    def get_src(frame,
+                max_lines:,
+                start_line: nil,
+                end_line: nil,
+                dir: +1)
       if file_lines = frame.file_lines
         frame_line = frame.location.lineno - 1
 
@@ -462,7 +462,7 @@ module DEBUGGER__
 
     def show_src(frame_index: @current_frame_index, update_line: false, max_lines: CONFIG[:show_src_lines] || 10, **options)
       if frame = get_frame(frame_index)
-        start_line, end_line, lines = *get_src(frame: frame, max_lines: max_lines, **options)
+        start_line, end_line, lines = *get_src(frame, max_lines: max_lines, **options)
 
         if start_line
           if update_line
