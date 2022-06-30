@@ -6,6 +6,15 @@ require 'pp'
 require_relative 'color'
 
 module DEBUGGER__
+  M_INSTANCE_VARIABLES = method(:instance_variables).unbind
+  M_INSTANCE_VARIABLE_GET = method(:instance_variable_get).unbind
+  M_CLASS = method(:class).unbind
+  M_SINGLETON_CLASS = method(:singleton_class).unbind
+  M_KIND_OF_P = method(:kind_of?).unbind
+  M_RESPOND_TO_P = method(:respond_to?).unbind
+  M_METHOD = method(:method).unbind
+  M_OBJECT_ID = method(:object_id).unbind
+
   module SkipPathHelper
     def skip_path?(path)
       CONFIG.skip? || !path ||
@@ -532,8 +541,8 @@ module DEBUGGER__
 
     def show_ivars pat
       if s = current_frame&.self
-        s.instance_variables.sort.each{|iv|
-          value = s.instance_variable_get(iv)
+        M_INSTANCE_VARIABLES.bind_call(s).sort.each{|iv|
+          value = M_INSTANCE_VARIABLE_GET.bind_call(s, iv)
           puts_variable_info iv, value, pat
         }
       end
@@ -542,10 +551,10 @@ module DEBUGGER__
     def show_consts pat, only_self: false
       if s = current_frame&.self
         cs = {}
-        if s.kind_of? Module
+        if M_KIND_OF_P.bind_call(s, Module)
           cs[s] = :self
         else
-          s = s.class
+          s = M_CLASS.bind_call(s)
           cs[s] = :self unless only_self
         end
 
@@ -583,7 +592,7 @@ module DEBUGGER__
       return if pat && pat !~ label
 
       begin
-        inspected = obj.inspect
+        inspected = DEBUGGER__.safe_inspect(obj)
       rescue Exception => e
         inspected = e.inspect
       end
@@ -687,18 +696,25 @@ module DEBUGGER__
         o = Output.new(@output)
 
         locals = current_frame&.local_variables
-        klass  = (obj.class == Class || obj.class == Module ? obj : obj.class)
 
-        o.dump("constants", obj.constants) if obj.respond_to?(:constants)
+        klass = M_CLASS.bind_call(obj)
+        klass = obj if Class == klass || Module == klass
+
+        o.dump("constants", obj.constants) if M_RESPOND_TO_P.bind_call(obj, :constants)
         outline_method(o, klass, obj)
-        o.dump("instance variables", obj.instance_variables)
+        o.dump("instance variables", M_INSTANCE_VARIABLES.bind_call(obj))
         o.dump("class variables", klass.class_variables)
         o.dump("locals", locals.keys) if locals
       end
     end
 
     def outline_method(o, klass, obj)
-      singleton_class = begin obj.singleton_class; rescue TypeError; nil end
+      begin
+        singleton_class = M_SINGLETON_CLASS.bind_call(obj)
+      rescue TypeError
+        singleton_class = nil
+      end
+
       maps = class_method_map((singleton_class || klass).ancestors)
       maps.each do |mod, methods|
         name = mod == singleton_class ? "#{klass}.methods" : "#{mod}#methods"
@@ -1000,7 +1016,7 @@ module DEBUGGER__
             begin
               obj = frame_eval args.shift, re_raise: true
               opt = args.shift
-              obj_inspect = obj.inspect
+              obj_inspect = DEBUGGER__.safe_inspect(obj)
 
               width = 50
 
@@ -1008,7 +1024,7 @@ module DEBUGGER__
                 obj_inspect = truncate(obj_inspect, width: width)
               end
 
-              event! :result, :trace_pass, obj.object_id, obj_inspect, opt
+              event! :result, :trace_pass, M_OBJECT_ID.bind_call(obj), obj_inspect, opt
             rescue => e
               puts e.message
               event! :result, nil

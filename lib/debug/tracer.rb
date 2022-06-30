@@ -186,7 +186,7 @@ module DEBUGGER__
       @tracer = TracePoint.new(:a_call){|tp|
         next if skip?(tp)
 
-        if tp.self.object_id == @obj_id
+        if M_OBJECT_ID.bind_call(tp.self) == @obj_id
           klass = tp.defined_class
           method = tp.method_id
           method_info =
