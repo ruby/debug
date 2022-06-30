@@ -18,7 +18,7 @@ module DEBUGGER__
       end
 
       at_exit do
-        CONFIG[:skip_path] = [//] # skip all
+        CONFIG.skip_all
         FileUtils.rm_rf dir if tempdir
       end
 
