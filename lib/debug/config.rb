@@ -428,7 +428,7 @@ module DEBUGGER__
   end
 
   def self.create_unix_domain_socket_name_prefix(base_dir = unix_domain_socket_dir)
-    user = ENV['USER'] || 'ruby-debug'
+    user = ENV['USER'] || 'UnknownUser'
     File.join(base_dir, "ruby-debug-#{user}")
   end
 
