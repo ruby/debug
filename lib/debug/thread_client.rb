@@ -8,7 +8,9 @@ require_relative 'color'
 module DEBUGGER__
   module SkipPathHelper
     def skip_path?(path)
-      !path || skip_internal_path?(path) || (skip_paths = CONFIG[:skip_path]) && skip_paths.any?{|skip_path| path.match?(skip_path)}
+      CONFIG.skip? || !path ||
+      skip_internal_path?(path) ||
+      (skip_paths = CONFIG[:skip_path]) && skip_paths.any?{|skip_path| path.match?(skip_path)}
     end
 
     def skip_internal_path?(path)

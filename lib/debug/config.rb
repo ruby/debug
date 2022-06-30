@@ -59,6 +59,8 @@ module DEBUGGER__
     end
 
     def initialize argv
+      @skip_all = false
+
       if self.class.config
         raise 'Can not make multiple configurations in one process'
       end
@@ -76,6 +78,14 @@ module DEBUGGER__
 
     def []=(key, val)
       set_config(key => val)
+    end
+
+    def skip_all
+      @skip_all = true
+    end
+
+    def skip?
+      @skip_all
     end
 
     def set_config(**kw)
