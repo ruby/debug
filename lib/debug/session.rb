@@ -2080,22 +2080,27 @@ module DEBUGGER__
     log :INFO, msg
   end
 
-  def self.debug msg
-    log :DEBUG, msg
+  def self.check_loglevel level
+    lv = LOG_LEVELS[level]
+    config_lv = LOG_LEVELS[CONFIG[:log_level] || :WARN]
+    lv <= config_lv
+  end
+
+  def self.debug(&b)
+    if check_loglevel :DEBUG
+      log :DEBUG, b.call
+    end
   end
 
   def self.log level, msg
-    @logfile = STDERR unless defined? @logfile
+    if check_loglevel level
+      @logfile = STDERR unless defined? @logfile
 
-    lv = LOG_LEVELS[level]
-    config_lv = LOG_LEVELS[CONFIG[:log_level] || :WARN]
+      if defined? SESSION
+        pi = SESSION.process_info
+        process_info = pi ? "[#{pi}]" : nil
+      end
 
-    if defined? SESSION
-      pi = SESSION.process_info
-      process_info = pi ? "[#{pi}]" : nil
-    end
-
-    if lv <= config_lv
       if level == :WARN
         # :WARN on debugger is general information
         @logfile.puts "DEBUGGER#{process_info}: #{msg}"

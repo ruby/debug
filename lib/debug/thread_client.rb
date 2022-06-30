@@ -1059,22 +1059,30 @@ module DEBUGGER__
     end
 
     def debug_event(ev, args)
-      args = args.map { |arg| DEBUGGER__.safe_inspect(arg) }
-      DEBUGGER__.debug("#{inspect} sends Event { type: #{ev.inspect}, args: #{args} } to Session")
+      DEBUGGER__.debug{
+        args = args.map { |arg| DEBUGGER__.safe_inspect(arg) }
+        "#{inspect} sends Event { type: #{ev.inspect}, args: #{args} } to Session"
+      }
     end
 
     def debug_mode(old_mode, new_mode)
-      DEBUGGER__.debug("#{inspect} changes mode (#{old_mode} -> #{new_mode})")
+      DEBUGGER__.debug{
+        "#{inspect} changes mode (#{old_mode} -> #{new_mode})"
+      }
     end
 
     def debug_cmd(cmds)
-      cmd, *args = *cmds
-      args = args.map { |arg| DEBUGGER__.safe_inspect(arg) }
-      DEBUGGER__.debug("#{inspect} receives Cmd { type: #{cmd.inspect}, args: #{args} } from Session")
+      DEBUGGER__.debug{
+        cmd, *args = *cmds
+        args = args.map { |arg| DEBUGGER__.safe_inspect(arg) }
+        "#{inspect} receives Cmd { type: #{cmd.inspect}, args: #{args} } from Session"
+      }
     end
 
     def debug_suspend(event)
-      DEBUGGER__.debug("#{inspect} is suspended for #{event.inspect}")
+      DEBUGGER__.debug{
+        "#{inspect} is suspended for #{event.inspect}"
+      }
     end
 
     class Recorder
