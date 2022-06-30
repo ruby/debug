@@ -718,10 +718,10 @@ module DEBUGGER__
               ]
             end
 
-            vars += obj.instance_variables.map{|iv|
-              variable(iv, obj.instance_variable_get(iv))
+            vars += M_INSTANCE_VARIABLES.bind_call(obj).map{|iv|
+              variable(iv, M_INSTANCE_VARIABLE_GET.bind_call(obj, iv))
             }
-            vars.unshift variable('#class', obj.class)
+            vars.unshift variable('#class', M_CLASS.bind_call(obj))
           end
         end
         event! :dap_result, :variable, req, variables: (vars || []), tid: self.id
@@ -748,7 +748,7 @@ module DEBUGGER__
             case expr
             when /\A\@\S/
               begin
-                result = b.receiver.instance_variable_get(expr)
+                result = M_INSTANCE_VARIABLE_GET.bind_call(b.receiver, expr)
               rescue NameError
                 message = "Error: Not defined instance variable: #{expr.inspect}"
               end
@@ -759,6 +759,8 @@ module DEBUGGER__
                   break false
                 end
               } and (message = "Error: Not defined global variable: #{expr.inspect}")
+            when /\Aself$/
+              result = b.receiver
             when /(\A((::[A-Z]|[A-Z])\w*)+)/
               unless result = search_const(b, $1)
                 message = "Error: Not defined constants: #{expr.inspect}"
@@ -768,8 +770,8 @@ module DEBUGGER__
                 result = b.local_variable_get(expr)
               rescue NameError
                 # try to check method
-                if b.receiver.respond_to? expr, include_all: true
-                  result = b.receiver.method(expr)
+                if M_RESPOND_TO_P.bind_call(b.receiver, expr, include_all: true)
+                  result = M_METHOD.bind_call(b.receiver, expr)
                 else
                   message = "Error: Can not evaluate: #{expr.inspect}"
                 end
@@ -849,11 +851,11 @@ module DEBUGGER__
         vid = 0
       end
 
-      ivnum = obj.instance_variables.size
+      ivnum = M_INSTANCE_VARIABLES.bind_call(obj).size
 
       { name: name,
         value: DEBUGGER__.safe_inspect(obj),
-        type: obj.class.name || obj.class.to_s,
+        type: (klass = M_CLASS.bind_call(obj)).name || klass.to_s,
         variablesReference: vid,
         indexedVariables: indexedVariables,
         namedVariables: namedVariables + ivnum,

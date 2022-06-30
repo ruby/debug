@@ -102,7 +102,11 @@ module DEBUGGER__
     end
 
     def callee
-      self._callee ||= self.binding&.eval('__callee__')
+      self._callee ||= begin
+                         self.binding&.eval('__callee__')
+                       rescue NameError # BasicObject
+                         nil
+                       end
     end
 
     def return_str

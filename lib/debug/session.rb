@@ -2310,3 +2310,12 @@ class Binding
   alias break debugger
   alias b debugger
 end
+
+# for Ruby 2.6 compatibility
+unless method(:p).unbind.respond_to? :bind_call
+  class UnboundMethod
+    def bind_call(obj, *args)
+      self.bind(obj).call(*args)
+    end
+  end
+end
