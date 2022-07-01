@@ -108,6 +108,7 @@ module DEBUGGER__
       @obj_map = {} # { object_id => obj } for CDP
       @recorder = nil
       @mode = :waiting
+      @current_frame_index = 0
       # every thread should maintain its own CheckBreakpoint fulfillment state
       @check_bp_fulfillment_map = {} # { check_bp => boolean }
       set_mode :running
