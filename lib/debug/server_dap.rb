@@ -441,6 +441,7 @@ module DEBUGGER__
 
       when 'stackTrace'
         tid = req.dig('arguments', 'threadId')
+
         if tc = find_waiting_tc(tid)
           request_tc [:dap, :backtrace, req]
         else
@@ -551,9 +552,10 @@ module DEBUGGER__
 
       case type
       when :backtrace
-        result[:stackFrames].each.with_index{|fi, i|
+        result[:stackFrames].each{|fi|
+          frame_depth = fi[:id]
           fi[:id] = id = @frame_map.size + 1
-          @frame_map[id] = [req.dig('arguments', 'threadId'), i]
+          @frame_map[id] = [req.dig('arguments', 'threadId'), frame_depth]
           if fi[:source]
             if src = fi[:source][:sourceReference]
               src_id = @src_map.size + 1
@@ -620,27 +622,36 @@ module DEBUGGER__
 
       case type
       when :backtrace
-        event! :dap_result, :backtrace, req, {
-          stackFrames: @target_frames.map{|frame|
-            path = frame.realpath || frame.path
-            source_name = path ? File.basename(path) : frame.location.to_s
+        start_frame = req.dig('arguments', 'startFrame') || 0
+        levels = req.dig('arguments', 'levels') || 1_000
+        frames = []
+        @target_frames.each_with_index do |frame, i|
+          next if i < start_frame
+          break if (levels -= 1) < 0
 
-            if !UI_DAP.local_fs || !(path && File.exist?(path))
-              ref = frame.file_lines
-            end
+          path = frame.realpath || frame.path
+          source_name = path ? File.basename(path) : frame.location.to_s
 
-            {
-              # id: ??? # filled by SESSION
-              name: frame.name,
-              line: frame.location.lineno,
-              column: 1,
-              source: {
-                name: source_name,
-                path: path,
-                sourceReference: ref,
-              },
-            }
+          if !UI_DAP.local_fs || !(path && File.exist?(path))
+            ref = frame.file_lines
+          end
+
+          frames << {
+            id: i, # id is refilled by SESSION
+            name: frame.name,
+            line: frame.location.lineno,
+            column: 1,
+            source: {
+              name: source_name,
+              path: path,
+              sourceReference: ref,
+            },
           }
+        end
+
+        event! :dap_result, :backtrace, req, {
+          stackFrames: frames,
+          totalFrames: @target_frames.size,
         }
       when :scopes
         fid = args.shift
