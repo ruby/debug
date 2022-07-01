@@ -452,10 +452,10 @@ config set log_level INFO
 config set no_color true
 ```
 
-<% cat = nil; DEBUGGER__::CONFIG_SET.each do |key, (env, desc)| %>
+<% cat = nil; DEBUGGER__::CONFIG_SET.each do |key, (env, desc, _, default)| %>
 <% /\A(\w+): (.+)/ =~ desc; if cat != $1; cat = 1 %>
 * <%= $1 %>
-<% cat = $1; end %>  * `<%= env %>` (`<%= key %>`): <%= $2 %><% end %>
+<% cat = $1; end %>  * `<%= env %>` (`<%= key %>`): <%= default ? "#{$2} (default: #{default})" : $2 %><% end %>
 
 ### Initial scripts
 

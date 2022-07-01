@@ -456,33 +456,33 @@ config set no_color true
 
 * UI
   * `RUBY_DEBUG_LOG_LEVEL` (`log_level`): Log level same as Logger (default: WARN)
-  * `RUBY_DEBUG_SHOW_SRC_LINES` (`show_src_lines`): Show n lines source code on breakpoint (default: 10 lines)
-  * `RUBY_DEBUG_SHOW_FRAMES` (`show_frames`): Show n frames on breakpoint (default: 2 frames)
-  * `RUBY_DEBUG_USE_SHORT_PATH` (`use_short_path`): Show shorten PATH (like $(Gem)/foo.rb)
+  * `RUBY_DEBUG_SHOW_SRC_LINES` (`show_src_lines`): Show n lines source code on breakpoint (default: 10)
+  * `RUBY_DEBUG_SHOW_FRAMES` (`show_frames`): Show n frames on breakpoint (default: 2)
+  * `RUBY_DEBUG_USE_SHORT_PATH` (`use_short_path`): Show shorten PATH (like $(Gem)/foo.rb) (default: false)
   * `RUBY_DEBUG_NO_COLOR` (`no_color`): Do not use colorize (default: false)
   * `RUBY_DEBUG_NO_SIGINT_HOOK` (`no_sigint_hook`): Do not suspend on SIGINT (default: false)
   * `RUBY_DEBUG_NO_RELINE` (`no_reline`): Do not use Reline library (default: false)
 
 * CONTROL
-  * `RUBY_DEBUG_SKIP_PATH` (`skip_path`): Skip showing/entering frames for given paths (default: [])
+  * `RUBY_DEBUG_SKIP_PATH` (`skip_path`): Skip showing/entering frames for given paths
   * `RUBY_DEBUG_SKIP_NOSRC` (`skip_nosrc`): Skip on no source code lines (default: false)
   * `RUBY_DEBUG_KEEP_ALLOC_SITE` (`keep_alloc_site`): Keep allocation site and p, pp shows it (default: false)
   * `RUBY_DEBUG_POSTMORTEM` (`postmortem`): Enable postmortem debug (default: false)
   * `RUBY_DEBUG_FORK_MODE` (`fork_mode`): Control which process activates a debugger after fork (both/parent/child) (default: both)
-  * `RUBY_DEBUG_SIGDUMP_SIG` (`sigdump_sig`): Sigdump signal (default: disabled)
+  * `RUBY_DEBUG_SIGDUMP_SIG` (`sigdump_sig`): Sigdump signal (default: false)
 
 * BOOT
-  * `RUBY_DEBUG_NONSTOP` (`nonstop`): Nonstop mode
-  * `RUBY_DEBUG_STOP_AT_LOAD` (`stop_at_load`): Stop at just loading location
+  * `RUBY_DEBUG_NONSTOP` (`nonstop`): Nonstop mode (default: false)
+  * `RUBY_DEBUG_STOP_AT_LOAD` (`stop_at_load`): Stop at just loading location (default: false)
   * `RUBY_DEBUG_INIT_SCRIPT` (`init_script`): debug command script path loaded at first stop
   * `RUBY_DEBUG_COMMANDS` (`commands`): debug commands invoked at first stop. commands should be separated by ';;'
-  * `RUBY_DEBUG_NO_RC` (`no_rc`): ignore loading ~/.rdbgrc(.rb)
+  * `RUBY_DEBUG_NO_RC` (`no_rc`): ignore loading ~/.rdbgrc(.rb) (default: false)
   * `RUBY_DEBUG_HISTORY_FILE` (`history_file`): history file (default: ~/.rdbg_history)
-  * `RUBY_DEBUG_SAVE_HISTORY` (`save_history`): maximum save history lines (default: 10,000)
+  * `RUBY_DEBUG_SAVE_HISTORY` (`save_history`): maximum save history lines (default: 10000)
 
 * REMOTE
   * `RUBY_DEBUG_PORT` (`port`): TCP/IP remote debugging: port
-  * `RUBY_DEBUG_HOST` (`host`): TCP/IP remote debugging: host (localhost if not given)
+  * `RUBY_DEBUG_HOST` (`host`): TCP/IP remote debugging: host (default: 127.0.0.1)
   * `RUBY_DEBUG_SOCK_PATH` (`sock_path`): UNIX Domain Socket remote debugging: socket path
   * `RUBY_DEBUG_SOCK_DIR` (`sock_dir`): UNIX Domain Socket remote debugging: socket directory
   * `RUBY_DEBUG_COOKIE` (`cookie`): Cookie for negotiation

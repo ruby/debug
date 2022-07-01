@@ -355,7 +355,7 @@ module DEBUGGER__
   class UI_TcpServer < UI_ServerBase
     def initialize host: nil, port: nil
       @local_addr = nil
-      @host = host || CONFIG[:host] || '127.0.0.1'
+      @host = host || CONFIG[:host]
       @port_save_file = nil
       @port = begin
         port_str = (port && port.to_s) || CONFIG[:port] || raise("Specify listening port by RUBY_DEBUG_PORT environment variable.")
@@ -381,7 +381,7 @@ module DEBUGGER__
           With Chrome browser, type the following URL in the address-bar:
 
              devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{@local_addr.inspect_sockaddr}/#{SecureRandom.uuid}
-          
+
           EOS
       end
     end

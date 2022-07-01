@@ -1057,11 +1057,18 @@ module DEBUGGER__
 
     def config_show key
       key = key.to_sym
-      if CONFIG_SET[key]
+      config_detail = CONFIG_SET[key]
+
+      if config_detail
         v = CONFIG[key]
-        kv = "#{key} = #{v.nil? ? '(default)' : v.inspect}"
-        desc = CONFIG_SET[key][1]
-        line = "%-30s \# %s" % [kv, desc]
+        kv = "#{key} = #{v.inspect}"
+        desc = config_detail[1]
+
+        if config_default = config_detail[3]
+          desc += " (default: #{config_default})"
+        end
+
+        line = "%-34s \# %s" % [kv, desc]
         if line.size > SESSION.width
           @ui.puts "\# #{desc}\n#{kv}"
         else
@@ -2115,7 +2122,7 @@ module DEBUGGER__
 
   def self.check_loglevel level
     lv = LOG_LEVELS[level]
-    config_lv = LOG_LEVELS[CONFIG[:log_level] || :WARN]
+    config_lv = LOG_LEVELS[CONFIG[:log_level]]
     lv <= config_lv
   end
 
@@ -2211,12 +2218,10 @@ module DEBUGGER__
     end
 
     private def __fork_setup_for_debugger
-      unless fork_mode = CONFIG[:fork_mode]
-        if CONFIG[:parent_on_fork]
-          fork_mode = :parent
-        else
-          fork_mode = :both
-        end
+      fork_mode = CONFIG[:fork_mode]
+
+      if fork_mode == :both && CONFIG[:parent_on_fork]
+        fork_mode = :parent
       end
 
       parent_pid = Process.pid
