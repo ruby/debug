@@ -806,6 +806,8 @@ module DEBUGGER__
         end
 
         event! :dap_result, :completions, req, targets: (words || []).map{|phrase|
+          detail = nil
+
           if /\b([_a-zA-Z]\w*[!\?]?)\z/ =~ phrase
             w = $1
           else
@@ -814,13 +816,14 @@ module DEBUGGER__
 
           begin
             v = b.local_variable_get(w)
-            phrase += " (variable:#{DEBUGGER__.safe_inspect(v)})"
+            detail ="(variable: #{DEBUGGER__.safe_inspect(v)})"
           rescue NameError
           end
 
           {
             label: phrase,
             text: w,
+            detail: detail,
           }
         }
 
