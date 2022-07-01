@@ -36,6 +36,70 @@ module DEBUGGER__
     end
   end
 
+  class StopAtLoadOptionTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| a = "foo"
+      2| binding.b
+      RUBY
+    end
+
+    def test_debugger_stops_immediately
+      run_rdbg(program, options: "--stop-at-load") do
+        # stops at the earliest possible location
+        assert_line_text(/\[C\] Kernel#require/)
+        type "c"
+        type "a + 'bar'"
+        assert_line_text(/foobar/)
+        type "c"
+      end
+    end
+  end
+
+  class RCFileTest < ConsoleTestCase
+    def rc_filename
+      File.join(pty_home_dir, ".rdbgrc")
+    end
+
+    def rc_script
+      "config set skip_path /foo/bar/"
+    end
+
+    def program
+      <<~RUBY
+      1| a = 1
+      RUBY
+    end
+
+    def with_rc_script
+      File.open(rc_filename, "w") { |f| f.write(rc_script) }
+
+      yield
+    ensure
+      File.delete(rc_filename)
+    end
+
+    def test_debugger_loads_the_rc_file_by_default
+      with_rc_script do
+        run_rdbg(program) do
+          type "config skip_path"
+          assert_line_text(/foo\\\/bar/)
+          type "c"
+        end
+      end
+    end
+
+    def test_debugger_doesnt_load_the_rc_file_with_no_rc
+      with_rc_script do
+        run_rdbg(program, options: "--no-rc") do
+          type "config skip_path"
+          assert_no_line_text(/foo\\\/bar/)
+          type "c"
+        end
+      end
+    end
+  end
+
   class InitScriptTest < ConsoleTestCase
     TEMPFILE_BASENAME = __FILE__.hash.abs.to_s(16)
 
