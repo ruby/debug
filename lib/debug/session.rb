@@ -1057,7 +1057,9 @@ module DEBUGGER__
 
     def config_show key
       key = key.to_sym
-      if config_detail = CONFIG_SET[key]
+      config_detail = CONFIG_SET[key]
+
+      if config_detail
         v = CONFIG[key]
         kv = "#{key} = #{v.inspect}"
         desc = config_detail[1]
