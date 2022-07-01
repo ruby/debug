@@ -32,6 +32,7 @@ $LOADED_FEATURES << File.expand_path(File.join(__dir__, '..', 'debug.rb'))
 require 'debug' # invalidate the $LOADED_FEATURE cache
 
 require 'json' if ENV['RUBY_DEBUG_TEST_UI'] == 'terminal'
+require 'pp'
 
 class RubyVM::InstructionSequence
   def traceable_lines_norec lines
@@ -2057,16 +2058,48 @@ module DEBUGGER__
   end
 
   METHOD_ADDED_TRACKER = self.create_method_added_tracker
-
   SHORT_INSPECT_LENGTH = 40
 
-  def self.safe_inspect obj, max_length: SHORT_INSPECT_LENGTH, short: false
-    str = obj.inspect
+  class LimitedPP
+    def self.pp(obj, max=80)
+      out = self.new(max)
+      catch out do
+        PP.singleline_pp(obj, out)
+      end
+      out.buf
+    end
 
-    if short && str.length > max_length
-      str[0...max_length] + '...'
+    attr_reader :buf
+
+    def initialize max
+      @max = max
+      @cnt = 0
+      @buf = String.new
+    end
+
+    def <<(other)
+      @buf << other
+
+      if @buf.size >= @max
+        @buf = @buf[0..@max] + '...'
+        throw self
+      end
+    end
+  end
+
+  def self.safe_inspect obj, max_length: SHORT_INSPECT_LENGTH, short: false
+    if short
+      LimitedPP.pp(obj, max_length)
     else
-      str
+      obj.inspect
+    end
+  rescue NoMethodError => e
+    klass, oid = M_CLASS.bind_call(obj), M_OBJECT_ID.bind_call(obj)
+    if obj == (r = e.receiver)
+      "<\##{klass.name}#{oid} does not have \#inspect>"
+    else
+      rklass, roid = M_CLASS.bind_call(r), M_OBJECT_ID.bind_call(r)
+      "<\##{klass.name}:#{oid} contains <\##{rklass}:#{rid} and it does not have #inspect>"
     end
   rescue Exception => e
     str = "<#inspect raises #{e.inspect}>"
