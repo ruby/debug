@@ -2099,10 +2099,10 @@ module DEBUGGER__
       "<\##{klass.name}#{oid} does not have \#inspect>"
     else
       rklass, roid = M_CLASS.bind_call(r), M_OBJECT_ID.bind_call(r)
-      "<\##{klass.name}:#{oid} contains <\##{rklass}:#{rid} and it does not have #inspect>"
+      "<\##{klass.name}:#{roid} contains <\##{rklass}:#{roid} and it does not have #inspect>"
     end
   rescue Exception => e
-    str = "<#inspect raises #{e.inspect}>"
+    "<#inspect raises #{e.inspect}>"
   end
 
   def self.warn msg
