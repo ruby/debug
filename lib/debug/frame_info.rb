@@ -115,11 +115,6 @@ module DEBUGGER__
       end
     end
 
-    def real_location
-      # realpath can sometimes be nil so we can't use it here
-      "#{path}:#{location.lineno}"
-    end
-
     def location_str
       "#{pretty_path}:#{location.lineno}"
     end

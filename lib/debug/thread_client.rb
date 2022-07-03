@@ -652,11 +652,15 @@ module DEBUGGER__
       if @target_frames && (max ||= @target_frames.size) > 0
         frames = []
         @target_frames.each_with_index{|f, i|
-          # we need to use FrameInfo#real_location because #location_str is for display
-          # and it may change based on configs (e.g. use_short_path)
-          next if pattern && !(f.name.match?(pattern) || f.real_location.match?(pattern))
-          # avoid using skip_path? because we still want to display internal frames
-          next if skip_config_skip_path?(f.real_location)
+          next if pattern && !(f.name.match?(pattern) || f.location_str.match?(pattern))
+          next if CONFIG[:skip_path] && CONFIG[:skip_path].any?{|pat|
+            case pat
+            when String
+              f.location_str.start_with?(pat)
+            when Regexp
+              f.location_str.match?(pat)
+            end
+          }
 
           frames << [i, f]
         }
