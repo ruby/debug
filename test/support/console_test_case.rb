@@ -9,6 +9,32 @@ module DEBUGGER__
       warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
     end
 
+    class << self
+      attr_reader :pty_home_dir
+
+      def startup
+        @pty_home_dir =
+          if ENV["CI"]
+            # CIs usually doesn't allow overriding the HOME path
+            # we also don't need to worry about adding or being affected by ~/.rdbgrc on CI
+            # so we can just use the original home page there
+            Dir.home
+          else
+            Dir.mktmpdir
+          end
+      end
+
+      def shutdown
+        unless ENV["CI"]
+          FileUtils.remove_entry @pty_home_dir
+        end
+      end
+    end
+
+    def pty_home_dir
+      self.class.pty_home_dir
+    end
+
     def create_message fail_msg, test_info
       debugger_msg = <<~DEBUGGER_MSG.chomp
         --------------------
