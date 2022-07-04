@@ -19,6 +19,10 @@ module DEBUGGER__
     def skip_path?(path)
       CONFIG.skip? || !path ||
       skip_internal_path?(path) ||
+      skip_config_skip_path?(path)
+    end
+
+    def skip_config_skip_path?(path)
       (skip_paths = CONFIG[:skip_path]) && skip_paths.any?{|skip_path| path.match?(skip_path)}
     end
 
@@ -652,11 +656,11 @@ module DEBUGGER__
       if @target_frames && (max ||= @target_frames.size) > 0
         frames = []
         @target_frames.each_with_index{|f, i|
-          # we need to use FrameInfo#real_location because #location_str is for display
+          # we need to use FrameInfo#matchable_location because #location_str is for display
           # and it may change based on configs (e.g. use_short_path)
-          next if pattern && !(f.name.match?(pattern) || f.real_location.match?(pattern))
+          next if pattern && !(f.name.match?(pattern) || f.matchable_location.match?(pattern))
           # avoid using skip_path? because we still want to display internal frames
-          next if skip_config_skip_path?(f.real_location)
+          next if skip_config_skip_path?(f.matchable_location)
 
           frames << [i, f]
         }

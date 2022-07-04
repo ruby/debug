@@ -115,7 +115,7 @@ module DEBUGGER__
       end
     end
 
-    def real_location
+    def matchable_location
       # realpath can sometimes be nil so we can't use it here
       "#{path}:#{location.lineno}"
     end
