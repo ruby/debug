@@ -235,7 +235,7 @@ module DEBUGGER__
           if /\A\/(.+)\/\z/ =~ e
             Regexp.compile $1
           else
-            File.expand_path(e)
+            e
           end
         }
       else
