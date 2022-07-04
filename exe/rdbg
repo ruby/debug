@@ -3,7 +3,9 @@
 require_relative '../lib/debug/config'
 config = DEBUGGER__::Config::parse_argv(ARGV)
 
-case config[:mode]
+# mode is not an actual configuration option
+# it's only used to carry the result of parse_argv here
+case config.delete(:mode)
 when :start
   require 'rbconfig'
 
