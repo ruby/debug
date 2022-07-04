@@ -20,7 +20,7 @@ when :start
 
 when :attach
   require_relative "../lib/debug/client"
-  ::DEBUGGER__::CONFIG.update config
+  ::DEBUGGER__::CONFIG.set_config **config
 
   begin
     if ARGV.empty? && config[:port]
