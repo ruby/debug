@@ -615,6 +615,11 @@ module DEBUGGER__
   end
 
   class ThreadClient
+    def value_inspect obj
+      # TODO: max length should be configuarable?
+      DEBUGGER__.safe_inspect obj, short: true, max_length: 4 * 1024
+    end
+
     def process_dap args
       # pp tc: self, args: args
       type = args.shift
@@ -706,7 +711,7 @@ module DEBUGGER__
             case obj
             when Hash
               vars = obj.map{|k, v|
-                variable(DEBUGGER__.safe_inspect(k), v,)
+                variable(value_inspect(k), v,)
               }
             when Struct
               vars = obj.members.map{|m|
@@ -816,7 +821,7 @@ module DEBUGGER__
 
           begin
             v = b.local_variable_get(w)
-            detail ="(variable: #{DEBUGGER__.safe_inspect(v)})"
+            detail ="(variable: #{value_inspect(v)})"
           rescue NameError
           end
 
@@ -853,7 +858,7 @@ module DEBUGGER__
       v = variable nil, r
       v.delete :name
       v.delete :value
-      v[:result] = DEBUGGER__.safe_inspect(r)
+      v[:result] = value_inspect(r)
       v
     end
 
@@ -868,7 +873,7 @@ module DEBUGGER__
       ivnum = M_INSTANCE_VARIABLES.bind_call(obj).size
 
       { name: name,
-        value: DEBUGGER__.safe_inspect(obj),
+        value: value_inspect(obj),
         type: (klass = M_CLASS.bind_call(obj)).name || klass.to_s,
         variablesReference: vid,
         indexedVariables: indexedVariables,
