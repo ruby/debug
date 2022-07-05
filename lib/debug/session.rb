@@ -19,6 +19,14 @@ if $0.end_with?('bin/bundle') && ARGV.first == 'exec'
   return
 end
 
+# restore RUBYOPT
+if (added_opt = ENV['RUBY_DEBUG_ADDED_RUBYOPT']) &&
+   (rubyopt = ENV['RUBYOPT']) &&
+   rubyopt.start_with?(added_opt)
+  ENV['RUBYOPT'] = rubyopt.delete_prefix(rubyopt)
+  ENV['RUBY_DEBUG_ADDED_RUBYOPT'] = nil
+end
+
 require_relative 'frame_info'
 require_relative 'config'
 require_relative 'thread_client'

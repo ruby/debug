@@ -14,7 +14,9 @@ when :start
   cmd = config[:command] ? ARGV.shift : (ENV['RUBY'] || RbConfig.ruby)
 
   env = ::DEBUGGER__::Config.config_to_env_hash(config)
-  env['RUBYOPT'] = "-r #{libpath}/#{start_mode}"
+  rubyopt = env['RUBYOPT']
+  env['RUBY_DEBUG_ADDED_RUBYOPT'] = added = "-r #{libpath}/#{start_mode}"
+  env['RUBYOPT'] = "#{added} #{rubyopt}"
 
   exec(env, cmd, *ARGV)
 
