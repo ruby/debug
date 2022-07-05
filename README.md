@@ -9,11 +9,11 @@ New debug.rb has several advantages:
 
 * Fast: No performance penalty on non-stepping mode and non-breakpoints.
 * [Remote debugging](#remote-debugging): Support remote debugging natively.
-  * UNIX domain socket
-  * TCP/IP
+  * [UNIX domain socket](/docs/remote_debugging.md#invoke-program-as-a-remote-debuggee)
+  * [TCP/IP](/docs/remote_debugging.md#tcpip)
   * Integration with rich debugger frontend
-    * VSCode/DAP ([VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg))
-    * Chrome DevTools
+    - [VSCode](/docs/remote_debugging.md#vscode) (or other DAP supporting clients)
+    - [Chrome DevTools](/docs/remote_debugging.md#chrome-devtool-integration) (or other CDP supporting clients)
 * Extensible: application can introduce debugging support with several ways:
   * By `rdbg` command
   * By loading libraries with `-r` command line option
