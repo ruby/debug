@@ -1126,7 +1126,7 @@ module DEBUGGER__
         config_set $1, $2, append: true
 
       when /\A\s*append\s+(\w+)\s+(.+)\z/
-        config_set $1, $2
+        config_set $1, $2, append: true
 
       when /\A(\w+)\z/
         config_show $1

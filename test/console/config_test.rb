@@ -276,6 +276,37 @@ module DEBUGGER__
     end
   end
 
+  class ConfigSetAppend < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| a = 1
+      RUBY
+    end
+
+    def test_set_append
+      debug_code program do
+        type 'config set skip_path foo'
+        assert_line_text(/foo/)
+
+        type 'config set skip_path bar'
+        assert_no_line_text(/foo/)
+        assert_line_text(/bar/)
+
+        type 'config skip_path = foo'
+        assert_no_line_text(/bar/)
+        assert_line_text(/foo/)
+
+        type 'config append skip_path bar'
+        assert_line_text(/foo.+bar/)
+
+        type 'config skip_path << baz'
+        assert_line_text(/foo.+bar.+baz/)
+
+        type 'c'
+      end
+    end
+  end
+
   class ConfigKeepAllocSiteTest < ConsoleTestCase
     def program
       <<~RUBY
