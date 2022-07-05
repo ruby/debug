@@ -49,7 +49,8 @@ If you can modify the program, you can open a debugging port by adding `require 
 
 If you don't want to stop the program when `require 'debug/open'` is executed, you can instead use `require 'debug/open_nonstop'`.
 
-**Please do not leave these requires in your program as they will allow other people to connect to it.**
+> **Note**
+> Please do not leave these requires in your program as they will allow other people to connect to it.
 
 ## `DEBUGGER__.open`
 
@@ -136,7 +137,9 @@ $ rdbg --attach 12345
 ```
 
 If you want to choose the host to bind, you can use the `--host` option.
-Note that the connection between the debugger and the debuggee is **NOT** encrypted. So please use remote debugging carefully.
+
+> **Note**
+> The connection between the debugger and the debuggee is **NOT** encrypted. So please use remote debugging carefully.
 
 ## VSCode
 
