@@ -139,18 +139,18 @@ module DEBUGGER__
     end
   end
 
-  class RecordOnAfterStoppingOnceTest < TestCase
+  class RecordOnAfterStoppingOnceTest < ConsoleTestCase
     def program
       <<~RUBY
         1| a=1
-        2| 
+        2|
         3| b=1
-        4| 
+        4|
         5| c=1
         6| p a
       RUBY
     end
-    
+
     def test_1656237686
       debug_code(program) do
         type 'record on'
