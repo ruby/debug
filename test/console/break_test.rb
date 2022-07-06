@@ -748,4 +748,44 @@ module DEBUGGER__
       end
     end
   end
+
+  class BreakAtLinesReloadTest < ConsoleTestCase
+    def extra_file
+      <<~RUBY
+      def foo  # 1
+        a = 10 # 2
+        b = 20 # 3
+        c = 30 # 4
+      end
+      RUBY
+    end
+
+    def program path
+      <<~RUBY
+      1| load #{path.dump}
+      2| foo()
+      3| load #{path.dump}
+      4| foo()
+      RUBY
+    end
+
+    def test_break_on_realoded_file
+      with_extra_tempfile do |extra_file|
+        debug_code(program(extra_file.path)) do
+          type "break #{extra_file.path}:2 do: p :xyzzy"
+          type "break #{extra_file.path}:3"
+
+          type 'c'
+          assert_line_num 3
+          assert_line_text(/xyzzy/)
+
+          type 'c'
+          assert_line_num 3         # should stop at reloaded file
+          assert_line_text(/xyzzy/) # should do at line 2
+
+          type 'c'
+        end
+      end
+    end
+  end
 end

@@ -131,9 +131,17 @@ module DEBUGGER__
   end
 
   class LineBreakpoint < Breakpoint
-    attr_reader :path, :line, :iseq
+    attr_reader :path, :line, :iseq, :cond, :oneshot, :hook_call, :command
 
-    def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil
+    def self.copy bp, root_iseq
+      nbp = LineBreakpoint.new bp.path, bp.line,
+                               cond: bp.cond, oneshot: bp.oneshot, hook_call: bp.hook_call,
+                               command: bp.command, skip_activate: true
+      nbp.try_activate root_iseq
+      nbp
+    end
+
+    def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil, skip_activate: false
       @line = line
       @oneshot = oneshot
       @hook_call = hook_call
@@ -146,7 +154,7 @@ module DEBUGGER__
 
       super(cond, command, path)
 
-      try_activate
+      try_activate unless skip_activate
       @pending = !@iseq
     end
 
