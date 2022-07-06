@@ -1598,7 +1598,7 @@ module DEBUGGER__
 
       pending_line_breakpoints.each do |_key, bp|
         if DEBUGGER__.compare_path(bp.path, (iseq.absolute_path || iseq.path))
-          bp.try_activate
+          bp.try_activate iseq
         end
       end
     end
