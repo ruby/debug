@@ -14,10 +14,19 @@ module DEBUGGER__
       def initialize
         # cache
         @cmap = ObjectSpace::WeakMap.new
+        @loaded_file_map = {} # path => nil
       end
 
       def add iseq, src
         # do nothing
+        if (path = (iseq.absolute_path || iseq.path)) && File.exist?(path)
+          if @loaded_file_map.has_key? path
+            return path, true # reloaded
+          else
+            @loaded_file_map[path] = path
+            return path, false
+          end
+        end
       end
 
       def get iseq
@@ -55,10 +64,14 @@ module DEBUGGER__
 
       def add iseq, src
         if (path = (iseq.absolute_path || iseq.path)) && File.exist?(path)
+          reloaded = @files.has_key? path
           add_path path
+          return path, reloaded
         elsif src
           add_iseq iseq, src
         end
+
+        nil
       end
 
       private def all_iseq iseq, rs = []

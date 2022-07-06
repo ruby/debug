@@ -388,6 +388,16 @@ module DEBUGGER__
 
     def event type, *args
       case type
+      when :load
+        file_path, reloaded = *args
+
+        if file_path
+          send_event 'loadedSource',
+                     reason: (reloaded ? :changed : :new),
+                     source: {
+                       path: file_path,
+                     }
+        end
       when :suspend_bp
         _i, bp, tid = *args
         if bp.kind_of?(CatchBreakpoint)
