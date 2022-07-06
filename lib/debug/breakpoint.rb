@@ -216,42 +216,56 @@ module DEBUGGER__
 
     NearestISeq = Struct.new(:iseq, :line, :events)
 
-    def try_activate
+    def iterate_iseq root_iseq
+      if root_iseq
+        is = [root_iseq]
+        while iseq = is.pop
+          yield iseq
+          iseq.each_child do |child_iseq|
+            is << child_iseq
+          end
+        end
+      else
+        ObjectSpace.each_iseq do |iseq|
+          if DEBUGGER__.compare_path((iseq.absolute_path || iseq.path), self.path) &&
+             iseq.first_lineno <= self.line &&
+             iseq.type != :ensure # ensure iseq is copied (duplicated)
+            yield iseq
+          end
+        end
+      end
+    end
+
+    def try_activate root_iseq = nil
       nearest = nil # NearestISeq
+      iterate_iseq root_iseq do |iseq|
+        iseq.traceable_lines_norec(line_events = {})
+        lines = line_events.keys.sort
 
-      ObjectSpace.each_iseq{|iseq|
-        if DEBUGGER__.compare_path((iseq.absolute_path || iseq.path), self.path) &&
-            iseq.first_lineno <= self.line &&
-            iseq.type != :ensure # ensure iseq is copied (duplicated)
+        if !lines.empty? && lines.last >= line
+          nline = lines.bsearch{|l| line <= l}
+          events = line_events[nline]
 
-          iseq.traceable_lines_norec(line_events = {})
-          lines = line_events.keys.sort
+          next if events == [:RUBY_EVENT_B_CALL]
 
-          if !lines.empty? && lines.last >= line
-            nline = lines.bsearch{|l| line <= l}
-            events = line_events[nline]
+          if @hook_call &&
+            events.include?(:RUBY_EVENT_CALL) &&
+            self.line == iseq.first_lineno
+            nline = iseq.first_lineno
+          end
 
-            next if events == [:RUBY_EVENT_B_CALL]
-
-            if @hook_call &&
-               events.include?(:RUBY_EVENT_CALL) &&
-               self.line == iseq.first_lineno
-              nline = iseq.first_lineno
-            end
-
-            if !nearest || ((line - nline).abs < (line - nearest.line).abs)
-              nearest = NearestISeq.new(iseq, nline, events)
-            else
-              if @hook_call && nearest.iseq.first_lineno <= iseq.first_lineno
-                if (nearest.line > line && !nearest.events.include?(:RUBY_EVENT_CALL)) ||
-                   (events.include?(:RUBY_EVENT_CALL))
-                  nearest = NearestISeq.new(iseq, nline, events)
-                end
+          if !nearest || ((line - nline).abs < (line - nearest.line).abs)
+            nearest = NearestISeq.new(iseq, nline, events)
+          else
+            if @hook_call && nearest.iseq.first_lineno <= iseq.first_lineno
+              if (nearest.line > line && !nearest.events.include?(:RUBY_EVENT_CALL)) ||
+                (events.include?(:RUBY_EVENT_CALL))
+                nearest = NearestISeq.new(iseq, nline, events)
               end
             end
           end
         end
-      }
+      end
 
       if nearest
         activate_exact nearest.iseq, nearest.events, nearest.line
