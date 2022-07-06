@@ -230,7 +230,6 @@ module DEBUGGER__
       when :load
         iseq, src = ev_args
         on_load iseq, src
-        @ui.event :load
         request_tc :continue
 
       when :trace
@@ -1590,7 +1589,8 @@ module DEBUGGER__
 
     def on_load iseq, src
       DEBUGGER__.info "Load #{iseq.absolute_path || iseq.path}"
-      @sr.add iseq, src
+      file_path, reloaded = @sr.add(iseq, src)
+      @ui.event :load, file_path, reloaded
 
       pending_line_breakpoints = @bps.find_all do |key, bp|
         LineBreakpoint === bp && !bp.iseq
