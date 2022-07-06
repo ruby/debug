@@ -38,6 +38,9 @@ If you use Bundler, write the following line to your Gemfile.
 gem "debug", ">= 1.0.0"
 ```
 
+(The version constraint is important; `debug < 1.0.0` is an older,
+abandoned gem that is completely different from this product.)
+
 # HOW TO USE
 
 To use a debugger, roughly you will do the following steps:
@@ -134,7 +137,7 @@ d => 4
 ### Invoke the program from the debugger as a traditional debuggers
 
 If you don't want to modify the source code, you can set breakpoints with a debug command `break` (`b` for short).
-Using `rdbg` command to launch the program without any modifications, you can run the program with the debugger.
+Using `rdbg` command (or `bundle exec rdbg`) to launch the program without any modifications, you can run the program with the debugger.
 
 ```shell
 $ cat target.rb                        # Sample program
@@ -285,7 +288,7 @@ There are multiple ways to run your program as a debuggee:
 Stop at program start | [`rdbg` option](https://github.com/ruby/debug#rdbg---open-or-rdbg--o-for-short) | [require](https://github.com/ruby/debug#require-debugopen-in-a-program) | [debugger API](https://github.com/ruby/debug#start-by-method)
 ---|---|---|---|
 Yes | `rdbg --open` | `require "debug/open"` | `DEBUGGER__.open`
-No | `rdbg --open --nonstop` | `require "debug/open_nonstop"` | `DEBUGGER__.open(nonstop: true)` 
+No | `rdbg --open --nonstop` | `require "debug/open_nonstop"` | `DEBUGGER__.open(nonstop: true)`
 
 #### `rdbg --open` (or `rdbg -O` for short)
 
