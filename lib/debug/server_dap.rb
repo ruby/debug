@@ -70,14 +70,39 @@ module DEBUGGER__
       end
     end
 
-    @local_fs = false
+    # true: all localfs
+    # Array: part of localfs
+    # nil: no localfs
+    @local_fs_map = nil
 
-    def self.local_fs
-      @local_fs
+    def self.local_fs_map_path path
+      case @local_fs_map
+      when nil
+        false
+      when true
+        path
+      else # Array
+        @local_fs_map.each do |(remote_path_prefix, local_path_prefix)|
+          if path.start_with? remote_path_prefix
+            return path.sub(remote_path_prefix){ local_path_prefix }
+          end
+        end
+
+        nil
+      end
     end
 
-    def self.local_fs_set
-      @local_fs = true
+    def self.local_fs_map_set map
+      return if @local_fs_map # already setup
+
+      case map
+      when String
+        @local_fs_map = map.split(',').map{|e| e.split(':')}
+      when true
+        @local_fs_map = map
+      when nil
+        @local_fs_map = CONFIG[:local_fs_map]
+      end
     end
 
     def dap_setup bytes
@@ -86,7 +111,7 @@ module DEBUGGER__
 
       case self
       when UI_UnixDomainServer
-        UI_DAP.local_fs_set
+        UI_DAP.local_fs_map_set true
       when UI_TcpServer
         # TODO: loopback address can be used to connect other FS env, like Docker containers
         # UI_DAP.local_fs_set if @local_addr.ipv4_loopback? || @local_addr.ipv6_loopback?
@@ -228,12 +253,12 @@ module DEBUGGER__
         when 'launch'
           send_response req
           @is_attach = false
-          UI_DAP.local_fs_set if req.dig('arguments', 'localfs')
+          UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
         when 'attach'
           send_response req
           Process.kill(UI_ServerBase::TRAP_SIGNAL, Process.pid)
           @is_attach = true
-          UI_DAP.local_fs_set if req.dig('arguments', 'localfs')
+          UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
         when 'setBreakpoints'
           path = args.dig('source', 'path')
           SESSION.clear_line_breakpoints path
@@ -637,7 +662,9 @@ module DEBUGGER__
           path = frame.realpath || frame.path
           source_name = path ? File.basename(path) : frame.location.to_s
 
-          if !UI_DAP.local_fs || !(path && File.exist?(path))
+          if (path && File.exist?(path)) && (local_path = UI_DAP.local_fs_map_path(path))
+            # ok
+          else
             ref = frame.file_lines
           end
 
@@ -648,7 +675,7 @@ module DEBUGGER__
             column: 1,
             source: {
               name: source_name,
-              path: path,
+              path: (local_path || path),
               sourceReference: ref,
             },
           }
