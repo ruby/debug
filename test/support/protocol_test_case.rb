@@ -163,6 +163,8 @@ module DEBUGGER__
         res = find_crt_dap_response
         result_cmd = res.dig(:command)
         assert_equal 'configurationDone', result_cmd
+        # suspends the debuggee so it'll take the later requests (include terminate)
+        send_dap_request "pause", threadId: 1
       when 'chrome'
         req_disconnect
         attach_to_cdp_server
