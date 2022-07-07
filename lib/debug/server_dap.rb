@@ -105,6 +105,10 @@ module DEBUGGER__
       end
     end
 
+    def is_dap?
+      true
+    end
+
     def dap_setup bytes
       CONFIG.set_config no_color: true
       @seq = 0
@@ -256,7 +260,6 @@ module DEBUGGER__
           UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
         when 'attach'
           send_response req
-          Process.kill(UI_ServerBase::TRAP_SIGNAL, Process.pid)
           @is_attach = true
           UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
         when 'setBreakpoints'

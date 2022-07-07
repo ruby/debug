@@ -20,6 +20,10 @@ module DEBUGGER__
       @session = nil
     end
 
+    def is_dap?
+      false
+    end
+
     class Terminate < StandardError; end
     class GreetingError < StandardError; end
 
@@ -68,7 +72,7 @@ module DEBUGGER__
           } unless already_connected
 
           setup_interrupt do
-            pause unless already_connected
+            pause unless already_connected || is_dap?
             process
           end
 
