@@ -184,10 +184,12 @@ module DEBUGGER__
     end
 
     def send **kw
-      kw[:seq] = @seq += 1
-      str = JSON.dump(kw)
-      @sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
-      show_protocol '<', str
+      if sock = @sock
+        kw[:seq] = @seq += 1
+        str = JSON.dump(kw)
+        sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
+        show_protocol '<', str
+      end
     end
 
     def send_response req, success: true, message: nil, **kw
@@ -319,11 +321,21 @@ module DEBUGGER__
           send_response req, breakpoints: filters
 
         when 'disconnect'
-          if args.fetch("terminateDebuggee", false)
-            @q_msg << 'kill!'
+          terminate = args.fetch("terminateDebuggee", false)
+
+          if SESSION.in_subsession?
+            if terminate
+              @q_msg << 'kill!'
+            else
+              @q_msg << 'continue'
+            end
           else
-            @q_msg << 'continue'
+            if terminate
+              @q_msg << 'kill!'
+              pause
+            end
           end
+
           send_response req
 
         ## control
