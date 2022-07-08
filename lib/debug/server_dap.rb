@@ -114,7 +114,7 @@ module DEBUGGER__
 
       case map
       when String
-        @local_fs_map = map.split(',').map{|e| e.split(':')}
+        @local_fs_map = map.split(',').map{|e| e.split(':').map{|path| path.delete_suffix('/') + '/'}}
       when true
         @local_fs_map = map
       when nil
