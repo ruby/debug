@@ -75,16 +75,33 @@ module DEBUGGER__
     # nil: no localfs
     @local_fs_map = nil
 
-    def self.local_fs_map_path path
+    def self.remote_to_local_path path
       case @local_fs_map
       when nil
-        false
+        nil
       when true
         path
       else # Array
         @local_fs_map.each do |(remote_path_prefix, local_path_prefix)|
           if path.start_with? remote_path_prefix
             return path.sub(remote_path_prefix){ local_path_prefix }
+          end
+        end
+
+        nil
+      end
+    end
+
+    def self.local_to_remote_path path
+      case @local_fs_map
+      when nil
+        nil
+      when true
+        path
+      else # Array
+        @local_fs_map.each do |(remote_path_prefix, local_path_prefix)|
+          if path.start_with? local_path_prefix
+            return path.sub(local_path_prefix){ remote_path_prefix }
           end
         end
 
@@ -276,21 +293,29 @@ module DEBUGGER__
           end
 
         when 'setBreakpoints'
-          path = args.dig('source', 'path')
-          SESSION.clear_line_breakpoints path
+          req_path = args.dig('source', 'path')
+          path = UI_DAP.local_to_remote_path(req_path)
 
-          bps = []
-          args['breakpoints'].each{|bp|
-            line = bp['line']
-            if cond = bp['condition']
-              bps << SESSION.add_line_breakpoint(path, line, cond: cond)
-            else
-              bps << SESSION.add_line_breakpoint(path, line)
-            end
-          }
-          send_response req, breakpoints: (bps.map do |bp| {verified: true,} end)
+          if path
+            SESSION.clear_line_breakpoints path
+
+            bps = []
+            args['breakpoints'].each{|bp|
+              line = bp['line']
+              if cond = bp['condition']
+                bps << SESSION.add_line_breakpoint(path, line, cond: cond)
+              else
+                bps << SESSION.add_line_breakpoint(path, line)
+              end
+            }
+            send_response req, breakpoints: (bps.map do |bp| {verified: true,} end)
+          else
+            send_response req, success: false, message: "#{req_path} is not available"
+          end
+
         when 'setFunctionBreakpoints'
           send_response req
+
         when 'setExceptionBreakpoints'
           process_filter = ->(filter_id, cond = nil) {
             bp =
@@ -302,19 +327,19 @@ module DEBUGGER__
               else
                 nil
               end
-            {
-              verified: !bp.nil?,
-              message: bp.inspect,
+              {
+                verified: !bp.nil?,
+                message: bp.inspect,
+              }
             }
-          }
 
-          SESSION.clear_catch_breakpoints 'Exception', 'RuntimeError'
+            SESSION.clear_catch_breakpoints 'Exception', 'RuntimeError'
 
-          filters = args.fetch('filters').map {|filter_id|
-            process_filter.call(filter_id)
-          }
+            filters = args.fetch('filters').map {|filter_id|
+              process_filter.call(filter_id)
+            }
 
-          filters += args.fetch('filterOptions', {}).map{|bp_info|
+            filters += args.fetch('filterOptions', {}).map{|bp_info|
             process_filter.call(bp_info['filterId'], bp_info['condition'])
           }
 
@@ -689,7 +714,7 @@ module DEBUGGER__
           path = frame.realpath || frame.path
           source_name = path ? File.basename(path) : frame.location.to_s
 
-          if (path && File.exist?(path)) && (local_path = UI_DAP.local_fs_map_path(path))
+          if (path && File.exist?(path)) && (local_path = UI_DAP.remote_to_local_path(path))
             # ok
           else
             ref = frame.file_lines
