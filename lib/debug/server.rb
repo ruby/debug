@@ -336,7 +336,6 @@ module DEBUGGER__
     def pause
       # $stderr.puts "DEBUG: pause request"
       Process.kill(TRAP_SIGNAL, Process.pid)
-      p :paused
     end
 
     def quit n
