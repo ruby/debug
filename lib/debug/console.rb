@@ -98,7 +98,7 @@ module DEBUGGER__
           when :ruby
             colorize_code(buff.chomp)
           end
-        end
+        end unless CONFIG[:no_hint]
 
         yield
 
