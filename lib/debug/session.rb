@@ -1376,6 +1376,8 @@ module DEBUGGER__
       clear_breakpoints do |k, bp|
         bp.is_a?(LineBreakpoint) && DEBUGGER__.compare_path(k.first, path)
       end
+    rescue Errno::ENOENT
+      # just ignore
     end
 
     def clear_catch_breakpoints *exception_names
