@@ -16,7 +16,7 @@ New debug.rb has several advantages:
      Frontend |  [Console](https://github.com/ruby/debug#invoke-as-a-remote-debuggee) | [VSCode](https://github.com/ruby/debug#vscode-integration) | [Chrome DevTool](#chrome-devtool-integration) |
      ---|---|---|---|
      Connection | UDS, TCP/IP | UDS, TCP/IP | TCP/IP |
-     Requirement | No | [vscode-rdbg](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg) | No |
+     Requirement | No | [vscode-rdbg](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg) | Chrome |
 
 * Extensible: application can introduce debugging support with several ways:
   * By `rdbg` command
