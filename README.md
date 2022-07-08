@@ -506,6 +506,14 @@ config set no_color true
 * OBSOLETE
   * `RUBY_DEBUG_PARENT_ON_FORK` (`parent_on_fork`): Keep debugging parent process on fork (default: false)
 
+There are other environment variables:
+
+* `NO_COLOR`: If the value is set, set `RUBY_DEBUG_NO_COLOR` ([NO_COLOR: disabling ANSI color output in various Unix commands](https://no-color.org/)).
+* `RUBY_DEBUG_ENABLE`: If the value is `0`, do not enable debug.gem feature.
+* `RUBY_DEBUG_ADDED_RUBYOPT`: Remove this value from `RUBYOPT` at first. This feature helps loading debug.gem with `RUBYOPT='-r debug/...'` and you don't want to derive it to child processes. In this case you can set `RUBY_DEBUG_ADDED_RUBYOPT='-r debug/...'` (same value) and this string will be deleted from `RUBYOPT` at first.
+* `RUBY_DEBUG_EDITOR` or `EDITOR`: An editor used by `edit` debug command.
+* `RUBY_DEBUG_BB`: Define `Kernel#bb` method which is alias of `Kernel#debugger`.
+
 ### Initial scripts
 
 If there is `~/.rdbgrc`, the file is loaded as an initial script (which contains debug commands) when the debug session is started.
