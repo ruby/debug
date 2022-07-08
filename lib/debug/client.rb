@@ -173,6 +173,8 @@ module DEBUGGER__
     end
 
     def connect
+      pre_commands = (CONFIG[:commands] || '').split(';;')
+
       trap(:SIGINT){
         send "pause"
       }
@@ -199,7 +201,12 @@ module DEBUGGER__
           prev_trap = trap(:SIGINT, 'DEFAULT')
 
           begin
-            line = readline
+            if pre_commands.empty?
+              line = readline
+            else
+              line = pre_commands.shift
+              puts "(rdbg:remote:command) #{line}"
+            end
           rescue Interrupt
             retry
           ensure
