@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+__END__
+
 require_relative '../support/protocol_test_case'
 
 module DEBUGGER__

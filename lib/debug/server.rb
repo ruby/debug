@@ -49,6 +49,7 @@ module DEBUGGER__
         accept do |server, already_connected: false|
           DEBUGGER__.warn "Connected."
           greeting_done = false
+          @need_pause_at_first = true
 
           @accept_m.synchronize{
             @sock = server
@@ -68,7 +69,7 @@ module DEBUGGER__
           } unless already_connected
 
           setup_interrupt do
-            pause unless already_connected
+            pause if !already_connected && @need_pause_at_first
             process
           end
 
@@ -133,12 +134,14 @@ module DEBUGGER__
         raise unless @sock.read(2) == "\r\n"
         self.extend(UI_DAP)
         @repl = false
+        @need_pause_at_first = false
         dap_setup @sock.read($1.to_i)
       when /^GET \/.* HTTP\/1.1/
         require_relative 'server_cdp'
 
         self.extend(UI_CDP)
         @repl = false
+        @need_pause_at_first = false
         CONFIG.set_config no_color: true
 
         @ws_server = UI_CDP::WebSocketServer.new(@sock)
@@ -333,6 +336,7 @@ module DEBUGGER__
     def pause
       # $stderr.puts "DEBUG: pause request"
       Process.kill(TRAP_SIGNAL, Process.pid)
+      p :paused
     end
 
     def quit n

@@ -252,13 +252,27 @@ module DEBUGGER__
         ## boot/configuration
         when 'launch'
           send_response req
-          @is_attach = false
           UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
+          @is_launch = true
+
         when 'attach'
           send_response req
-          Process.kill(UI_ServerBase::TRAP_SIGNAL, Process.pid)
-          @is_attach = true
           UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
+          @is_launch = false
+
+        when 'configurationDone'
+          send_response req
+
+          if @is_launch
+            @q_msg << 'continue'
+          else
+            if SESSION.in_subsession?
+              send_event 'stopped', reason: 'pause',
+                                    threadId: 1, # maybe ...
+                                    allThreadsStopped: true
+            end
+          end
+
         when 'setBreakpoints'
           path = args.dig('source', 'path')
           SESSION.clear_line_breakpoints path
@@ -303,16 +317,7 @@ module DEBUGGER__
           }
 
           send_response req, breakpoints: filters
-        when 'configurationDone'
-          send_response req
-          if defined?(@is_attach) && @is_attach
-            @q_msg << 'p'
-            send_event 'stopped', reason: 'pause',
-                                  threadId: 1,
-                                  allThreadsStopped: true
-          else
-            @q_msg << 'continue'
-          end
+
         when 'disconnect'
           if args.fetch("terminateDebuggee", false)
             @q_msg << 'kill!'
