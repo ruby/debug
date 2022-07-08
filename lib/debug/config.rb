@@ -250,6 +250,7 @@ module DEBUGGER__
     def self.parse_argv argv
       config = {
         mode: :start,
+        no_color: (nc = ENV['NO_COLOR']) && !nc.empty?,
       }
       CONFIG_MAP.each{|key, evname|
         if val = ENV[evname]
