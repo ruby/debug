@@ -361,6 +361,7 @@ module DEBUGGER__
             end
           end
 
+          SESSION.clear_all_breakpoints
           send_response req
 
         ## control
