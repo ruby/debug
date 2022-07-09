@@ -1386,6 +1386,10 @@ module DEBUGGER__
       end
     end
 
+    def clear_all_breakpoints
+      clear_breakpoints{true}
+    end
+
     def add_iseq_breakpoint iseq, **kw
       bp = ISeqBreakpoint.new(iseq, [:line], **kw)
       add_bp bp
