@@ -334,7 +334,9 @@ module DEBUGGER__
     end
 
     def readline prompt
-      input = (sock do |s|
+      input = (sock(skip: CONFIG[:ignore_bp]) do |s|
+        next unless s
+
         if @repl
           raise "not in subsession, but received: #{line.inspect}" unless @session.in_subsession?
           line = "input #{Process.pid}"

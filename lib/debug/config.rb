@@ -44,6 +44,7 @@ module DEBUGGER__
     sock_path:      ['RUBY_DEBUG_SOCK_PATH',    "REMOTE: UNIX Domain Socket remote debugging: socket path"],
     sock_dir:       ['RUBY_DEBUG_SOCK_DIR',     "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
     local_fs_map:   ['RUBY_DEBUG_LOCAL_FS_MAP', "REMOTE: Specify local fs map", :path_map],
+    ignore_bp:      ['RUBY_DEBUG_IGNORE_BP',    "REMOTE: Ignore breakpoints if no clients are attached", :bool, 'false'],
     cookie:         ['RUBY_DEBUG_COOKIE',       "REMOTE: Cookie for negotiation"],
     open_frontend:  ['RUBY_DEBUG_OPEN_FRONTEND',"REMOTE: frontend used by open command (vscode, chrome, default: rdbg)."],
     chrome_path:    ['RUBY_DEBUG_CHROME_PATH',  "REMOTE: Platform dependent path of Chrome (For more information, See [here](https://github.com/ruby/debug/pull/334/files#diff-5fc3d0a901379a95bc111b86cf0090b03f857edfd0b99a0c1537e26735698453R55-R64))"],
