@@ -334,7 +334,7 @@ module DEBUGGER__
     end
 
     def readline prompt
-      input = (sock(skip: CONFIG[:ignore_bp]) do |s|
+      input = (sock(skip: CONFIG[:skip_bp]) do |s|
         next unless s
 
         if @repl
