@@ -1643,7 +1643,7 @@ module DEBUGGER__
       b = tp.binding
       if var_name = b.local_variables.first
         mid = b.local_variable_get(var_name)
-        unresolved = false
+        resolved = true
 
         @bps.each{|k, bp|
           case bp
@@ -1654,14 +1654,52 @@ module DEBUGGER__
               end
             end
 
-            unresolved = true unless bp.enabled?
+            resolved = false if !bp.enabled?
           end
         }
-        unless unresolved
-          METHOD_ADDED_TRACKER.disable
+
+        if resolved
+          Session.deactivate_method_added_trackers
+        end
+
+        case mid
+        when :method_added, :singleton_method_added
+          Session.create_method_added_tracker(tp.self, mid)
+          Session.create_method_added_tracker unless resolved
         end
       end
     end
+
+    class ::Module
+      undef method_added
+      def method_added mid; end
+      def singleton_method_added mid; end
+    end
+
+    def self.create_method_added_tracker mod, method_added_id, method_accessor = :method
+      m = mod.__send__(method_accessor, method_added_id)
+      METHOD_ADDED_TRACKERS[m] = TracePoint.new(:call) do |tp|
+        SESSION.method_added tp
+      end
+    end
+
+    def self.activate_method_added_trackers
+      METHOD_ADDED_TRACKERS.each do |m, tp|
+        tp.enable(target: m) unless tp.enabled?
+      rescue ArgumentError
+        DEBUGGER__.warn "Methods defined under #{m.owner} can not track by the debugger."
+      end
+    end
+
+    def self.deactivate_method_added_trackers
+      METHOD_ADDED_TRACKERS.each do |m, tp|
+        tp.disable if tp.enabled?
+      end
+    end
+
+    METHOD_ADDED_TRACKERS = Hash.new
+    create_method_added_tracker Module, :method_added,           :instance_method
+    create_method_added_tracker Module, :singleton_method_added, :instance_method
 
     def width
       @ui.width
@@ -2076,21 +2114,8 @@ module DEBUGGER__
     end
   end
 
-  class ::Module
-    undef method_added
-    def method_added mid; end
-    def singleton_method_added mid; end
-  end
-
-  def self.method_added tp
-    begin
-      SESSION.method_added tp
-    rescue Exception => e
-      p e
-    end
-  end
-
-  METHOD_ADDED_TRACKER = self.create_method_added_tracker
+  # Inspector
+  
   SHORT_INSPECT_LENGTH = 40
 
   class LimitedPP

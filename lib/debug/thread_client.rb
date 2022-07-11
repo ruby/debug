@@ -744,9 +744,12 @@ module DEBUGGER__
         bp = MethodBreakpoint.new(current_frame.eval_binding, klass_name, op, method_name, cond: cond, command: cmd, path: path)
         begin
           bp.enable
+        rescue NameError => e
+          puts "Unknown name `#{e.name}` for `#{e.receiver}`"
+          # TODO: Ractor support
+          Session.activate_method_added_trackers
         rescue Exception => e
           puts e.message
-          ::DEBUGGER__::METHOD_ADDED_TRACKER.enable
         end
 
         bp
