@@ -762,15 +762,20 @@ module DEBUGGER__
         begin
           bp.enable
         rescue NameError => e
-          if constant_name? klass_name
-            puts "Unknown constant name: \"#{e.name}\""
-            # TODO: Ractor support
-            Session.activate_method_added_trackers
+          if bp.klass
+            puts "Unknown method name: \"#{e.name}\""
           else
-            # only Class name is allowed
-            puts "Not a constant name: \"#{klass_name}\""
-            bp = nil
+            # klass_name can not be evaluated
+            if constant_name? klass_name
+              puts "Unknown constant name: \"#{e.name}\""
+            else
+              # only Class name is allowed
+              puts "Not a constant name: \"#{klass_name}\""
+              bp = nil
+            end
           end
+
+          Session.activate_method_added_trackers if bp
         rescue Exception => e
           puts e.inspect
           bp = nil
