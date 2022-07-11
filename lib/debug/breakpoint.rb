@@ -421,7 +421,7 @@ module DEBUGGER__
   end
 
   class MethodBreakpoint < Breakpoint
-    attr_reader :sig_method_name, :method
+    attr_reader :sig_method_name, :method, :klass
 
     def initialize b, klass_name, op, method_name, cond: nil, command: nil, path: nil
       @sig_klass_name = klass_name
