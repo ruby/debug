@@ -27,8 +27,8 @@ module DEBUGGER__
       location.absolute_path
     end
 
-    def pretty_path
-      return '#<none>' unless path = self.path
+    def self.pretty_path path
+     return '#<none>' unless path
       use_short_path = CONFIG[:use_short_path]
 
       case
@@ -43,6 +43,10 @@ module DEBUGGER__
       else
         path
       end
+    end
+
+    def pretty_path
+      FrameInfo.pretty_path path
     end
 
     def name
