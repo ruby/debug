@@ -145,7 +145,9 @@ module DEBUGGER__
     end
 
     def setup_remote_debuggee(cmd)
-      remote_info = DEBUGGER__::TestCase::RemoteInfo.new(*PTY.spawn(cmd))
+      homedir = defined?(self.class.pty_home_dir) ? self.class.pty_home_dir : ENV['HOME']
+
+      remote_info = DEBUGGER__::TestCase::RemoteInfo.new(*PTY.spawn({'HOME' => homedir}, cmd))
       remote_info.r.read(1) # wait for the remote server to boot up
       remote_info.debuggee_backlog = []
 
