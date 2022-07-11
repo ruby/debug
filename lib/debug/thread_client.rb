@@ -737,6 +737,23 @@ module DEBUGGER__
 
     ## cmd: breakpoint
 
+    # TODO: support non-ASCII Constant name
+    def constant_name? name
+      case name
+      when /\A::\b/
+        constant_name? $~.post_match
+      when /\A[A-Z]\w*/
+        post = $~.post_match
+        if post.empty?
+          true
+        else
+          constant_name? post
+        end
+      else
+        false
+      end
+    end
+
     def make_breakpoint args
       case args.first
       when :method
@@ -745,11 +762,18 @@ module DEBUGGER__
         begin
           bp.enable
         rescue NameError => e
-          puts "Unknown name `#{e.name}` for `#{e.receiver}`"
-          # TODO: Ractor support
-          Session.activate_method_added_trackers
+          if constant_name? klass_name
+            puts "Unknown constant name: \"#{e.name}\""
+            # TODO: Ractor support
+            Session.activate_method_added_trackers
+          else
+            # only Class name is allowed
+            puts "Not a constant name: \"#{klass_name}\""
+            bp = nil
+          end
         rescue Exception => e
-          puts e.message
+          puts e.inspect
+          bp = nil
         end
 
         bp
