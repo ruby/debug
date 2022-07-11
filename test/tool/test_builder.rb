@@ -195,7 +195,7 @@ module DEBUGGER__
       <<~TEST
         # frozen_string_literal: true
 
-        require_relative '../support/test_case'
+        require_relative '../support/console_test_case'
 
         module DEBUGGER__
           #{create_scenario_and_program}
@@ -213,7 +213,7 @@ module DEBUGGER__
     end
 
     def create_file
-      path = "#{__dir__}/../debug/#{@file_name}_test.rb"
+      path = "#{__dir__}/../console/#{@file_name}_test.rb"
       if File.exist?(path)
         @inserted_src = File.read(path)
         content = @inserted_src.split("\n")[0..-3].join("\n") + "\n#{make_content}\nend\n" if @inserted_src.include? @class
