@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-__END__
-
 require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
@@ -22,7 +20,7 @@ module DEBUGGER__
       12| end
     RUBY
 
-    def test_1639218122
+    def test_1657544386
       run_dap_scenario PROGRAM do
         [
           *INITIALIZE_DAP_MSGS,
@@ -98,6 +96,7 @@ module DEBUGGER__
             body: {
               stackFrames: [
                 {
+                  id: 1,
                   name: "<main>",
                   line: 1,
                   column: 1,
@@ -105,10 +104,10 @@ module DEBUGGER__
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
                     sourceReference: 0
-                  },
-                  id: 1
+                  }
                 }
-              ]
+              ],
+              totalFrames: 1
             }
           },
           {
@@ -228,16 +227,19 @@ module DEBUGGER__
               exceptionBreakpointFilters: [
                 {
                   filter: "any",
-                  label: "rescue any exception"
+                  label: "rescue any exception",
+                  supportsCondition: true
                 },
                 {
                   filter: "RuntimeError",
-                  label: "rescue RuntimeError"
+                  label: "rescue RuntimeError",
+                  supportsCondition: true
                 }
               ],
               supportsExceptionFilterOptions: true,
               supportsStepBack: true,
-              supportsEvaluateForHovers: true
+              supportsEvaluateForHovers: true,
+              supportsCompletionsRequest: true
             }
           },
           {
@@ -252,26 +254,13 @@ module DEBUGGER__
               type: "rdbg",
               name: "Attach with rdbg",
               request: "attach",
-              rdbgPath: /#{File.expand_path('../../exe/rdbg', __dir__)}/,
-              debugPort: "/var/folders/5j/z2c9zm7124q81f_py4xmd3scp7w9j7/T/ruby-debug-sock-746464807/ruby-debug-s15236-55231",
-              autoAttach: true,
               __configurationTarget: 5,
-              __sessionId: "e3ff75ee-d35c-49a4-9520-ac70bd14867d"
+              __sessionId: "46523ba0-38c2-4503-aa21-ee7c19a263dd"
             },
             type: "request"
           },
           {
             seq: 3,
-            type: "event",
-            event: "stopped",
-            body: {
-              reason: "pause",
-              threadId: 1,
-              allThreadsStopped: true
-            }
-          },
-          {
-            seq: 4,
             type: "response",
             command: "attach",
             request_seq: 2,
@@ -283,13 +272,13 @@ module DEBUGGER__
             command: "setFunctionBreakpoints",
             arguments: {
               breakpoints: [
-
+          
               ]
             },
             type: "request"
           },
           {
-            seq: 5,
+            seq: 4,
             type: "response",
             command: "setFunctionBreakpoints",
             request_seq: 3,
@@ -298,14 +287,53 @@ module DEBUGGER__
           },
           {
             seq: 4,
-            command: "threads",
+            command: "setExceptionBreakpoints",
+            arguments: {
+              filters: [
+          
+              ],
+              filterOptions: [
+          
+              ]
+            },
+            type: "request"
+          },
+          {
+            seq: 5,
+            type: "response",
+            command: "setExceptionBreakpoints",
+            request_seq: 4,
+            success: true,
+            message: "Success",
+            body: {
+              breakpoints: [
+          
+              ]
+            }
+          },
+          {
+            seq: 5,
+            command: "configurationDone",
             type: "request"
           },
           {
             seq: 6,
             type: "response",
+            command: "configurationDone",
+            request_seq: 5,
+            success: true,
+            message: "Success"
+          },
+          {
+            seq: 6,
             command: "threads",
-            request_seq: 4,
+            type: "request"
+          },
+          {
+            seq: 7,
+            type: "response",
+            command: "threads",
+            request_seq: 6,
             success: true,
             message: "Success",
             body: {
@@ -318,117 +346,23 @@ module DEBUGGER__
             }
           },
           {
-            seq: 5,
-            command: "setExceptionBreakpoints",
-            arguments: {
-              filters: [
-
-              ],
-              filterOptions: [
-                {
-                  filterId: "RuntimeError"
-                }
-              ]
-            },
-            type: "request"
-          },
-          {
             seq: 7,
-            type: "response",
-            command: "setExceptionBreakpoints",
-            request_seq: 5,
-            success: true,
-            message: "Success",
-            body: {
-              breakpoints: [
-                {
-                  verified: true,
-                  message: /#<DEBUGGER__::CatchBreakpoint:.*/
-                }
-              ]
-            }
-          },
-          {
-            seq: 6,
-            command: "stackTrace",
+            command: "pause",
             arguments: {
-              threadId: 1,
-              startFrame: 0,
-              levels: 20
+              threadId: 1
             },
             type: "request"
           },
           {
             seq: 8,
             type: "response",
-            command: "stackTrace",
-            request_seq: 6,
-            success: true,
-            message: "Success",
-            body: {
-              stackFrames: [
-                {
-                  name: "block in <module:Foo>",
-                  line: 9,
-                  column: 1,
-                  source: {
-                    name: /#{File.basename temp_file_path}/,
-                    path: /#{temp_file_path}/,
-                    sourceReference: 0
-                  },
-                  id: 2
-                },
-                {
-                  name: "[C] Kernel#loop",
-                  line: 7,
-                  column: 1,
-                  source: {
-                    name: /#{File.basename temp_file_path}/,
-                    path: /#{temp_file_path}/,
-                    sourceReference: 0
-                  },
-                  id: 3
-                },
-                {
-                  name: "<module:Foo>",
-                  line: 7,
-                  column: 1,
-                  source: {
-                    name: /#{File.basename temp_file_path}/,
-                    path: /#{temp_file_path}/,
-                    sourceReference: 0
-                  },
-                  id: 4
-                },
-                {
-                  name: "<main>",
-                  line: 1,
-                  column: 1,
-                  source: {
-                    name: /#{File.basename temp_file_path}/,
-                    path: /#{temp_file_path}/,
-                    sourceReference: 0
-                  },
-                  id: 5
-                }
-              ]
-            }
-          },
-          {
-            seq: 7,
-            command: "configurationDone",
-            type: "request"
-          },
-          {
-            seq: 9,
-            type: "response",
-            command: "configurationDone",
+            command: "pause",
             request_seq: 7,
             success: true,
             message: "Success"
           },
           {
-            seq: 10,
+            seq: 9,
             type: "event",
             event: "stopped",
             body: {
@@ -443,7 +377,7 @@ module DEBUGGER__
             type: "request"
           },
           {
-            seq: 11,
+            seq: 10,
             type: "response",
             command: "threads",
             request_seq: 8,
@@ -460,27 +394,6 @@ module DEBUGGER__
           },
           {
             seq: 9,
-            command: "threads",
-            type: "request"
-          },
-          {
-            seq: 12,
-            type: "response",
-            command: "threads",
-            request_seq: 9,
-            success: true,
-            message: "Success",
-            body: {
-              threads: [
-                {
-                  id: 1,
-                  name: /#1 .*/
-                }
-              ]
-            }
-          },
-          {
-            seq: 10,
             command: "stackTrace",
             arguments: {
               threadId: 1,
@@ -490,15 +403,16 @@ module DEBUGGER__
             type: "request"
           },
           {
-            seq: 13,
+            seq: 11,
             type: "response",
             command: "stackTrace",
-            request_seq: 10,
+            request_seq: 9,
             success: true,
             message: "Success",
             body: {
               stackFrames: [
                 {
+                  id: 2,
                   name: "block in <module:Foo>",
                   line: 9,
                   column: 1,
@@ -506,10 +420,10 @@ module DEBUGGER__
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
                     sourceReference: 0
-                  },
-                  id: 6
+                  }
                 },
                 {
+                  id: 3,
                   name: "[C] Kernel#loop",
                   line: 7,
                   column: 1,
@@ -517,10 +431,10 @@ module DEBUGGER__
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
                     sourceReference: 0
-                  },
-                  id: 7
+                  }
                 },
                 {
+                  id: 4,
                   name: "<module:Foo>",
                   line: 7,
                   column: 1,
@@ -528,10 +442,10 @@ module DEBUGGER__
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
                     sourceReference: 0
-                  },
-                  id: 8
+                  }
                 },
                 {
+                  id: 5,
                   name: "<main>",
                   line: 1,
                   column: 1,
@@ -539,25 +453,25 @@ module DEBUGGER__
                     name: /#{File.basename temp_file_path}/,
                     path: /#{temp_file_path}/,
                     sourceReference: 0
-                  },
-                  id: 9
+                  }
                 }
-              ]
+              ],
+              totalFrames: 4
             }
           },
           {
-            seq: 11,
+            seq: 10,
             command: "scopes",
             arguments: {
-              frameId: 6
+              frameId: 2
             },
             type: "request"
           },
           {
-            seq: 14,
+            seq: 12,
             type: "response",
             command: "scopes",
-            request_seq: 11,
+            request_seq: 10,
             success: true,
             message: "Success",
             body: {
@@ -582,7 +496,7 @@ module DEBUGGER__
             }
           },
           {
-            seq: 12,
+            seq: 11,
             command: "variables",
             arguments: {
               variablesReference: 4
@@ -590,10 +504,10 @@ module DEBUGGER__
             type: "request"
           },
           {
-            seq: 15,
+            seq: 13,
             type: "response",
             command: "variables",
-            request_seq: 12,
+            request_seq: 11,
             success: true,
             message: "Success",
             body: {
@@ -626,21 +540,13 @@ module DEBUGGER__
             }
           },
           {
-            seq: 13,
+            seq: 12,
             command: "disconnect",
             arguments: {
               restart: false,
-              terminateDebuggee: false
+              terminateDebuggee: true
             },
             type: "request"
-          },
-          {
-            seq: 16,
-            type: "response",
-            command: "disconnect",
-            request_seq: 13,
-            success: true,
-            message: "Success"
           }
         ]
       end
