@@ -527,6 +527,32 @@ module DEBUGGER__
     end
   end
 
+  class MethodAddedTest < ConsoleTestCase
+    def program_method_added
+      <<~RUBY
+         1| class C
+         2|   def self.method_added mid
+         3|     debugger
+         4|   end
+         5|   def foo
+         6|   end
+         5| end
+         6| C.new.foo
+      RUBY
+    end
+
+    def test_break_after_user_defined_method_added
+      debug_code program_method_added do
+        type 'b C#foo'
+        type 'c'
+        assert_line_num 3
+        type 'c'
+        assert_line_num 5
+        type 'c'
+      end
+    end
+  end
+
   #
   # Tests adding breakpoints to lines
   #

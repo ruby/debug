@@ -1665,7 +1665,7 @@ module DEBUGGER__
         case mid
         when :method_added, :singleton_method_added
           Session.create_method_added_tracker(tp.self, mid)
-          Session.create_method_added_tracker unless resolved
+          Session.activate_method_added_trackers unless resolved
         end
       end
     end
