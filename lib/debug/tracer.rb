@@ -74,7 +74,7 @@ module DEBUGGER__
     end
 
     def out tp, msg = nil, depth = caller.size - 1
-      location_str = colorize("#{tp.path}:#{tp.lineno}", [:GREEN])
+      location_str = colorize("#{FrameInfo.pretty_path(tp.path)}:#{tp.lineno}", [:GREEN])
       buff = "#{header(depth)}#{msg} at #{location_str}"
 
       if false # TODO: Ractor.main?
