@@ -28,7 +28,7 @@ module DEBUGGER__
     end
 
     def self.pretty_path path
-     return '#<none>' unless path
+      return '#<none>' unless path
       use_short_path = CONFIG[:use_short_path]
 
       case
@@ -158,9 +158,7 @@ module DEBUGGER__
       }.compact
     end
 
-    private
-
-    def get_singleton_class obj
+    private def get_singleton_class obj
       obj.singleton_class # TODO: don't use it
     rescue TypeError
       nil
@@ -170,7 +168,7 @@ module DEBUGGER__
       local_variables[var]
     end
 
-    def klass_sig
+    private def klass_sig
       if self.class == get_singleton_class(self.self)
         "#{self.self}."
       else
