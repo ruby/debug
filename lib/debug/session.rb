@@ -1641,6 +1641,7 @@ module DEBUGGER__
 
     def method_added tp
       b = tp.binding
+
       if var_name = b.local_variables.first
         mid = b.local_variable_get(var_name)
         resolved = true
@@ -1673,6 +1674,10 @@ module DEBUGGER__
     class ::Module
       undef method_added
       def method_added mid; end
+    end
+
+    class ::BasicObject
+      undef singleton_method_added
       def singleton_method_added mid; end
     end
 
@@ -1698,8 +1703,8 @@ module DEBUGGER__
     end
 
     METHOD_ADDED_TRACKERS = Hash.new
-    create_method_added_tracker Module, :method_added,           :instance_method
-    create_method_added_tracker Module, :singleton_method_added, :instance_method
+    create_method_added_tracker Module, :method_added, :instance_method
+    create_method_added_tracker BasicObject, :singleton_method_added, :instance_method
 
     def width
       @ui.width
