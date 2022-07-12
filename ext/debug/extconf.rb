@@ -1,7 +1,7 @@
 require 'mkmf'
 require_relative '../../lib/debug/version'
 File.write("debug_version.h", "#define RUBY_DEBUG_VERSION \"#{DEBUGGER__::VERSION}\"\n")
-
+$distcleanfiles << "debug_version.h"
 
 if defined? RubyVM
   $defs << '-DHAVE_RB_ISEQ_PARAMETERS'
