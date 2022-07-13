@@ -3,6 +3,31 @@
 require_relative '../support/console_test_case'
 
 module DEBUGGER__
+  class RUBYOPTHandlingTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| a = 1
+      RUBY
+    end
+
+    def test_debugger_removes_rubyopt_added_by_rdbg
+      run_rdbg(program) do
+        type "ENV['RUBYOPT']"
+        assert_no_line_text(/debug\/start/)
+        type "c"
+      end
+    end
+
+    def test_debugger_respects_other_rubyopt
+      run_rdbg(program, rubyopt: "-rreline") do
+        type "ENV['RUBYOPT']"
+        assert_no_line_text(/debug\/start/)
+        assert_line_text(/-rreline/)
+        type "c"
+      end
+    end
+  end
+
   class DebugCommandOptionTest < ConsoleTestCase
     def program
       <<~RUBY
