@@ -22,8 +22,9 @@ end
 # restore RUBYOPT
 if (added_opt = ENV['RUBY_DEBUG_ADDED_RUBYOPT']) &&
    (rubyopt = ENV['RUBYOPT']) &&
-   rubyopt.start_with?(added_opt)
-  ENV['RUBYOPT'] = rubyopt.delete_prefix(rubyopt)
+   rubyopt.end_with?(added_opt)
+
+  ENV['RUBYOPT'] = rubyopt.delete_suffix(added_opt)
   ENV['RUBY_DEBUG_ADDED_RUBYOPT'] = nil
 end
 
@@ -2120,7 +2121,7 @@ module DEBUGGER__
   end
 
   # Inspector
-  
+
   SHORT_INSPECT_LENGTH = 40
 
   class LimitedPP

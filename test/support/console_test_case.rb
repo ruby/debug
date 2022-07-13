@@ -246,10 +246,11 @@ module DEBUGGER__
       end
     end
 
-    def run_rdbg program, options: nil, &test_steps
+    def run_rdbg program, options: nil, rubyopt: nil, &test_steps
       prepare_test_environment(program, test_steps) do
         test_info = TestInfo.new(dup_scenario, 'LOCAL', /\(rdbg\)/)
         cmd = "#{RDBG_EXECUTABLE} #{options} -- #{temp_file_path}"
+        cmd = "RUBYOPT=#{rubyopt} #{cmd}" if rubyopt
         run_test_scenario cmd, test_info
       end
     end
