@@ -320,6 +320,22 @@ Execute debugging `program` with `&scenario`. If you want to test it only for DA
 
 `run_protocol_scenario program, cdp: false ...`
 
+- attach_to_dap_server(terminate_debuggee:)
+
+Attach to the running DAP server through UNIX Domain Socket.
+
+- attach_to_cdp_server
+
+Attach to the running CDP server through TCP/IP.
+
+- req_dap_disconnect
+
+Disconnect from the currently connected DAP server.
+
+- req_cdp_disconnect
+
+Disconnect from the currently connected CDP server.
+
 - req_add_breakpoint(lineno, path: temp_file_path, cond: nil)
 
 Sends request to rdbg to add a breakpoint.

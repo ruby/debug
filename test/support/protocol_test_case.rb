@@ -50,6 +50,57 @@ module DEBUGGER__
       end
     end
 
+    def attach_to_dap_server
+      @sock = Socket.unix @remote_info.sock_path
+      @seq = 1
+      @reader_thread = Thread.new do
+        while res = recv_response
+          @queue.push res
+        end
+      rescue Detach
+      end
+      sleep 0.001 while @reader_thread.status != 'sleep'
+      @reader_thread.run
+      INITIALIZE_DAP_MSGS.each{|msg| send(**msg)}
+    end
+
+    def attach_to_cdp_server
+      body = get_request HOST, @remote_info.port, '/json'
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Disconnected.'
+      end
+
+      sock = Socket.tcp HOST, @remote_info.port
+      uuid = body[0][:id]
+
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.001 until @remote_info.debuggee_backlog.join.match?(/Disconnected\.\R.*Connected/)
+      end
+
+      @web_sock = WebSocketClient.new sock
+      @web_sock.handshake @remote_info.port, uuid
+      @id = 1
+      @reader_thread = Thread.new do
+        while res = @web_sock.extract_data
+          @queue.push res
+        end
+      rescue Detach
+      end
+      sleep 0.001 while @reader_thread.status != 'sleep'
+      @reader_thread.run
+      INITIALIZE_CDP_MSGS.each{|msg| send(**msg)}
+    end
+
+    def req_dap_disconnect(terminate_debuggee:)
+      send_dap_request 'disconnect', restart: false, terminateDebuggee: terminate_debuggee
+      close_reader
+    end
+
+    def req_cdp_disconnect
+      @web_sock.send_close_connection
+      close_reader
+    end
+
     def req_add_breakpoint lineno, path: temp_file_path, cond: nil
       case get_target_ui
       when 'vscode'
@@ -324,6 +375,8 @@ module DEBUGGER__
       @backlog = []
 
       attach_to_cdp_server
+      res = find_response :method, 'Debugger.paused', 'C<D'
+      @crt_frames = res.dig(:params, :callFrames)
       scenario.call
     ensure
       @reader_thread&.kill
@@ -399,50 +452,7 @@ module DEBUGGER__
       end
     end
 
-    def attach_to_dap_server
-      @sock = Socket.unix @remote_info.sock_path
-      @seq = 1
-      @reader_thread = Thread.new do
-        while res = recv_response
-          @queue.push res
-        end
-      rescue Detach
-      end
-      sleep 0.001 while @reader_thread.status != 'sleep'
-      @reader_thread.run
-      INITIALIZE_DAP_MSGS.each{|msg| send(**msg)}
-    end
-
     HOST = '127.0.0.1'
-
-    def attach_to_cdp_server
-      body = get_request HOST, @remote_info.port, '/json'
-      Timeout.timeout(TIMEOUT_SEC) do
-        sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Disconnected.'
-      end
-
-      sock = Socket.tcp HOST, @remote_info.port
-      uuid = body[0][:id]
-
-      Timeout.timeout(TIMEOUT_SEC) do
-        sleep 0.001 until @remote_info.debuggee_backlog.join.match?(/Disconnected\.\R.*Connected/)
-      end
-
-      @web_sock = WebSocketClient.new sock
-      @web_sock.handshake @remote_info.port, uuid
-      @id = 1
-      @reader_thread = Thread.new do
-        while res = @web_sock.extract_data
-          @queue.push res
-        end
-      rescue Detach
-      end
-      sleep 0.001 while @reader_thread.status != 'sleep'
-      @reader_thread.run
-      INITIALIZE_CDP_MSGS.each{|msg| send(**msg)}
-      res = find_response :method, 'Debugger.paused', 'C<D'
-      @crt_frames = res.dig(:params, :callFrames)
-    end
 
     JAVASCRIPT_TYPE_TO_CLASS_MAPS = {
       'string' => String,
