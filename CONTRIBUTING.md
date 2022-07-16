@@ -393,10 +393,6 @@ Sends request to rdbg to step back from current method.
 
 Sends request to rdbg to terminate the debuggee.
 
-- assert_reattach
-
-Passes if reattaching to rdbg is successful.
-
 - assert_hover_result(expected, expression)
 
 Passes if result of `expression` matches `expected`.
