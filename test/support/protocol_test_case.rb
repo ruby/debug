@@ -206,20 +206,6 @@ module DEBUGGER__
       close_reader
     end
 
-    def assert_reattach
-      case get_target_ui
-      when 'vscode'
-        req_disconnect
-        attach_to_dap_server
-        res = find_crt_dap_response
-        result_cmd = res.dig(:command)
-        assert_equal 'configurationDone', result_cmd
-      when 'chrome'
-        req_disconnect
-        attach_to_cdp_server
-      end
-    end
-
     def assert_locals_result expected, frame_idx: 0
       case get_target_ui
       when 'vscode'
