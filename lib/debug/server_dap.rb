@@ -348,6 +348,9 @@ module DEBUGGER__
         when 'disconnect'
           terminate = args.fetch("terminateDebuggee", false)
 
+          SESSION.clear_all_breakpoints
+          send_response req
+
           if SESSION.in_subsession?
             if terminate
               @q_msg << 'kill!'
@@ -360,9 +363,6 @@ module DEBUGGER__
               pause
             end
           end
-
-          SESSION.clear_all_breakpoints
-          send_response req
 
         ## control
         when 'continue'
