@@ -4,12 +4,12 @@ require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
 
-  class RestartTest < ProtocolTestCase
+  class TerminateTest < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| a = 1
     RUBY
 
-    def test_restart
+    def test_terminate
       run_protocol_scenario PROGRAM do
         req_terminate_debuggee
       end

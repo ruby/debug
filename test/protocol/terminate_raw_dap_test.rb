@@ -4,7 +4,7 @@ require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
 
-  class RestartTest1644070899 < ProtocolTestCase
+  class TerminateTest1644070899 < ProtocolTestCase
     PROGRAM = <<~RUBY
        1| module Foo
        2|    class Bar
@@ -20,7 +20,7 @@ module DEBUGGER__
       12|  end
     RUBY
 
-    def test_restart_works_correctly_1644070899
+    def test_terminate_works_correctly_1644070899
       run_dap_scenario PROGRAM do
         [
           *INITIALIZE_DAP_MSGS,
@@ -181,14 +181,6 @@ module DEBUGGER__
               terminateDebuggee: true
             },
             type: "request"
-          },
-          {
-            seq: 13,
-            type: "response",
-            command: "disconnect",
-            request_seq: 11,
-            success: true,
-            message: "Success"
           }
         ]
       end
