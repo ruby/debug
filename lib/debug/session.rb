@@ -26,6 +26,7 @@ if (added_opt = ENV['RUBY_DEBUG_ADDED_RUBYOPT']) &&
 
   ENV['RUBYOPT'] = rubyopt.delete_suffix(added_opt)
   ENV['RUBY_DEBUG_ADDED_RUBYOPT'] = nil
+  Gem.try_activate("debug")
 end
 
 require_relative 'frame_info'
