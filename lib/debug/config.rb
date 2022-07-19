@@ -471,32 +471,15 @@ module DEBUGGER__
 
   def self.parse_help
     helps = Hash.new{|h, k| h[k] = []}
-    desc = cat = nil
     cmds = Hash.new
 
-    File.read(File.join(__dir__, 'session.rb'), encoding: Encoding::UTF_8).each_line do |line|
-      case line
-      when /\A\s*### (.+)/
-        cat = $1
-        break if $1 == 'END'
-      when /\A\s*register_command (.+)/
-        next unless cat
-        next unless desc
-        ws = $1.split(/,\s*/).map{|e| e.gsub('\'', '')}
-        helps[cat] << [ws, desc]
-        desc = nil
-        max_w = ws.max_by{|w| w.length}
-        ws.each{|w|
-          cmds[w] = max_w
-        }
-      when /\A\s+# (\s*\*.+)/
-        if desc
-          desc << "\n" + $1
-        else
-          desc = $1
-        end
+    DEBUGGER__::Session::COMMAND_SET.values.uniq.each do |command|
+      command.names.each do |name|
+        cmds[name] = command.name
       end
+      helps[command.category] << [command.names, command.doc]
     end
+
     @commands = cmds
     @helps = helps
   end

@@ -21,6 +21,7 @@ when :start
   exec(env, cmd, *ARGV)
 
 when :attach
+  require_relative "../lib/debug/session"
   require_relative "../lib/debug/client"
   ::DEBUGGER__::CONFIG.set_config(**config)
 

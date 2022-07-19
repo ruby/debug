@@ -100,6 +100,8 @@ module DEBUGGER__
         @command_set
       end
 
+      include Enumerable
+
       def initialize
         if self.class.command_set
           raise "Can't have multiple command sets"
@@ -109,17 +111,42 @@ module DEBUGGER__
       end
 
       def [](cmd)
-        self.class.instance_variable_get(:@command_set)[cmd]
+        self.class.command_set[cmd]
       end
 
-      def register_commands(commands, method_name)
+      def values
+        self.class.command_set.values
+      end
+
+      def register_command(command)
         old_set = self.class.instance_variable_get(:@command_set)
         new_set = old_set.dup
-        commands.each do |cmd|
-          new_set[cmd] = method_name
+        command.names.each do |name|
+          new_set[name] = command
         end
 
         self.class.instance_variable_set(:@command_set, new_set.freeze)
+      end
+    end
+
+    class Command
+      attr_reader :name, :aliases, :method_name, :category, :doc
+
+      def initialize(name, aliases, method_name)
+        @name = name
+        @aliases = aliases
+        @method_name = method_name
+        @category = nil
+        @doc = nil
+      end
+
+      def document(category:, content:)
+        @category = category
+        @doc = content.chop
+      end
+
+      def names
+        aliases + [name]
       end
     end
 
@@ -128,13 +155,13 @@ module DEBUGGER__
     def self.register_command(name, aliases: [], &block)
       method_name = "cmd_#{name}"
 
-      self.define_method(method_name) do |arg|
+      define_method(method_name) do |arg|
         instance_exec(arg, &block)
       end
 
-      commands = Array(aliases) << name
-
-      COMMAND_SET.register_commands(commands, method_name)
+      Command.new(name, Array(aliases), method_name).tap do |command|
+        COMMAND_SET.register_command(command)
+      end
     end
 
     def initialize
@@ -450,10 +477,10 @@ module DEBUGGER__
 
       # p cmd: [cmd, *arg]
 
-      cmd_method = COMMAND_SET[cmd]
+      command = COMMAND_SET[cmd]
 
-      if cmd_method
-        send(cmd_method, arg)
+      if command
+        send(command.method_name, arg)
       else
         request_tc [:eval, :pp, line]
       end
@@ -470,31 +497,30 @@ module DEBUGGER__
       return :retry
     end
 
-    ### Control flow
-    # * `s[tep]`
-    #   * Step in. Resume the program until next breakable point.
-    # * `s[tep] <n>`
-    #   * Step in, resume the program at `<n>`th breakable point.
     register_command "step", aliases: "s" do |arg|
       cancel_auto_continue
       check_postmortem
       step_command :in, arg
-    end
+    end.document category: "Control flow", content: <<~MD
+      * `s[tep]`
+        * Step in. Resume the program until next breakable point.
+      * `s[tep] <n>`
+        * Step in, resume the program at `<n>`th breakable point.
+    MD
 
-    # * `n[ext]`
-    #   * Step over. Resume the program until next line.
-    # * `n[ext] <n>`
-    #   * Step over, same as `step <n>`.
+
     register_command "next", aliases: "n" do |arg|
       cancel_auto_continue
       check_postmortem
       step_command :next, arg
-    end
+    end.document category: "Control flow", content: <<~MD
+      * `n[ext]`
+        * Step over. Resume the program until next line.
+      * `n[ext] <n>`
+        * Step over, same as `step <n>`.
+    MD
 
-    # * `fin[ish]`
-    #   * Finish this frame. Resume the program until the current frame is finished.
-    # * `fin[ish] <n>`
-    #   * Finish `<n>`th frames.
+
     register_command "finish", aliases: "fin" do |arg|
       cancel_auto_continue
       check_postmortem
@@ -504,17 +530,23 @@ module DEBUGGER__
       end
 
       step_command :finish, arg
-    end
+    end.document category: "Control flow", content: <<~MD
+      * `fin[ish]`
+        * Finish this frame. Resume the program until the current frame is finished.
+      * `fin[ish] <n>`
+        * Finish `<n>`th frames.
+    MD
 
-    # * `c[ontinue]`
-    #   * Resume the program.
+
     register_command "continue", aliases: "c" do |arg|
       cancel_auto_continue
       leave_subsession :continue
-    end
+    end.document category: "Control flow", content: <<~MD
+      * `c[ontinue]`
+        * Resume the program.
+    MD
 
-    # * `q[uit]` or `Ctrl-D`
-    #   * Finish debugger (with the debuggee process on non-remote debugging).
+
     register_command "quit", aliases: "q" do |arg|
       if ask 'Really quit?'
         @ui.quit arg.to_i
@@ -522,34 +554,37 @@ module DEBUGGER__
       else
         :retry
       end
-    end
+    end.document category: "Control flow", content: <<~MD
+      * `q[uit]` or `Ctrl-D`
+        * Finish debugger (with the debuggee process on non-remote debugging).
+    MD
 
-    # * `q[uit]!`
-    #   * Same as q[uit] but without the confirmation prompt.
     register_command "quit!", aliases: "q!" do |arg|
       @ui.quit arg.to_i
       leave_subsession nil
-    end
+    end.document category: "Control flow", content: <<~MD
+      * `q[uit]!`
+        * Same as q[uit] but without the confirmation prompt.
+    MD
 
-    # * `kill`
-    #   * Stop the debuggee process with `Kernel#exit!`.
     register_command "kill" do |arg|
       if ask 'Really kill?'
         exit! (arg || 1).to_i
       else
         :retry
       end
-    end
+    end.document category: "Control flow", content: <<~MD
+      * `kill`
+        * Stop the debuggee process with `Kernel#exit!`.
+    MD
 
-    # * `kill!`
-    #   * Same as kill but without the confirmation prompt.
     register_command 'kill!' do |arg|
       exit! (arg || 1).to_i
-    end
+    end.document category: "Control flow", content: <<~MD
+      * `kill!`
+        * Same as kill but without the confirmation prompt.
+    MD
 
-    # * `sigint`
-    #   * Execute SIGINT handler registered by the debuggee.
-    #   * Note that this command should be used just after stop by `SIGINT`.
     register_command "sigint" do |arg|
       begin
         case cmd = @intercepted_sigint_cmd
@@ -568,30 +603,12 @@ module DEBUGGER__
         @ui.puts e.backtrace.map{|line| "  #{e}"}
         :retry
       end
-    end
+    end.document category: "Control flow", content: <<~MD
+      * `sigint`
+        * Execute SIGINT handler registered by the debuggee.
+        * Note that this command should be used just after stop by `SIGINT`.
+    MD
 
-    ### Breakpoint
-    # * `b[reak]`
-    #   * Show all breakpoints.
-    # * `b[reak] <line>`
-    #   * Set breakpoint on `<line>` at the current frame's file.
-    # * `b[reak] <file>:<line>` or `<file> <line>`
-    #   * Set breakpoint on `<file>:<line>`.
-    # * `b[reak] <class>#<name>`
-    #    * Set breakpoint on the method `<class>#<name>`.
-    # * `b[reak] <expr>.<name>`
-    #    * Set breakpoint on the method `<expr>.<name>`.
-    # * `b[reak] ... if: <expr>`
-    #   * break if `<expr>` is true at specified location.
-    # * `b[reak] ... pre: <command>`
-    #   * break and run `<command>` before stopping.
-    # * `b[reak] ... do: <command>`
-    #   * break and run `<command>`, and continue.
-    # * `b[reak] ... path: <path>`
-    #   * break if the path matches to `<path>`. `<path>` can be a regexp with `/regexp/`.
-    # * `b[reak] if: <expr>`
-    #   * break if: `<expr>` is true at any lines.
-    #   * Note that this feature is super slow.
     register_command 'break', aliases: "b" do |arg|
       check_postmortem
 
@@ -608,18 +625,30 @@ module DEBUGGER__
           :retry
         end
       end
-    end
+    end.document category: "Breakpoint", content: <<~MD
+      * `b[reak]`
+        * Show all breakpoints.
+      * `b[reak] <line>`
+        * Set breakpoint on `<line>` at the current frame's file.
+      * `b[reak] <file>:<line>` or `<file> <line>`
+        * Set breakpoint on `<file>:<line>`.
+      * `b[reak] <class>#<name>`
+         * Set breakpoint on the method `<class>#<name>`.
+      * `b[reak] <expr>.<name>`
+         * Set breakpoint on the method `<expr>.<name>`.
+      * `b[reak] ... if: <expr>`
+        * break if `<expr>` is true at specified location.
+      * `b[reak] ... pre: <command>`
+        * break and run `<command>` before stopping.
+      * `b[reak] ... do: <command>`
+        * break and run `<command>`, and continue.
+      * `b[reak] ... path: <path>`
+        * break if the path matches to `<path>`. `<path>` can be a regexp with `/regexp/`.
+      * `b[reak] if: <expr>`
+        * break if: `<expr>` is true at any lines.
+        * Note that this feature is super slow.
+    MD
 
-    # * `catch <Error>`
-    #   * Set breakpoint on raising `<Error>`.
-    # * `catch ... if: <expr>`
-    #   * stops only if `<expr>` is true as well.
-    # * `catch ... pre: <command>`
-    #   * runs `<command>` before stopping.
-    # * `catch ... do: <command>`
-    #   * stops and run `<command>`, and continue.
-    # * `catch ... path: <path>`
-    #   * stops if the exception is raised from a `<path>`. `<path>` can be a regexp with `/regexp/`.
     register_command 'catch' do |arg|
       check_postmortem
 
@@ -631,19 +660,19 @@ module DEBUGGER__
       end
 
       :retry
-    end
+    end.document category: "Breakpoint", content: <<~MD
+      * `catch <Error>`
+        * Set breakpoint on raising `<Error>`.
+      * `catch ... if: <expr>`
+        * stops only if `<expr>` is true as well.
+      * `catch ... pre: <command>`
+        * runs `<command>` before stopping.
+      * `catch ... do: <command>`
+        * stops and run `<command>`, and continue.
+      * `catch ... path: <path>`
+        * stops if the exception is raised from a `<path>`. `<path>` can be a regexp with `/regexp/`.
+    MD
 
-    # * `watch @ivar`
-    #   * Stop the execution when the result of current scope's `@ivar` is changed.
-    #   * Note that this feature is super slow.
-    # * `watch ... if: <expr>`
-    #   * stops only if `<expr>` is true as well.
-    # * `watch ... pre: <command>`
-    #   * runs `<command>` before stopping.
-    # * `watch ... do: <command>`
-    #   * stops and run `<command>`, and continue.
-    # * `watch ... path: <path>`
-    #   * stops if the path matches `<path>`. `<path>` can be a regexp with `/regexp/`.
     register_command 'watch', aliases: 'wat' do |arg|
       check_postmortem
 
@@ -653,12 +682,20 @@ module DEBUGGER__
         show_bps
         :retry
       end
-    end
+    end.document category: "Breakpoint", content: <<~MD
+      * `watch @ivar`
+        * Stop the execution when the result of current scope's `@ivar` is changed.
+        * Note that this feature is super slow.
+      * `watch ... if: <expr>`
+        * stops only if `<expr>` is true as well.
+      * `watch ... pre: <command>`
+        * runs `<command>` before stopping.
+      * `watch ... do: <command>`
+        * stops and run `<command>`, and continue.
+      * `watch ... path: <path>`
+        * stops if the path matches `<path>`. `<path>` can be a regexp with `/regexp/`.
+    MD
 
-    # * `del[ete]`
-    #   * delete all breakpoints.
-    # * `del[ete] <bpnum>`
-    #   * delete specified breakpoint.
     register_command 'delete', aliases: "del" do |arg|
       check_postmortem
 
@@ -676,18 +713,13 @@ module DEBUGGER__
       end
       @ui.puts "deleted: \##{bp[0]} #{bp[1]}" if bp
       :retry
-    end
+    end.document category: "Breakpoint", content: <<~MD
+      * `del[ete]`
+        * delete all breakpoints.
+      * `del[ete] <bpnum>`
+        * delete specified breakpoint.
+    MD
 
-    ### Information
-
-    # * `bt` or `backtrace`
-    #   * Show backtrace (frame) information.
-    # * `bt <num>` or `backtrace <num>`
-    #   * Only shows first `<num>` frames.
-    # * `bt /regexp/` or `backtrace /regexp/`
-    #   * Only shows frames with method name or location info that matches `/regexp/`.
-    # * `bt <num> /regexp/` or `backtrace <num> /regexp/`
-    #   * Only shows first `<num>` frames with method name or location info that matches `/regexp/`.
     register_command 'backtrace', aliases: 'bt' do |arg|
       case arg
       when /\A(\d+)\z/
@@ -701,15 +733,17 @@ module DEBUGGER__
       else
         request_tc [:show, :backtrace, nil, nil]
       end
-    end
+    end.document category: "Information", content: <<~MD
+      * `bt` or `backtrace`
+        * Show backtrace (frame) information.
+      * `bt <num>` or `backtrace <num>`
+        * Only shows first `<num>` frames.
+      * `bt /regexp/` or `backtrace /regexp/`
+        * Only shows frames with method name or location info that matches `/regexp/`.
+      * `bt <num> /regexp/` or `backtrace <num> /regexp/`
+        * Only shows first `<num>` frames with method name or location info that matches `/regexp/`.
+    MD
 
-    # * `l[ist]`
-    #   * Show current frame's source code.
-    #   * Next `list` command shows the successor lines.
-    # * `l[ist] -`
-    #   * Show predecessor lines as opposed to the `list` command.
-    # * `l[ist] <start>` or `l[ist] <start>-<end>`
-    #   * Show current frame's source code from the line <start> to <end> if given.
     register_command 'list', aliases: 'l' do |arg|
       case arg ? arg.strip : nil
       when /\A(\d+)\z/
@@ -724,13 +758,17 @@ module DEBUGGER__
         @ui.puts "Can not handle list argument: #{arg}"
         :retry
       end
-    end
+    end.document category: "Information", content: <<~MD
+      * `l[ist]`
+        * Show current frame's source code.
+        * Next `list` command shows the successor lines.
+      * `l[ist] -`
+        * Show predecessor lines as opposed to the `list` command.
+      * `l[ist] <start>` or `l[ist] <start>-<end>`
+        * Show current frame's source code from the line <start> to <end> if given.
+    MD
 
-    # * `edit`
-    #   * Open the current file on the editor (use `EDITOR` environment variable).
-    #   * Note that edited file will not be reloaded.
-    # * `edit <file>`
-    #   * Open <file> on the editor.
+
     register_command 'edit' do |arg|
       if @ui.remote?
         @ui.puts "not supported on the remote console."
@@ -745,23 +783,14 @@ module DEBUGGER__
       end
 
       request_tc [:show, :edit, arg]
-    end
+    end.document category: "Information", content: <<~MD
+      * `edit`
+        * Open the current file on the editor (use `EDITOR` environment variable).
+        * Note that edited file will not be reloaded.
+      * `edit <file>`
+        * Open <file> on the editor.
+    MD
 
-    # * `i[nfo]`
-    #    * Show information about current frame (local/instance variables and defined constants).
-    # * `i[nfo] l[ocal[s]]`
-    #   * Show information about the current frame (local variables)
-    #   * It includes `self` as `%self` and a return value as `%return`.
-    # * `i[nfo] i[var[s]]` or `i[nfo] instance`
-    #   * Show information about instance variables about `self`.
-    # * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
-    #   * Show information about accessible constants except toplevel constants.
-    # * `i[nfo] g[lobal[s]]`
-    #   * Show information about global variables
-    # * `i[nfo] ... /regexp/`
-    #   * Filter the output with `/regexp/`.
-    # * `i[nfo] th[read[s]]`
-    #   * Show all threads (same as `th[read]`).
     register_command 'info', aliases: 'i' do |arg|
       if /\/(.+)\/\z/ =~ arg
         pat = Regexp.compile($1)
@@ -789,21 +818,34 @@ module DEBUGGER__
         show_help 'info'
         :retry
       end
-    end
+    end.document category: "Information", content: <<~MD
+      * `i[nfo]`
+         * Show information about current frame (local/instance variables and defined constants).
+      * `i[nfo] l[ocal[s]]`
+        * Show information about the current frame (local variables)
+        * It includes `self` as `%self` and a return value as `%return`.
+      * `i[nfo] i[var[s]]` or `i[nfo] instance`
+        * Show information about instance variables about `self`.
+      * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
+        * Show information about accessible constants except toplevel constants.
+      * `i[nfo] g[lobal[s]]`
+        * Show information about global variables
+      * `i[nfo] ... /regexp/`
+        * Filter the output with `/regexp/`.
+      * `i[nfo] th[read[s]]`
+        * Show all threads (same as `th[read]`).
+    MD
 
-    # * `o[utline]` or `ls`
-    #   * Show you available methods, constants, local variables, and instance variables in the current scope.
-    # * `o[utline] <expr>` or `ls <expr>`
-    #   * Show you available methods and instance variables of the given object.
-    #   * If the object is a class/module, it also lists its constants.
     register_command 'outline', aliases: ['o', 'ls'] do |arg|
       request_tc [:show, :outline, arg]
-    end
+    end.document category: "Information", content: <<~MD
+      * `o[utline]` or `ls`
+        * Show you available methods, constants, local variables, and instance variables in the current scope.
+      * `o[utline] <expr>` or `ls <expr>`
+        * Show you available methods and instance variables of the given object.
+        * If the object is a class/module, it also lists its constants.
+    MD
 
-    # * `display`
-    #   * Show display setting.
-    # * `display <expr>`
-    #   * Show the result of `<expr>` at every suspended timing.
     register_command 'display' do |arg|
       if arg && !arg.empty?
         @displays << arg
@@ -811,12 +853,13 @@ module DEBUGGER__
       else
         request_tc [:eval, :display, @displays]
       end
-    end
+    end.document category: "Information", content: <<~MD
+      * `display`
+        * Show display setting.
+      * `display <expr>`
+        * Show the result of `<expr>` at every suspended timing.
+    MD
 
-    # * `undisplay`
-    #   * Remove all display settings.
-    # * `undisplay <displaynum>`
-    #   * Remove a specified display setting.
     register_command 'undisplay' do |arg|
       case arg
       when /(\d+)/
@@ -830,46 +873,50 @@ module DEBUGGER__
         end
         :retry
       end
-    end
+    end.document category: "Information", content: <<~MD
+      * `undisplay`
+        * Remove all display settings.
+      * `undisplay <displaynum>`
+        * Remove a specified display setting.
+    MD
 
-    ### Frame control
-
-    # * `f[rame]`
-    #   * Show the current frame.
-    # * `f[rame] <framenum>`
-    #   * Specify a current frame. Evaluation are run on specified frame.
     register_command 'frame', aliases: 'f' do |arg|
       request_tc [:frame, :set, arg]
-    end
+    end.document category: "Frame control", content: <<~MD
+      * `f[rame]`
+        * Show the current frame.
+      * `f[rame] <framenum>`
+        * Specify a current frame. Evaluation are run on specified frame.
+    MD
 
-    # * `up`
-    #   * Specify the upper frame.
     register_command 'up' do |arg|
       request_tc [:frame, :up]
-    end
+    end.document category: "Frame control", content: <<~MD
+      * `up`
+        * Specify the upper frame.
+    MD
 
-    # * `down`
-    #   * Specify the lower frame.
     register_command 'down' do |arg|
       request_tc [:frame, :down]
-    end
+    end.document category: "Frame control", content: <<~MD
+      * `down`
+        * Specify the lower frame.
+    MD
 
-    ### Evaluate
-
-    # * `p <expr>`
-    #   * Evaluate like `p <expr>` on the current frame.
     register_command 'p' do |arg|
       request_tc [:eval, :p, arg.to_s]
-    end
+    end.document category: "Evaluate", content: <<~MD
+      * `p <expr>`
+        * Evaluate like `p <expr>` on the current frame.
+    MD
 
-    # * `pp <expr>`
-    #   * Evaluate like `pp <expr>` on the current frame.
     register_command 'pp' do |arg|
       request_tc [:eval, :pp, arg.to_s]
-    end
+    end.document category: "Evaluate", content: <<~MD
+      * `pp <expr>`
+        * Evaluate like `pp <expr>` on the current frame.
+    MD
 
-    # * `eval <expr>`
-    #   * Evaluate `<expr>` on the current frame.
     register_command 'eval', aliases: 'call' do |arg|
       if arg == nil || arg.empty?
         show_help 'eval'
@@ -878,10 +925,11 @@ module DEBUGGER__
       else
         request_tc [:eval, :call, arg]
       end
-    end
+    end.document category: "Evaluate", content: <<~MD
+      * `eval <expr>`
+        * Evaluate `<expr>` on the current frame.
+    MD
 
-    # * `irb`
-    #   * Invoke `irb` on the current frame.
     register_command 'irb' do |arg|
       if @ui.remote?
         @ui.puts "not supported on the remote console."
@@ -891,27 +939,11 @@ module DEBUGGER__
 
       # don't repeat irb command
       @repl_prev_line = nil
-    end
+    end.document category: "Evaluate", content: <<~MD
+      * `irb`
+        * Invoke `irb` on the current frame.
+    MD
 
-    ### Trace
-    # * `trace`
-    #   * Show available tracers list.
-    # * `trace line`
-    #   * Add a line tracer. It indicates line events.
-    # * `trace call`
-    #   * Add a call tracer. It indicate call/return events.
-    # * `trace exception`
-    #   * Add an exception tracer. It indicates raising exceptions.
-    # * `trace object <expr>`
-    #   * Add an object tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
-    # * `trace ... /regexp/`
-    #   * Indicates only matched events to `/regexp/`.
-    # * `trace ... into: <file>`
-    #   * Save trace information into: `<file>`.
-    # * `trace off <num>`
-    #   * Disable tracer specified by `<num>` (use `trace` command to check the numbers).
-    # * `trace off [line|call|pass]`
-    #   * Disable all tracers. If `<type>` is provided, disable specified type tracers.
     register_command 'trace' do |arg|
       if (re = /\s+into:\s*(.+)/) =~ arg
         into = $1
@@ -969,18 +1001,27 @@ module DEBUGGER__
         @ui.puts "Unknown trace option: #{arg.inspect}"
         :retry
       end
-    end
+    end.document category: "Trace", content: <<~MD
+      * `trace`
+        * Show available tracers list.
+      * `trace line`
+        * Add a line tracer. It indicates line events.
+      * `trace call`
+        * Add a call tracer. It indicate call/return events.
+      * `trace exception`
+        * Add an exception tracer. It indicates raising exceptions.
+      * `trace object <expr>`
+        * Add an object tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
+      * `trace ... /regexp/`
+        * Indicates only matched events to `/regexp/`.
+      * `trace ... into: <file>`
+        * Save trace information into: `<file>`.
+      * `trace off <num>`
+        * Disable tracer specified by `<num>` (use `trace` command to check the numbers).
+      * `trace off [line|call|pass]`
+        * Disable all tracers. If `<type>` is provided, disable specified type tracers.
+    MD
 
-    # Record
-    # * `record`
-    #   * Show recording status.
-    # * `record [on|off]`
-    #   * Start/Stop recording.
-    # * `step back`
-    #   * Start replay. Step back with the last execution log.
-    #   * `s[tep]` does stepping forward with the last log.
-    # * `step reset`
-    #   * Stop replay .
     register_command 'record' do |arg|
       case arg
       when nil, 'on', 'off'
@@ -989,14 +1030,18 @@ module DEBUGGER__
         @ui.puts "unknown command: #{arg}"
         :retry
       end
-    end
+    end.document category: "Trace", content: <<~MD
+      * `record`
+        * Show recording status.
+      * `record [on|off]`
+        * Start/Stop recording.
+      * `step back`
+        * Start replay. Step back with the last execution log.
+        * `s[tep]` does stepping forward with the last log.
+      * `step reset`
+        * Stop replay .
+    MD
 
-    ### Thread control
-
-    # * `th[read]`
-    #   * Show all threads.
-    # * `th[read] <thnum>`
-    #   * Switch thread specified by `<thnum>`.
     register_command 'thread', aliases: 'th' do |arg|
       case arg
       when nil, 'list', 'l'
@@ -1007,26 +1052,29 @@ module DEBUGGER__
         @ui.puts "unknown thread command: #{arg}"
       end
       :retry
-    end
+    end.document category: "Thread control", content: <<~MD
+      * `th[read]`
+        * Show all threads.
+      * `th[read] <thnum>`
+        * Switch thread specified by `<thnum>`.
+    MD
 
-    ### Configuration
-    # * `config`
-    #   * Show all configuration with description.
-    # * `config <name>`
-    #   * Show current configuration of <name>.
-    # * `config set <name> <val>` or `config <name> = <val>`
-    #   * Set <name> to <val>.
-    # * `config append <name> <val>` or `config <name> << <val>`
-    #   * Append `<val>` to `<name>` if it is an array.
-    # * `config unset <name>`
-    #   * Set <name> to default.
     register_command 'config' do |arg|
       config_command arg
       :retry
-    end
+    end.document category: "Configuration", content: <<~MD
+      * `config`
+        * Show all configuration with description.
+      * `config <name>`
+        * Show current configuration of <name>.
+      * `config set <name> <val>` or `config <name> = <val>`
+        * Set <name> to <val>.
+      * `config append <name> <val>` or `config <name> << <val>`
+        * Append `<val>` to `<name>` if it is an array.
+      * `config unset <name>`
+        * Set <name> to default.
+    MD
 
-    # * `source <file>`
-    #   * Evaluate lines in `<file>` as debug commands.
     register_command 'source' do |arg|
       if arg
         begin
@@ -1039,17 +1087,11 @@ module DEBUGGER__
         show_help 'source'
       end
       :retry
-    end
+    end.document category: "Configuration", content: <<~MD
+      * `source <file>`
+        * Evaluate lines in `<file>` as debug commands.
+    MD
 
-    # * `open`
-    #   * open debuggee port on UNIX domain socket and wait for attaching.
-    #   * Note that `open` command is EXPERIMENTAL.
-    # * `open [<host>:]<port>`
-    #   * open debuggee port on TCP/IP with given `[<host>:]<port>` and wait for attaching.
-    # * `open vscode`
-    #   * open debuggee port for VSCode and launch VSCode if available.
-    # * `open chrome`
-    #   * open debuggee port for Chrome and wait for attaching.
     register_command 'open' do |arg|
       case arg&.downcase
       when '', nil
@@ -1070,20 +1112,27 @@ module DEBUGGER__
       end
 
       :retry
-    end
+    end.document category: "Configuration", content: <<~MD
+      * `open`
+        * open debuggee port on UNIX domain socket and wait for attaching.
+        * Note that `open` command is EXPERIMENTAL.
+      * `open [<host>:]<port>`
+        * open debuggee port on TCP/IP with given `[<host>:]<port>` and wait for attaching.
+      * `open vscode`
+        * open debuggee port for VSCode and launch VSCode if available.
+      * `open chrome`
+        * open debuggee port for Chrome and wait for attaching.
+    MD
 
-    ### Help
-
-    # * `h[elp]`
-    #   * Show help for all commands.
-    # * `h[elp] <command>`
-    #   * Show help for the given command.
     register_command 'help', aliases: ['?', 'h'] do |arg|
       show_help arg
       :retry
-    end
-
-    ### END
+    end.document category: "Help", content: <<~MD
+      * `h[elp]`
+        * Show help for all commands.
+      * `h[elp] <command>`
+        * Show help for the given command.
+    MD
 
     def repl_open_setup
       @tp_thread_begin.disable
