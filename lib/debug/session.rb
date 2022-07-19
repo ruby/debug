@@ -93,6 +93,50 @@ module DEBUGGER__
 
     include Color
 
+    class CommandSet
+      @command_set = nil
+
+      def self.command_set
+        @command_set
+      end
+
+      def initialize
+        if self.class.command_set
+          raise "Can't have multiple command sets"
+        end
+
+        self.class.instance_variable_set(:@command_set, {}.freeze)
+      end
+
+      def [](cmd)
+        self.class.instance_variable_get(:@command_set)[cmd]
+      end
+
+      def register_commands(commands, method_name)
+        old_set = self.class.instance_variable_get(:@command_set)
+        new_set = old_set.dup
+        commands.each do |cmd|
+          new_set[cmd] = method_name
+        end
+
+        self.class.instance_variable_set(:@command_set, new_set.freeze)
+      end
+    end
+
+    COMMAND_SET = CommandSet.new
+
+    def self.register_command(name, aliases: [], &block)
+      method_name = "cmd_#{name}"
+
+      self.define_method(method_name) do |arg|
+        instance_exec(arg, &block)
+      end
+
+      commands = Array(aliases) << name
+
+      COMMAND_SET.register_commands(commands, method_name)
+    end
+
     def initialize
       @ui = nil
       @sr = SourceRepository.new
@@ -406,605 +450,13 @@ module DEBUGGER__
 
       # p cmd: [cmd, *arg]
 
-      case cmd
-      ### Control flow
+      cmd_method = COMMAND_SET[cmd]
 
-      # * `s[tep]`
-      #   * Step in. Resume the program until next breakable point.
-      # * `s[tep] <n>`
-      #   * Step in, resume the program at `<n>`th breakable point.
-      when 's', 'step'
-        cancel_auto_continue
-        check_postmortem
-        step_command :in, arg
-
-      # * `n[ext]`
-      #   * Step over. Resume the program until next line.
-      # * `n[ext] <n>`
-      #   * Step over, same as `step <n>`.
-      when 'n', 'next'
-        cancel_auto_continue
-        check_postmortem
-        step_command :next, arg
-
-      # * `fin[ish]`
-      #   * Finish this frame. Resume the program until the current frame is finished.
-      # * `fin[ish] <n>`
-      #   * Finish `<n>`th frames.
-      when 'fin', 'finish'
-        cancel_auto_continue
-        check_postmortem
-
-        if arg&.to_i == 0
-          raise 'finish command with 0 does not make sense.'
-        end
-
-        step_command :finish, arg
-
-      # * `c[ontinue]`
-      #   * Resume the program.
-      when 'c', 'continue'
-        cancel_auto_continue
-        leave_subsession :continue
-
-      # * `q[uit]` or `Ctrl-D`
-      #   * Finish debugger (with the debuggee process on non-remote debugging).
-      when 'q', 'quit'
-        if ask 'Really quit?'
-          @ui.quit arg.to_i
-          leave_subsession :continue
-        else
-          return :retry
-        end
-
-      # * `q[uit]!`
-      #   * Same as q[uit] but without the confirmation prompt.
-      when 'q!', 'quit!'
-        @ui.quit arg.to_i
-        leave_subsession nil
-
-      # * `kill`
-      #   * Stop the debuggee process with `Kernel#exit!`.
-      when 'kill'
-        if ask 'Really kill?'
-          exit! (arg || 1).to_i
-        else
-          return :retry
-        end
-
-      # * `kill!`
-      #   * Same as kill but without the confirmation prompt.
-      when 'kill!'
-        exit! (arg || 1).to_i
-
-      # * `sigint`
-      #   * Execute SIGINT handler registered by the debuggee.
-      #   * Note that this command should be used just after stop by `SIGINT`.
-      when 'sigint'
-        begin
-          case cmd = @intercepted_sigint_cmd
-          when nil, 'IGNORE', :IGNORE, 'DEFAULT', :DEFAULT
-            # ignore
-          when String
-            eval(cmd)
-          when Proc
-            cmd.call
-          end
-
-          leave_subsession :continue
-
-        rescue Exception => e
-          @ui.puts "Exception: #{e}"
-          @ui.puts e.backtrace.map{|line| "  #{e}"}
-          return :retry
-        end
-
-      ### Breakpoint
-
-      # * `b[reak]`
-      #   * Show all breakpoints.
-      # * `b[reak] <line>`
-      #   * Set breakpoint on `<line>` at the current frame's file.
-      # * `b[reak] <file>:<line>` or `<file> <line>`
-      #   * Set breakpoint on `<file>:<line>`.
-      # * `b[reak] <class>#<name>`
-      #    * Set breakpoint on the method `<class>#<name>`.
-      # * `b[reak] <expr>.<name>`
-      #    * Set breakpoint on the method `<expr>.<name>`.
-      # * `b[reak] ... if: <expr>`
-      #   * break if `<expr>` is true at specified location.
-      # * `b[reak] ... pre: <command>`
-      #   * break and run `<command>` before stopping.
-      # * `b[reak] ... do: <command>`
-      #   * break and run `<command>`, and continue.
-      # * `b[reak] ... path: <path>`
-      #   * break if the path matches to `<path>`. `<path>` can be a regexp with `/regexp/`.
-      # * `b[reak] if: <expr>`
-      #   * break if: `<expr>` is true at any lines.
-      #   * Note that this feature is super slow.
-      when 'b', 'break'
-        check_postmortem
-
-        if arg == nil
-          show_bps
-          return :retry
-        else
-          case bp = repl_add_breakpoint(arg)
-          when :noretry
-          when nil
-            return :retry
-          else
-            show_bps bp
-            return :retry
-          end
-        end
-
-      # * `catch <Error>`
-      #   * Set breakpoint on raising `<Error>`.
-      # * `catch ... if: <expr>`
-      #   * stops only if `<expr>` is true as well.
-      # * `catch ... pre: <command>`
-      #   * runs `<command>` before stopping.
-      # * `catch ... do: <command>`
-      #   * stops and run `<command>`, and continue.
-      # * `catch ... path: <path>`
-      #   * stops if the exception is raised from a `<path>`. `<path>` can be a regexp with `/regexp/`.
-      when 'catch'
-        check_postmortem
-
-        if arg
-          bp = repl_add_catch_breakpoint arg
-          show_bps bp if bp
-        else
-          show_bps
-        end
-        return :retry
-
-      # * `watch @ivar`
-      #   * Stop the execution when the result of current scope's `@ivar` is changed.
-      #   * Note that this feature is super slow.
-      # * `watch ... if: <expr>`
-      #   * stops only if `<expr>` is true as well.
-      # * `watch ... pre: <command>`
-      #   * runs `<command>` before stopping.
-      # * `watch ... do: <command>`
-      #   * stops and run `<command>`, and continue.
-      # * `watch ... path: <path>`
-      #   * stops if the path matches `<path>`. `<path>` can be a regexp with `/regexp/`.
-      when 'wat', 'watch'
-        check_postmortem
-
-        if arg && arg.match?(/\A@\w+/)
-          repl_add_watch_breakpoint(arg)
-        else
-          show_bps
-          return :retry
-        end
-
-      # * `del[ete]`
-      #   * delete all breakpoints.
-      # * `del[ete] <bpnum>`
-      #   * delete specified breakpoint.
-      when 'del', 'delete'
-        check_postmortem
-
-        bp =
-        case arg
-        when nil
-          show_bps
-          if ask "Remove all breakpoints?", 'N'
-            delete_bp
-          end
-        when /\d+/
-          delete_bp arg.to_i
-        else
-          nil
-        end
-        @ui.puts "deleted: \##{bp[0]} #{bp[1]}" if bp
-        return :retry
-
-      ### Information
-
-      # * `bt` or `backtrace`
-      #   * Show backtrace (frame) information.
-      # * `bt <num>` or `backtrace <num>`
-      #   * Only shows first `<num>` frames.
-      # * `bt /regexp/` or `backtrace /regexp/`
-      #   * Only shows frames with method name or location info that matches `/regexp/`.
-      # * `bt <num> /regexp/` or `backtrace <num> /regexp/`
-      #   * Only shows first `<num>` frames with method name or location info that matches `/regexp/`.
-      when 'bt', 'backtrace'
-        case arg
-        when /\A(\d+)\z/
-          request_tc [:show, :backtrace, arg.to_i, nil]
-        when /\A\/(.*)\/\z/
-          pattern = $1
-          request_tc [:show, :backtrace, nil, Regexp.compile(pattern)]
-        when /\A(\d+)\s+\/(.*)\/\z/
-          max, pattern = $1, $2
-          request_tc [:show, :backtrace, max.to_i, Regexp.compile(pattern)]
-        else
-          request_tc [:show, :backtrace, nil, nil]
-        end
-
-      # * `l[ist]`
-      #   * Show current frame's source code.
-      #   * Next `list` command shows the successor lines.
-      # * `l[ist] -`
-      #   * Show predecessor lines as opposed to the `list` command.
-      # * `l[ist] <start>` or `l[ist] <start>-<end>`
-      #   * Show current frame's source code from the line <start> to <end> if given.
-      when 'l', 'list'
-        case arg ? arg.strip : nil
-        when /\A(\d+)\z/
-          request_tc [:show, :list, {start_line: arg.to_i - 1}]
-        when /\A-\z/
-          request_tc [:show, :list, {dir: -1}]
-        when /\A(\d+)-(\d+)\z/
-          request_tc [:show, :list, {start_line: $1.to_i - 1, end_line: $2.to_i}]
-        when nil
-          request_tc [:show, :list]
-        else
-          @ui.puts "Can not handle list argument: #{arg}"
-          return :retry
-        end
-
-      # * `edit`
-      #   * Open the current file on the editor (use `EDITOR` environment variable).
-      #   * Note that edited file will not be reloaded.
-      # * `edit <file>`
-      #   * Open <file> on the editor.
-      when 'edit'
-        if @ui.remote?
-          @ui.puts "not supported on the remote console."
-          return :retry
-        end
-
-        begin
-          arg = resolve_path(arg) if arg
-        rescue Errno::ENOENT
-          @ui.puts "not found: #{arg}"
-          return :retry
-        end
-
-        request_tc [:show, :edit, arg]
-
-      # * `i[nfo]`
-      #    * Show information about current frame (local/instance variables and defined constants).
-      # * `i[nfo] l[ocal[s]]`
-      #   * Show information about the current frame (local variables)
-      #   * It includes `self` as `%self` and a return value as `%return`.
-      # * `i[nfo] i[var[s]]` or `i[nfo] instance`
-      #   * Show information about instance variables about `self`.
-      # * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
-      #   * Show information about accessible constants except toplevel constants.
-      # * `i[nfo] g[lobal[s]]`
-      #   * Show information about global variables
-      # * `i[nfo] ... /regexp/`
-      #   * Filter the output with `/regexp/`.
-      # * `i[nfo] th[read[s]]`
-      #   * Show all threads (same as `th[read]`).
-      when 'i', 'info'
-        if /\/(.+)\/\z/ =~ arg
-          pat = Regexp.compile($1)
-          sub = $~.pre_match.strip
-        else
-          sub = arg
-        end
-
-        case sub
-        when nil
-          request_tc [:show, :default, pat] # something useful
-        when 'l', /^locals?/
-          request_tc [:show, :locals, pat]
-        when 'i', /^ivars?/i, /^instance[_ ]variables?/i
-          request_tc [:show, :ivars, pat]
-        when 'c', /^consts?/i, /^constants?/i
-          request_tc [:show, :consts, pat]
-        when 'g', /^globals?/i, /^global[_ ]variables?/i
-          request_tc [:show, :globals, pat]
-        when 'th', /threads?/
-          thread_list
-          return :retry
-        else
-          @ui.puts "unrecognized argument for info command: #{arg}"
-          show_help 'info'
-          return :retry
-        end
-
-      # * `o[utline]` or `ls`
-      #   * Show you available methods, constants, local variables, and instance variables in the current scope.
-      # * `o[utline] <expr>` or `ls <expr>`
-      #   * Show you available methods and instance variables of the given object.
-      #   * If the object is a class/module, it also lists its constants.
-      when 'outline', 'o', 'ls'
-        request_tc [:show, :outline, arg]
-
-      # * `display`
-      #   * Show display setting.
-      # * `display <expr>`
-      #   * Show the result of `<expr>` at every suspended timing.
-      when 'display'
-        if arg && !arg.empty?
-          @displays << arg
-          request_tc [:eval, :try_display, @displays]
-        else
-          request_tc [:eval, :display, @displays]
-        end
-
-      # * `undisplay`
-      #   * Remove all display settings.
-      # * `undisplay <displaynum>`
-      #   * Remove a specified display setting.
-      when 'undisplay'
-        case arg
-        when /(\d+)/
-          if @displays[n = $1.to_i]
-            @displays.delete_at n
-          end
-          request_tc [:eval, :display, @displays]
-        when nil
-          if ask "clear all?", 'N'
-            @displays.clear
-          end
-          return :retry
-        end
-
-      ### Frame control
-
-      # * `f[rame]`
-      #   * Show the current frame.
-      # * `f[rame] <framenum>`
-      #   * Specify a current frame. Evaluation are run on specified frame.
-      when 'frame', 'f'
-        request_tc [:frame, :set, arg]
-
-      # * `up`
-      #   * Specify the upper frame.
-      when 'up'
-        request_tc [:frame, :up]
-
-      # * `down`
-      #   * Specify the lower frame.
-      when 'down'
-        request_tc [:frame, :down]
-
-      ### Evaluate
-
-      # * `p <expr>`
-      #   * Evaluate like `p <expr>` on the current frame.
-      when 'p'
-        request_tc [:eval, :p, arg.to_s]
-
-      # * `pp <expr>`
-      #   * Evaluate like `pp <expr>` on the current frame.
-      when 'pp'
-        request_tc [:eval, :pp, arg.to_s]
-
-      # * `eval <expr>`
-      #   * Evaluate `<expr>` on the current frame.
-      when 'eval', 'call'
-        if arg == nil || arg.empty?
-          show_help 'eval'
-          @ui.puts "\nTo evaluate the variable `#{cmd}`, use `pp #{cmd}` instead."
-          return :retry
-        else
-          request_tc [:eval, :call, arg]
-        end
-
-      # * `irb`
-      #   * Invoke `irb` on the current frame.
-      when 'irb'
-        if @ui.remote?
-          @ui.puts "not supported on the remote console."
-          return :retry
-        end
-        request_tc [:eval, :irb]
-
-        # don't repeat irb command
-        @repl_prev_line = nil
-
-      ### Trace
-      # * `trace`
-      #   * Show available tracers list.
-      # * `trace line`
-      #   * Add a line tracer. It indicates line events.
-      # * `trace call`
-      #   * Add a call tracer. It indicate call/return events.
-      # * `trace exception`
-      #   * Add an exception tracer. It indicates raising exceptions.
-      # * `trace object <expr>`
-      #   * Add an object tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
-      # * `trace ... /regexp/`
-      #   * Indicates only matched events to `/regexp/`.
-      # * `trace ... into: <file>`
-      #   * Save trace information into: `<file>`.
-      # * `trace off <num>`
-      #   * Disable tracer specified by `<num>` (use `trace` command to check the numbers).
-      # * `trace off [line|call|pass]`
-      #   * Disable all tracers. If `<type>` is provided, disable specified type tracers.
-      when 'trace'
-        if (re = /\s+into:\s*(.+)/) =~ arg
-          into = $1
-          arg.sub!(re, '')
-        end
-
-        if (re = /\s\/(.+)\/\z/) =~ arg
-          pattern = $1
-          arg.sub!(re, '')
-        end
-
-        case arg
-        when nil
-          @ui.puts 'Tracers:'
-          @tracers.values.each_with_index{|t, i|
-            @ui.puts "* \##{i} #{t}"
-          }
-          @ui.puts
-          return :retry
-
-        when /\Aline\z/
-          add_tracer LineTracer.new(@ui, pattern: pattern, into: into)
-          return :retry
-
-        when /\Acall\z/
-          add_tracer CallTracer.new(@ui, pattern: pattern, into: into)
-          return :retry
-
-        when /\Aexception\z/
-          add_tracer ExceptionTracer.new(@ui, pattern: pattern, into: into)
-          return :retry
-
-        when /\Aobject\s+(.+)/
-          request_tc [:trace, :object, $1.strip, {pattern: pattern, into: into}]
-
-        when /\Aoff\s+(\d+)\z/
-          if t = @tracers.values[$1.to_i]
-            t.disable
-            @ui.puts "Disable #{t.to_s}"
-          else
-            @ui.puts "Unmatched: #{$1}"
-          end
-          return :retry
-
-        when /\Aoff(\s+(line|call|exception|object))?\z/
-          @tracers.values.each{|t|
-            if $2.nil? || t.type == $2
-              t.disable
-              @ui.puts "Disable #{t.to_s}"
-            end
-          }
-          return :retry
-
-        else
-          @ui.puts "Unknown trace option: #{arg.inspect}"
-          return :retry
-        end
-
-      # Record
-      # * `record`
-      #   * Show recording status.
-      # * `record [on|off]`
-      #   * Start/Stop recording.
-      # * `step back`
-      #   * Start replay. Step back with the last execution log.
-      #   * `s[tep]` does stepping forward with the last log.
-      # * `step reset`
-      #   * Stop replay .
-      when 'record'
-        case arg
-        when nil, 'on', 'off'
-          request_tc [:record, arg&.to_sym]
-        else
-          @ui.puts "unknown command: #{arg}"
-          return :retry
-        end
-
-      ### Thread control
-
-      # * `th[read]`
-      #   * Show all threads.
-      # * `th[read] <thnum>`
-      #   * Switch thread specified by `<thnum>`.
-      when 'th', 'thread'
-        case arg
-        when nil, 'list', 'l'
-          thread_list
-        when /(\d+)/
-          switch_thread $1.to_i
-        else
-          @ui.puts "unknown thread command: #{arg}"
-        end
-        return :retry
-
-      ### Configuration
-      # * `config`
-      #   * Show all configuration with description.
-      # * `config <name>`
-      #   * Show current configuration of <name>.
-      # * `config set <name> <val>` or `config <name> = <val>`
-      #   * Set <name> to <val>.
-      # * `config append <name> <val>` or `config <name> << <val>`
-      #   * Append `<val>` to `<name>` if it is an array.
-      # * `config unset <name>`
-      #   * Set <name> to default.
-      when 'config'
-        config_command arg
-        return :retry
-
-      # * `source <file>`
-      #   * Evaluate lines in `<file>` as debug commands.
-      when 'source'
-        if arg
-          begin
-            cmds = File.readlines(path = File.expand_path(arg))
-            add_preset_commands path, cmds, kick: true, continue: false
-          rescue Errno::ENOENT
-            @ui.puts "File not found: #{arg}"
-          end
-        else
-          show_help 'source'
-        end
-        return :retry
-
-      # * `open`
-      #   * open debuggee port on UNIX domain socket and wait for attaching.
-      #   * Note that `open` command is EXPERIMENTAL.
-      # * `open [<host>:]<port>`
-      #   * open debuggee port on TCP/IP with given `[<host>:]<port>` and wait for attaching.
-      # * `open vscode`
-      #   * open debuggee port for VSCode and launch VSCode if available.
-      # * `open chrome`
-      #   * open debuggee port for Chrome and wait for attaching.
-      when 'open'
-        case arg&.downcase
-        when '', nil
-          repl_open
-        when 'vscode'
-          repl_open_vscode
-        when /\A(.+):(\d+)\z/
-          repl_open_tcp $1, $2.to_i
-        when /\A(\d+)z/
-          repl_open_tcp nil, $1.to_i
-        when 'tcp'
-          repl_open_tcp CONFIG[:host], (CONFIG[:port] || 0)
-        when 'chrome', 'cdp'
-          CONFIG[:open_frontend] = 'chrome'
-          repl_open_tcp CONFIG[:host], (CONFIG[:port] || 0)
-        else
-          raise "Unknown arg: #{arg}"
-        end
-
-        return :retry
-
-      ### Help
-
-      # * `h[elp]`
-      #   * Show help for all commands.
-      # * `h[elp] <command>`
-      #   * Show help for the given command.
-      when 'h', 'help', '?'
-        show_help arg
-        return :retry
-
-      ### END
+      if cmd_method
+        send(cmd_method, arg)
       else
         request_tc [:eval, :pp, line]
-=begin
-        @repl_prev_line = nil
-        @ui.puts "unknown command: #{line}"
-        begin
-          require 'did_you_mean'
-          spell_checker = DidYouMean::SpellChecker.new(dictionary: DEBUGGER__.commands)
-          correction = spell_checker.correct(line.split(/\s/).first || '')
-          @ui.puts "Did you mean? #{correction.join(' or ')}" unless correction.empty?
-        rescue LoadError
-          # Don't use D
-        end
-        return :retry
-=end
       end
-
     rescue Interrupt
       return :retry
     rescue SystemExit
@@ -1017,6 +469,621 @@ module DEBUGGER__
       @ui.puts e.backtrace.map{|e| '  ' + e}
       return :retry
     end
+
+    ### Control flow
+    # * `s[tep]`
+    #   * Step in. Resume the program until next breakable point.
+    # * `s[tep] <n>`
+    #   * Step in, resume the program at `<n>`th breakable point.
+    register_command "step", aliases: "s" do |arg|
+      cancel_auto_continue
+      check_postmortem
+      step_command :in, arg
+    end
+
+    # * `n[ext]`
+    #   * Step over. Resume the program until next line.
+    # * `n[ext] <n>`
+    #   * Step over, same as `step <n>`.
+    register_command "next", aliases: "n" do |arg|
+      cancel_auto_continue
+      check_postmortem
+      step_command :next, arg
+    end
+
+    # * `fin[ish]`
+    #   * Finish this frame. Resume the program until the current frame is finished.
+    # * `fin[ish] <n>`
+    #   * Finish `<n>`th frames.
+    register_command "finish", aliases: "fin" do |arg|
+      cancel_auto_continue
+      check_postmortem
+
+      if arg&.to_i == 0
+        raise 'finish command with 0 does not make sense.'
+      end
+
+      step_command :finish, arg
+    end
+
+    # * `c[ontinue]`
+    #   * Resume the program.
+    register_command "continue", aliases: "c" do |arg|
+      cancel_auto_continue
+      leave_subsession :continue
+    end
+
+    # * `q[uit]` or `Ctrl-D`
+    #   * Finish debugger (with the debuggee process on non-remote debugging).
+    register_command "quit", aliases: "q" do |arg|
+      if ask 'Really quit?'
+        @ui.quit arg.to_i
+        leave_subsession :continue
+      else
+        :retry
+      end
+    end
+
+    # * `q[uit]!`
+    #   * Same as q[uit] but without the confirmation prompt.
+    register_command "quit!", aliases: "q!" do |arg|
+      @ui.quit arg.to_i
+      leave_subsession nil
+    end
+
+    # * `kill`
+    #   * Stop the debuggee process with `Kernel#exit!`.
+    register_command "kill" do |arg|
+      if ask 'Really kill?'
+        exit! (arg || 1).to_i
+      else
+        :retry
+      end
+    end
+
+    # * `kill!`
+    #   * Same as kill but without the confirmation prompt.
+    register_command 'kill!' do |arg|
+      exit! (arg || 1).to_i
+    end
+
+    # * `sigint`
+    #   * Execute SIGINT handler registered by the debuggee.
+    #   * Note that this command should be used just after stop by `SIGINT`.
+    register_command "sigint" do |arg|
+      begin
+        case cmd = @intercepted_sigint_cmd
+        when nil, 'IGNORE', :IGNORE, 'DEFAULT', :DEFAULT
+          # ignore
+        when String
+          eval(cmd)
+        when Proc
+          cmd.call
+        end
+
+        leave_subsession :continue
+
+      rescue Exception => e
+        @ui.puts "Exception: #{e}"
+        @ui.puts e.backtrace.map{|line| "  #{e}"}
+        :retry
+      end
+    end
+
+    ### Breakpoint
+    # * `b[reak]`
+    #   * Show all breakpoints.
+    # * `b[reak] <line>`
+    #   * Set breakpoint on `<line>` at the current frame's file.
+    # * `b[reak] <file>:<line>` or `<file> <line>`
+    #   * Set breakpoint on `<file>:<line>`.
+    # * `b[reak] <class>#<name>`
+    #    * Set breakpoint on the method `<class>#<name>`.
+    # * `b[reak] <expr>.<name>`
+    #    * Set breakpoint on the method `<expr>.<name>`.
+    # * `b[reak] ... if: <expr>`
+    #   * break if `<expr>` is true at specified location.
+    # * `b[reak] ... pre: <command>`
+    #   * break and run `<command>` before stopping.
+    # * `b[reak] ... do: <command>`
+    #   * break and run `<command>`, and continue.
+    # * `b[reak] ... path: <path>`
+    #   * break if the path matches to `<path>`. `<path>` can be a regexp with `/regexp/`.
+    # * `b[reak] if: <expr>`
+    #   * break if: `<expr>` is true at any lines.
+    #   * Note that this feature is super slow.
+    register_command 'break', aliases: "b" do |arg|
+      check_postmortem
+
+      if arg == nil
+        show_bps
+        :retry
+      else
+        case bp = repl_add_breakpoint(arg)
+        when :noretry
+        when nil
+          :retry
+        else
+          show_bps bp
+          :retry
+        end
+      end
+    end
+
+    # * `catch <Error>`
+    #   * Set breakpoint on raising `<Error>`.
+    # * `catch ... if: <expr>`
+    #   * stops only if `<expr>` is true as well.
+    # * `catch ... pre: <command>`
+    #   * runs `<command>` before stopping.
+    # * `catch ... do: <command>`
+    #   * stops and run `<command>`, and continue.
+    # * `catch ... path: <path>`
+    #   * stops if the exception is raised from a `<path>`. `<path>` can be a regexp with `/regexp/`.
+    register_command 'catch' do |arg|
+      check_postmortem
+
+      if arg
+        bp = repl_add_catch_breakpoint arg
+        show_bps bp if bp
+      else
+        show_bps
+      end
+
+      :retry
+    end
+
+    # * `watch @ivar`
+    #   * Stop the execution when the result of current scope's `@ivar` is changed.
+    #   * Note that this feature is super slow.
+    # * `watch ... if: <expr>`
+    #   * stops only if `<expr>` is true as well.
+    # * `watch ... pre: <command>`
+    #   * runs `<command>` before stopping.
+    # * `watch ... do: <command>`
+    #   * stops and run `<command>`, and continue.
+    # * `watch ... path: <path>`
+    #   * stops if the path matches `<path>`. `<path>` can be a regexp with `/regexp/`.
+    register_command 'watch', aliases: 'wat' do |arg|
+      check_postmortem
+
+      if arg && arg.match?(/\A@\w+/)
+        repl_add_watch_breakpoint(arg)
+      else
+        show_bps
+        :retry
+      end
+    end
+
+    # * `del[ete]`
+    #   * delete all breakpoints.
+    # * `del[ete] <bpnum>`
+    #   * delete specified breakpoint.
+    register_command 'delete', aliases: "del" do |arg|
+      check_postmortem
+
+      bp =
+      case arg
+      when nil
+        show_bps
+        if ask "Remove all breakpoints?", 'N'
+          delete_bp
+        end
+      when /\d+/
+        delete_bp arg.to_i
+      else
+        nil
+      end
+      @ui.puts "deleted: \##{bp[0]} #{bp[1]}" if bp
+      :retry
+    end
+
+    ### Information
+
+    # * `bt` or `backtrace`
+    #   * Show backtrace (frame) information.
+    # * `bt <num>` or `backtrace <num>`
+    #   * Only shows first `<num>` frames.
+    # * `bt /regexp/` or `backtrace /regexp/`
+    #   * Only shows frames with method name or location info that matches `/regexp/`.
+    # * `bt <num> /regexp/` or `backtrace <num> /regexp/`
+    #   * Only shows first `<num>` frames with method name or location info that matches `/regexp/`.
+    register_command 'backtrace', aliases: 'bt' do |arg|
+      case arg
+      when /\A(\d+)\z/
+        request_tc [:show, :backtrace, arg.to_i, nil]
+      when /\A\/(.*)\/\z/
+        pattern = $1
+        request_tc [:show, :backtrace, nil, Regexp.compile(pattern)]
+      when /\A(\d+)\s+\/(.*)\/\z/
+        max, pattern = $1, $2
+        request_tc [:show, :backtrace, max.to_i, Regexp.compile(pattern)]
+      else
+        request_tc [:show, :backtrace, nil, nil]
+      end
+    end
+
+    # * `l[ist]`
+    #   * Show current frame's source code.
+    #   * Next `list` command shows the successor lines.
+    # * `l[ist] -`
+    #   * Show predecessor lines as opposed to the `list` command.
+    # * `l[ist] <start>` or `l[ist] <start>-<end>`
+    #   * Show current frame's source code from the line <start> to <end> if given.
+    register_command 'list', aliases: 'l' do |arg|
+      case arg ? arg.strip : nil
+      when /\A(\d+)\z/
+        request_tc [:show, :list, {start_line: arg.to_i - 1}]
+      when /\A-\z/
+        request_tc [:show, :list, {dir: -1}]
+      when /\A(\d+)-(\d+)\z/
+        request_tc [:show, :list, {start_line: $1.to_i - 1, end_line: $2.to_i}]
+      when nil
+        request_tc [:show, :list]
+      else
+        @ui.puts "Can not handle list argument: #{arg}"
+        :retry
+      end
+    end
+
+    # * `edit`
+    #   * Open the current file on the editor (use `EDITOR` environment variable).
+    #   * Note that edited file will not be reloaded.
+    # * `edit <file>`
+    #   * Open <file> on the editor.
+    register_command 'edit' do |arg|
+      if @ui.remote?
+        @ui.puts "not supported on the remote console."
+        next :retry
+      end
+
+      begin
+        arg = resolve_path(arg) if arg
+      rescue Errno::ENOENT
+        @ui.puts "not found: #{arg}"
+        next :retry
+      end
+
+      request_tc [:show, :edit, arg]
+    end
+
+    # * `i[nfo]`
+    #    * Show information about current frame (local/instance variables and defined constants).
+    # * `i[nfo] l[ocal[s]]`
+    #   * Show information about the current frame (local variables)
+    #   * It includes `self` as `%self` and a return value as `%return`.
+    # * `i[nfo] i[var[s]]` or `i[nfo] instance`
+    #   * Show information about instance variables about `self`.
+    # * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
+    #   * Show information about accessible constants except toplevel constants.
+    # * `i[nfo] g[lobal[s]]`
+    #   * Show information about global variables
+    # * `i[nfo] ... /regexp/`
+    #   * Filter the output with `/regexp/`.
+    # * `i[nfo] th[read[s]]`
+    #   * Show all threads (same as `th[read]`).
+    register_command 'info', aliases: 'i' do |arg|
+      if /\/(.+)\/\z/ =~ arg
+        pat = Regexp.compile($1)
+        sub = $~.pre_match.strip
+      else
+        sub = arg
+      end
+
+      case sub
+      when nil
+        request_tc [:show, :default, pat] # something useful
+      when 'l', /^locals?/
+        request_tc [:show, :locals, pat]
+      when 'i', /^ivars?/i, /^instance[_ ]variables?/i
+        request_tc [:show, :ivars, pat]
+      when 'c', /^consts?/i, /^constants?/i
+        request_tc [:show, :consts, pat]
+      when 'g', /^globals?/i, /^global[_ ]variables?/i
+        request_tc [:show, :globals, pat]
+      when 'th', /threads?/
+        thread_list
+        :retry
+      else
+        @ui.puts "unrecognized argument for info command: #{arg}"
+        show_help 'info'
+        :retry
+      end
+    end
+
+    # * `o[utline]` or `ls`
+    #   * Show you available methods, constants, local variables, and instance variables in the current scope.
+    # * `o[utline] <expr>` or `ls <expr>`
+    #   * Show you available methods and instance variables of the given object.
+    #   * If the object is a class/module, it also lists its constants.
+    register_command 'outline', aliases: ['o', 'ls'] do |arg|
+      request_tc [:show, :outline, arg]
+    end
+
+    # * `display`
+    #   * Show display setting.
+    # * `display <expr>`
+    #   * Show the result of `<expr>` at every suspended timing.
+    register_command 'display' do |arg|
+      if arg && !arg.empty?
+        @displays << arg
+        request_tc [:eval, :try_display, @displays]
+      else
+        request_tc [:eval, :display, @displays]
+      end
+    end
+
+    # * `undisplay`
+    #   * Remove all display settings.
+    # * `undisplay <displaynum>`
+    #   * Remove a specified display setting.
+    register_command 'undisplay' do |arg|
+      case arg
+      when /(\d+)/
+        if @displays[n = $1.to_i]
+          @displays.delete_at n
+        end
+        request_tc [:eval, :display, @displays]
+      when nil
+        if ask "clear all?", 'N'
+          @displays.clear
+        end
+        :retry
+      end
+    end
+
+    ### Frame control
+
+    # * `f[rame]`
+    #   * Show the current frame.
+    # * `f[rame] <framenum>`
+    #   * Specify a current frame. Evaluation are run on specified frame.
+    register_command 'frame', aliases: 'f' do |arg|
+      request_tc [:frame, :set, arg]
+    end
+
+    # * `up`
+    #   * Specify the upper frame.
+    register_command 'up' do |arg|
+      request_tc [:frame, :up]
+    end
+
+    # * `down`
+    #   * Specify the lower frame.
+    register_command 'down' do |arg|
+      request_tc [:frame, :down]
+    end
+
+    ### Evaluate
+
+    # * `p <expr>`
+    #   * Evaluate like `p <expr>` on the current frame.
+    register_command 'p' do |arg|
+      request_tc [:eval, :p, arg.to_s]
+    end
+
+    # * `pp <expr>`
+    #   * Evaluate like `pp <expr>` on the current frame.
+    register_command 'pp' do |arg|
+      request_tc [:eval, :pp, arg.to_s]
+    end
+
+    # * `eval <expr>`
+    #   * Evaluate `<expr>` on the current frame.
+    register_command 'eval', aliases: 'call' do |arg|
+      if arg == nil || arg.empty?
+        show_help 'eval'
+        @ui.puts "\nTo evaluate the variable `#{cmd}`, use `pp #{cmd}` instead."
+        :retry
+      else
+        request_tc [:eval, :call, arg]
+      end
+    end
+
+    # * `irb`
+    #   * Invoke `irb` on the current frame.
+    register_command 'irb' do |arg|
+      if @ui.remote?
+        @ui.puts "not supported on the remote console."
+        next :retry
+      end
+      request_tc [:eval, :irb]
+
+      # don't repeat irb command
+      @repl_prev_line = nil
+    end
+
+    ### Trace
+    # * `trace`
+    #   * Show available tracers list.
+    # * `trace line`
+    #   * Add a line tracer. It indicates line events.
+    # * `trace call`
+    #   * Add a call tracer. It indicate call/return events.
+    # * `trace exception`
+    #   * Add an exception tracer. It indicates raising exceptions.
+    # * `trace object <expr>`
+    #   * Add an object tracer. It indicates that an object by `<expr>` is passed as a parameter or a receiver on method call.
+    # * `trace ... /regexp/`
+    #   * Indicates only matched events to `/regexp/`.
+    # * `trace ... into: <file>`
+    #   * Save trace information into: `<file>`.
+    # * `trace off <num>`
+    #   * Disable tracer specified by `<num>` (use `trace` command to check the numbers).
+    # * `trace off [line|call|pass]`
+    #   * Disable all tracers. If `<type>` is provided, disable specified type tracers.
+    register_command 'trace' do |arg|
+      if (re = /\s+into:\s*(.+)/) =~ arg
+        into = $1
+        arg.sub!(re, '')
+      end
+
+      if (re = /\s\/(.+)\/\z/) =~ arg
+        pattern = $1
+        arg.sub!(re, '')
+      end
+
+      case arg
+      when nil
+        @ui.puts 'Tracers:'
+        @tracers.values.each_with_index{|t, i|
+          @ui.puts "* \##{i} #{t}"
+        }
+        @ui.puts
+        :retry
+
+      when /\Aline\z/
+        add_tracer LineTracer.new(@ui, pattern: pattern, into: into)
+        :retry
+
+      when /\Acall\z/
+        add_tracer CallTracer.new(@ui, pattern: pattern, into: into)
+        :retry
+
+      when /\Aexception\z/
+        add_tracer ExceptionTracer.new(@ui, pattern: pattern, into: into)
+        :retry
+
+      when /\Aobject\s+(.+)/
+        request_tc [:trace, :object, $1.strip, {pattern: pattern, into: into}]
+
+      when /\Aoff\s+(\d+)\z/
+        if t = @tracers.values[$1.to_i]
+          t.disable
+          @ui.puts "Disable #{t.to_s}"
+        else
+          @ui.puts "Unmatched: #{$1}"
+        end
+        :retry
+
+      when /\Aoff(\s+(line|call|exception|object))?\z/
+        @tracers.values.each{|t|
+          if $2.nil? || t.type == $2
+            t.disable
+            @ui.puts "Disable #{t.to_s}"
+          end
+        }
+        :retry
+
+      else
+        @ui.puts "Unknown trace option: #{arg.inspect}"
+        :retry
+      end
+    end
+
+    # Record
+    # * `record`
+    #   * Show recording status.
+    # * `record [on|off]`
+    #   * Start/Stop recording.
+    # * `step back`
+    #   * Start replay. Step back with the last execution log.
+    #   * `s[tep]` does stepping forward with the last log.
+    # * `step reset`
+    #   * Stop replay .
+    register_command 'record' do |arg|
+      case arg
+      when nil, 'on', 'off'
+        request_tc [:record, arg&.to_sym]
+      else
+        @ui.puts "unknown command: #{arg}"
+        :retry
+      end
+    end
+
+    ### Thread control
+
+    # * `th[read]`
+    #   * Show all threads.
+    # * `th[read] <thnum>`
+    #   * Switch thread specified by `<thnum>`.
+    register_command 'thread', aliases: 'th' do |arg|
+      case arg
+      when nil, 'list', 'l'
+        thread_list
+      when /(\d+)/
+        switch_thread $1.to_i
+      else
+        @ui.puts "unknown thread command: #{arg}"
+      end
+      :retry
+    end
+
+    ### Configuration
+    # * `config`
+    #   * Show all configuration with description.
+    # * `config <name>`
+    #   * Show current configuration of <name>.
+    # * `config set <name> <val>` or `config <name> = <val>`
+    #   * Set <name> to <val>.
+    # * `config append <name> <val>` or `config <name> << <val>`
+    #   * Append `<val>` to `<name>` if it is an array.
+    # * `config unset <name>`
+    #   * Set <name> to default.
+    register_command 'config' do |arg|
+      config_command arg
+      :retry
+    end
+
+    # * `source <file>`
+    #   * Evaluate lines in `<file>` as debug commands.
+    register_command 'source' do |arg|
+      if arg
+        begin
+          cmds = File.readlines(path = File.expand_path(arg))
+          add_preset_commands path, cmds, kick: true, continue: false
+        rescue Errno::ENOENT
+          @ui.puts "File not found: #{arg}"
+        end
+      else
+        show_help 'source'
+      end
+      :retry
+    end
+
+    # * `open`
+    #   * open debuggee port on UNIX domain socket and wait for attaching.
+    #   * Note that `open` command is EXPERIMENTAL.
+    # * `open [<host>:]<port>`
+    #   * open debuggee port on TCP/IP with given `[<host>:]<port>` and wait for attaching.
+    # * `open vscode`
+    #   * open debuggee port for VSCode and launch VSCode if available.
+    # * `open chrome`
+    #   * open debuggee port for Chrome and wait for attaching.
+    register_command 'open' do |arg|
+      case arg&.downcase
+      when '', nil
+        repl_open
+      when 'vscode'
+        repl_open_vscode
+      when /\A(.+):(\d+)\z/
+        repl_open_tcp $1, $2.to_i
+      when /\A(\d+)z/
+        repl_open_tcp nil, $1.to_i
+      when 'tcp'
+        repl_open_tcp CONFIG[:host], (CONFIG[:port] || 0)
+      when 'chrome', 'cdp'
+        CONFIG[:open_frontend] = 'chrome'
+        repl_open_tcp CONFIG[:host], (CONFIG[:port] || 0)
+      else
+        raise "Unknown arg: #{arg}"
+      end
+
+      :retry
+    end
+
+    ### Help
+
+    # * `h[elp]`
+    #   * Show help for all commands.
+    # * `h[elp] <command>`
+    #   * Show help for the given command.
+    register_command 'help', aliases: ['?', 'h'] do |arg|
+      show_help arg
+      :retry
+    end
+
+    ### END
 
     def repl_open_setup
       @tp_thread_begin.disable

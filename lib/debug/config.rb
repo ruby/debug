@@ -479,7 +479,7 @@ module DEBUGGER__
       when /\A\s*### (.+)/
         cat = $1
         break if $1 == 'END'
-      when /\A      when (.+)/
+      when /\A\s*register_command (.+)/
         next unless cat
         next unless desc
         ws = $1.split(/,\s*/).map{|e| e.gsub('\'', '')}
