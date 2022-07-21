@@ -213,18 +213,24 @@ module DEBUGGER__
 
     def process_event evt
       # variable `@internal_info` is only used for test
-      @tc, output, ev, @internal_info, *ev_args = evt
+      tc, output, ev, @internal_info, *ev_args = evt
 
       output.each{|str| @ui.puts str} if ev != :suspend
 
-      case ev
-
-      when :thread_begin # special event, tc is nil
+      # special event, tc is nil
+      # and we don't want to set @tc to the newly created thread's ThreadClient
+      if ev == :thread_begin
         th = ev_args.shift
         q = ev_args.shift
         on_thread_begin th
         q << true
 
+        return
+      end
+
+      @tc = tc
+
+      case ev
       when :init
         enter_subsession
         wait_command_loop
