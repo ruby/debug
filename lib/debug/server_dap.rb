@@ -263,7 +263,7 @@ module DEBUGGER__
 
     def process
       while req = recv_request
-        raise "not a request: #{req.inpsect}" unless req['type'] == 'request'
+        raise "not a request: #{req.inspect}" unless req['type'] == 'request'
         args = req.dig('arguments')
 
         case req['command']
