@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+return if ENV['RUBY_DEBUG_ENABLE'] == '0'
 return if defined?(::DEBUGGER__)
 
 # Put the following line in your login script (e.g. ~/.bash_profile) with modified path:
