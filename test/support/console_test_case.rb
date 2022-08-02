@@ -9,12 +9,23 @@ module DEBUGGER__
       warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
     end
 
+    HOME_CANNOT_CHANGE =
+      begin
+        pwd = Dir.pwd
+        ruby = ENV['RUBY'] || RbConfig.ruby
+        home_cannot_change = false
+        PTY.spawn({ "HOME" => pwd }, ruby, '-e', 'puts ENV["HOME"]') do |r,|
+          home_cannot_change = r.gets.chomp != pwd
+        end
+        home_cannot_change
+      end
+
     class << self
       attr_reader :pty_home_dir
 
       def startup
         @pty_home_dir =
-          if ENV["CI"]
+          if HOME_CANNOT_CHANGE
             # CIs usually doesn't allow overriding the HOME path
             # we also don't need to worry about adding or being affected by ~/.rdbgrc on CI
             # so we can just use the original home page there
@@ -25,7 +36,7 @@ module DEBUGGER__
       end
 
       def shutdown
-        unless ENV["CI"]
+        unless HOME_CANNOT_CHANGE
           FileUtils.remove_entry @pty_home_dir
         end
       end
