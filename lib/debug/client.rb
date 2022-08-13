@@ -42,7 +42,7 @@ module DEBUGGER__
         when /csh/
           :csh
         when /zsh/
-          :szh
+          :zsh
         when /dash/
           :dash
         else
