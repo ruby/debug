@@ -134,6 +134,8 @@ module DEBUGGER__
         assert_no_line_text(/~\/foo\.rb/)
         type 'c'
       end
+    ensure
+      File.unlink "#{pty_home_dir}/foo.rb"
     end
   end
 
