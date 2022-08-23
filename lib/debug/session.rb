@@ -127,7 +127,8 @@ module DEBUGGER__
 
       @tp_thread_begin = nil
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
-        ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
+        # skip on_load if no bps for faster loading
+        ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script if @bps.any?
       }
       @tp_load_script.enable
 
