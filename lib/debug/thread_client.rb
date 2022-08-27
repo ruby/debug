@@ -856,7 +856,12 @@ module DEBUGGER__
 
             depth = @target_frames.first.frame_depth
 
-            step_tp iter do
+            skip_line = false
+            step_tp iter do |event|
+              next if event == :line && skip_line
+              # skip line events until we see a return event
+              skip_line = !(event == :return || event == :b_return)
+
               loc = caller_locations(2, 1).first
               loc_path = loc.absolute_path || "!eval:#{loc.path}"
 
