@@ -21,7 +21,9 @@ module DEBUGGER__
         10|
         11| s = Student.new("John")
         12| s.name
-        13| "foo"
+        13| puts "foo"
+        14| puts "bar"
+        15| "baz"
       RUBY
     end
 
@@ -84,6 +86,8 @@ module DEBUGGER__
         assert_line_num 11
         type 'n 2'
         assert_line_num 13
+        type 'n 2'
+        assert_line_num 15
         type 'quit'
         type 'y'
       end
