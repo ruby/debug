@@ -89,12 +89,24 @@ capture_frames(VALUE self, VALUE skip_path_prefix)
     return rb_debug_inspector_open(di_body, (void *)skip_path_prefix);
 }
 
+#define BUFF_SIZE 4096
+
 static VALUE
 frame_depth(VALUE self)
 {
-    // TODO: more efficient API
-    VALUE bt = rb_make_backtrace();
-    return INT2FIX(RARRAY_LEN(bt));
+    static VALUE buff[BUFF_SIZE];
+    static int lines[BUFF_SIZE];
+
+    int size = rb_profile_frames(0, BUFF_SIZE, buff, lines);
+
+    // If the buffer is full, there might be more frames.
+    // Fall back to rb_make_backtrace to get them all.
+    if (size >= BUFF_SIZE) {
+        VALUE bt = rb_make_backtrace();
+        size = RARRAY_LEN(bt);
+    } 
+ 
+    return INT2FIX(size);
 }
 
 // iseq
