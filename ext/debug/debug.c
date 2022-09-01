@@ -104,9 +104,12 @@ frame_depth(VALUE self)
     if (size >= BUFF_SIZE) {
         VALUE bt = rb_make_backtrace();
         size = RARRAY_LEN(bt);
+        return INT2FIX(size);
     } 
- 
-    return INT2FIX(size);
+    
+    // rb_profile_frames will return one extra frame
+    // https://bugs.ruby-lang.org/issues/18907
+    return INT2FIX(size - 1);
 }
 
 // iseq
