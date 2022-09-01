@@ -128,7 +128,8 @@ module DEBUGGER__
 
       case self
       when UI_UnixDomainServer
-        UI_DAP.local_fs_map_set true
+        # If the user specified a mapping, respect it, otherwise, make sure that no mapping is used
+        UI_DAP.local_fs_map_set CONFIG[:local_fs_map] || true
       when UI_TcpServer
         # TODO: loopback address can be used to connect other FS env, like Docker containers
         # UI_DAP.local_fs_set if @local_addr.ipv4_loopback? || @local_addr.ipv6_loopback?
