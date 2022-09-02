@@ -2033,38 +2033,39 @@ module DEBUGGER__
     setup_initial_suspend unless nonstop
   end
 
-  def self.open host: nil, port: CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false, **kw
+  # @param on_client_connected [lambda] a function to be called every time a client connects to the debugger
+  def self.open host: nil, port: CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false, on_client_connected: nil, **kw
     CONFIG.set_config(**kw)
     require_relative 'server'
 
     if port || CONFIG[:open_frontend] == 'chrome' || (!::Addrinfo.respond_to?(:unix))
-      open_tcp host: host, port: (port || 0), nonstop: nonstop
+      open_tcp host: host, port: (port || 0), nonstop: nonstop, on_client_connected: on_client_connected
     else
-      open_unix sock_path: sock_path, sock_dir: sock_dir, nonstop: nonstop
+      open_unix sock_path: sock_path, sock_dir: sock_dir, nonstop: nonstop, on_client_connected: on_client_connected
     end
   end
 
-  def self.open_tcp host: nil, port:, nonstop: false, **kw
+  def self.open_tcp host: nil, port:, nonstop: false, on_client_connected: nil, **kw
     CONFIG.set_config(**kw)
     require_relative 'server'
 
     if defined? SESSION
-      SESSION.reset_ui UI_TcpServer.new(host: host, port: port)
+      SESSION.reset_ui UI_TcpServer.new(host: host, port: port, on_client_connected: on_client_connected)
     else
-      initialize_session{ UI_TcpServer.new(host: host, port: port) }
+      initialize_session{ UI_TcpServer.new(host: host, port: port, on_client_connected: on_client_connected) }
     end
 
     setup_initial_suspend unless nonstop
   end
 
-  def self.open_unix sock_path: nil, sock_dir: nil, nonstop: false, **kw
+  def self.open_unix sock_path: nil, sock_dir: nil, nonstop: false, on_client_connected: nil, **kw
     CONFIG.set_config(**kw)
     require_relative 'server'
 
     if defined? SESSION
-      SESSION.reset_ui UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
+      SESSION.reset_ui UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path, on_client_connected: on_client_connected)
     else
-      initialize_session{ UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path) }
+      initialize_session{ UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path, on_client_connected: on_client_connected) }
     end
 
     setup_initial_suspend unless nonstop

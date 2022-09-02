@@ -7,10 +7,12 @@ require_relative 'version'
 
 module DEBUGGER__
   class UI_ServerBase < UI_Base
-    def initialize
+    # @param on_client_connected [lambda] a function to be called every time a client connects to the debugger
+    def initialize(on_client_connected: nil)
       @sock = @sock_for_fork = nil
       @accept_m = Mutex.new
       @accept_cv = ConditionVariable.new
+      @on_client_connected = on_client_connected
       @client_addr = nil
       @q_msg = nil
       @q_ans = nil
@@ -57,6 +59,10 @@ module DEBUGGER__
             greeting_done = true
 
             @accept_cv.signal
+
+            if @on_client_connected
+              @on_client_connected.call()
+            end
 
             # flush unsent messages
             @unsent_messages.each{|m|
@@ -379,7 +385,7 @@ module DEBUGGER__
   end
 
   class UI_TcpServer < UI_ServerBase
-    def initialize host: nil, port: nil
+    def initialize host: nil, port: nil, on_client_connected: nil
       @local_addr = nil
       @host = host || CONFIG[:host]
       @port_save_file = nil
@@ -396,7 +402,7 @@ module DEBUGGER__
         end
       end
 
-      super()
+      super(on_client_connected: on_client_connected)
     end
 
     def chrome_setup
@@ -471,12 +477,12 @@ module DEBUGGER__
   end
 
   class UI_UnixDomainServer < UI_ServerBase
-    def initialize sock_dir: nil, sock_path: nil
+    def initialize sock_dir: nil, sock_path: nil, on_client_connected: nil
       @sock_path = sock_path
       @sock_dir = sock_dir || DEBUGGER__.unix_domain_socket_dir
       @sock_for_fork = nil
 
-      super()
+      super(on_client_connected: on_client_connected)
     end
 
     def accept
