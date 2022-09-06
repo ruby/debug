@@ -702,9 +702,10 @@ module DEBUGGER__
         frames = []
         @target_frames.each_with_index do |frame, i|
           next if i < start_frame
-          break if (levels -= 1) < 0
 
           path = frame.realpath || frame.path
+          next if skip_path?(path)
+          break if (levels -= 1) < 0
           source_name = path ? File.basename(path) : frame.location.to_s
 
           if (path && File.exist?(path)) && (local_path = UI_DAP.remote_to_local_path(path))
