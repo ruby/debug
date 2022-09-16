@@ -26,7 +26,7 @@ module Kernel
       }
       require 'debug/session'
       require 'debug/version'
-      ::DEBUGGER__.info "Can not activate debug #{cur_version} specified by debug/prelude.rb. Activate debug #{DEBUGGER__::VERSION} instead."
+      ::DEBUGGER__.warn "Can not activate debug #{cur_version} specified by debug/prelude.rb. Activate debug #{DEBUGGER__::VERSION} instead."
       up_level += 1
     end
 

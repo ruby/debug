@@ -120,7 +120,7 @@ module DEBUGGER__
       set_mode :running
       thr.instance_variable_set(:@__thread_client_id, id)
 
-      ::DEBUGGER__.info("Thread \##{@id} is created.")
+      ::DEBUGGER__.debug("Thread \##{@id} is created.")
     end
 
     def deactivate

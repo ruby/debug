@@ -12,7 +12,7 @@ module DEBUGGER__
 
   CONFIG_SET = {
     # UI setting
-    log_level:      ['RUBY_DEBUG_LOG_LEVEL',      "UI: Log level same as Logger",               :loglevel, "WARN"],
+    log_level:      ['RUBY_DEBUG_LOG_LEVEL',      "UI: Log level same as Logger",               :loglevel, "INFO"],
     show_src_lines: ['RUBY_DEBUG_SHOW_SRC_LINES', "UI: Show n lines source code on breakpoint", :int, "10"],
     show_frames:    ['RUBY_DEBUG_SHOW_FRAMES',    "UI: Show n frames on breakpoint",            :int, "2"],
     use_short_path: ['RUBY_DEBUG_USE_SHORT_PATH', "UI: Show shorten PATH (like $(Gem)/foo.rb)", :bool, "false"],
