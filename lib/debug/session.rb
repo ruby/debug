@@ -1893,9 +1893,11 @@ module DEBUGGER__
 
     def after_fork child: true
       if child || !@lock_file
-        @m = Mutex.new
-        @lock_level = 0
-        @lock_file = open(@lock_tempfile.path, 'w')
+        @m = Mutex.new unless @m
+        @m.synchronize do
+          @lock_level = 0
+          @lock_file = open(@lock_tempfile.path, 'w')
+        end
       end
     end
 
