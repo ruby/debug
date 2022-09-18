@@ -438,12 +438,12 @@ $ rdbg target.rb --open=chrome
 DEBUGGER: Debugger can attach via TCP/IP (127.0.0.1:43633)
 DEBUGGER: With Chrome browser, type the following URL in the address-bar:
 
-   devtools://devtools/bundled/inspector.html?ws=127.0.0.1:43633
+   devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=127.0.0.1:57231/b32a55cd-2eb5-4c5c-87d8-b3dfc59d80ef
 
 DEBUGGER: wait for debugger connection...
 ```
 
-Type `devtools://devtools/bundled/inspector.html?ws=127.0.0.1:43633` in the address-bar on Chrome browser, and you can continue the debugging with chrome browser.
+Type `devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=127.0.0.1:57231/b32a55cd-2eb5-4c5c-87d8-b3dfc59d80ef` in the address-bar on Chrome browser, and you can continue the debugging with chrome browser.
 
 Also `open chrome` command works like `open vscode`.
 
