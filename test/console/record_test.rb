@@ -167,4 +167,84 @@ module DEBUGGER__
       end
     end
   end
+
+  class StepIntoWithNumWhileReplayTest < ConsoleTestCase
+    def program
+      <<~RUBY
+         1| def a
+         2|   return b()
+         3| end
+         4| 
+         5| def b
+         6|   return 1
+         7| end
+         8| 
+         9| a()
+        10| a()
+        11| a()
+        12| a()
+        13| a()
+        14| a()
+      RUBY
+    end
+    
+    def test_1663647719
+      debug_code(program) do
+        type 'record on'
+        type 'b 11'
+        type 'c'
+        assert_line_num 11
+        type 'step back'
+        assert_line_num 11
+        type 'step back'
+        assert_line_num 6
+        type 'step back'
+        assert_line_num 2
+        type 'step back'
+        assert_line_num 10
+        type 'step 2'
+        assert_line_num 6
+        type 'step 2'
+        assert_line_num 11
+        type 'q!'
+      end
+    end
+  end
+
+  class StepIntoWhenNumberIsLargetThanLogIndex < ConsoleTestCase
+    def program
+      <<~RUBY
+         1| def a
+         2|   return b()
+         3| end
+         4| 
+         5| def b
+         6|   return 1
+         7| end
+         8| 
+         9| a()
+        10| a()
+        11| a()
+        12| a()
+        13| a()
+        14| a()
+      RUBY
+    end
+    
+    def test_1663647719
+      debug_code(program) do
+        type 'record on'
+        type 'b 11'
+        type 'c'
+        assert_line_num 11
+        type 'step back'
+        assert_line_num 11
+        type 'step back'
+        assert_line_num 6
+        type 'step 100'
+        assert_line_num 11
+        type 'q!'
+      end
+    end
+  end
 end
