@@ -841,8 +841,9 @@ module DEBUGGER__
 
           case step_type
           when :in
+            iter = iter || 1
             if @recorder&.replaying?
-              @recorder.step_forward
+              @recorder.step_forward iter
               raise SuspendReplay
             else
               step_tp iter do
@@ -1209,8 +1210,11 @@ module DEBUGGER__
         end
       end
 
-      def step_forward
-        @index -= 1
+      def step_forward iter
+        @index -= iter
+        if @index < 0
+          @index = 0
+        end
       end
 
       def step_reset
