@@ -139,6 +139,74 @@ module DEBUGGER__
     end
   end
 
+  class StepBackWithNumWhileReplayTest < ConsoleTestCase
+    def program
+      <<~RUBY
+         1| def a
+         2|   return b()
+         3| end
+         4| 
+         5| def b
+         6|   return 1
+         7| end
+         8| 
+         9| a()
+        10| a()
+        11| a()
+        12| a()
+        13| a()
+        14| a()
+      RUBY
+    end
+    
+    def test_1663648816
+      debug_code(program) do
+        type 'b 11'
+        type 'record on'
+        type 'c'
+        assert_line_num 11
+        type 'step back   2' # multiple whitespaces
+        assert_line_num 6
+        type 'step back 2'
+        assert_line_num 10
+        type 'q!'
+      end
+    end
+  end
+
+  class StepBackWhenNumberIsLargetThanLogIndex < ConsoleTestCase
+    def program
+      <<~RUBY
+         1| def a
+         2|   return b()
+         3| end
+         4| 
+         5| def b
+         6|   return 1
+         7| end
+         8| 
+         9| a()
+        10| a()
+        11| a()
+        12| a()
+        13| a()
+        14| a()
+      RUBY
+    end
+    
+    def test_1663648816
+      debug_code(program) do
+        type 'b 11'
+        type 'record on'
+        type 'c'
+        assert_line_num 11
+        type 'step back 100'
+        assert_line_num 5
+        type 'q!'
+      end
+    end
+  end
+
   class RecordOnAfterStoppingOnceTest < ConsoleTestCase
     def program
       <<~RUBY
