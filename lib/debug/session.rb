@@ -1061,12 +1061,14 @@ module DEBUGGER__
         else
           leave_subsession [:step, type, arg&.to_i]
         end
-      when /\Aback\z/, /\Areset\z/
+      when /\A(back)\z/, /\A(back)\s+(\d+)\z/, /\A(reset)\z/
         if type != :in
           @ui.puts "only `step #{arg}` is supported."
           :retry
         else
-          request_tc [:step, arg.to_sym]
+          type = $1.to_sym
+          iter = $2&.to_i
+          request_tc [:step, type, iter]
         end
       else
         @ui.puts "Unknown option: #{arg}"
