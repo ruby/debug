@@ -2231,7 +2231,7 @@ module DEBUGGER__
     # depend on the file system. So this check is only roughly estimation.
 
     def self.compare_path(a, b)
-      a.downcase == b.downcase
+      a&.downcase == b&.downcase
     end
   else
     def self.compare_path(a, b)
