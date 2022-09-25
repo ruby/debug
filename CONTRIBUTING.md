@@ -269,7 +269,7 @@ Currently, there are 2 kinds of test frameworks for DAP and CDP.
 
 If you want to write protocol-based tests, you should use the test generator.
 To run the test generator, you can enter `$ bin/gentest target.rb --open=vscode` in the terminal, VSCode will be executed.
-Also, if you enter ``$ bin/gentest target.rb --open=chrome` there, Chrome will be executed.
+Also, if you enter `$ bin/gentest target.rb --open=chrome` there, Chrome will be executed.
 If you need to modify existing tests, it is basically a good idea to regenerate them by the test generator instead of rewriting them directly.
 Please refer to [the Microsoft "Debug Adapter Protocol" article](https://microsoft.github.io/debug-adapter-protocol/specification) to learn more about DAP formats.
 Please refer to [Procol viewer for "Chrome DevTools Protocol"](https://chromedevtools.github.io/devtools-protocol/) to learn more about CDP formats.
