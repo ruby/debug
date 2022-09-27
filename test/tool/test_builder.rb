@@ -363,7 +363,7 @@ module DEBUGGER__
     def create_scenario_and_program
       <<-TEST.chomp
 
-  class #{@class}#{@current_time} < TestCase
+  class #{@class}#{@current_time} < ProtocolTestCase
     PROGRAM = <<~RUBY
       #{format_program}
     RUBY
@@ -399,7 +399,7 @@ module DEBUGGER__
       <<~TEST
         # frozen_string_literal: true
 
-        require_relative '../support/test_case'
+        require_relative '../support/protocol_test_case'
 
         module DEBUGGER__
           #{create_scenario_and_program}
@@ -604,7 +604,7 @@ module DEBUGGER__
     def create_scenario_and_program
       <<-TEST.chomp
 
-  class #{@class}#{@current_time} < TestCase
+  class #{@class}#{@current_time} < ProtocolTestCase
     PROGRAM = <<~RUBY
       #{format_program}
     RUBY
@@ -640,7 +640,7 @@ module DEBUGGER__
       <<~TEST
         # frozen_string_literal: true
 
-        require_relative '../support/test_case'
+        require_relative '../support/protocol_test_case'
 
         module DEBUGGER__
           #{create_scenario_and_program}
