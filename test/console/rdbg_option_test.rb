@@ -97,11 +97,17 @@ module DEBUGGER__
     end
 
     def with_rc_script
-      File.open(rc_filename, "w") { |f| f.write(rc_script) }
+      begin
+        File.open(rc_filename, "w") { |f| f.write(rc_script) }
+      rescue Errno::EPERM
+        omit "Skip test with rc files. Cannot create rcfiles in HOME directory."
+      end
 
       yield
     ensure
-      File.delete(rc_filename)
+      if File.exist?(rc_filename)
+        File.delete(rc_filename)
+      end
     end
 
     def test_debugger_loads_the_rc_file_by_default

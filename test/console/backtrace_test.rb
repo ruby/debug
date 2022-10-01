@@ -122,6 +122,10 @@ module DEBUGGER__
        2| Foo.new.bar
       RUBY
 
+      if File.writable?(pty_home_dir)
+        omit "Skip test with load files. Cannot create files in HOME directory."
+      end
+
       debug_code(program) do
         type "file = File.open('#{pty_home_dir}/foo.rb', 'w+') { |f| f.write('#{foo_file}') }"
         type 'c'
@@ -135,7 +139,9 @@ module DEBUGGER__
         type 'c'
       end
     ensure
-      File.unlink "#{pty_home_dir}/foo.rb"
+      if File.exist? "#{pty_home_dir}/foo.rb"
+        File.unlink "#{pty_home_dir}/foo.rb"
+      end
     end
   end
 
