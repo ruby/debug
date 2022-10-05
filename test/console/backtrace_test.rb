@@ -123,7 +123,7 @@ module DEBUGGER__
       RUBY
 
       begin
-        File.open('#{pty_home_dir}/foo.rb', 'w+').close
+        File.open("#{pty_home_dir}/foo.rb", 'w+').close
       rescue Errno::EACCES, Errno::EPERM
         omit "Skip test with load files. Cannot create files in HOME directory."
       end
