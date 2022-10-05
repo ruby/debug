@@ -99,7 +99,7 @@ module DEBUGGER__
     def with_rc_script
       begin
         File.open(rc_filename, "w") { |f| f.write(rc_script) }
-      rescue Errno::EPERM
+      rescue Errno::EPERM, Errno::EACCES
         omit "Skip test with rc files. Cannot create rcfiles in HOME directory."
       end
 
