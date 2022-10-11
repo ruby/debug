@@ -423,48 +423,50 @@ module DEBUGGER__
   # Tests that next/finish work for a deep call stack.
   # We use different logic for computing frame depth when the call stack is above/below 4096.
   #
-  class DeepCallstackTest < ConsoleTestCase
-    def program
-      <<~RUBY
-         1| # target.rb
-         2| def foo
-         3|     "hello"
-         4| end
-         5|   
-         6| def recursive(n,stop)
-         7|   foo
-         8|   return if n >= stop
-         9| 
-        10|   recursive(n + 1, stop)
-        11| end
-        12| 
-        13| recursive(0, 4100)
-        14| 
-        15| "done"
-      RUBY
-    end
-    
-    def test_next
-      debug_code(program) do
-        type 'b 13'
-        type 'c'
-        assert_line_num 13
-        type 'n'
-        assert_line_num 15
-        type 'q!'
+  if RUBY_VERSION >= '3.0.0'
+    class DeepCallstackTest < ConsoleTestCase
+      def program
+        <<~RUBY
+           1| # target.rb
+           2| def foo
+           3|     "hello"
+           4| end
+           5|   
+           6| def recursive(n,stop)
+           7|   foo
+           8|   return if n >= stop
+           9| 
+          10|   recursive(n + 1, stop)
+          11| end
+          12| 
+          13| recursive(0, 4100)
+          14| 
+          15| "done"
+        RUBY
       end
-    end
-
-    def test_finish
-      debug_code(program) do
-        type 'b 13'
-        type 'c'
-        assert_line_num 13
-        type 's'
-        assert_line_num 7
-        type 'fin'
-        assert_line_num 11
-        type 'q!'
+      
+      def test_next
+        debug_code(program) do
+          type 'b 13'
+          type 'c'
+          assert_line_num 13
+          type 'n'
+          assert_line_num 15
+          type 'q!'
+        end
+      end
+  
+      def test_finish
+        debug_code(program) do
+          type 'b 13'
+          type 'c'
+          assert_line_num 13
+          type 's'
+          assert_line_num 7
+          type 'fin'
+          assert_line_num 11
+          type 'q!'
+        end
       end
     end
   end
