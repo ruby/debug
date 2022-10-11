@@ -89,6 +89,7 @@ capture_frames(VALUE self, VALUE skip_path_prefix)
     return rb_debug_inspector_open(di_body, (void *)skip_path_prefix);
 }
 
+#ifdef RB_PROFILE_FRAMES_HAS_C_FRAMES
 #define BUFF_SIZE 4096
 
 static VALUE
@@ -109,8 +110,21 @@ frame_depth(VALUE self)
     
     // rb_profile_frames will return one extra frame
     // https://bugs.ruby-lang.org/issues/18907
-    return INT2FIX(size - 1);
+    #ifdef RB_PROFILE_FRAMES_HAS_EXTRA_FRAME
+        return INT2FIX(size - 1);
+    #else
+        return INT2FIX(size);
+    #endif  
 }
+#else
+static VALUE
+frame_depth(VALUE self)
+{
+    // TODO: more efficient API
+    VALUE bt = rb_make_backtrace();
+    return INT2FIX(RARRAY_LEN(bt));
+}
+#endif
 
 // iseq
 
