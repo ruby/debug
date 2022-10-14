@@ -900,6 +900,11 @@ NOTE
 
 ```
 
+# Additional Resources
+
+- [From byebug to ruby/debug](https://st0012.dev/from-byebug-to-ruby-debug) - A migration guide for `byebug` users.
+- [ruby/debug cheatsheet](https://st0012.dev/ruby-debug-cheatsheet)
+
 # Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/ruby/debug.
