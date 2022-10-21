@@ -2,6 +2,7 @@
 
 require 'objspace'
 require 'pp'
+require 'shellwords'
 
 require_relative 'color'
 
@@ -643,7 +644,7 @@ module DEBUGGER__
         if editor = (ENV['RUBY_DEBUG_EDITOR'] || ENV['EDITOR'])
           puts "command: #{editor}"
           puts "   path: #{path}"
-          system(editor, path)
+          system(*Shellwords.split(editor), path)
         else
           puts "can not find editor setting: ENV['RUBY_DEBUG_EDITOR'] or ENV['EDITOR']"
         end
