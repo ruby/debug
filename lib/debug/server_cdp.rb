@@ -13,7 +13,7 @@ module DEBUGGER__
     SHOW_PROTOCOL = ENV['RUBY_DEBUG_CDP_SHOW_PROTOCOL'] == '1'
 
     class << self
-      def setup_chrome addr
+      def setup_chrome addr, uuid
         return if CONFIG[:chrome_path] == ''
 
         port, path, pid = run_new_chrome
@@ -51,7 +51,7 @@ module DEBUGGER__
             ws_client.send sessionId: s_id, id: 5,
                           method: 'Page.navigate',
                           params: {
-                            url: "devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{addr}/#{SecureRandom.uuid}",
+                            url: "devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{addr}/#{uuid}",
                             frameId: f_id
                           }
           when res['method'] == 'Page.loadEventFired'
@@ -100,6 +100,49 @@ module DEBUGGER__
 
         [port, path, wait_thr.pid]
       end
+    end
+
+    def send_chrome_response req
+      @repl = false
+      case req
+      when /^GET\s\/json\/version\sHTTP\/1.1/
+        body = {
+          Browser: "ruby/v#{RUBY_VERSION}",
+          'Protocol-Version': "1.1"
+        }
+        send_http_res body
+        raise UI_ServerBase::RetryConnection
+
+      when /^GET\s\/json\sHTTP\/1.1/
+        @uuid = @uuid || SecureRandom.uuid
+        addr = @local_addr.inspect_sockaddr
+        body = [{
+          description: "ruby instance",
+          devtoolsFrontendUrl: "devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=#{addr}/#{@uuid}",
+          id: @uuid,
+          title: $0,
+          type: "node",
+          url: "file://#{File.absolute_path($0)}",
+          webSocketDebuggerUrl: "ws://#{addr}/#{@uuid}"
+        }]
+        send_http_res body
+        raise UI_ServerBase::RetryConnection
+
+      when /^GET\s\/(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})\sHTTP\/1.1/
+        raise 'Incorrect uuid' unless $1 == @uuid
+
+        @need_pause_at_first = false
+        CONFIG.set_config no_color: true
+
+        @ws_server = WebSocketServer.new(@sock)
+        @ws_server.handshake
+      end
+    end
+
+    def send_http_res body
+      json = JSON.generate body
+      header = "HTTP/1.0 200 OK\r\nContent-Type: application/json; charset=UTF-8\r\nCache-Control: no-cache\r\nContent-Length: #{json.bytesize}\r\n\r\n"
+      @sock.puts "#{header}#{json}"
     end
 
     module WebSocketUtils

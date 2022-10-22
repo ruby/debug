@@ -188,5 +188,26 @@ module DEBUGGER__
       remote_info.port = TCPIP_PORT
       remote_info
     end
+
+    # Debuggee sometimes sends msgs such as "out [1, 5] in ...".
+    # This http request method is for ignoring them.
+    def get_request host, port, path
+      Timeout.timeout(TIMEOUT_SEC) do
+        Socket.tcp(host, port){|sock|
+          sock.print "GET #{path} HTTP/1.1\r\n"
+          sock.close_write
+          loop do
+            case header = sock.gets
+            when /Content-Length: (\d+)/
+              b = sock.read(2)
+              raise b.inspect unless b == "\r\n"
+      
+              l = sock.read $1.to_i
+              return JSON.parse l, symbolize_names: true
+            end
+          end
+        }
+      end
+    end
   end
 end

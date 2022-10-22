@@ -34,12 +34,15 @@ module DEBUGGER__
     def connect_to_cdp_server
       ENV['RUBY_DEBUG_TEST_MODE'] = 'true'
 
+      body = get_request HOST, @remote_info.port, '/json'
       sock = Socket.tcp HOST, @remote_info.port
+      uuid = body[0][:id]
+
       Timeout.timeout(TIMEOUT_SEC) do
-        sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Connected'
+        sleep 0.001 until @remote_info.debuggee_backlog.join.match?(/Disconnected\.\R.*Connected/)
       end
       @web_sock = WebSocketClient.new sock
-      @web_sock.handshake @remote_info.port, '/'
+      @web_sock.handshake @remote_info.port, uuid
       @reader_thread = Thread.new do
         Thread.current.abort_on_exception = true
         while res = @web_sock.extract_data

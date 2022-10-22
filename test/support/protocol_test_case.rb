@@ -394,14 +394,20 @@ module DEBUGGER__
     HOST = '127.0.0.1'
 
     def attach_to_cdp_server
+      body = get_request HOST, @remote_info.port, '/json'
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Disconnected.'
+      end
+
       sock = Socket.tcp HOST, @remote_info.port
+      uuid = body[0][:id]
 
       Timeout.timeout(TIMEOUT_SEC) do
-        sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Connected'
+        sleep 0.001 until @remote_info.debuggee_backlog.join.match?(/Disconnected\.\R.*Connected/)
       end
 
       @web_sock = WebSocketClient.new sock
-      @web_sock.handshake @remote_info.port, '/'
+      @web_sock.handshake @remote_info.port, uuid
       @id = 1
       @reader_thread = Thread.new do
         while res = @web_sock.extract_data
@@ -797,9 +803,9 @@ module DEBUGGER__
       @sock = s
     end
 
-    def handshake port, path
+    def handshake port, uuid
       key = SecureRandom.hex(11)
-      @sock.print "GET #{path} HTTP/1.1\r\nHost: 127.0.0.1:#{port}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: #{key}==\r\n\r\n"
+      @sock.print "GET /#{uuid} HTTP/1.1\r\nHost: 127.0.0.1:#{port}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: #{key}==\r\n\r\n"
       server_key = get_server_key
 
       correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
