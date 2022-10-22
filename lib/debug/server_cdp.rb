@@ -872,8 +872,8 @@ module DEBUGGER__
                 result = b.local_variable_get(expr)
               rescue NameError
                 # try to check method
-                if b.receiver.respond_to? expr, include_all: true
-                  result = b.receiver.method(expr)
+                if M_RESPOND_TO_P.bind_call(b.receiver, expr, include_all: true)
+                  result = M_METHOD.bind_call(b.receiver, expr)
                 else
                   message = "Error: Can not evaluate: #{expr.inspect}"
                 end
@@ -987,10 +987,10 @@ module DEBUGGER__
             ]
           end
 
-          result += obj.instance_variables.map{|iv|
-            variable(iv, obj.instance_variable_get(iv))
+          result += M_INSTANCE_VARIABLES.bind_call(obj).map{|iv|
+            variable(iv, M_INSTANCE_VARIABLE_GET.bind_call(obj, iv))
           }
-          prop += [internalProperty('#class', obj.class)]
+          prop += [internalProperty('#class', M_CLASS.bind_call(obj))]
         end
         event! :cdp_result, :properties, req, result: result, internalProperties: prop
       end
@@ -1045,7 +1045,7 @@ module DEBUGGER__
         v = prop[:value]
         v.delete :value
         v[:subtype] = subtype if subtype
-        v[:className] = obj.class
+        v[:className] = (klass = M_CLASS.bind_call(obj)).name || klass.to_s
       end
       prop
     end
