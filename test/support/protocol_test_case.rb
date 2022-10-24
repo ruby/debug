@@ -51,7 +51,7 @@ module DEBUGGER__
     end
 
     def req_add_breakpoint lineno, path: temp_file_path, cond: nil
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         @bps << [path, lineno, cond]
         req_set_breakpoints_on_dap
@@ -68,7 +68,7 @@ module DEBUGGER__
     end
 
     def req_delete_breakpoint bpnum
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         @bps.delete_at bpnum
         req_set_breakpoints_on_dap
@@ -79,7 +79,7 @@ module DEBUGGER__
     end
 
     def req_continue
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         send_dap_request 'continue', threadId: 1
       when 'chrome'
@@ -90,7 +90,7 @@ module DEBUGGER__
     end
 
     def req_step
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         send_dap_request 'stepIn', threadId: 1
       when 'chrome'
@@ -101,7 +101,7 @@ module DEBUGGER__
     end
 
     def req_next
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         send_dap_request 'next', threadId: 1
       when 'chrome'
@@ -112,7 +112,7 @@ module DEBUGGER__
     end
 
     def req_finish
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         send_dap_request 'stepOut', threadId: 1
       when 'chrome'
@@ -123,7 +123,7 @@ module DEBUGGER__
     end
 
     def req_set_exception_breakpoints(breakpoints)
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         filter_options = breakpoints.map do |bp|
           filter_option = { filterId: bp[:name] }
@@ -138,14 +138,14 @@ module DEBUGGER__
     end
 
     def req_step_back
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         send_dap_request 'stepBack', threadId: 1
       end
     end
 
     def req_terminate_debuggee
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         send_dap_request 'terminate'
       when 'chrome'
@@ -156,7 +156,7 @@ module DEBUGGER__
     end
 
     def assert_reattach
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         req_disconnect
         attach_to_dap_server
@@ -170,7 +170,7 @@ module DEBUGGER__
     end
 
     def assert_locals_result expected, frame_idx: 0
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         # get frameId
         res = send_dap_request 'stackTrace',
@@ -228,7 +228,7 @@ module DEBUGGER__
     end
 
     def assert_threads_result(expected_names)
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         res = send_dap_request 'threads'
         failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}."}
@@ -251,7 +251,7 @@ module DEBUGGER__
     end
 
     def assert_hover_result expected, expression, frame_idx: 0
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         assert_eval_result 'hover', expression, expected, frame_idx
       when 'chrome'
@@ -260,7 +260,7 @@ module DEBUGGER__
     end
 
     def assert_repl_result expected,  expression, frame_idx: 0
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         assert_eval_result 'repl', expression, expected, frame_idx
       when 'chrome'
@@ -269,7 +269,7 @@ module DEBUGGER__
     end
 
     def assert_watch_result expected,  expression, frame_idx: 0
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         assert_eval_result 'watch', expression, expected, frame_idx
       when 'chrome'
@@ -280,7 +280,7 @@ module DEBUGGER__
     # Not API
 
     def execute_dap_scenario scenario
-      ENV['RUBY_DEBUG_TEST_UI'] = 'vscode'
+      ENV['RUBY_DEBUG_TESTED_UI'] = 'vscode'
 
       @remote_info = setup_unix_domain_socket_remote_debuggee
       Timeout.timeout(TIMEOUT_SEC) do
@@ -305,7 +305,7 @@ module DEBUGGER__
     end
 
     def execute_cdp_scenario scenario
-      ENV['RUBY_DEBUG_TEST_UI'] = 'chrome'
+      ENV['RUBY_DEBUG_TESTED_UI'] = 'chrome'
 
       @remote_info = setup_tcpip_remote_debuggee
       Timeout.timeout(TIMEOUT_SEC) do
@@ -330,7 +330,7 @@ module DEBUGGER__
     end
 
     def req_disconnect
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         send_dap_request 'disconnect',
                       restart: false,
@@ -369,7 +369,7 @@ module DEBUGGER__
     def close_reader
       @reader_thread.raise Detach
 
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         @sock.close
       when 'chrome'
@@ -424,7 +424,7 @@ module DEBUGGER__
     }
 
     def assert_eval_result context, expression, expected, frame_idx
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         res = send_dap_request 'stackTrace',
                       threadId: 1,
@@ -473,7 +473,7 @@ module DEBUGGER__
     end
 
     def send_request command, **kw
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         send type: 'request',
             command: command,
@@ -508,7 +508,7 @@ module DEBUGGER__
     end
 
     def send **kw
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         kw[:seq] = @seq += 1
         str = JSON.dump(kw)
@@ -587,6 +587,10 @@ module DEBUGGER__
       end
     rescue Timeout::Error
       flunk create_protocol_message "TIMEOUT ERROR (#{TIMEOUT_SEC} sec) while waiting: #{key} #{target}"
+    end
+
+    def get_target_ui
+      ENV['RUBY_DEBUG_TESTED_UI']
     end
 
     # FIXME: Commonalize this method.
@@ -714,7 +718,7 @@ module DEBUGGER__
         #{@backlog.join("\n")}
       DEBUGGER_MSG
 
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'vscode'
         pattern = /(D|V)(<|>)(D|V)\s/
       when 'chrome'
