@@ -911,7 +911,7 @@ module DEBUGGER__
 
     def search_const b, expr
       cs = expr.delete_prefix('::').split('::')
-      [Object, *b.eval('Module.nesting')].reverse_each{|mod|
+      [Object, *b.eval('::Module.nesting')].reverse_each{|mod|
         if cs.all?{|c|
              if mod.const_defined?(c)
                mod = mod.const_get(c)

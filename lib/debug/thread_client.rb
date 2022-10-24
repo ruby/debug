@@ -568,7 +568,7 @@ module DEBUGGER__
         unless only_self
           s.ancestors.each{|c| break if c == Object; cs[c] = :ancestors}
           if b = current_frame&.binding
-            b.eval('Module.nesting').each{|c| cs[c] = :nesting unless cs.has_key? c}
+            b.eval('::Module.nesting').each{|c| cs[c] = :nesting unless cs.has_key? c}
           end
         end
 
