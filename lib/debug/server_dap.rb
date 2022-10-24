@@ -687,22 +687,12 @@ module DEBUGGER__
   class ThreadClient
     def value_inspect obj
       # TODO: max length should be configuarable?
-      value = DEBUGGER__.safe_inspect obj, short: true, max_length: 4 * 1024
+      str = DEBUGGER__.safe_inspect obj, short: true, max_length: 4 * 1024
 
-      # Given that this is going to be transmitted in a JSON string, it needs to be unicode-encoded
-      # (and "UTF-8" is the default).
-      if value.encoding != Encoding::UTF_8
-        # If the string we got is frozen, we need to make a copy first
-        value = value.dup if value.frozen?
-        value.force_encoding(Encoding::UTF_8)
-      end
-
-      if value.valid_encoding?
-        value
+      if str.encoding == Encoding::UTF_8
+        str.scrub
       else
-        # If a variable contains non-unicode data, at least we can send it partially and signal that
-        # the encoding was unexpected.
-        "[Invalid encoding] #{value.encode("UTF-8", invalid: :replace, undef: :replace)}"
+        str.encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
       end
     end
 
