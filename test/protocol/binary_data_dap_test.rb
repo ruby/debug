@@ -25,7 +25,7 @@ module DEBUGGER__
         assert_locals_result(
           [
             { name: '%self', value: 'main', type: 'Object' },
-            { name: 'with_binary_data', value: /\[Invalid encoding\] /, type: 'PassthroughInspect' }
+            { name: 'with_binary_data', value: [8, 200, 1].pack('CCC').encode(Encoding::UTF_8, invalid: :replace, undef: :replace), type: 'PassthroughInspect' }
           ]
         )
         req_terminate_debuggee
