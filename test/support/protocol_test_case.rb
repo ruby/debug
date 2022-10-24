@@ -800,18 +800,10 @@ module DEBUGGER__
     def handshake port, path
       key = SecureRandom.hex(11)
       @sock.print "GET #{path} HTTP/1.1\r\nHost: 127.0.0.1:#{port}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: #{key}==\r\n\r\n"
-      res = nil
-      loop do
-        res = @sock.readpartial 4092
-        break unless res.match?(/out|input/)
-      end
+      server_key = get_server_key
 
-      if res.match(/^Sec-WebSocket-Accept: (.*)\r\n/)
-        correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-        raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless $1 == correct_key
-      else
-        raise "Unknown response: #{res}"
-      end
+      correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+      raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless server_key == correct_key
     end
 
     def send msg
@@ -881,6 +873,19 @@ module DEBUGGER__
 
     def close
       @sock.close
+    end
+
+    private
+
+    def get_server_key
+      Timeout.timeout(ProtocolTestCase::TIMEOUT_SEC) do
+        loop do
+          res = @sock.readpartial 4092
+          if res.match(/^Sec-WebSocket-Accept: (.*)\r\n/)
+            return $1
+          end
+        end
+      end
     end
   end
 
