@@ -3,7 +3,7 @@
 module DEBUGGER__
   module AssertionHelpers
     def assert_line_num(expected)
-      case ENV['RUBY_DEBUG_TEST_UI']
+      case get_target_ui
       when 'terminal'
         @scenario.push(Proc.new { |test_info|
           msg = "Expected line number to be #{expected.inspect}, but was #{test_info.internal_info['line']}\n"

@@ -280,7 +280,7 @@ module DEBUGGER__
     # Not API
 
     def execute_dap_scenario scenario
-      ENV['RUBY_DEBUG_TESTED_UI'] = 'vscode'
+      ENV['RUBY_DEBUG_TEST_UI'] = 'vscode'
 
       @remote_info = setup_unix_domain_socket_remote_debuggee
       Timeout.timeout(TIMEOUT_SEC) do
@@ -305,7 +305,7 @@ module DEBUGGER__
     end
 
     def execute_cdp_scenario scenario
-      ENV['RUBY_DEBUG_TESTED_UI'] = 'chrome'
+      ENV['RUBY_DEBUG_TEST_UI'] = 'chrome'
 
       @remote_info = setup_tcpip_remote_debuggee
       Timeout.timeout(TIMEOUT_SEC) do
@@ -587,10 +587,6 @@ module DEBUGGER__
       end
     rescue Timeout::Error
       flunk create_protocol_message "TIMEOUT ERROR (#{TIMEOUT_SEC} sec) while waiting: #{key} #{target}"
-    end
-
-    def get_target_ui
-      ENV['RUBY_DEBUG_TESTED_UI']
     end
 
     # FIXME: Commonalize this method.
