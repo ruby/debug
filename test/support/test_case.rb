@@ -98,6 +98,10 @@ module DEBUGGER__
 
     TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
+    def get_target_ui
+      ENV['RUBY_DEBUG_TEST_UI']
+    end
+
     private
 
     def wait_pid pid, sec
