@@ -655,6 +655,11 @@ module DEBUGGER__
           return :retry
         end
 
+      # * `whereami`
+      #   * Show the current frame with source code.
+      when 'whereami'
+        request_tc [:show, :whereami]
+
       # * `edit`
       #   * Open the current file on the editor (use `EDITOR` environment variable).
       #   * Note that edited file will not be reloaded.

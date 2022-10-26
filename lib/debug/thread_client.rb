@@ -482,19 +482,28 @@ module DEBUGGER__
       exit!
     end
 
-    def show_src(frame_index: @current_frame_index, update_line: false, max_lines: CONFIG[:show_src_lines], **options)
+    def show_src(frame_index: @current_frame_index, update_line: false, ignore_show_line: false, max_lines: CONFIG[:show_src_lines], **options)
       if frame = get_frame(frame_index)
-        start_line, end_line, lines = *get_src(frame, max_lines: max_lines, **options)
-
-        if start_line
-          if update_line
-            frame.show_line = end_line
+        begin
+          if ignore_show_line
+            prev_show_line = frame.show_line
+            frame.show_line = nil
           end
 
-          puts "[#{start_line+1}, #{end_line}] in #{frame.pretty_path}" if !update_line && max_lines != 1
-          puts lines[start_line...end_line]
-        else
-          puts "# No sourcefile available for #{frame.path}"
+          start_line, end_line, lines = *get_src(frame, max_lines: max_lines, **options)
+
+          if start_line
+            if update_line
+              frame.show_line = end_line
+            end
+
+            puts "[#{start_line+1}, #{end_line}] in #{frame.pretty_path}" if !update_line && max_lines != 1
+            puts lines[start_line...end_line]
+          else
+            puts "# No sourcefile available for #{frame.path}"
+          end
+        ensure
+          frame.show_line = prev_show_line if prev_show_line
         end
       end
     end
@@ -994,6 +1003,10 @@ module DEBUGGER__
 
           when :list
             show_src(update_line: true, **(args.first || {}))
+
+          when :whereami
+            show_src ignore_show_line: true
+            show_frames CONFIG[:show_frames]
 
           when :edit
             show_by_editor(args.first)
