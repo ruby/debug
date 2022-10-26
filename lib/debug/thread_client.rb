@@ -869,17 +869,14 @@ module DEBUGGER__
             skip_line = false
             step_tp iter do |event|
               next if event == :line && skip_line
+              # skip line events until we see a return event
+              skip_line = !(event == :return || event == :b_return)
 
               loc = caller_locations(2, 1).first
               loc_path = loc.absolute_path || "!eval:#{loc.path}"
 
-              frame_depth = DEBUGGER__.frame_depth - 3
-
-              # If we're at a deeper stack depth, we can skip line events until there's a return event.
-              skip_line = event == :line && frame_depth > depth
-
               # same stack depth
-              (frame_depth <= depth) ||
+              (DEBUGGER__.frame_depth - 3 <= depth) ||
 
               # different frame
               (next_line && loc_path == path &&
