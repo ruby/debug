@@ -638,6 +638,8 @@ The `<...>` notation means the argument.
   * Show predecessor lines as opposed to the `list` command.
 * `l[ist] <start>` or `l[ist] <start>-<end>`
   * Show current frame's source code from the line <start> to <end> if given.
+* `whereami`
+  * Show the current frame with source code.
 * `edit`
   * Open the current file on the editor (use `EDITOR` environment variable).
   * Note that edited file will not be reloaded.
