@@ -127,8 +127,12 @@ module DEBUGGER__
 
       @tp_thread_begin = nil
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
-        # skip on_load if no bps for faster loading
-        ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script if @bps.any?
+        if RUBY_VERSION >= '3.1.0'
+          # skip on_load if no bps for faster loading
+          ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script if @bps.any?
+        else
+          ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
+        end
       }
       @tp_load_script.enable
 
