@@ -9,14 +9,14 @@ if defined? RubyVM
 
   if RUBY_VERSION >= '3.0.0'
     $defs << '-DRB_PROFILE_FRAMES_HAS_C_FRAMES'
-  end
-
-  if RUBY_VERSION >= '3.1.0'
-    $defs << '-DHAVE_RB_ISEQ_TYPE'
 
     if RUBY_VERSION < '3.2.0'
       $defs << '-DRB_PROFILE_FRAMES_HAS_EXTRA_FRAME'
     end
+  end
+
+  if RUBY_VERSION >= '3.1.0'
+    $defs << '-DHAVE_RB_ISEQ_TYPE'
   end
 else
   # not on MRI
