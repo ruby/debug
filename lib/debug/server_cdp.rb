@@ -7,10 +7,14 @@ require 'securerandom'
 require 'stringio'
 require 'open3'
 require 'tmpdir'
+require 'tempfile'
 
 module DEBUGGER__
   module UI_CDP
     SHOW_PROTOCOL = ENV['RUBY_DEBUG_CDP_SHOW_PROTOCOL'] == '1'
+
+    class UnsupportedError < StandardError; end
+    class NotFoundChromeEndpointError < StandardError; end
 
     class << self
       def setup_chrome addr
@@ -59,46 +63,97 @@ module DEBUGGER__
           end
         end
         pid
-      rescue Errno::ENOENT
+      rescue Errno::ENOENT, UnsupportedError, NotFoundChromeEndpointError
         nil
       end
 
-      def get_chrome_path
-        return CONFIG[:chrome_path] if CONFIG[:chrome_path]
+      def run_new_chrome
+        path = CONFIG[:chrome_path]
 
-        # The process to check OS is based on `selenium` project.
+        data = nil
+        port = nil
+        wait_thr = nil
         case RbConfig::CONFIG['host_os']
         when /mswin|msys|mingw|cygwin|emc/
-          'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+          if path.nil?
+            candidates = ['C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe']
+            path = get_chrome_path candidates
+          end
+          uuid = SecureRandom.uuid
+          # The path is based on https://github.com/sindresorhus/open/blob/v8.4.0/index.js#L128.
+          stdin, stdout, stderr, wait_thr = *Open3.popen3("#{ENV['SystemRoot']}\\System32\\WindowsPowerShell\\v1.0\\powershell")
+          tf = Tempfile.create(['debug-', '.txt'])
+
+          stdin.puts("Start-process '#{path}' -Argumentlist '--remote-debugging-port=0', '--no-first-run', '--no-default-browser-check', '--user-data-dir=C:\\temp' -Wait -RedirectStandardError #{tf.path}")
+          stdin.close
+          stdout.close
+          stderr.close
+          port, path = get_devtools_endpoint(tf.path)
+
+          at_exit{
+            DEBUGGER__.skip_all
+
+            stdin, stdout, stderr, wait_thr = *Open3.popen3("#{ENV['SystemRoot']}\\System32\\WindowsPowerShell\\v1.0\\powershell")
+            stdin.puts("Stop-process -Name chrome")
+            stdin.close
+            stdout.close
+            stderr.close
+            tf.close
+            begin
+              File.unlink(tf)
+            rescue Errno::EACCES
+            end
+          }
         when /darwin|mac os/
-          '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
-        when /linux/
-          'google-chrome'
+          path = path || '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
+          dir = Dir.mktmpdir
+          # The command line flags are based on: https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Chrome_Desktop#connecting.
+          stdin, stdout, stderr, wait_thr = *Open3.popen3("#{path} --remote-debugging-port=0 --no-first-run --no-default-browser-check --user-data-dir=#{dir}")
+          stdin.close
+          stdout.close
+          data = stderr.readpartial 4096
+          stderr.close
+          if data.match /DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/
+            port = $1
+            path = $2
+          end
+
+          at_exit{
+            DEBUGGER__.skip_all
+            FileUtils.rm_rf dir
+          }
         else
-          raise "Unsupported OS"
+          raise UnsupportedError
         end
-      end
-
-      def run_new_chrome
-        dir = Dir.mktmpdir
-        # The command line flags are based on: https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Chrome_Desktop#connecting
-        stdin, stdout, stderr, wait_thr = *Open3.popen3("#{get_chrome_path} --remote-debugging-port=0 --no-first-run --no-default-browser-check --user-data-dir=#{dir}")
-        stdin.close
-        stdout.close
-
-        data = stderr.readpartial 4096
-        if data.match /DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/
-          port = $1
-          path = $2
-        end
-        stderr.close
-
-        at_exit{
-          DEBUGGER__.skip_all
-          FileUtils.rm_rf dir
-        }
 
         [port, path, wait_thr.pid]
+      end
+
+      def get_chrome_path candidates
+        candidates.each{|c|
+          if File.exist? c
+            return c
+          end
+        }
+        raise UnsupportedError
+      end
+
+      ITERATIONS = 50
+
+      def get_devtools_endpoint tf
+        i = 1
+        while i < ITERATIONS
+          i += 1
+          if File.exist?(tf) && data = File.read(tf)
+            if data.match /DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/
+              port = $1
+              path = $2
+              return [port, path]
+            end
+          end
+          sleep 0.1
+        end
+        raise NotFoundChromeEndpointError
       end
     end
 
