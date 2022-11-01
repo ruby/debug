@@ -426,6 +426,8 @@ module DEBUGGER__
       #   * Step in. Resume the program until next breakable point.
       # * `s[tep] <n>`
       #   * Step in, resume the program at `<n>`th breakable point.
+      # * `s[tep] into <name>` or `s[tep] into /regexp/`
+      #   * Stop at the beggining of method `<name>` or the name matched to `/regexp/`
       when 's', 'step'
         cancel_auto_continue
         check_postmortem
@@ -1077,6 +1079,14 @@ module DEBUGGER__
           iter = $2&.to_i
           request_tc [:step, type, iter]
         end
+      when /\Ainto\s+(\S+)(\s+(\d+))?\z/
+        pat = $1
+        iter = $3&.to_i
+        if /\A\/(.+)\/\z/ =~ pat
+          pat = Regexp.new($1)
+        end
+
+        request_tc [:step, :into, pat, iter]
       else
         @ui.puts "Unknown option: #{arg}"
         :retry

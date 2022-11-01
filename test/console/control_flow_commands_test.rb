@@ -63,6 +63,20 @@ module DEBUGGER__
       end
     end
 
+    def test_step_into
+      debug_code program do
+        type 'step into name'
+        assert_line_num 7
+        type 'step into xyzzy' # doesn't match
+      end
+
+      debug_code program do
+        type 'step into /.ame/'
+        assert_line_num 7
+        type 'step into xyzzy' # doesn't match
+      end
+    end
+
     def test_next_goes_to_the_next_line
       debug_code(program) do
         type 'b 11'

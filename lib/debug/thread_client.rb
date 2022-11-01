@@ -336,7 +336,7 @@ module DEBUGGER__
             tp.disable
             next
           end
-          next if !yield(tp.event)
+          next if !yield(tp)
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
@@ -355,7 +355,7 @@ module DEBUGGER__
             tp.disable
             next
           end
-          next if !yield(tp.event)
+          next if !yield(tp)
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
@@ -858,6 +858,13 @@ module DEBUGGER__
               end
               break
             end
+
+          when :into
+            pat, iter = args[1], args[2]
+            step_tp iter, [:call, :c_call] do |tp|
+              pat === tp.callee_id.to_s
+            end
+            break
 
           when :next
             frame = @target_frames.first
