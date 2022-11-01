@@ -328,10 +328,14 @@ module DEBUGGER__
       @step_tp.disable if @step_tp
 
       thread = Thread.current
+      subsession_id = SESSION.subsession_id
 
       if SUPPORT_TARGET_THREAD
         @step_tp = TracePoint.new(*events){|tp|
-          next if SESSION.break_at? tp.path, tp.lineno
+          if SESSION.stop_stepping? tp.path, tp.lineno, subsession_id
+            tp.disable
+            next
+          end
           next if !yield(tp.event)
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
@@ -347,7 +351,10 @@ module DEBUGGER__
       else
         @step_tp = TracePoint.new(*events){|tp|
           next if thread != Thread.current
-          next if SESSION.break_at? tp.path, tp.lineno
+          if SESSION.stop_stepping? tp.path, tp.lineno, subsession_id
+            tp.disable
+            next
+          end
           next if !yield(tp.event)
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')

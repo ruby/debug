@@ -89,7 +89,7 @@ module DEBUGGER__
   class PostmortemError < RuntimeError; end
 
   class Session
-    attr_reader :intercepted_sigint_cmd, :process_group
+    attr_reader :intercepted_sigint_cmd, :process_group, :subsession_id
 
     include Color
 
@@ -116,6 +116,7 @@ module DEBUGGER__
       @intercepted_sigint_cmd = 'DEFAULT'
       @process_group = ProcessGroup.new
       @subsession_stack = []
+      @subsession_id = 0
 
       @frame_map = {} # for DAP: {id => [threadId, frame_depth]} and CDP: {id => frame_depth}
       @var_map   = {1 => [:globals], } # {id => ...} for DAP
@@ -138,8 +139,14 @@ module DEBUGGER__
       !@q_evt.closed?
     end
 
-    def break_at? file, line
-      @bps.has_key? [file, line]
+    def stop_stepping? file, line, subsession_id
+      if @bps.has_key? [file, line]
+        true
+      elsif @subsession_id != subsession_id
+        true
+      else
+        false
+      end
     end
 
     def activate ui = nil, on_fork: false
@@ -1571,6 +1578,7 @@ module DEBUGGER__
     end
 
     private def enter_subsession
+      @subsession_id += 1
       if !@subsession_stack.empty?
         DEBUGGER__.info "Enter subsession (nested #{@subsession_stack.size})"
       else
