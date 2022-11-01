@@ -2131,6 +2131,18 @@ module DEBUGGER__
     end
   end
 
+  # Exiting control
+
+  class << self
+    def skip_all
+      @skip_all = true
+    end
+
+    def skip?
+      @skip_all
+    end
+  end
+
   def self.load_rc
     [[File.expand_path('~/.rdbgrc'), true],
      [File.expand_path('~/.rdbgrc.rb'), true],
