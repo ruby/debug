@@ -18,7 +18,7 @@ module DEBUGGER__
       end
 
       at_exit do
-        CONFIG.skip_all
+        DEBUGGER__.skip_all
         FileUtils.rm_rf dir if tempdir
       end
 

@@ -94,7 +94,7 @@ module DEBUGGER__
         stderr.close
 
         at_exit{
-          CONFIG.skip_all
+          DEBUGGER__.skip_all
           FileUtils.rm_rf dir
         }
 

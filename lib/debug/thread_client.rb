@@ -18,7 +18,7 @@ module DEBUGGER__
   module SkipPathHelper
     def skip_path?(path)
       !path ||
-      CONFIG.skip? ||
+      DEBUGGER__.skip? ||
       ThreadClient.current.management? ||
       skip_internal_path?(path) ||
       skip_config_skip_path?(path)
