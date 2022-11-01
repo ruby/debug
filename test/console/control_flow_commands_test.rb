@@ -358,4 +358,50 @@ module DEBUGGER__
       end
     end
   end
+
+  class CancelStepTest < ConsoleTestCase
+    def program
+      <<~RUBY
+       1| def foo m
+       2|  __send__ m
+       3| end
+       4| def bar
+       5|   a = :bar1
+       6|   b = :bar2
+       7|   c = :bar3
+       8| end
+       9|
+      10| def baz
+      11|   :baz
+      12| end
+      13| foo :bar
+      14| foo :baz
+      15| foo :baz
+      RUBY
+    end
+
+    def test_next_should_be_canceled
+      debug_code program do
+        type 'b 13'
+        type 'b Object#bar'
+        type 'c'
+        assert_line_num 13
+        type 'n'
+        assert_line_num 5
+        type 'c'
+      end
+    end
+
+    def test_finish_should_be_canceled
+      debug_code program do
+        type 'b 5'
+        type 'b 6'
+        type 'c'
+        assert_line_num 5
+        type 'finish'
+        assert_line_num 6
+        type 'c'
+      end
+    end
+  end
 end
