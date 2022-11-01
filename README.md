@@ -536,7 +536,8 @@ There are additional features:
 * `<expr>` without debug command is almost same as `pp <expr>`.
   * If the input line `<expr>` does *NOT* start with any debug command, the line `<expr>` will be evaluated as a Ruby expression and the result will be printed with `pp` method. So that the input `foo.bar` is same as `pp foo.bar`.
   * If `<expr>` is recognized as a debug command, of course it is not evaluated as a Ruby expression, but is executed as debug command. For example, you can not evaluate such single letter local variables `i`, `b`, `n`, `c` because they are single letter debug commands. Use `p i` instead.
-* `Enter` without any input repeats the last command (useful when repeating `step`s).
+  * So the author (Koichi Sasada) recommends to use `p`, `pp` or `eval` command to evaluate the Ruby expression everytime.
+* `Enter` without any input repeats the last command (useful when repeating `step`s) for some commands.
 * `Ctrl-D` is equal to `quit` command.
 * [debug command compare sheet - Google Sheets](https://docs.google.com/spreadsheets/d/1TlmmUDsvwK4sSIyoMv-io52BUUz__R5wpu-ComXlsw0/edit?usp=sharing)
 
@@ -550,6 +551,8 @@ The `<...>` notation means the argument.
   * Step in. Resume the program until next breakable point.
 * `s[tep] <n>`
   * Step in, resume the program at `<n>`th breakable point.
+* `s[tep] into <name>` or `s[tep] into /regexp/`
+  * Stop at the beggining of method `<name>` or the name matched to `/regexp/`
 * `n[ext]`
   * Step over. Resume the program until next line.
 * `n[ext] <n>`
@@ -904,8 +907,8 @@ NOTE
 
 # Additional Resources
 
-- [From byebug to ruby/debug](https://st0012.dev/from-byebug-to-ruby-debug) - A migration guide for `byebug` users.
-- [ruby/debug cheatsheet](https://st0012.dev/ruby-debug-cheatsheet)
+- [From byebug to ruby/debug](https://st0012.dev/from-byebug-to-ruby-debug) by Stan Lo - A migration guide for `byebug` users.
+- [ruby/debug cheatsheet](https://st0012.dev/ruby-debug-cheatsheet) by Stan Lo
 
 # Contributing
 
