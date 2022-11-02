@@ -101,6 +101,10 @@ module DEBUGGER__
     def generate_label(name)
       colorize(" BP - #{name} ", [:YELLOW, :BOLD, :REVERSE])
     end
+
+    def pending_until_load?
+      false
+    end
   end
 
   if RUBY_VERSION.to_f <= 2.7
@@ -156,6 +160,10 @@ module DEBUGGER__
 
       try_activate unless skip_activate
       @pending = !@iseq
+    end
+
+    def pending_until_load?
+      @pending
     end
 
     def setup
