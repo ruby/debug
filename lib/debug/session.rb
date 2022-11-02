@@ -126,11 +126,11 @@ module DEBUGGER__
       @obj_map = {} # { object_id => ... } for CDP
 
       @tp_thread_begin = nil
+
+      has_keep_script_lines = RubyVM.respond_to? :keep_script_lines
+
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
-        if RUBY_VERSION >= '3.1.0'
-          # skip on_load if no bps for faster loading
-          ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script if @bps.any?
-        else
+        if !has_keep_script_lines || bps_pending_until_load?
           ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
         end
       }
@@ -1237,6 +1237,10 @@ module DEBUGGER__
     end
 
     # breakpoint management
+
+    def bps_pending_until_load?
+      @bps.any?{|key, bp| bp.pending_until_load?}
+    end
 
     def iterate_bps
       deleted_bps = []
