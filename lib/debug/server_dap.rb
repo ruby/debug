@@ -942,6 +942,16 @@ module DEBUGGER__
       v
     end
 
+    def type_name obj
+      klass = M_CLASS.bind_call(obj)
+
+      begin
+        klass.name || klass.to_s
+      rescue Exception => e
+        "<Error: #{e.message} (#{e.backtrace.first}>"
+      end
+    end
+
     def variable_ name, obj, indexedVariables: 0, namedVariables: 0
       if indexedVariables > 0 || namedVariables > 0
         vid = @var_map.size + 1
@@ -954,7 +964,7 @@ module DEBUGGER__
 
       { name: name,
         value: value_inspect(obj),
-        type: (klass = M_CLASS.bind_call(obj)).name || klass.to_s,
+        type: type_name(obj),
         variablesReference: vid,
         indexedVariables: indexedVariables,
         namedVariables: namedVariables + ivnum,
