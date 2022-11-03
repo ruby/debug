@@ -273,17 +273,22 @@ module DEBUGGER__
         when 'launch'
           send_response req
           UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
-          @is_launch = true
+          @nonstop = true
 
         when 'attach'
           send_response req
           UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
-          @is_launch = false
+
+          if req.dig('arguments', 'nonstop') == true
+            @nonstop = true
+          else
+            @nonstop = false
+          end
 
         when 'configurationDone'
           send_response req
 
-          if @is_launch
+          if @nonstop
             @q_msg << 'continue'
           else
             if SESSION.in_subsession?
