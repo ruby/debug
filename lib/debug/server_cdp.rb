@@ -73,6 +73,8 @@ module DEBUGGER__
         data = nil
         port = nil
         wait_thr = nil
+
+        # The process to check OS is based on `selenium` project.
         case RbConfig::CONFIG['host_os']
         when /mswin|msys|mingw|cygwin|emc/
           if path.nil?
