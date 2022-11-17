@@ -431,8 +431,6 @@ module DEBUGGER__
       #   * Step in. Resume the program until next breakable point.
       # * `s[tep] <n>`
       #   * Step in, resume the program at `<n>`th breakable point.
-      # * `s[tep] into <name>` or `s[tep] into /regexp/`
-      #   * Stop at the beggining of method `<name>` or the name matched to `/regexp/`
       register_command 's', 'step',
                        repeat: true,
                        cancel_auto_continue: true,
@@ -464,6 +462,21 @@ module DEBUGGER__
         end
 
         step_command :finish, arg
+      end
+
+      # * `u[ntil]`
+      #   * Similar to `next` command, but only stop later lines or the end of the current frame.
+      #   * Similar to gdb's `advance` command.
+      # * `u[ntil] <[file:]line>
+      #   * Run til the program reaches given location or the end of the current frame.
+      # * `u[ntil] <name>
+      #   * Run til the program invokes a method `<name>`. `<name>` can be a regexp with `/name/`.
+      register_command 'u', 'until',
+                       repeat: true,
+                       cancel_auto_continue: true,
+                       postmortem: false do |arg|
+
+        step_command :until, arg
       end
 
       # * `c[ontinue]`
@@ -1105,6 +1118,11 @@ module DEBUGGER__
     end
 
     def step_command type, arg
+      if type == :until
+        leave_subsession [:step, type, arg]
+        return
+      end
+
       case arg
       when nil, /\A\d+\z/
         if type == :in && @tc.recorder&.replaying?
@@ -1121,14 +1139,6 @@ module DEBUGGER__
           iter = $2&.to_i
           request_tc [:step, type, iter]
         end
-      when /\Ainto\s+(\S+)(\s+(\d+))?\z/
-        pat = $1
-        iter = $3&.to_i
-        if /\A\/(.+)\/\z/ =~ pat
-          pat = Regexp.new($1)
-        end
-
-        request_tc [:step, :into, pat, iter]
       else
         @ui.puts "Unknown option: #{arg}"
         :retry
