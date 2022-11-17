@@ -819,10 +819,7 @@ module DEBUGGER__
               ]
               vars << variable('#dump', NaiveString.new(obj)) if obj.length > MAX_LENGTH
             when Class, Module
-              vars = obj.instance_variables.map{|iv|
-                variable(iv, obj.instance_variable_get(iv))
-              }
-              vars.unshift variable('%ancestors', obj.ancestors[1..])
+              vars << variable('%ancestors', obj.ancestors[1..])
             when Range
               vars = [
                 variable('#begin', obj.begin),
@@ -831,7 +828,7 @@ module DEBUGGER__
             end
 
             unless NaiveString === obj
-              vars += M_INSTANCE_VARIABLES.bind_call(obj).map{|iv|
+              vars += M_INSTANCE_VARIABLES.bind_call(obj).sort.map{|iv|
                 variable(iv, M_INSTANCE_VARIABLE_GET.bind_call(obj, iv))
               }
               vars.unshift variable('#class', M_CLASS.bind_call(obj))
