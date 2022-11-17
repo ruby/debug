@@ -391,15 +391,19 @@ module DEBUGGER__
       end
     end
 
-    def frame_eval_core src, b
+    def frame_eval_core src, b, binding_location: false
       saved_target_frames = @target_frames
       saved_current_frame_index = @current_frame_index
 
       if b
-        f, _l = b.source_location
+        file, lineno = b.source_location
 
         tp_allow_reentry do
-          b.eval(src, "(rdbg)/#{f}")
+          if binding_location
+            b.eval(src, file, lineno)
+          else
+            b.eval(src, "(rdbg)/#{file}")
+          end
         end
       else
         frame_self = current_frame.self
@@ -418,7 +422,7 @@ module DEBUGGER__
       [:return_value,     "_return"],
     ]
 
-    def frame_eval src, re_raise: false
+    def frame_eval src, re_raise: false, binding_location: false
       @success_last_eval = false
 
       b = current_frame.eval_binding
@@ -427,7 +431,7 @@ module DEBUGGER__
         b.local_variable_set(name, var) if /\%/ !~ name
       end
 
-      result = frame_eval_core(src, b)
+      result = frame_eval_core(src, b, binding_location: binding_location)
 
       @success_last_eval = true
       result
@@ -949,7 +953,7 @@ module DEBUGGER__
             result = frame_eval(eval_src)
           when :irb
             begin
-              result = frame_eval('binding.irb')
+              result = frame_eval('binding.irb', binding_location: true)
             ensure
               # workaround: https://github.com/ruby/debug/issues/308
               Reline.prompt_proc = nil if defined? Reline
