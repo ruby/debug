@@ -863,13 +863,6 @@ module DEBUGGER__
               break
             end
 
-          when :into
-            pat, iter = args[1], args[2]
-            step_tp iter, [:call, :c_call] do |tp|
-              pat === tp.callee_id.to_s
-            end
-            break
-
           when :next
             frame = @target_frames.first
             path = frame.location.absolute_path || "!eval:#{frame.path}"
@@ -906,6 +899,47 @@ module DEBUGGER__
             step_tp nil, [:return, :b_return] do
               DEBUGGER__.frame_depth - 3 <= goal_depth ? true : false
             end
+            break
+
+          when :until
+            location = iter&.strip
+            frame = @target_frames.first
+            depth = frame.frame_depth
+            target_location_label = frame.location.base_label
+
+            case location
+            when nil, /\A(?:(.+):)?(\d+)\z/
+              file = $1
+              line = ($2 ||  frame.location.lineno + 1).to_i
+
+              step_tp nil, [:line, :return] do |tp|
+                if tp.event == :line
+                  next true if file && tp.path.end_with?(file)
+                  next true if tp.lineno >= line
+                else
+                  next true if depth >= DEBUGGER__.frame_depth - 3 &&
+                               caller_locations(2, 1).first.label == target_location_label
+                               # TODO: imcomplete condition
+                end
+              end
+            else
+              pat = location
+              if /\A\/(.+)\/\z/ =~ pat
+                pat = Regexp.new($1)
+              end
+
+              step_tp nil, [:call, :c_call, :return] do |tp|
+                case tp.event
+                when :call, :c_call
+                  next true if pat === tp.callee_id.to_s
+                else # :return, :b_return
+                  next true if depth >= DEBUGGER__.frame_depth - 3 &&
+                               caller_locations(2, 1).first.label == target_location_label
+                               # TODO: imcomplete condition
+                end
+              end
+            end
+
             break
 
           when :back

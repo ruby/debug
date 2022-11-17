@@ -63,20 +63,6 @@ module DEBUGGER__
       end
     end
 
-    def test_step_into
-      debug_code program do
-        type 'step into name'
-        assert_line_num 7
-        type 'step into xyzzy' # doesn't match
-      end
-
-      debug_code program do
-        type 'step into /.ame/'
-        assert_line_num 7
-        type 'step into xyzzy' # doesn't match
-      end
-    end
-
     def test_next_goes_to_the_next_line
       debug_code(program) do
         type 'b 11'
@@ -414,6 +400,52 @@ module DEBUGGER__
         assert_line_num 5
         type 'finish'
         assert_line_num 6
+        type 'c'
+      end
+    end
+  end
+
+  class UntilTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| 3.times do
+      2|   a = 1
+      3|   b = 2
+      4| end
+      5| c = 3
+      6| def foo
+      7|   x = 1
+      8| end
+      9| foo
+      RUBY
+    end
+
+    def test_until_line
+      debug_code program do
+        type 'u 2'
+        assert_line_num 2
+        type 'u'
+        assert_line_num 3
+        type 'u'
+        assert_line_num 5
+        type 'c'
+      end
+    end
+
+    def test_until_line_overrun
+      debug_code program do
+        type 'u 2'
+        assert_line_num 2
+        type 'u 100'
+      end
+    end
+
+    def test_until_method
+      debug_code program do
+        type 'u foo'
+        assert_line_num 7
+        type 'u bar'
+        assert_line_num 8
         type 'c'
       end
     end
