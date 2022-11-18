@@ -986,8 +986,9 @@ module DEBUGGER__
           when :call
             result = frame_eval(eval_src)
           when :irb
+            require 'irb' # prelude's binding.irb doesn't have show_code option
             begin
-              result = frame_eval('binding.irb', binding_location: true)
+              result = frame_eval('binding.irb(show_code: false)', binding_location: true)
             ensure
               # workaround: https://github.com/ruby/debug/issues/308
               Reline.prompt_proc = nil if defined? Reline

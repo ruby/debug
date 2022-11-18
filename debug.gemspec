@@ -27,6 +27,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.extensions    = ['ext/debug/extconf.rb']
 
-  spec.add_dependency "irb", ">= 1.3.6" # for its color_printer class, which was added after 1.3
+  spec.add_dependency "irb", ">= 1.5.0" # for binding.irb(show_code: false)
   spec.add_dependency "reline", ">= 0.3.1"
 end
