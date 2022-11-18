@@ -399,7 +399,16 @@ module DEBUGGER__
         sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Disconnected.'
       end
 
-      sock = Socket.tcp HOST, @remote_info.port
+      retry_cnt = 0
+      begin
+        sock = Socket.tcp HOST, @remote_info.port
+      rescue Errno::ECONNREFUSED
+        raise if (retry_cnt += 1) > 10 # retry up to 10 times
+
+        sleep 0.1
+        retry
+      end
+
       uuid = body[0][:id]
 
       Timeout.timeout(TIMEOUT_SEC) do
