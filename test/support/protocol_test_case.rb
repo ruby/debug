@@ -304,9 +304,10 @@ module DEBUGGER__
       @remote_info&.w&.close
     end
 
-    def execute_cdp_scenario scenario
+    def execute_cdp_scenario_ scenario
       ENV['RUBY_DEBUG_TEST_UI'] = 'chrome'
 
+      @web_sock = nil
       @remote_info = setup_tcpip_remote_debuggee
       Timeout.timeout(TIMEOUT_SEC) do
         sleep 0.001 until @remote_info.debuggee_backlog.join.include? @remote_info.port.to_s
@@ -327,6 +328,23 @@ module DEBUGGER__
       @remote_info&.reader_thread&.kill
       @remote_info&.r&.close
       @remote_info&.w&.close
+    end
+
+    def execute_cdp_scenario scenario
+      retry_cnt = 0
+      begin
+        execute_cdp_scenario_ scenario
+      rescue Errno::ECONNREFUSED
+        if (retry_cnt += 1) > 10
+          STDERR.puts "retry #{retry_cnt} but can not connect!"
+          raise
+        end
+
+        STDERR.puts "retry (#{retry_cnt}) connecting..."
+
+        sleep 0.3
+        retry
+      end
     end
 
     def req_disconnect
@@ -399,21 +417,7 @@ module DEBUGGER__
         sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Disconnected.'
       end
 
-      retry_cnt = 0
-      begin
-        sock = Socket.tcp HOST, @remote_info.port
-      rescue Errno::ECONNREFUSED
-        if (retry_cnt += 1) > 20
-          STDERR.puts "retry #{retry_cnt} but can not connect..."
-          raise
-        end
-
-        STDERR.puts "retry (#{retry_cnt}) connecting to #{HOST}:#{@remote_info.port}"
-
-        sleep 0.3
-        retry
-      end
-
+      sock = Socket.tcp HOST, @remote_info.port
       uuid = body[0][:id]
 
       Timeout.timeout(TIMEOUT_SEC) do
