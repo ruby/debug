@@ -403,10 +403,12 @@ module DEBUGGER__
       begin
         sock = Socket.tcp HOST, @remote_info.port
       rescue Errno::ECONNREFUSED
-        if (retry_cnt += 1) > 10 # retry up to 10 times
+        if (retry_cnt += 1) > 20
           STDERR.puts "retry #{retry_cnt} but can not connect..."
           raise
         end
+
+        STDERR.puts "retry (#{retry_cnt}) connecting to #{HOST}:#{@remote_info.port}"
 
         sleep 0.3
         retry
