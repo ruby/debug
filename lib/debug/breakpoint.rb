@@ -6,7 +6,7 @@ module DEBUGGER__
   class Breakpoint
     include SkipPathHelper
 
-    attr_reader :key
+    attr_reader :key, :skip_src
 
     def initialize cond, command, path, do_enable: true
       @deleted = false
@@ -145,10 +145,11 @@ module DEBUGGER__
       nbp
     end
 
-    def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil, skip_activate: false
+    def initialize path, line, cond: nil, oneshot: false, hook_call: true, command: nil, skip_activate: false, skip_src: false
       @line = line
       @oneshot = oneshot
       @hook_call = hook_call
+      @skip_src = skip_src
       @pending = false
 
       @iseq = nil

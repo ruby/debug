@@ -291,8 +291,10 @@ module DEBUGGER__
       end
 
       if event != :pause
-        show_src
-        show_frames CONFIG[:show_frames]
+        unless bp&.skip_src
+          show_src
+          show_frames CONFIG[:show_frames]
+        end
 
         set_mode :waiting
 
