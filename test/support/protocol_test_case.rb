@@ -282,7 +282,10 @@ module DEBUGGER__
     def execute_dap_scenario scenario
       ENV['RUBY_DEBUG_TEST_UI'] = 'vscode'
 
-      @remote_info = setup_unix_domain_socket_remote_debuggee
+      # TestInfo is defined to use kill_remote_debuggee method.
+      test_info = TestInfo.new
+
+      @remote_info = test_info.remote_info = setup_unix_domain_socket_remote_debuggee
       Timeout.timeout(TIMEOUT_SEC) do
         sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'connection...'
       end
@@ -294,21 +297,23 @@ module DEBUGGER__
 
       attach_to_dap_server
       scenario.call
-
-      flunk create_protocol_message "Expected the debuggee program to finish" unless wait_pid @remote_info.pid, TIMEOUT_SEC
     ensure
       @reader_thread&.kill
       @sock&.close
-      @remote_info&.reader_thread&.kill
-      @remote_info&.r&.close
-      @remote_info&.w&.close
+      kill_remote_debuggee test_info
+      if name = test_info.failed_process
+        flunk create_protocol_message "Expected the debuggee program to finish"
+      end
     end
 
     def execute_cdp_scenario_ scenario
       ENV['RUBY_DEBUG_TEST_UI'] = 'chrome'
 
+      # TestInfo is defined to use kill_remote_debuggee method.
+      test_info = TestInfo.new
+
       @web_sock = nil
-      @remote_info = setup_tcpip_remote_debuggee
+      @remote_info = test_info.remote_info = setup_tcpip_remote_debuggee
       Timeout.timeout(TIMEOUT_SEC) do
         sleep 0.001 until @remote_info.debuggee_backlog.join.include? @remote_info.port.to_s
       end
@@ -320,14 +325,13 @@ module DEBUGGER__
 
       attach_to_cdp_server
       scenario.call
-
-      flunk create_protocol_message "Expected the debuggee program to finish" unless wait_pid @remote_info.pid, TIMEOUT_SEC
     ensure
       @reader_thread&.kill
       @web_sock&.close
-      @remote_info&.reader_thread&.kill
-      @remote_info&.r&.close
-      @remote_info&.w&.close
+      kill_remote_debuggee test_info
+      if name = test_info.failed_process
+        flunk create_protocol_message "Expected the debuggee program to finish"
+      end
     end
 
     def execute_cdp_scenario scenario
