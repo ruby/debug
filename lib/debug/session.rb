@@ -502,7 +502,7 @@ module DEBUGGER__
       #   * Same as q[uit] but without the confirmation prompt.
       register_command 'q!', 'quit!', unsafe: false do |arg|
         @ui.quit arg.to_i
-        leave_subsession nil
+        leave_subsession :continue
       end
 
       # * `kill`
