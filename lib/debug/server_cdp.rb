@@ -8,6 +8,7 @@ require 'stringio'
 require 'open3'
 require 'tmpdir'
 require 'tempfile'
+require 'timeout'
 
 module DEBUGGER__
   module UI_CDP
@@ -67,6 +68,8 @@ module DEBUGGER__
         nil
       end
 
+      TIMEOUT_SEC = 5
+
       def run_new_chrome
         path = CONFIG[:chrome_path]
 
@@ -114,6 +117,33 @@ module DEBUGGER__
           stdin.close
           stdout.close
           data = stderr.readpartial 4096
+          stderr.close
+          if data.match /DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/
+            port = $1
+            path = $2
+          end
+
+          at_exit{
+            DEBUGGER__.skip_all
+            FileUtils.rm_rf dir
+          }
+        when /linux/
+          path = path || 'google-chrome'
+          dir = Dir.mktmpdir
+          # The command line flags are based on: https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Chrome_Desktop#connecting.
+          stdin, stdout, stderr, wait_thr = *Open3.popen3("#{path} --remote-debugging-port=0 --no-first-run --no-default-browser-check --user-data-dir=#{dir}")
+          stdin.close
+          stdout.close
+          data = ''
+          begin
+            Timeout.timeout(TIMEOUT_SEC) do
+              until data.match?(/DevTools listening on ws:\/\/127.0.0.1:\d+.*/)
+                data = stderr.readpartial 4096
+              end
+            end
+          rescue Exception
+            raise NotFoundChromeEndpointError
+          end
           stderr.close
           if data.match /DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/
             port = $1
