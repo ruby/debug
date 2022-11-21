@@ -16,7 +16,7 @@ module DEBUGGER__
         type "c"
         type "p r"
         assert_line_text('false')
-        type 'q!'
+        type 'kill!'
       end
     end
   end

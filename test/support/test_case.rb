@@ -142,10 +142,11 @@ module DEBUGGER__
     def kill_remote_debuggee test_info
       return unless r = test_info.remote_info
 
+      kill_safely r.pid, :remote, test_info
       r.reader_thread.kill
+      # Because the debuggee may be terminated by executing the following operations, we need to run them after `kill_safely` method.
       r.r.close
       r.w.close
-      kill_safely r.pid, :remote, test_info
     end
 
     def setup_remote_debuggee(cmd)

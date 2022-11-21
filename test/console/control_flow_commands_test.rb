@@ -117,7 +117,7 @@ module DEBUGGER__
         assert_line_num 7
         type 'fin'
         assert_line_num 8
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -194,7 +194,7 @@ module DEBUGGER__
         assert_line_num 8
         type 'finish'
         assert_line_num 9
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -205,7 +205,7 @@ module DEBUGGER__
         assert_line_num 8
         type 'fin 0'
         assert_line_text(/finish command with 0 does not make sense/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -216,7 +216,7 @@ module DEBUGGER__
         assert_line_num 8
         type 'fin 1'
         assert_line_num 9
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -227,7 +227,7 @@ module DEBUGGER__
         assert_line_num 8
         type 'fin 2'
         assert_line_num 6
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -238,7 +238,7 @@ module DEBUGGER__
         assert_line_num 8
         type 'fin 3'
         assert_line_num 3
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -485,7 +485,7 @@ module DEBUGGER__
           assert_line_num 13
           type 'n'
           assert_line_num 15
-          type 'q!'
+          type 'kill!'
         end
       end
   
@@ -498,7 +498,7 @@ module DEBUGGER__
           assert_line_num 7
           type 'fin'
           assert_line_num 11
-          type 'q!'
+          type 'kill!'
         end
       end
     end

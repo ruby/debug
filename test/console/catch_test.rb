@@ -20,7 +20,7 @@ module DEBUGGER__
         assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
         assert_line_text('Integer#/')
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -29,7 +29,7 @@ module DEBUGGER__
         type 'catch StandardError'
         type 'continue'
         assert_line_text('Integer#/')
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -38,7 +38,7 @@ module DEBUGGER__
         type 'catch StandardError'
         type ''
         assert_no_line_text(/duplicated breakpoint/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -110,7 +110,7 @@ module DEBUGGER__
         assert_line_text('Integer#/')
         type 's'
         assert_line_text('Object#bar')
-        type 'q!'
+        type 'kill!'
       end
     end
   end

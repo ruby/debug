@@ -37,7 +37,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'help foo'
         assert_line_text(/not found: foo/)
-        type 'q!'
+        type 'kill!'
       end
     end
   end
