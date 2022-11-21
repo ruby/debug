@@ -24,7 +24,7 @@ module DEBUGGER__
 
         type 'info'
         assert_line_text('#<RuntimeError: Boom>')
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -53,7 +53,7 @@ module DEBUGGER__
           "a = 1\r\n" \
           "@var = 10\r\n"
         )
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -108,7 +108,7 @@ module DEBUGGER__
         type 'c'
         type 'info threads'
         assert_line_text(/#0 \(sleep\)@.*:7:in `<main>'/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -118,7 +118,7 @@ module DEBUGGER__
         type 'c'
         type 'info threads'
         assert_line_text(/#1 \(sleep\)@.*:2 sleep/)
-        type 'q!'
+        type 'kill!'
       end
     end
   end

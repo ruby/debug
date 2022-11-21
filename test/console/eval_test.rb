@@ -20,7 +20,7 @@ module DEBUGGER__
         type 'e a.upcase!'
         type 'p a'
         assert_line_text(/"FOO"/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -31,7 +31,7 @@ module DEBUGGER__
         type 'e b = a + b'
         type 'p b'
         assert_line_text(/"foobar"/)
-        type 'q!'
+        type 'kill!'
       end
     end
   end

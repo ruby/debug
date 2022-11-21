@@ -47,7 +47,7 @@ module DEBUGGER__
         type 'watch @name'
         type ''
         assert_no_line_text(/duplicated breakpoint/)
-        type 'quit!'
+        type 'kill!'
       end
     end
 

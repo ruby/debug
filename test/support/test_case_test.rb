@@ -40,4 +40,40 @@ module DEBUGGER__
       end
     end
   end
+
+  class PseudoTerminalTestForRemoteDebuggee < ConsoleTestCase
+    def program
+      <<~RUBY
+        1| def a
+        2| end
+        3|
+        4| loop{
+        5|   a()
+        6| }
+      RUBY
+    end
+
+    def steps
+      Proc.new{
+        type 'quit'
+        type 'y'
+      }
+    end
+
+    def test_the_test_fails_when_debuggee_on_unix_domain_socket_mode_doesnt_exist_after_scenarios
+      assert_raise_message(/Expected the remote program to finish/) do
+        prepare_test_environment(program, steps) do
+          debug_code_on_unix_domain_socket()
+        end
+      end
+    end
+
+    def test_the_test_fails_when_debuggee_on_tcpip_mode_doesnt_exist_after_scenarios
+      assert_raise_message(/Expected the remote program to finish/) do
+        prepare_test_environment(program, steps) do
+          debug_code_on_tcpip()
+        end
+      end
+    end
+  end
 end

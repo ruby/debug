@@ -37,7 +37,7 @@ module DEBUGGER__
 
           type 'frame'
           assert_line_text(/Foo#baz at/)
-          type 'q!'
+          type 'kill!'
         end
       end
     end
@@ -56,7 +56,7 @@ module DEBUGGER__
           assert_line_text(/<main> at/)
           type 'frame'
           assert_line_text(/<main> at/)
-          type 'q!'
+          type 'kill!'
         end
       end
     end
@@ -72,7 +72,7 @@ module DEBUGGER__
           type 'c'
           assert_line_text(/<main> at/)
           assert_line_num(5)
-          type 'q!'
+          type 'kill!'
         end
       end
     end
@@ -91,7 +91,7 @@ module DEBUGGER__
           assert_line_text(/Foo#bar at/)
           type 'down'
           assert_line_text(/Foo#baz at/)
-          type 'q!'
+          type 'kill!'
         end
       end
     end
@@ -108,7 +108,7 @@ module DEBUGGER__
           type 'c'
           assert_line_num(7)
           assert_line_text(/Foo#baz at/)
-          type 'q!'
+          type 'kill!'
         end
       end
     end
@@ -124,7 +124,7 @@ module DEBUGGER__
           type 'c'
           assert_line_text(/<main> at/)
           assert_line_num(5)
-          type 'q!'
+          type 'kill!'
         end
       end
     end

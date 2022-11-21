@@ -34,7 +34,7 @@ module DEBUGGER__
 
         type "continue"
         assert_line_num(3)
-        type "q!"
+        type 'kill!'
       end
     end
 
@@ -56,7 +56,7 @@ module DEBUGGER__
           /\#0  BP \- Line  .*/,
           /\#1  BP \- Line  .*/
         ])
-        type 'q!'
+        type 'kill!'
       end
     end
   end

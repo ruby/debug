@@ -31,7 +31,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'continue'
         assert_line_text('Foo#bar')
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -72,7 +72,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'continue'
         assert_no_line_text(/duplicated breakpoint:/)
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -109,7 +109,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'continue'
         assert_no_line_text(/duplicated breakpoint:/)
-        type 'q!'
+        type 'kill!'
       end
     end
 

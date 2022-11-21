@@ -30,7 +30,7 @@ module DEBUGGER__
         assert_line_text([
           /show_frames = \d+/
         ])
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -47,7 +47,7 @@ module DEBUGGER__
         assert_line_text([
           /  # and 2 frames \(use `bt' command for all frames\)/,
         ])
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -64,7 +64,7 @@ module DEBUGGER__
         assert_line_text([
           /  # and 2 frames \(use `bt' command for all frames\)/,
         ])
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -331,7 +331,7 @@ module DEBUGGER__
         assert_line_text([
           /allocated at/
         ])
-        type 'q!'
+        type 'kill!'
       end
     end
   end

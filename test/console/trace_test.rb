@@ -23,7 +23,7 @@ module DEBUGGER__
         type 'trace line'
         type 'trace call'
         type 'trace'
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -47,7 +47,7 @@ module DEBUGGER__
         type 'trace off 1'
         type 'trace'
         assert_line_text [/#0 LineTracer \(disabled\)/, /#1 CallTracer \(disabled\)/]
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -98,7 +98,7 @@ module DEBUGGER__
           /rb:6/,
           /rb:11/,
         ])
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -117,7 +117,7 @@ module DEBUGGER__
           /rb:6/,
           /rb:11/,
         ])
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -127,7 +127,7 @@ module DEBUGGER__
         assert_line_text(/Enable LineTracer/)
         type 'c'
         assert_line_text(/DEBUGGER \(trace\/line\)/)
-        type 'q!'
+        type 'kill!'
       end
 
       debug_code(program) do
@@ -136,7 +136,7 @@ module DEBUGGER__
         type 'c'
 
         assert_no_line_text(/DEBUGGER \(trace\/line\)/)
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -168,7 +168,7 @@ module DEBUGGER__
         type 'c'
         assert_line_text(/trace\/exception.+RuntimeError: foo/)
         assert_line_text(/trace\/exception.+RuntimeError: bar/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -185,7 +185,7 @@ module DEBUGGER__
             /trace\/exception.+RuntimeError: bar/
           ]
         )
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -203,7 +203,7 @@ module DEBUGGER__
             /trace\/exception.+RuntimeError: bar/
           ]
         )
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -214,7 +214,7 @@ module DEBUGGER__
         assert_line_text(/Enable ExceptionTracer/)
         type 'c'
         assert_no_line_text(/trace\/exception.+RuntimeError: foo/)
-        type 'q!'
+        type 'kill!'
       end
 
       debug_code(program) do
@@ -223,7 +223,7 @@ module DEBUGGER__
         type 'c'
         assert_line_text(/trace\/exception.+RuntimeError: foo/)
         assert_line_text(/trace\/exception.+RuntimeError: bar/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -234,7 +234,7 @@ module DEBUGGER__
         type 'c'
         assert_line_text(/trace\/exception.+RuntimeError: foo/)
         assert_no_line_text(/trace\/exception.+RuntimeError: bar/)
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -271,7 +271,7 @@ module DEBUGGER__
         # tracer should ignore calls from associated libraries
         # for example, the test implementation relies on 'json' to generate test info, which's calls should be ignored
         assert_no_line_text(/JSON/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -290,7 +290,7 @@ module DEBUGGER__
             /Object#bar #=> nil/
           ]
         )
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -310,7 +310,7 @@ module DEBUGGER__
             /Object#bar #=> nil/
           ]
         )
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -325,7 +325,7 @@ module DEBUGGER__
             /Object#bar #=> nil/
           ]
         )
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -342,7 +342,7 @@ module DEBUGGER__
             /Object#bar #=> nil/
           ]
         )
-        type 'q!'
+        type 'kill!'
       end
 
       debug_code(program) do
@@ -351,7 +351,7 @@ module DEBUGGER__
         type 'c'
         assert_no_line_text(/Object#foo/)
         assert_no_line_text(/Object#bar/)
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -389,7 +389,7 @@ module DEBUGGER__
         assert_line_text(/Enable ObjectTracer/)
         type 'c'
         assert_no_line_text(/trace\/object/)
-        type 'q!'
+        type 'kill!'
       end
     end if RUBY_VERSION >= "2.7"
 
@@ -399,7 +399,7 @@ module DEBUGGER__
         assert_line_text(/Enable ObjectTracer/)
         type 'c'
         assert_line_text(/2 is used as a parameter a of Object#bar/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -418,7 +418,7 @@ module DEBUGGER__
             /3 is used as a parameter in kw of Object#baz/
           ]
         )
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -428,7 +428,7 @@ module DEBUGGER__
         assert_line_text(/Enable ObjectTracer/)
         type 'c'
         assert_line_text(/3 is used as a parameter in kw of Object#baz/)
-        type 'q!'
+        type 'kill!'
       end
     end
 

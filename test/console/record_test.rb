@@ -22,7 +22,7 @@ module DEBUGGER__
       debug_code(program) do
         type 'step back'
         assert_line_text(/Can not step back more\./)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -56,7 +56,7 @@ module DEBUGGER__
         assert_line_num 9
         type 'step back'
         assert_line_text(/Can not step back more\./)
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -169,7 +169,7 @@ module DEBUGGER__
         assert_line_num 6
         type 'step back 2'
         assert_line_num 10
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -202,7 +202,7 @@ module DEBUGGER__
         assert_line_num 11
         type 'step back 100'
         assert_line_num 5
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -231,7 +231,7 @@ module DEBUGGER__
         assert_line_text([
           /\[replay\] =>\#0\t<main> at .*/
         ])
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -274,7 +274,7 @@ module DEBUGGER__
         assert_line_num 6
         type 'step 2'
         assert_line_num 11
-        type 'q!'
+        type 'kill!'
       end
     end
   end
@@ -311,7 +311,7 @@ module DEBUGGER__
         assert_line_num 6
         type 'step 100'
         assert_line_num 11
-        type 'q!'
+        type 'kill!'
       end
     end
   end

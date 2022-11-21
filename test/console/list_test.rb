@@ -46,7 +46,7 @@ module DEBUGGER__
         assert_line_text(/p 10/)
         assert_no_line_text(/p 11/)
 
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -56,7 +56,7 @@ module DEBUGGER__
         assert_no_line_text(/p 10/)
         assert_line_text(/p 11/)
 
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -74,7 +74,7 @@ module DEBUGGER__
         type ""
         assert_line_text(/p 30/)
         assert_no_line_text(/p 20/)
-        type 'q!'
+        type 'kill!'
       end
     end
   end

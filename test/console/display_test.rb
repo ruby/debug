@@ -24,7 +24,7 @@ module DEBUGGER__
         assert_line_text(/0: a = 1/)
         assert_line_text(/1: b = 2/)
 
-        type "q!"
+        type 'kill!'
       end
     end
 
@@ -36,7 +36,7 @@ module DEBUGGER__
         assert_line_text(/0: a = /)
         assert_line_text(/1: b = /)
 
-        type "q!"
+        type 'kill!'
       end
     end
 
@@ -48,7 +48,7 @@ module DEBUGGER__
         type "continue"
         assert_no_line_text(/0: a =/)
 
-        type "q!"
+        type 'kill!'
       end
     end
 
@@ -61,7 +61,7 @@ module DEBUGGER__
         assert_no_line_text(/0: a = /)
         assert_no_line_text(/1: b = /)
 
-        type "q!"
+        type 'kill!'
       end
     end
   end

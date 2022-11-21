@@ -34,7 +34,7 @@ module DEBUGGER__
         type 'c'
         type 'bt'
         assert_line_text(/\[C\] Integer#times/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -44,7 +44,7 @@ module DEBUGGER__
         type 'c'
         type 'bt'
         assert_line_text(/Foo#first_call .* #=> 30/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -54,7 +54,7 @@ module DEBUGGER__
         type 'c'
         type 'bt'
         assert_line_text(/Foo#second_call\(num=20\)/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -64,7 +64,7 @@ module DEBUGGER__
         type 'c'
         type 'bt'
         assert_line_text(/block {\|ten=10\|}/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -76,7 +76,7 @@ module DEBUGGER__
         assert_line_text(/Foo#third_call_with_block/)
         assert_line_text(/Foo#second_call/)
         assert_no_line_text(/Foo#first_call/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -88,7 +88,7 @@ module DEBUGGER__
         assert_line_text(/Foo#second_call/)
         assert_line_text(/Foo#first_call/)
         assert_no_line_text(/Foo#third_call_with_block/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -100,7 +100,7 @@ module DEBUGGER__
         assert_line_text(/Foo#second_call/)
         assert_no_line_text(/Foo#first_call/)
         assert_no_line_text(/Foo#third_call_with_block/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -111,7 +111,7 @@ module DEBUGGER__
         type 'bt 1 /rb:\d\z/'
         assert_line_text(/Foo#second_call/)
         assert_no_line_text(/Foo#first_call/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -166,7 +166,7 @@ module DEBUGGER__
         type 'c'
         type 'bt'
         assert_line_text(/block in <main> at/)
-        type 'q!'
+        type 'kill!'
       end
     end
 
@@ -176,7 +176,7 @@ module DEBUGGER__
         type 'c'
         type 'bt'
         assert_line_text(/block in <main> \(2 levels\) at/)
-        type 'q!'
+        type 'kill!'
       end
     end
   end
