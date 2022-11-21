@@ -121,7 +121,7 @@ module DEBUGGER__
     end
 
     def kill_safely pid, name, test_info
-      return if wait_pid pid, 3
+      return if wait_pid pid, TIMEOUT_SEC
 
       test_info.failed_process = name
 
