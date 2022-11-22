@@ -222,7 +222,7 @@ module DEBUGGER__
         when /^ask (\d+) (.*)/
           pid = $1
           print $2
-          send "answer #{pid} #{gets || ''}"
+          send "answer #{pid} #{$stdin.gets || ''}"
 
         when /^quit/
           raise 'quit'
@@ -231,8 +231,8 @@ module DEBUGGER__
           puts "(unknown) #{line.inspect}"
         end
       end
-    rescue
-      STDERR.puts "disconnected (#{$!})"
+    rescue => e
+      STDERR.puts "disconnected (#{e})"
       exit
     ensure
       deactivate
