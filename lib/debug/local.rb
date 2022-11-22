@@ -42,6 +42,7 @@ module DEBUGGER__
     end
 
     def quit n
+      yield
       exit n
     end
 

@@ -362,7 +362,7 @@ module DEBUGGER__
       Process.kill(TRAP_SIGNAL, Process.pid)
     end
 
-    def quit n
+    def quit n, &_b
       # ignore n
       sock do |s|
         s.puts "quit"
