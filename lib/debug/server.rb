@@ -175,17 +175,17 @@ module DEBUGGER__
 
     def process
       while true
-        DEBUGGER__.info "sleep IO.select"
+        DEBUGGER__.debug{ "sleep IO.select" }
         r = IO.select([@sock])
-        DEBUGGER__.info "wakeup IO.select"
+        DEBUGGER__.debug{ "wakeup IO.select" }
 
         line = @session.process_group.sync do
           unless IO.select([@sock], nil, nil, 0)
-            DEBUGGER__.info "UI_Server can not read"
+            DEBUGGER__.debug{ "UI_Server can not read" }
             break :can_not_read
           end
           @sock.gets&.chomp.tap{|line|
-            DEBUGGER__.info "UI_Server received: #{line}"
+            DEBUGGER__.debug{ "UI_Server received: #{line}" }
           }
         end
 
@@ -341,12 +341,12 @@ module DEBUGGER__
         if @repl
           raise "not in subsession, but received: #{line.inspect}" unless @session.in_subsession?
           line = "input #{Process.pid}"
-          DEBUGGER__.info "send: #{line}"
+          DEBUGGER__.debug{ "send: #{line}" }
           s.puts line
         end
         sleep 0.01 until @q_msg
         @q_msg.pop.tap{|msg|
-          DEBUGGER__.info "readline: #{msg.inspect}"
+          DEBUGGER__.debug{ "readline: #{msg.inspect}" }
         }
       end || 'continue')
 
@@ -430,7 +430,7 @@ module DEBUGGER__
             DEBUGGER__.warn "Port is saved into #{@port_save_file}"
           end
 
-          DEBUGGER__.info <<~EOS
+          DEBUGGER__.warn <<~EOS
           With rdbg, use the following command line:
           #
           #   #{rdbg} --attach #{@local_addr.ip_address} #{@local_addr.ip_port}

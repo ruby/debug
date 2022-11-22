@@ -1651,9 +1651,9 @@ module DEBUGGER__
     private def enter_subsession
       @subsession_id += 1
       if !@subsession_stack.empty?
-        DEBUGGER__.info "Enter subsession (nested #{@subsession_stack.size})"
+        DEBUGGER__.debug{ "Enter subsession (nested #{@subsession_stack.size})" }
       else
-        DEBUGGER__.info "Enter subsession"
+        DEBUGGER__.debug{ "Enter subsession" }
         stop_all_threads
         @process_group.lock
       end
@@ -1666,11 +1666,11 @@ module DEBUGGER__
       @subsession_stack.pop
 
       if @subsession_stack.empty?
-        DEBUGGER__.info "Leave subsession"
+        DEBUGGER__.debug{ "Leave subsession" }
         @process_group.unlock
         restart_all_threads
       else
-        DEBUGGER__.info "Leave subsession (nested #{@subsession_stack.size})"
+        DEBUGGER__.debug{ "Leave subsession (nested #{@subsession_stack.size})" }
       end
 
       request_tc type if type
@@ -1998,7 +1998,7 @@ module DEBUGGER__
     end
 
     def locked?
-      # DEBUGGER__.info "locked? #{@lock_level}"
+      # DEBUGGER__.debug{ "locked? #{@lock_level}" }
       @lock_level > 0
     end
 
@@ -2402,19 +2402,19 @@ module DEBUGGER__
           # Do nothing
         }
         child_hook = -> {
-          DEBUGGER__.warn "Detaching after fork from child process #{Process.pid}"
+          DEBUGGER__.info "Detaching after fork from child process #{Process.pid}"
           SESSION.deactivate
         }
       when :child
         SESSION.before_fork false
 
         parent_hook = -> child_pid {
-          DEBUGGER__.warn "Detaching after fork from parent process #{Process.pid}"
+          DEBUGGER__.info "Detaching after fork from parent process #{Process.pid}"
           SESSION.after_fork_parent
           SESSION.deactivate
         }
         child_hook = -> {
-          DEBUGGER__.warn "Attaching after process #{parent_pid} fork to child process #{Process.pid}"
+          DEBUGGER__.info "Attaching after process #{parent_pid} fork to child process #{Process.pid}"
           SESSION.activate on_fork: true
         }
       when :both
@@ -2425,7 +2425,7 @@ module DEBUGGER__
           SESSION.after_fork_parent
         }
         child_hook = -> {
-          DEBUGGER__.warn "Attaching after process #{parent_pid} fork to child process #{Process.pid}"
+          DEBUGGER__.info "Attaching after process #{parent_pid} fork to child process #{Process.pid}"
           SESSION.process_group.after_fork child: true
           SESSION.activate on_fork: true
         }
