@@ -835,6 +835,7 @@ module DEBUGGER__
           set_mode :waiting if !waiting?
           cmds = @q_cmd.pop
           # pp [self, cmds: cmds]
+
           break unless cmds
         ensure
           set_mode :running
@@ -1161,6 +1162,8 @@ module DEBUGGER__
           end
           event! :result, nil
 
+        when :quit
+          sleep # wait for SystemExit
         when :dap
           process_dap args
         when :cdp

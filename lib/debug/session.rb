@@ -491,7 +491,9 @@ module DEBUGGER__
       #   * Finish debugger (with the debuggee process on non-remote debugging).
       register_command 'q', 'quit' do |arg|
         if ask 'Really quit?'
-          @ui.quit arg.to_i
+          @ui.quit arg.to_i do
+            request_tc :quit
+          end
           leave_subsession :continue
         else
           next :retry
@@ -501,8 +503,10 @@ module DEBUGGER__
       # * `q[uit]!`
       #   * Same as q[uit] but without the confirmation prompt.
       register_command 'q!', 'quit!', unsafe: false do |arg|
-        @ui.quit arg.to_i
-        leave_subsession nil
+        @ui.quit arg.to_i do
+          request_tc :quit
+        end
+        leave_subsession :continue
       end
 
       # * `kill`
