@@ -437,7 +437,7 @@ module DEBUGGER__
           #
           EOS
 
-          case CONFIG[:open_frontend]
+          case CONFIG[:open]
           when 'chrome'
             chrome_setup
           when 'vscode'
@@ -494,7 +494,7 @@ module DEBUGGER__
       end
 
       ::DEBUGGER__.warn "Debugger can attach via UNIX domain socket (#{@sock_path})"
-      vscode_setup @sock_path if CONFIG[:open_frontend] == 'vscode'
+      vscode_setup @sock_path if CONFIG[:open] == 'vscode'
 
       begin
         Socket.unix_server_loop @sock_path do |sock, client|

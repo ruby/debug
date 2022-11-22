@@ -10,7 +10,7 @@ when :start
   require 'rbconfig'
 
   libpath = File.join(File.expand_path(File.dirname(__dir__)), 'lib/debug')
-  start_mode = config[:remote] ? "open" : 'start'
+  start_mode = config[:open] ? "open" : 'start'
   cmd = config[:command] ? ARGV.shift : (ENV['RUBY'] || RbConfig.ruby)
 
   if defined?($:.resolve_feature_path)

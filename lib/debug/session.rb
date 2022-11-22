@@ -1042,10 +1042,10 @@ module DEBUGGER__
         when 'tcp'
           ::DEBUGGER__.open_tcp host: CONFIG[:host], port: (CONFIG[:port] || 0), nonstop: true
         when 'vscode'
-          CONFIG[:open_frontend] = 'vscode'
+          CONFIG[:open] = 'vscode'
           ::DEBUGGER__.open nonstop: true
         when 'chrome', 'cdp'
-          CONFIG[:open_frontend] = 'chrome'
+          CONFIG[:open] = 'chrome'
           ::DEBUGGER__.open_tcp host: CONFIG[:host], port: (CONFIG[:port] || 0), nonstop: true
         else
           raise "Unknown arg: #{arg}"
@@ -2105,19 +2105,22 @@ module DEBUGGER__
   def self.start nonstop: false, **kw
     CONFIG.set_config(**kw)
 
-    unless defined? SESSION
-      require_relative 'local'
-      initialize_session{ UI_LocalConsole.new }
+    if CONFIG[:open]
+      open nonstop: nonstop, **kw
+    else
+      unless defined? SESSION
+        require_relative 'local'
+        initialize_session{ UI_LocalConsole.new }
+      end
+      setup_initial_suspend unless nonstop
     end
-
-    setup_initial_suspend unless nonstop
   end
 
   def self.open host: nil, port: CONFIG[:port], sock_path: nil, sock_dir: nil, nonstop: false, **kw
     CONFIG.set_config(**kw)
     require_relative 'server'
 
-    if port || CONFIG[:open_frontend] == 'chrome' || (!::Addrinfo.respond_to?(:unix))
+    if port || CONFIG[:open] == 'chrome' || (!::Addrinfo.respond_to?(:unix))
       open_tcp host: host, port: (port || 0), nonstop: nonstop
     else
       open_unix sock_path: sock_path, sock_dir: sock_dir, nonstop: nonstop

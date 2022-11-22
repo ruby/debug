@@ -39,6 +39,7 @@ module DEBUGGER__
     save_history:   ['RUBY_DEBUG_SAVE_HISTORY',"BOOT: maximum save history lines", :int, "10000"],
 
     # remote setting
+    open:           ['RUBY_DEBUG_OPEN',         "REMOTE: Open remote port (same as `rdbg --open` option)"],
     port:           ['RUBY_DEBUG_PORT',         "REMOTE: TCP/IP remote debugging: port"],
     host:           ['RUBY_DEBUG_HOST',         "REMOTE: TCP/IP remote debugging: host", :string, "127.0.0.1"],
     sock_path:      ['RUBY_DEBUG_SOCK_PATH',    "REMOTE: UNIX Domain Socket remote debugging: socket path"],
@@ -46,7 +47,6 @@ module DEBUGGER__
     local_fs_map:   ['RUBY_DEBUG_LOCAL_FS_MAP', "REMOTE: Specify local fs map", :path_map],
     skip_bp:        ['RUBY_DEBUG_SKIP_BP',      "REMOTE: Skip breakpoints if no clients are attached", :bool, 'false'],
     cookie:         ['RUBY_DEBUG_COOKIE',       "REMOTE: Cookie for negotiation"],
-    open_frontend:  ['RUBY_DEBUG_OPEN_FRONTEND',"REMOTE: frontend used by open command (vscode, chrome, default: rdbg)."],
     chrome_path:    ['RUBY_DEBUG_CHROME_PATH',  "REMOTE: Platform dependent path of Chrome (For more information, See [here](https://github.com/ruby/debug/pull/334/files#diff-5fc3d0a901379a95bc111b86cf0090b03f857edfd0b99a0c1537e26735698453R55-R64))"],
 
     # obsolete
@@ -298,8 +298,25 @@ module DEBUGGER__
                                         'If TCP/IP options are not given, a UNIX domain socket will be used.',
                                         'If FRONTEND is given, prepare for the FRONTEND.',
                                         'Now rdbg, vscode and chrome is supported.') do |f|
-          config[:remote] = true
-          config[:open_frontend] = f.downcase if f
+
+          case f # some format patterns are not documented yet
+          when nil
+            config[:open] = true
+          when /\A\d\z/
+            config[:open] = true
+            config[:port] = f.to_i
+          when /\A(\S+):(\d+)\z/
+            config[:open] = true
+            config[:host] = $1
+            config[:port] = $2.to_i
+          when 'tcp'
+            config[:open] = true
+            config[:port] ||= 0
+          when 'vscode', 'chrome', 'cdp'
+            config[:open] = f&.downcase
+          else
+            raise "Unknown option for --open: #{f}"
+          end
         end
         o.on('--sock-path=SOCK_PATH', 'UNIX Domain socket path') do |path|
           config[:sock_path] = path
