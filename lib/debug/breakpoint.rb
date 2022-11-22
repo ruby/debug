@@ -205,7 +205,7 @@ module DEBUGGER__
       enable
 
       if @pending && !@oneshot
-        DEBUGGER__.warn "#{self} is activated."
+        DEBUGGER__.info "#{self} is activated."
       end
     end
 
@@ -509,7 +509,7 @@ module DEBUGGER__
         retried = false
 
         @tp.enable(target: @method)
-        DEBUGGER__.warn "#{self} is activated." if added
+        DEBUGGER__.info "#{self} is activated." if added
 
         if @sig_op == '#'
           @cond_class = @klass if @method.owner != @klass
