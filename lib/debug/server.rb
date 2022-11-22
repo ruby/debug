@@ -176,7 +176,7 @@ module DEBUGGER__
     def process
       while true
         DEBUGGER__.debug{ "sleep IO.select" }
-        r = IO.select([@sock])
+        _r = IO.select([@sock])
         DEBUGGER__.debug{ "wakeup IO.select" }
 
         line = @session.process_group.sync do
