@@ -211,6 +211,14 @@ module DEBUGGER__
     def reset_ui ui
       @ui.deactivate
       @ui = ui
+
+      # activate new ui
+      @tp_thread_begin.disable
+      @ui.activate self
+      if @ui.respond_to?(:reader_thread) && thc = get_thread_client(@ui.reader_thread)
+        thc.mark_as_management
+      end
+      @tp_thread_begin.enable
     end
 
     def pop_event
@@ -1026,21 +1034,23 @@ module DEBUGGER__
       register_command 'open' do |arg|
         case arg&.downcase
         when '', nil
-          repl_open
-        when 'vscode'
-          repl_open_vscode
-        when /\A(.+):(\d+)\z/
-          repl_open_tcp $1, $2.to_i
+          ::DEBUGGER__.open nonstop: true
         when /\A(\d+)z/
-          repl_open_tcp nil, $1.to_i
+          ::DEBUGGER__.open_tcp host: nil, port: $1.to_i, nonstop: true
+        when /\A(.+):(\d+)\z/
+          ::DEBUGGER__.open_tcp host: $1, port: $2.to_i, nonstop: true
         when 'tcp'
-          repl_open_tcp CONFIG[:host], (CONFIG[:port] || 0)
+          ::DEBUGGER__.open_tcp host: CONFIG[:host], port: (CONFIG[:port] || 0), nonstop: true
+        when 'vscode'
+          CONFIG[:open_frontend] = 'vscode'
+          ::DEBUGGER__.open nonstop: true
         when 'chrome', 'cdp'
           CONFIG[:open_frontend] = 'chrome'
-          repl_open_tcp CONFIG[:host], (CONFIG[:port] || 0)
+          ::DEBUGGER__.open_tcp host: CONFIG[:host], port: (CONFIG[:port] || 0), nonstop: true
         else
           raise "Unknown arg: #{arg}"
         end
+
         :retry
       end
 
@@ -1095,30 +1105,6 @@ module DEBUGGER__
       @ui.puts "[REPL ERROR] #{e.inspect}"
       @ui.puts e.backtrace.map{|e| '  ' + e}
       return :retry
-    end
-
-    def repl_open_setup
-      @tp_thread_begin.disable
-      @ui.activate self
-      if @ui.respond_to?(:reader_thread) && thc = get_thread_client(@ui.reader_thread)
-        thc.mark_as_management
-      end
-      @tp_thread_begin.enable
-    end
-
-    def repl_open_tcp host, port, **kw
-      DEBUGGER__.open_tcp host: host, port: port, nonstop: true, **kw
-      repl_open_setup
-    end
-
-    def repl_open
-      DEBUGGER__.open nonstop: true
-      repl_open_setup
-    end
-
-    def repl_open_vscode
-      CONFIG[:open_frontend] = 'vscode'
-      repl_open
     end
 
     def step_command type, arg
