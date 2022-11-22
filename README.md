@@ -551,8 +551,6 @@ The `<...>` notation means the argument.
   * Step in. Resume the program until next breakable point.
 * `s[tep] <n>`
   * Step in, resume the program at `<n>`th breakable point.
-* `s[tep] into <name>` or `s[tep] into /regexp/`
-  * Stop at the beggining of method `<name>` or the name matched to `/regexp/`
 * `n[ext]`
   * Step over. Resume the program until next line.
 * `n[ext] <n>`
@@ -561,6 +559,13 @@ The `<...>` notation means the argument.
   * Finish this frame. Resume the program until the current frame is finished.
 * `fin[ish] <n>`
   * Finish `<n>`th frames.
+* `u[ntil]`
+  * Similar to `next` command, but only stop later lines or the end of the current frame.
+  * Similar to gdb's `advance` command.
+* `u[ntil] <[file:]line>
+  * Run til the program reaches given location or the end of the current frame.
+* `u[ntil] <name>
+  * Run til the program invokes a method `<name>`. `<name>` can be a regexp with `/name/`.
 * `c[ontinue]`
   * Resume the program.
 * `q[uit]` or `Ctrl-D`
