@@ -832,11 +832,11 @@ It is useful if you only want to call a debug command and don't want to stop the
 ```
 def initialize
   @a = 1
-  binding.b do: 'watch @a'
+  binding.b do: 'info \n watch @a'
 end
 ```
 
-On this case, register a watch breakpoint for `@a` and continue to run.
+On this case, execute the `info` command then register a watch breakpoint for `@a` and continue to run. You can also use `;;` instead of `\n` to separate your commands.
 
 If `pre: 'command'` is specified, the debugger suspends the program and run the `command` as a debug command, and keep suspend.
 It is useful if you have operations before suspend.
