@@ -187,6 +187,9 @@ module DEBUGGER__
     def setup_tcpip_remote_debuggee
       remote_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{TCPIP_PORT} -- #{temp_file_path}")
       remote_info.port = TCPIP_PORT
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.001 until remote_info.debuggee_backlog.join.include? remote_info.port.to_s
+      end
       remote_info
     end
 
