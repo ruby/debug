@@ -133,6 +133,7 @@ module DEBUGGER__
       when UI_TcpServer
         # TODO: loopback address can be used to connect other FS env, like Docker containers
         # UI_DAP.local_fs_set if @local_addr.ipv4_loopback? || @local_addr.ipv6_loopback?
+        UI_DAP.local_fs_map_set CONFIG[:local_fs_map] || true
       end
 
       show_protocol :>, bytes
