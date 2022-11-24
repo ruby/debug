@@ -89,34 +89,6 @@ capture_frames(VALUE self, VALUE skip_path_prefix)
     return rb_debug_inspector_open(di_body, (void *)skip_path_prefix);
 }
 
-#ifdef RB_PROFILE_FRAMES_HAS_C_FRAMES
-#define BUFF_SIZE 4096
-
-static VALUE
-frame_depth(VALUE self)
-{
-    static VALUE buff[BUFF_SIZE];
-    static int lines[BUFF_SIZE];
-
-    int size = rb_profile_frames(0, BUFF_SIZE, buff, lines);
-
-    // If the buffer is full, there might be more frames.
-    // Fall back to rb_make_backtrace to get them all.
-    if (size >= BUFF_SIZE) {
-        VALUE bt = rb_make_backtrace();
-        size = RARRAY_LEN(bt);
-        return INT2FIX(size);
-    } 
-    
-    // rb_profile_frames will return one extra frame
-    // https://bugs.ruby-lang.org/issues/18907
-    #ifdef RB_PROFILE_FRAMES_HAS_EXTRA_FRAME
-        return INT2FIX(size - 1);
-    #else
-        return INT2FIX(size);
-    #endif  
-}
-#else
 static VALUE
 frame_depth(VALUE self)
 {
@@ -124,7 +96,6 @@ frame_depth(VALUE self)
     VALUE bt = rb_make_backtrace();
     return INT2FIX(RARRAY_LEN(bt));
 }
-#endif
 
 // iseq
 
