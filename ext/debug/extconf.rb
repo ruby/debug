@@ -7,14 +7,6 @@ if defined? RubyVM
   $defs << '-DHAVE_RB_ISEQ_PARAMETERS'
   $defs << '-DHAVE_RB_ISEQ_CODE_LOCATION'
 
-  if RUBY_VERSION >= '3.0.0'
-    $defs << '-DRB_PROFILE_FRAMES_HAS_C_FRAMES'
-
-    if RUBY_VERSION < '3.2.0'
-      $defs << '-DRB_PROFILE_FRAMES_HAS_EXTRA_FRAME'
-    end
-  end
-
   if RUBY_VERSION >= '3.1.0'
     $defs << '-DHAVE_RB_ISEQ_TYPE'
   end
