@@ -566,7 +566,7 @@ The `<...>` notation means the argument.
   * Run til the program reaches given location or the end of the current frame.
 * `u[ntil] <name>
   * Run til the program invokes a method `<name>`. `<name>` can be a regexp with `/name/`.
-* `c[ontinue]`
+* `c` or `cont` or `continue`
   * Resume the program.
 * `q[uit]` or `Ctrl-D`
   * Finish debugger (with the debuggee process on non-remote debugging).
