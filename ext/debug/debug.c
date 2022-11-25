@@ -76,7 +76,12 @@ di_body(const rb_debug_inspector_t *dc, void *ptr)
                      rb_debug_inspector_frame_binding_get(dc, i),
                      iseq,
                      rb_debug_inspector_frame_class_get(dc, i),
-                     INT2FIX(len - i));
+#ifdef RB_DEBUG_INSPECTOR_FRAME_DEPTH
+                     rb_debug_inspector_frame_depth(dc, i)
+#else
+                     INT2FIX(len - i)
+#endif
+                     );
         rb_ary_push(ary, e);
     }
 
@@ -89,6 +94,13 @@ capture_frames(VALUE self, VALUE skip_path_prefix)
     return rb_debug_inspector_open(di_body, (void *)skip_path_prefix);
 }
 
+#ifdef RB_DEBUG_INSPECTOR_FRAME_DEPTH
+static VALUE
+frame_depth(VALUE self)
+{
+    return rb_debug_inspector_current_depth();
+}
+#else
 static VALUE
 frame_depth(VALUE self)
 {
@@ -96,6 +108,8 @@ frame_depth(VALUE self)
     VALUE bt = rb_make_backtrace();
     return INT2FIX(RARRAY_LEN(bt));
 }
+#endif
+
 
 // iseq
 
