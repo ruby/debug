@@ -540,8 +540,8 @@ module DEBUGGER__
         if ref = @var_map[varid]
           case ref[0]
           when :globals
-            vars = global_variables.map do |name|
-              gv = 'Not implemented yet...'
+            vars = global_variables.sort.map do |name|
+              gv = eval(name.to_s)
               {
                 name: name,
                 value: gv.inspect,
