@@ -273,13 +273,10 @@ module DEBUGGER__
 
           if !nearest || ((line - nline).abs < (line - nearest.line).abs)
             nearest = NearestISeq.new(iseq, nline, events)
-          else
-            if @hook_call && nearest.iseq.first_lineno <= iseq.first_lineno
-              if (nearest.line > line && !nearest.events.include?(:RUBY_EVENT_CALL)) ||
-                (events.include?(:RUBY_EVENT_CALL))
-                nearest = NearestISeq.new(iseq, nline, events)
-              end
-            end
+          elsif @hook_call &&
+                nearest.line == iseq.first_line &&
+                events.include?(:RUBY_EVENT_CALL)
+            nearest = NearestISeq.new(iseq, nline, events)
           end
         end
       end
