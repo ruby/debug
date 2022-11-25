@@ -838,4 +838,89 @@ module DEBUGGER__
       end
     end
   end
+
+  class BreakAtLineTest < ConsoleTestCase
+    def program path
+      <<~RUBY
+      1| load #{path.dump}
+      RUBY
+    end
+
+    def extra_file
+      <<~RUBY
+      a = 1
+
+      class C
+        def m
+          p :m
+        end
+      end
+      RUBY
+    end
+
+    def test_break_on_line
+      with_extra_tempfile do |extra_file|
+        debug_code program(extra_file.path) do
+          type "break #{extra_file.path}:1"
+          type 'c'
+          assert_line_num 1
+          type 'c'
+        end
+      end
+    end
+
+    def program2
+      <<~RUBY
+      1| a = 1
+      2| b = 2      # braek 2, stop at 2
+      3|            # break 3, stop at def
+      4| def foo    # break 4, stop at 5 (in foo)
+      5|   a = 2
+      6| end
+      7|
+      8| private def bar # break 8, stop at 9 (in bar)
+      9|   a = 3
+     10| end
+     11|
+     12| foo
+     13| bar
+      RUBY
+    end
+
+    def test_break_on_line_2
+      debug_code program2 do
+        type 'b 2'
+        type 'c'
+        assert_line_num 2
+        type 'c'
+      end
+    end
+
+    def test_break_on_line_3
+      debug_code program2 do
+        type 'b 3'
+        type 'c'
+        assert_line_num 4
+        type 'c'
+      end
+    end
+
+    def test_break_on_line_4
+      debug_code program2 do
+        type 'b 4'
+        type 'c'
+        assert_line_num 5
+        type 'c'
+      end
+    end
+
+    def test_break_on_line_8
+      debug_code program2 do
+        type 'b 8'
+        type 'c'
+        assert_line_num 9
+        type 'c'
+      end
+    end
+  end
 end
