@@ -274,7 +274,7 @@ module DEBUGGER__
 
       when :suspend
         enter_subsession if ev_args.first != :replay
-        output.each{|str| @ui.puts str}
+        output.each{|str| @ui.puts str} unless @ui.ignore_output_on_suspend?
 
         case ev_args.first
         when :breakpoint
@@ -2067,6 +2067,10 @@ module DEBUGGER__
       when :suspend_trap
         puts "\nStop by #{args.first}"
       end
+    end
+
+    def ignore_output_on_suspend?
+      false
     end
 
     def flush
