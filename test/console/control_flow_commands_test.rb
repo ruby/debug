@@ -82,6 +82,19 @@ module DEBUGGER__
       end
     end
 
+    def test_next_skips_method_in_a_same_line
+      debug_code program do
+        type 'b 7'
+        type 'c'
+        assert_line_num 7
+        type 'n'
+        assert_line_num 8
+        type 'n'
+        assert_line_num 17
+        type 'n'
+      end
+    end
+
     def test_next_with_number_goes_to_the_next_nth_line
       debug_code program do
         type 'b 15'
@@ -121,6 +134,17 @@ module DEBUGGER__
         type 'fin'
         assert_line_num 8
         type 'c'
+      end
+    end
+
+    def test_finish_skips_method_in_a_same_line
+      debug_code program do
+        type 'b 7'
+        type 'c'
+        assert_line_num 7
+        type 'fin'
+        assert_line_num 8
+        type 'fin'
       end
     end
   end
@@ -254,7 +278,6 @@ module DEBUGGER__
       end
     end
 
-
     def program2
       <<~RUBY
       1| def foo x
@@ -279,7 +302,7 @@ module DEBUGGER__
         type 'finish'
         assert_line_num 6
         type 'next'
-        assert_line_num 2
+        assert_line_num 9
         type 'c'
       end
     end
@@ -417,9 +440,13 @@ module DEBUGGER__
       4| end
       5| c = 3
       6| def foo
-      7|   x = 1
+      7|   @x = 1
       8| end
-      9| foo
+      9| def bar
+     10|   @y = 2
+     11| end
+     12| foo; bar
+     13| [@x, @y].inspect
       RUBY
     end
 
@@ -447,8 +474,20 @@ module DEBUGGER__
       debug_code program do
         type 'u foo'
         assert_line_num 7
-        type 'u bar'
+        type 'u baz'
         assert_line_num 8
+        type 'c'
+      end
+    end
+
+    def test_unit_method_in_the_same_line
+      debug_code program do
+        type 'u foo'
+        assert_line_num 7
+        type 'u'
+        assert_line_num 8
+        type 'u'
+        assert_line_num 13
         type 'c'
       end
     end

@@ -870,6 +870,7 @@ module DEBUGGER__
             frame = @target_frames.first
             path = frame.location.absolute_path || "!eval:#{frame.path}"
             line = frame.location.lineno
+            label = frame.location.base_label
 
             if frame.iseq
               frame.iseq.traceable_lines_norec(lines = {})
@@ -881,23 +882,32 @@ module DEBUGGER__
 
             depth = @target_frames.first.frame_depth
 
-            step_tp iter do
+            step_tp iter do |tp|
               loc = caller_locations(2, 1).first
               loc_path = loc.absolute_path || "!eval:#{loc.path}"
+              loc_label = loc.base_label
+              loc_depth = DEBUGGER__.frame_depth - 3
 
-              # same stack depth
-              (DEBUGGER__.frame_depth - 3 <= depth) ||
-
-              # different frame
-              (next_line && loc_path == path &&
-               (loc_lineno = loc.lineno) > line &&
-               loc_lineno <= next_line)
+              case
+              when loc_depth == depth && loc_label == label
+                true
+              when loc_depth < depth
+                # lower stack depth
+                true
+              when (next_line &&
+                    loc_path == path &&
+                    (loc_lineno = loc.lineno) > line &&
+                    loc_lineno <= next_line)
+                # different frame (maybe block) but the line is before next_line
+                true
+              end
             end
             break
 
           when :finish
             finish_frames = (iter || 1) - 1
-            goal_depth = @target_frames.first.frame_depth - finish_frames
+            frame = @target_frames.first
+            goal_depth = frame.frame_depth - finish_frames - (frame.has_return_value ? 1 : 0)
 
             step_tp nil, [:return, :b_return] do
               DEBUGGER__.frame_depth - 3 <= goal_depth ? true : false
@@ -907,22 +917,25 @@ module DEBUGGER__
           when :until
             location = iter&.strip
             frame = @target_frames.first
-            depth = frame.frame_depth
+            depth = frame.frame_depth - (frame.has_return_value ? 1 : 0)
             target_location_label = frame.location.base_label
 
             case location
             when nil, /\A(?:(.+):)?(\d+)\z/
-              file = $1
+              no_loc = !location
+              file = $1 || frame.location.path
               line = ($2 ||  frame.location.lineno + 1).to_i
 
               step_tp nil, [:line, :return] do |tp|
                 if tp.event == :line
-                  next true if file && tp.path.end_with?(file)
-                  next true if tp.lineno >= line
+                  next false if no_loc && depth < DEBUGGER__.frame_depth - 3
+                  next false unless tp.path.end_with?(file)
+                  next false unless tp.lineno >= line
+                  true
                 else
-                  next true if depth >= DEBUGGER__.frame_depth - 3 &&
-                               caller_locations(2, 1).first.label == target_location_label
-                               # TODO: imcomplete condition
+                  true if depth >= DEBUGGER__.frame_depth - 3 &&
+                          caller_locations(2, 1).first.label == target_location_label
+                          # TODO: imcomplete condition
                 end
               end
             else
@@ -934,11 +947,11 @@ module DEBUGGER__
               step_tp nil, [:call, :c_call, :return] do |tp|
                 case tp.event
                 when :call, :c_call
-                  next true if pat === tp.callee_id.to_s
+                  true if pat === tp.callee_id.to_s
                 else # :return, :b_return
-                  next true if depth >= DEBUGGER__.frame_depth - 3 &&
-                               caller_locations(2, 1).first.label == target_location_label
-                               # TODO: imcomplete condition
+                  true if depth >= DEBUGGER__.frame_depth - 3 &&
+                          caller_locations(2, 1).first.label == target_location_label
+                          # TODO: imcomplete condition
                 end
               end
             end
@@ -1181,6 +1194,8 @@ module DEBUGGER__
     rescue Exception => e
       pp ["DEBUGGER Exception: #{__FILE__}:#{__LINE__}", e, e.backtrace]
       raise
+    ensure
+      @returning = false
     end
 
     def debug_event(ev, args)
