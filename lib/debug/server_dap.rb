@@ -199,6 +199,13 @@ module DEBUGGER__
              # supportsInstructionBreakpoints:
       )
       send_event 'initialized'
+      puts <<~WELCOME
+        Ruby REPL: You can run any Ruby expression here.
+        Note that output to the STDOUT/ERR printed on the TERMINAL.
+        [experimental]
+          `,COMMAND` runs `COMMAND` debug command (ex: `,info`).
+          `,help` to list all debug commands.
+      WELCOME
     end
 
     def send **kw
@@ -425,10 +432,20 @@ module DEBUGGER__
             }
           }
 
+        when 'evaluate'
+          expr = req.dig('arguments', 'expression')
+          if /\A\s*,(.+)\z/ =~ expr
+            dbg_expr = $1
+            send_response req,
+                          result: "",
+                          variablesReference: 0
+            debugger do: dbg_expr
+          else
+            @q_msg << req
+          end
         when 'stackTrace',
              'scopes',
              'variables',
-             'evaluate',
              'source',
              'completions'
           @q_msg << req
@@ -449,7 +466,11 @@ module DEBUGGER__
 
     def puts result
       # STDERR.puts "puts: #{result}"
-      # send_event 'output', category: 'stderr', output: "PUTS!!: " + result.to_s
+      send_event 'output', category: 'console', output: "#{result&.chomp}\n"
+    end
+
+    def ignore_output_on_suspend?
+      true
     end
 
     def event type, *args
@@ -586,6 +607,7 @@ module DEBUGGER__
         if @frame_map[frame_id]
           tid, fid = @frame_map[frame_id]
           expr = req.dig('arguments', 'expression')
+
           if tc = find_waiting_tc(tid)
             request_tc [:dap, :evaluate, req, fid, expr, context]
           else
