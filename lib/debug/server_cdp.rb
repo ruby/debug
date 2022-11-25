@@ -685,6 +685,28 @@ module DEBUGGER__
   end
 
   class Session
+    # FIXME: unify this method with ThreadClient#propertyDescriptor.
+    def get_type obj
+      case obj
+      when Array
+        ['object', 'array']
+      when Hash
+        ['object', 'map']
+      when String
+        ['string']
+      when TrueClass, FalseClass
+        ['boolean']
+      when Symbol
+        ['symbol']
+      when Integer, Float
+        ['number']
+      when Exception
+        ['object', 'error']
+      else
+        ['object']
+      end
+    end
+
     def fail_response req, **result
       @ui.respond_fail req, **result
       return :retry
@@ -716,9 +738,28 @@ module DEBUGGER__
             frame_id = ref[1]
             fid = @frame_map[frame_id]
             request_tc [:cdp, :scope, req, fid]
+          when 'global'
+            vars = global_variables.sort.map do |name|
+              gv = eval(name.to_s)
+              prop = {
+                name: name,
+                value: {
+                  description: gv.inspect
+                },
+                configurable: true,
+                enumerable: true
+              }
+              type, subtype = get_type(gv)
+              prop[:value][:type] = type
+              prop[:value][:subtype] = subtype if subtype
+              prop
+            end
+
+            @ui.respond req, result: vars
+            return :retry
           when 'properties'
             request_tc [:cdp, :properties, req, oid]
-          when 'script', 'global'
+          when 'script'
             # TODO: Support script and global types
             @ui.respond req, result: []
             return :retry
