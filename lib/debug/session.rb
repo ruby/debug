@@ -2492,10 +2492,17 @@ module Kernel
     return if !defined?(::DEBUGGER__::SESSION) || !::DEBUGGER__::SESSION.active?
 
     if pre || (do_expr = binding.local_variable_get(:do))
-      cmds = ['binding.break', pre, do_expr]
+      cmds = ['#debugger', pre, do_expr]
     end
 
-    loc = caller_locations(up_level, 1).first; ::DEBUGGER__.add_line_breakpoint loc.path, loc.lineno + 1, oneshot: true, command: cmds
+    if ::DEBUGGER__::SESSION.in_subsession?
+      if cmds
+        commands = [*cmds[1], *cmds[2]].map{|c| c.split(';;').join("\n")}
+        ::DEBUGGER__::SESSION.add_preset_commands cmds[0], commands, kick: false, continue: false
+      end
+    else
+      loc = caller_locations(up_level, 1).first; ::DEBUGGER__.add_line_breakpoint loc.path, loc.lineno + 1, oneshot: true, command: cmds
+    end
     self
   end
 

@@ -34,6 +34,20 @@ module DEBUGGER__
         type 'kill!'
       end
     end
+
+    def test_debugger_method_in_subsession
+      debug_code program do
+        type 'c'
+        assert_line_num 3
+        type 'eval debugger do: "p 2 ** 32"'
+        assert_line_text('4294967296')
+        type 'eval debugger do: "p 2 ** 32;; n;; p 2 ** 33;;"'
+        assert_line_num 4
+        assert_line_text('4294967296')
+        assert_line_text('8589934592')
+        type 'c'
+      end
+    end
   end
 
   class DebuggerMethodWithPreCommandTest < DebuggerMethodTest
