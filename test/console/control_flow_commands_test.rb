@@ -10,114 +10,117 @@ module DEBUGGER__
     def program
       <<~RUBY
          1| class Student
-         2|   def initialize(name)
-         3|     @name = name
+         2|   def initialize(name, age)
+         3|     @name = name; @age = age
          4|   end
          5|
          6|   def name
          7|     @name
          8|   end
-         9| end
-        10|
-        11| s = Student.new("John")
-        12| s.name
-        13| "foo"
+         9|
+        10|   def age
+        11|     @age
+        12|   end
+        13| end
+        14|
+        15| s = Student.new("John", 17)
+        16| s.name; s.age
+        17| s.inspect # do not show
       RUBY
     end
 
     def test_step_goes_to_the_next_statement
-      debug_code(program) do
-        type 'b 11'
+      debug_code program do
+        type 'b 15'
         type 'c'
-        assert_line_num 11
+        assert_line_num 15
         type 's'
         assert_line_num 3
         type 's'
         assert_line_num 4
         type 's'
-        assert_line_num 12
+        assert_line_num 16
         type 's'
         assert_line_num 7
         type 's'
         assert_line_num 8
         type 's'
-        assert_line_num 13
-        type 'quit'
-        type 'y'
+        assert_line_num 11
+        type 's'
+        assert_line_num 12
+        type 's'
+        assert_line_num 17
+        type 's'
       end
     end
 
     def test_step_with_number_goes_to_the_next_nth_statement
-      debug_code(program) do
-        type 'b 11'
+      debug_code program do
+        type 'b 15'
         type 'c'
-        assert_line_num 11
+        assert_line_num 15
         type 's 2'
         assert_line_num 4
         type 's 3'
         assert_line_num 8
-        type 's'
-        assert_line_num 13
-        type 'quit'
-        type 'y'
+        type 's 2'
+        assert_line_num 12
+        type 's 2'
       end
     end
 
     def test_next_goes_to_the_next_line
-      debug_code(program) do
-        type 'b 11'
+      debug_code program do
+        type 'b 15'
         type 'c'
-        assert_line_num 11
+        assert_line_num 15
         type 'n'
-        assert_line_num 12
+        assert_line_num 16
         type 'n'
-        assert_line_num 13
-        type 'quit'
-        type 'y'
+        assert_line_num 17
+        type 'n'
       end
     end
 
     def test_next_with_number_goes_to_the_next_nth_line
-      debug_code(program) do
-        type 'b 11'
+      debug_code program do
+        type 'b 15'
         type 'c'
-        assert_line_num 11
+        assert_line_num 15
         type 'n 2'
-        assert_line_num 13
-        type 'quit'
-        type 'y'
+        assert_line_num 17
+        type 'n'
       end
     end
 
     def test_continue_goes_to_the_next_breakpoint
-      debug_code(program) do
-        type 'b 11'
+      debug_code program do
+        type 'b 15'
         type 'c'
-        assert_line_num 11
-        type 'b 13'
+        assert_line_num 15
+        type 'b 17'
         type 'c'
-        assert_line_num 13
-        type 'quit'
-        type 'y'
+        assert_line_num 17
+        type 'c'
       end
     end
 
     def test_finish_leaves_the_current_frame
-      debug_code(program) do
-        type 'b 11'
+      debug_code program do
+        type 'b 15'
         type 'c'
-        assert_line_num 11
+        assert_line_num 15
         type 's'
         assert_line_num 3
         type 'fin'
         assert_line_num 4
         type 's'
-        assert_line_num 12
+        assert_line_num 16
         type 's'
         assert_line_num 7
         type 'fin'
         assert_line_num 8
-        type 'kill!'
+        type 'c'
       end
     end
   end
@@ -136,7 +139,7 @@ module DEBUGGER__
     end
 
     def test_step_steps_out_of_blocks_when_done
-      debug_code(program) do
+      debug_code program do
         type 'step'
         assert_line_num 2
         type 'step'
@@ -153,7 +156,7 @@ module DEBUGGER__
     end
 
     def test_next_steps_out_of_blocks_right_away
-      debug_code(program) do
+      debug_code program do
         type 'step'
         assert_line_num 2
         type 'next'
@@ -309,7 +312,7 @@ module DEBUGGER__
     end
 
     def test_next_steps_out_of_if_blocks_when_done
-      debug_code(program) do
+      debug_code program do
         type 'next'
         assert_line_num 6
         type 'quit'
@@ -318,7 +321,7 @@ module DEBUGGER__
     end
 
     def test_step_steps_out_of_if_blocks_when_done
-      debug_code(program) do
+      debug_code program do
         type 'step'
         assert_line_num 6
         type 'quit'
@@ -347,7 +350,7 @@ module DEBUGGER__
     end
 
     def test_next_steps_over_rescue_when_raising_from_method
-      debug_code(program) do
+      debug_code program do
         type 'break Foo::Bar.raise_error'
         type 'continue'
         assert_line_num 4
@@ -479,7 +482,7 @@ module DEBUGGER__
       end
       
       def test_next
-        debug_code(program) do
+        debug_code program do
           type 'b 13'
           type 'c'
           assert_line_num 13
@@ -490,7 +493,7 @@ module DEBUGGER__
       end
   
       def test_finish
-        debug_code(program) do
+        debug_code program do
           type 'b 13'
           type 'c'
           assert_line_num 13
