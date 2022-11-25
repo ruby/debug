@@ -487,9 +487,9 @@ module DEBUGGER__
         step_command :until, arg
       end
 
-      # * `c[ontinue]`
+      # * `c` or `cont` or `continue`
       #   * Resume the program.
-      register_command 'c', 'continue',
+      register_command 'c', 'cont', 'continue',
                        repeat: true,
                        cancel_auto_continue: true do |arg|
         leave_subsession :continue
