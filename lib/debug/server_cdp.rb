@@ -730,8 +730,8 @@ module DEBUGGER__
                         code: INVALID_PARAMS,
                         message: "'callFrameId' is an invalid"
         end
-      when 'Runtime.getProperties'
-        oid = req.dig('params', 'objectId')
+      when 'Runtime.getProperties', 'Runtime.getExceptionDetails'
+        oid = req.dig('params', 'objectId') || req.dig('params', 'errorObjectId')
         if ref = @obj_map[oid]
           case ref[0]
           when 'local'
@@ -759,6 +759,8 @@ module DEBUGGER__
             return :retry
           when 'properties'
             request_tc [:cdp, :properties, req, oid]
+          when 'exception'
+            request_tc [:cdp, :exception, req, oid]
           when 'script'
             # TODO: Support script and global types
             @ui.respond req, result: []
@@ -895,6 +897,9 @@ module DEBUGGER__
                 frame[:scriptId] = s_id
               end
             }
+            if oid = exc[:exception][:objectId]
+              @obj_map[oid] = ['exception']
+            end
           end
           rs = result.dig(:response, :result)
           [rs].each{|obj|
@@ -931,6 +936,8 @@ module DEBUGGER__
             end
           }
         }
+        @ui.respond req, **result
+      when :exception
         @ui.respond req, **result
       end
     end
@@ -1051,35 +1058,7 @@ module DEBUGGER__
               result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
             rescue Exception => e
               result = e
-              b = result.backtrace.map{|e| "    #{e}\n"}
-              frames = [
-                {
-                  columnNumber: 0,
-                  functionName: 'eval',
-                  lineNumber: 0,
-                  url: ''
-                }
-              ]
-              e.backtrace_locations&.each do |loc|
-                break if loc.path == __FILE__
-                path = loc.absolute_path || loc.path
-                frames << {
-                  columnNumber: 0,
-                  functionName: loc.base_label,
-                  lineNumber: loc.lineno - 1,
-                  url: path
-                }
-              end
-              res[:exceptionDetails] = {
-                exceptionId: 1,
-                text: 'Uncaught',
-                lineNumber: 0,
-                columnNumber: 0,
-                exception: evaluate_result(result),
-                stackTrace: {
-                  callFrames: frames
-                }
-              }
+              res[:exceptionDetails] = exceptionDetails(e, 'Uncaught')
             ensure
               output = $stdout.string
               $stdout = orig_stdout
@@ -1158,7 +1137,45 @@ module DEBUGGER__
           prop += [internalProperty('#class', M_CLASS.bind_call(obj))]
         end
         event! :cdp_result, :properties, req, result: result, internalProperties: prop
+      when :exception
+        oid = args.shift
+        exc = nil
+        if obj = @obj_map[oid]
+          exc = exceptionDetails obj, obj.to_s
+        end
+        event! :cdp_result, :exception, req, exceptionDetails: exc
       end
+    end
+
+    def exceptionDetails exc, text
+      frames = [
+        {
+          columnNumber: 0,
+          functionName: 'eval',
+          lineNumber: 0,
+          url: ''
+        }
+      ]
+      exc.backtrace_locations&.each do |loc|
+        break if loc.path == __FILE__
+        path = loc.absolute_path || loc.path
+        frames << {
+          columnNumber: 0,
+          functionName: loc.base_label,
+          lineNumber: loc.lineno - 1,
+          url: path
+        }
+      end
+      {
+        exceptionId: 1,
+        text: text,
+        lineNumber: 0,
+        columnNumber: 0,
+        exception: evaluate_result(exc),
+        stackTrace: {
+          callFrames: frames
+        }
+      }
     end
 
     def search_const b, expr
