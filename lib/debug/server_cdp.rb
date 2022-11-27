@@ -44,6 +44,8 @@ module DEBUGGER__
                           }
           when res['id'] == 2
             s_id = res.dig('result', 'sessionId')
+            # TODO: change id
+            ws_client.send sessionId: s_id, id: 100, method: 'Network.enable'
             ws_client.send sessionId: s_id, id: 3,
                           method: 'Page.enable'
           when res['id'] == 3
@@ -59,7 +61,16 @@ module DEBUGGER__
                             url: "devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{addr}/#{uuid}",
                             frameId: f_id
                           }
-          when res['method'] == 'Page.loadEventFired'
+          when res['method'] == 'Network.webSocketWillSendHandshakeRequest'
+            s_id = res['sessionId']
+            # Display the console by entering ESC key
+            ws_client.send sessionId: s_id, id: 101,  # TODO: change id
+                          method:"Input.dispatchKeyEvent",
+                          params: {
+                            type:"keyDown",
+                            windowsVirtualKeyCode:27 # ESC key
+                          }
+          when res['id'] == 101
             break
           end
         end
