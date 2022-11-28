@@ -12,7 +12,7 @@ module DEBUGGER__
 
     def test_the_helper_takes_a_string_expectation_and_escape_it
       assert_raise_message(/Expected to include `"foobar\\\\?/) do
-        debug_code(program, remote: false) do
+        debug_code(program) do
           assert_line_text("foobar?")
         end
       end
@@ -48,6 +48,30 @@ module DEBUGGER__
           assert_line_text(123)
         end
       end
+    end
+
+    def test_the_test_fails_when_debuggee_on_unix_domain_socket_mode_doesnt_exist_after_scenarios
+      assert_raise_message(/Expected to include `"foobar\\\\?/) do
+        prepare_test_environment(program, steps) do
+          debug_code_on_unix_domain_socket()
+        end
+      end
+    end
+
+    def test_the_test_fails_when_debuggee_on_tcpip_mode_doesnt_exist_after_scenarios
+      assert_raise_message(/Expected to include `"foobar\\\\?/) do
+        prepare_test_environment(program, steps) do
+          debug_code_on_tcpip()
+        end
+      end
+    end
+
+    private
+
+    def steps
+      Proc.new{
+        assert_line_text("foobar?")
+      }
     end
   end
 end
