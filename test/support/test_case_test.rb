@@ -61,7 +61,7 @@ module DEBUGGER__
     end
 
     def test_the_test_fails_when_debuggee_on_unix_domain_socket_mode_doesnt_exist_after_scenarios
-      assert_raise_message(/Expected the remote program to finish/) do
+      assert_raise_message(/Expected the debuggee program to finish/) do
         prepare_test_environment(program, steps) do
           debug_code_on_unix_domain_socket()
         end
@@ -69,7 +69,7 @@ module DEBUGGER__
     end
 
     def test_the_test_fails_when_debuggee_on_tcpip_mode_doesnt_exist_after_scenarios
-      assert_raise_message(/Expected the remote program to finish/) do
+      assert_raise_message(/Expected the debuggee program to finish/) do
         prepare_test_environment(program, steps) do
           debug_code_on_tcpip()
         end

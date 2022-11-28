@@ -176,11 +176,23 @@ module DEBUGGER__
             check_error(/DEBUGGEE Exception/, test_info)
             assert_empty_queue test_info
           end
+
+          if r = test_info.remote_info
+            assert_program_finish test_info, r.pid, :debuggee
+          end
+
+          assert_program_finish test_info, pid, :debugger
         # result of `gets` return this exception in some platform
         # https://github.com/ruby/ruby/blob/master/ext/pty/pty.c#L729-L736
         rescue Errno::EIO => e
           check_error(/DEBUGGEE Exception/, test_info)
           assert_empty_queue test_info, exception: e
+          if r = test_info.remote_info
+            assert_program_finish test_info, r.pid, :debuggee
+          end
+
+          assert_program_finish test_info, pid, :debugger
+        # result of `gets` return this exception in some platform
         rescue Timeout::Error
           assert_block(create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)", test_info)) { false }
         ensure
@@ -189,11 +201,12 @@ module DEBUGGER__
           read.close
           write.close
           kill_safely pid, :debugger, test_info
-          if name = test_info.failed_process
-            assert_block(create_message("Expected the #{name} program to finish", test_info)) { false }
-          end
         end
       end
+    end
+
+    def assert_program_finish test_info, pid, name
+      assert_block(create_message("Expected the #{name} program to finish", test_info)) { wait_pid pid, TIMEOUT_SEC }
     end
 
     def prepare_test_environment(program, test_steps, &block)

@@ -118,6 +118,8 @@ module DEBUGGER__
       end
 
       false
+    rescue Errno::ECHILD
+      true
     end
 
     def kill_safely pid, name, test_info
