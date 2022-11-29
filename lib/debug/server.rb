@@ -430,7 +430,7 @@ module DEBUGGER__
             DEBUGGER__.warn "Port is saved into #{@port_save_file}"
           end
 
-          DEBUGGER__.warn <<~EOS
+          DEBUGGER__.info <<~EOS
           With rdbg, use the following command line:
           #
           #   #{rdbg} --attach #{@local_addr.ip_address} #{@local_addr.ip_port}
