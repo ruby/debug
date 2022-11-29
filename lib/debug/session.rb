@@ -738,6 +738,7 @@ module DEBUGGER__
       #   * It includes `self` as `%self` and a return value as `%return`.
       # * `i[nfo] i[var[s]]` or `i[nfo] instance`
       #   * Show information about instance variables about `self`.
+      #   * `info ivars <expr>` shows the instance variables of the result of `<expr>`.
       # * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
       #   * Show information about accessible constants except toplevel constants.
       # * `i[nfo] g[lobal[s]]`
@@ -759,8 +760,9 @@ module DEBUGGER__
           request_tc [:show, :default, pat] # something useful
         when 'l', /^locals?/
           request_tc [:show, :locals, pat]
-        when 'i', /^ivars?/i, /^instance[_ ]variables?/i
-          request_tc [:show, :ivars, pat]
+        when /^i\b/, /^ivars?\b/i, /^instance[_ ]variables?\b/i
+          expr = $~&.post_match&.strip
+          request_tc [:show, :ivars, pat, expr]
         when 'c', /^consts?/i, /^constants?/i
           request_tc [:show, :consts, pat]
         when 'g', /^globals?/i, /^global[_ ]variables?/i
