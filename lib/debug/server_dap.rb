@@ -279,7 +279,8 @@ module DEBUGGER__
         ## boot/configuration
         when 'launch'
           send_response req
-          UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
+          # `launch` runs on debuggee on the same file system
+          UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap') || true
           @nonstop = true
 
         when 'attach'
