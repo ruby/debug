@@ -654,21 +654,26 @@ The `<...>` notation means the argument.
 * `edit <file>`
   * Open <file> on the editor.
 * `i[nfo]`
-   * Show information about current frame (local/instance variables and defined constants).
-* `i[nfo] l[ocal[s]]`
+  * Show information about current frame (local/instance variables and defined constants).
+* `i[nfo]` <subcommand>
+  * `info` has the following sub-commands.
+  * Sub-commands can be specified with few letters which is unambiguous, like `l` for 'locals'.
+* `i[nfo] l or locals or local_variables`
   * Show information about the current frame (local variables)
-  * It includes `self` as `%self` and a return value as `%return`.
-* `i[nfo] i[var[s]]` or `i[nfo] instance`
+  * It includes `self` as `%self` and a return value as `_return`.
+* `i[nfo] i or ivars or instance_variables`
   * Show information about instance variables about `self`.
   * `info ivars <expr>` shows the instance variables of the result of `<expr>`.
-* `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
+* `i[nfo] c or consts or constants`
   * Show information about accessible constants except toplevel constants.
-* `i[nfo] g[lobal[s]]`
+* `i[nfo] g or globals or global_variables`
   * Show information about global variables
+* `i[nfo] th or threads`
+  * Show all threads (same as `th[read]`).
+* `i[nfo] b or breakpoints or w or watchpoints`
+  * Show all breakpoints and watchpoints.
 * `i[nfo] ... /regexp/`
   * Filter the output with `/regexp/`.
-* `i[nfo] th[read[s]]`
-  * Show all threads (same as `th[read]`).
 * `o[utline]` or `ls`
   * Show you available methods, constants, local variables, and instance variables in the current scope.
 * `o[utline] <expr>` or `ls <expr>`

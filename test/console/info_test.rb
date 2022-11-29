@@ -250,5 +250,46 @@ module DEBUGGER__
       end
     end
 
+    def test_ivar_abbrev
+      debug_code program do
+        type 'b 5'
+        type 'c'
+        assert_line_num 5
+
+        %w[ i iv iva ivar ivars
+            in ins inst insta instan instanc instance
+            instance_ instance_v instance_va instance_variable instance_variables].each{|c|
+          type "info #{c}"
+          assert_line_text(/@a/)
+          assert_line_text(/@b/)
+        }
+        type 'c'
+      end
+    end
+  end
+
+  class InfoBreaksTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| @a = 1
+      2| @b = 2
+      3| @c = 3
+      RUBY
+    end
+
+    def test_ivar_abbrev
+      debug_code program do
+        type 'next'
+        assert_line_num 2
+        type 'break 3'
+        type 'watch @a'
+        type 'i b'
+        assert_line_text(/:3/)
+        assert_line_text(/@a/)
+        type 'c'
+        assert_line_num 3
+        type 'c'
+      end
+    end
   end
 end
