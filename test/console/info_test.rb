@@ -239,13 +239,13 @@ module DEBUGGER__
         type 'u 8'
         assert_line_num 8
         type 'info ivars'
-        assert_no_line_text /@/
+        assert_no_line_text(/@/)
         type 'info ivars c'
-        assert_line_text /@a/
-        assert_line_text /@b/
+        assert_line_text(/@a/)
+        assert_line_text(/@b/)
         type 'info ivars c /b/'
-        assert_no_line_text /@a/
-        assert_line_text /@b/
+        assert_no_line_text(/@a/)
+        assert_line_text(/@b/)
         type 'c'
       end
     end
