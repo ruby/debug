@@ -18,6 +18,7 @@ file 'README.md' => ['lib/debug/session.rb', 'lib/debug/config.rb',
   require_relative 'lib/debug/session'
   require 'erb'
   File.write 'README.md', ERB.new(File.read('misc/README.md.erb')).result
+  File.write 'docs/configuration.md', ERB.new(File.read('misc/configuration.md.erb')).result
   puts 'README.md is updated.'
 end
 
