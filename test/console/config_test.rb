@@ -105,6 +105,44 @@ module DEBUGGER__
     end
   end
 
+  class ShowOrigSrcTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| binding.eval <<RUBY, __FILE__, 10
+      2|   a = 111
+      3|   b = 222
+      4|   c = 333
+      5|   d = 444
+      6|   e = 555
+      7|   f = 666
+      8| RUBY
+      9|
+     10| a = 777
+     11| b = 888
+     12| c = 999
+      RUBY
+    end
+
+    def test_show_evaledsrc_false_defalt
+      debug_code program do
+        type 's'
+        assert_line_num 10
+        assert_line_text(/a = 777/) # see file's 10th line
+        type 'c'
+      end
+    end
+
+    def test_show_evaledsrc_true
+      debug_code program do
+        type 'config show_evaledsrc = true'
+        type 's'
+        assert_line_num 10
+        assert_line_text(/a = 111/) # see eval'ed 10t line
+        type 'c'
+      end
+    end
+  end
+
   class ShowFramesTest < ConsoleTestCase
     def program
       <<~RUBY

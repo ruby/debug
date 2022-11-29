@@ -6,6 +6,22 @@ module DEBUGGER__
   class SourceRepository
     include Color
 
+    def file_src iseq
+      if (path = (iseq.absolute_path || iseq.path)) && File.exist?(path)
+        File.readlines(path, chomp: true)
+      end
+    end
+
+    def get iseq
+      return unless iseq
+
+      if CONFIG[:show_evaledsrc]
+        orig_src(iseq) || file_src(iseq)
+      else
+        file_src(iseq) || orig_src(iseq)
+      end
+    end
+
     if RubyVM.respond_to? :keep_script_lines
       # Ruby 3.1 and later
       RubyVM.keep_script_lines = true
@@ -29,17 +45,13 @@ module DEBUGGER__
         end
       end
 
-      def get iseq
-        return unless iseq
-
-        if lines = iseq.script_lines&.map(&:chomp)
-          lines
+      def orig_src iseq
+        lines = iseq.script_lines&.map(&:chomp)
+        line = iseq.first_line
+        if line > 1
+          lines = [*([''] * (line - 1)), *lines]
         else
-          if (path = (iseq.absolute_path || iseq.path)) && File.exist?(path)
-            File.readlines(path, chomp: true)
-          else
-            nil
-          end
+          lines
         end
       end
 
@@ -63,15 +75,22 @@ module DEBUGGER__
       end
 
       def add iseq, src
-        if (path = (iseq.absolute_path || iseq.path)) && File.exist?(path)
-          reloaded = @files.has_key? path
-          add_path path
-          return path, reloaded
-        elsif src
-          add_iseq iseq, src
-        end
+        path = (iseq.absolute_path || iseq.path)
 
-        nil
+        if path && File.exist?(path)
+          reloaded = @files.has_key? path
+
+          if src
+            add_iseq iseq, src
+            return path, reloaded
+          else
+            add_path path
+            return path, reloaded
+          end
+        else
+          add_iseq iseq, src
+          nil
+        end
       end
 
       private def all_iseq iseq, rs = []
@@ -87,7 +106,8 @@ module DEBUGGER__
         if line > 1
           src = ("\n" * (line - 1)) + src
         end
-        si = SrcInfo.new(src.lines)
+
+        si = SrcInfo.new(src.each_line.map{|l| l.chomp})
         all_iseq(iseq).each{|e|
           e.instance_variable_set(:@debugger_si, si)
           e.freeze
@@ -102,7 +122,7 @@ module DEBUGGER__
 
       private def get_si iseq
         return unless iseq
-      
+
         if iseq.instance_variable_defined?(:@debugger_si)
           iseq.instance_variable_get(:@debugger_si)
         elsif @files.has_key?(path = (iseq.absolute_path || iseq.path))
@@ -112,7 +132,7 @@ module DEBUGGER__
         end
       end
 
-      def get iseq
+      def orig_src iseq
         if si = get_si(iseq)
           si.src
         end
