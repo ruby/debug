@@ -155,8 +155,18 @@ module DEBUGGER__
       homedir = defined?(self.class.pty_home_dir) ? self.class.pty_home_dir : ENV['HOME']
 
       remote_info = DEBUGGER__::TestCase::RemoteInfo.new(*PTY.spawn({'HOME' => homedir}, cmd))
-      remote_info.r.read(1) # wait for the remote server to boot up
       remote_info.debuggee_backlog = []
+
+      line = nil
+
+      Timeout.timeout(TIMEOUT_SEC) do
+        line = remote_info.r.gets
+        remote_info.debuggee_backlog << line
+
+        # wait for first "wait for debugger connection" output
+        break if /wait for debugger connection/ =~ line
+        redo
+      end
 
       remote_info.reader_thread = Thread.new(remote_info) do |info|
         while data = info.r.gets
