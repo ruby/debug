@@ -660,6 +660,7 @@ The `<...>` notation means the argument.
   * It includes `self` as `%self` and a return value as `%return`.
 * `i[nfo] i[var[s]]` or `i[nfo] instance`
   * Show information about instance variables about `self`.
+  * `info ivars <expr>` shows the instance variables of the result of `<expr>`.
 * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
   * Show information about accessible constants except toplevel constants.
 * `i[nfo] g[lobal[s]]`
