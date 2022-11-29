@@ -135,7 +135,8 @@ module DEBUGGER__
 
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
         if !has_keep_script_lines || bps_pending_until_load?
-          ThreadClient.current.on_load tp.instruction_sequence, tp.eval_script
+          eval_script = tp.eval_script unless has_keep_script_lines
+          ThreadClient.current.on_load tp.instruction_sequence, eval_script
         end
       }
       @tp_load_script.enable
@@ -731,22 +732,30 @@ module DEBUGGER__
         request_tc [:show, :edit, arg]
       end
 
+      info_subcommands = nil
+      info_subcommands_abbrev = nil
+
       # * `i[nfo]`
-      #    * Show information about current frame (local/instance variables and defined constants).
-      # * `i[nfo] l[ocal[s]]`
+      #   * Show information about current frame (local/instance variables and defined constants).
+      # * `i[nfo]` <subcommand>
+      #   * `info` has the following sub-commands.
+      #   * Sub-commands can be specified with few letters which is unambiguous, like `l` for 'locals'.
+      # * `i[nfo] l or locals or local_variables`
       #   * Show information about the current frame (local variables)
-      #   * It includes `self` as `%self` and a return value as `%return`.
-      # * `i[nfo] i[var[s]]` or `i[nfo] instance`
+      #   * It includes `self` as `%self` and a return value as `_return`.
+      # * `i[nfo] i or ivars or instance_variables`
       #   * Show information about instance variables about `self`.
       #   * `info ivars <expr>` shows the instance variables of the result of `<expr>`.
-      # * `i[nfo] c[onst[s]]` or `i[nfo] constant[s]`
+      # * `i[nfo] c or consts or constants`
       #   * Show information about accessible constants except toplevel constants.
-      # * `i[nfo] g[lobal[s]]`
+      # * `i[nfo] g or globals or global_variables`
       #   * Show information about global variables
+      # * `i[nfo] th or threads`
+      #   * Show all threads (same as `th[read]`).
+      # * `i[nfo] b or breakpoints or w or watchpoints`
+      #   * Show all breakpoints and watchpoints.
       # * `i[nfo] ... /regexp/`
       #   * Filter the output with `/regexp/`.
-      # * `i[nfo] th[read[s]]`
-      #   * Show all threads (same as `th[read]`).
       register_command 'i', 'info', unsafe: false do |arg|
         if /\/(.+)\/\z/ =~ arg
           pat = Regexp.compile($1)
@@ -755,20 +764,47 @@ module DEBUGGER__
           sub = arg
         end
 
+        if /\A(.+?)\b(.+)/ =~ sub
+          sub = $1
+          opt = $2.strip
+          opt = nil if opt.empty?
+        end
+
+        if sub && !info_subcommands
+          info_subcommands = {
+            locals: %w[ locals local_variables ],
+            ivars:  %w[ ivars instance_variables ],
+            consts: %w[ consts constants ],
+            globals:%w[ globals global_variables ],
+            threads:%w[ threads ],
+            breaks: %w[ breakpoints ],
+            watchs: %w[ watchpoints ],
+          }
+
+          require_relative 'abbrev_command'
+          info_subcommands_abbrev = AbbrevCommand.new(info_subcommands)
+        end
+
+        if sub
+          sub = info_subcommands_abbrev.search sub, :unknown
+        end
+
         case sub
         when nil
           request_tc [:show, :default, pat] # something useful
-        when 'l', /^locals?/
+        when :locals
           request_tc [:show, :locals, pat]
-        when /^i\b/, /^ivars?\b/i, /^instance[_ ]variables?\b/i
-          expr = $~&.post_match&.strip
-          request_tc [:show, :ivars, pat, expr]
-        when 'c', /^consts?/i, /^constants?/i
+        when :ivars
+          request_tc [:show, :ivars, pat, opt]
+        when :consts
           request_tc [:show, :consts, pat]
-        when 'g', /^globals?/i, /^global[_ ]variables?/i
+        when :globals
           request_tc [:show, :globals, pat]
-        when 'th', /threads?/
+        when :threads
           thread_list
+          :retry
+        when :breaks, :watchs
+          show_bps
           :retry
         else
           @ui.puts "unrecognized argument for info command: #{arg}"
