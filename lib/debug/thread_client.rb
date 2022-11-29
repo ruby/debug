@@ -568,10 +568,18 @@ module DEBUGGER__
       end
     end
 
-    def show_ivars pat
-      if s = current_frame&.self
-        M_INSTANCE_VARIABLES.bind_call(s).sort.each{|iv|
-          value = M_INSTANCE_VARIABLE_GET.bind_call(s, iv)
+    def show_ivars pat, expr = nil
+
+      if expr && !expr.empty?
+        _self = frame_eval(expr);
+      elsif _self = current_frame&.self
+      else
+        _self = nil
+      end
+
+      if _self
+        M_INSTANCE_VARIABLES.bind_call(_self).sort.each{|iv|
+          value = M_INSTANCE_VARIABLE_GET.bind_call(_self, iv)
           puts_variable_info iv, value, pat
         }
       end
@@ -1088,7 +1096,8 @@ module DEBUGGER__
 
           when :ivars
             pat = args.shift
-            show_ivars pat
+            expr = args.shift
+            show_ivars pat, expr
 
           when :consts
             pat = args.shift

@@ -204,4 +204,51 @@ module DEBUGGER__
       end
     end
   end
+
+  class InfoIvarsTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| class C
+      2|   def initialize
+      3|     @a = :a
+      4|     @b = :b
+      5|   end
+      6| end
+      7| c = C.new
+      8| c
+      RUBY
+    end
+
+    def test_ivar
+      debug_code program do
+        type 'b 5'
+        type 'c'
+        assert_line_num 5
+        type 'info ivars'
+        assert_line_text(/@a/)
+        assert_line_text(/@b/)
+        type 'info ivars /b/'
+        assert_no_line_text(/@a/)
+        assert_line_text(/@b/)
+        type 'c'
+      end
+    end
+
+    def test_ivar_obj
+      debug_code program do
+        type 'u 8'
+        assert_line_num 8
+        type 'info ivars'
+        assert_no_line_text /@/
+        type 'info ivars c'
+        assert_line_text /@a/
+        assert_line_text /@b/
+        type 'info ivars c /b/'
+        assert_no_line_text /@a/
+        assert_line_text /@b/
+        type 'c'
+      end
+    end
+
+  end
 end
