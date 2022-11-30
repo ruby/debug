@@ -158,14 +158,22 @@ module DEBUGGER__
       remote_info.debuggee_backlog = []
 
       line = nil
+      msg1 = msg2 = nil
 
       Timeout.timeout(TIMEOUT_SEC) do
         line = remote_info.r.gets
         remote_info.debuggee_backlog << line
 
-        # wait for first "wait for debugger connection" output
-        break if /wait for debugger connection/ =~ line
-        redo
+        # wait for two lines (order is unstable)
+        case line
+        when /\ADEBUGGER: Debugger can attach via/
+          msg1 = true
+        when /\ADEBUGGER: wait for debugger connection/
+          msg2 = true
+        end
+
+        break if msg1 && msg2
+        redo # loop
       end
 
       remote_info.reader_thread = Thread.new(remote_info) do |info|
@@ -191,14 +199,16 @@ module DEBUGGER__
       remote_info
     end
 
-    # search free port by opening server socket with port 0
-    Socket.tcp_server_sockets(0).tap do |ss|
-      TCPIP_PORT = ss.first.local_address.ip_port
-    end.each{|s| s.close}
-
     def setup_tcpip_remote_debuggee
-      remote_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=#{TCPIP_PORT} -- #{temp_file_path}")
-      remote_info.port = TCPIP_PORT
+      remote_info = setup_remote_debuggee("#{RDBG_EXECUTABLE} -O --port=0 -- #{temp_file_path}")
+      port = nil
+      remote_info.debuggee_backlog.each{|line|
+        if /Debugger can attach via TCP\/IP \(.+:(\d+)\)/ =~ line
+          port = $1.to_i
+        end
+      }
+      raise "can not find TCP/IP port with backlog: #{remote_info.debuggee_backlog.inspect}" unless port
+      remote_info.port = port
       Timeout.timeout(TIMEOUT_SEC) do
         sleep 0.001 until remote_info.debuggee_backlog.join.include? remote_info.port.to_s
       end
