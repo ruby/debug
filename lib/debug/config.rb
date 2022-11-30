@@ -34,7 +34,7 @@ module DEBUGGER__
     nonstop:        ['RUBY_DEBUG_NONSTOP',     "BOOT: Nonstop mode",                                                :bool, "false"],
     stop_at_load:   ['RUBY_DEBUG_STOP_AT_LOAD',"BOOT: Stop at just loading location",                               :bool, "false"],
     init_script:    ['RUBY_DEBUG_INIT_SCRIPT', "BOOT: debug command script path loaded at first stop"],
-    commands:       ['RUBY_DEBUG_COMMANDS',    "BOOT: debug commands invoked at first stop. commands should be separated by ';;'"],
+    commands:       ['RUBY_DEBUG_COMMANDS',    "BOOT: debug commands invoked at first stop. Commands should be separated by `;;`"],
     no_rc:          ['RUBY_DEBUG_NO_RC',       "BOOT: ignore loading ~/.rdbgrc(.rb)",                               :bool, "false"],
     history_file:   ['RUBY_DEBUG_HISTORY_FILE',"BOOT: history file",               :string, "~/.rdbg_history"],
     save_history:   ['RUBY_DEBUG_SAVE_HISTORY',"BOOT: maximum save history lines", :int, "10000"],
