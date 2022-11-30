@@ -151,10 +151,10 @@ module DEBUGGER__
       !@q_evt.closed?
     end
 
-    def stop_stepping? file, line, subsession_id
+    def stop_stepping? file, line, subsession_id = nil
       if @bps.has_key? [file, line]
         true
-      elsif @subsession_id != subsession_id
+      elsif subsession_id && @subsession_id != subsession_id
         true
       else
         false
