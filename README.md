@@ -489,7 +489,7 @@ config set no_color true
   * `RUBY_DEBUG_NONSTOP` (`nonstop`): Nonstop mode (default: false)
   * `RUBY_DEBUG_STOP_AT_LOAD` (`stop_at_load`): Stop at just loading location (default: false)
   * `RUBY_DEBUG_INIT_SCRIPT` (`init_script`): debug command script path loaded at first stop
-  * `RUBY_DEBUG_COMMANDS` (`commands`): debug commands invoked at first stop. commands should be separated by ';;'
+  * `RUBY_DEBUG_COMMANDS` (`commands`): debug commands invoked at first stop. Commands should be separated by `;;`
   * `RUBY_DEBUG_NO_RC` (`no_rc`): ignore loading ~/.rdbgrc(.rb) (default: false)
   * `RUBY_DEBUG_HISTORY_FILE` (`history_file`): history file (default: ~/.rdbg_history)
   * `RUBY_DEBUG_SAVE_HISTORY` (`save_history`): maximum save history lines (default: 10000)
