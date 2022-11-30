@@ -749,7 +749,7 @@ module DEBUGGER__
           next if i < start_frame
 
           path = frame.realpath || frame.path
-          next if skip_path?(path)
+          next if skip_path?(path) && !SESSION.stop_stepping?(path, frame.location.lineno, SESSION.subsession_id)
           break if (levels -= 1) < 0
           source_name = path ? File.basename(path) : frame.location.to_s
 
