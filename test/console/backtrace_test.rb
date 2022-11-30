@@ -116,33 +116,41 @@ module DEBUGGER__
     end
 
     def test_frame_filtering_works_with_unexpanded_path_and_expanded_skip_path
-      foo_file = 'class Foo; def bar; debugger; end; end'
+      foo_path = "#{pty_home_dir}/foo_#{Time.now.to_i}.rb"
+      foo_file = <<~RUBY
+        class Foo
+          def bar
+            debugger
+          end
+        end
+      RUBY
+
       program = <<~RUBY
-       1| load "~/foo.rb"
+       1| load "~/#{File.basename(foo_path)}"
        2| Foo.new.bar
       RUBY
 
       begin
-        File.open("#{pty_home_dir}/foo.rb", 'w+').close
+        File.open(foo_path, 'w+').close
       rescue Errno::EACCES, Errno::EPERM
         omit "Skip test with load files. Cannot create files in HOME directory."
       end
 
+      file = File.open(foo_path, 'w+') { |f| f.write(foo_file) }
       debug_code(program) do
-        type "file = File.open('#{pty_home_dir}/foo.rb', 'w+') { |f| f.write('#{foo_file}') }"
         type 'c'
         type 'bt'
         assert_line_text(/Foo#bar/)
-        assert_line_text(/~\/foo\.rb/)
-        type "DEBUGGER__::CONFIG[:skip_path] = '#{pty_home_dir}/foo.rb'"
+        assert_line_text(/~\/foo_\d+.rb/)
+        type "eval DEBUGGER__::CONFIG[:skip_path] = '#{foo_path}'"
         type 'bt'
-        assert_no_line_text(/Foo#bar/) # ~/foo.rb should match foo.rb's absolute path and be skipped
+        assert_no_line_text(/Foo#bar/) # ~/foo....rb should match foo.rb's absolute path and be skipped
         assert_no_line_text(/~\/foo\.rb/)
         type 'c'
       end
     ensure
-      if File.exist? "#{pty_home_dir}/foo.rb"
-        File.unlink "#{pty_home_dir}/foo.rb"
+      if File.exist? foo_path
+        File.unlink foo_path
       end
     end
   end
