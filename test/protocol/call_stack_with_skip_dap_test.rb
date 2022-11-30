@@ -58,5 +58,21 @@ module DEBUGGER__
     ensure
       ENV['RUBY_DEBUG_SKIP_PATH'] = nil
     end
+
+    def test_it_does_not_skip_a_path_if_there_is_a_breakpoint
+      with_extra_tempfile do |extra_file|
+        ENV['RUBY_DEBUG_SKIP_PATH'] = extra_file.path
+        run_protocol_scenario(program(extra_file.path), cdp: false) do
+          req_add_breakpoint 2, path: extra_file.path
+          req_continue
+
+          assert_equal([File.basename(extra_file.path), File.basename(temp_file_path)], req_stacktrace_file_names)
+
+          req_terminate_debuggee
+        end
+      end
+    ensure
+      ENV['RUBY_DEBUG_SKIP_PATH'] = nil
+    end
   end
 end
