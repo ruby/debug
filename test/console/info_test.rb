@@ -203,6 +203,16 @@ module DEBUGGER__
         type 'c'
       end
     end
+
+    def test_info_constant_twice
+      debug_code program do
+        type 'i c' # on Ruby 3.2, `Set` loads `set.rb`
+        type 'i c' # on Ruby 3.2, accessing `SortedSet` raises an error
+        # #<RuntimeError: The `SortedSet` class has been extracted from the `set` library.
+        #                 You must use the `sorted_set` gem or other alternatives.
+        type 'c'
+      end
+    end
   end
 
   class InfoIvarsTest < ConsoleTestCase

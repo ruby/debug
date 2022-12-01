@@ -608,7 +608,11 @@ module DEBUGGER__
           c.constants(false).sort.each{|name|
             next if names.has_key? name
             names[name] = nil
-            value = c.const_get(name)
+            begin
+              value = c.const_get(name)
+            rescue Exception => e
+              value = e
+            end
             puts_variable_info name, value, pat
           }
         }
