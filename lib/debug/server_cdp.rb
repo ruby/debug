@@ -1194,7 +1194,11 @@ module DEBUGGER__
       [Object, *b.eval('::Module.nesting')].reverse_each{|mod|
         if cs.all?{|c|
              if mod.const_defined?(c)
-               mod = mod.const_get(c)
+               begin
+                 mod = mod.const_get(c)
+               rescue Exception
+                 false
+               end
              else
                false
              end
