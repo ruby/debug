@@ -748,6 +748,7 @@ module DEBUGGER__
       #   * `info ivars <expr>` shows the instance variables of the result of `<expr>`.
       # * `i[nfo] c or consts or constants`
       #   * Show information about accessible constants except toplevel constants.
+      #   * `info consts <expr>` shows the constants of a class/module of the result of `<expr>`
       # * `i[nfo] g or globals or global_variables`
       #   * Show information about global variables
       # * `i[nfo] th or threads`
@@ -800,7 +801,7 @@ module DEBUGGER__
         when :ivars
           request_tc [:show, :ivars, pat, opt]
         when :consts
-          request_tc [:show, :consts, pat]
+          request_tc [:show, :consts, pat, opt]
         when :globals
           request_tc [:show, :globals, pat]
         when :threads
