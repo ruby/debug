@@ -569,7 +569,6 @@ module DEBUGGER__
     end
 
     def show_ivars pat, expr = nil
-
       if expr && !expr.empty?
         _self = frame_eval(expr);
       elsif _self = current_frame&.self
@@ -585,18 +584,39 @@ module DEBUGGER__
       end
     end
 
-    def show_consts pat, only_self: false
-      if s = current_frame&.self
-        cs = {}
-        if M_KIND_OF_P.bind_call(s, Module)
-          cs[s] = :self
+    def iter_consts c, names = {}
+      c.constants(false).sort.each{|name|
+        next if names.has_key? name
+        names[name] = nil
+        begin
+          value = c.const_get(name)
+        rescue Exception => e
+          value = e
+        end
+        yield name, value
+      }
+    end
+
+    def get_consts expr = nil, only_self: false, &block
+      if expr && !expr.empty?
+        _self = frame_eval(expr)
+        if M_KIND_OF_P.bind_call(_self, Module)
+          iter_consts _self, &block
+          return
         else
-          s = M_CLASS.bind_call(s)
-          cs[s] = :self unless only_self
+          raise "#{_self.inspect} (by #{expr}) is not a Module."
+        end
+      elsif _self = current_frame&.self
+        cs = {}
+        if M_KIND_OF_P.bind_call(_self, Module)
+          cs[_self] = :self
+        else
+          _self = M_CLASS.bind_call(_self)
+          cs[_self] = :self unless only_self
         end
 
         unless only_self
-          s.ancestors.each{|c| break if c == Object; cs[c] = :ancestors}
+          _self.ancestors.each{|c| break if c == Object; cs[c] = :ancestors}
           if b = current_frame&.binding
             b.eval('::Module.nesting').each{|c| cs[c] = :nesting unless cs.has_key? c}
           end
@@ -605,17 +625,14 @@ module DEBUGGER__
         names = {}
 
         cs.each{|c, _|
-          c.constants(false).sort.each{|name|
-            next if names.has_key? name
-            names[name] = nil
-            begin
-              value = c.const_get(name)
-            rescue Exception => e
-              value = e
-            end
-            puts_variable_info name, value, pat
-          }
+          iter_consts c, names, &block
         }
+      end
+    end
+
+    def show_consts pat, expr = nil, only_self: false
+      get_consts expr, only_self: only_self do |name, value|
+        puts_variable_info name, value, pat
       end
     end
 
@@ -1105,7 +1122,8 @@ module DEBUGGER__
 
           when :consts
             pat = args.shift
-            show_consts pat
+            expr = args.shift
+            show_consts pat, expr
 
           when :globals
             pat = args.shift
