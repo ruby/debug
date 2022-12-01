@@ -32,6 +32,16 @@ module DEBUGGER__
           nil
         end
       end
+
+      def candidates
+        @children.map{|c, n|
+          ss = n.candidates
+          ss.empty? ? c :
+          ss.map{|s|
+            c+s
+          }
+        }.flatten
+      end
     end
 
     # config: { type: [commands...], ... }
@@ -60,6 +70,7 @@ module DEBUGGER__
           return if_none
         end
       end
+      yield trie.candidates.map{|s| str + s} if block_given?
       if_none
     end
   end

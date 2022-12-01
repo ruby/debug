@@ -786,7 +786,10 @@ module DEBUGGER__
         end
 
         if sub
-          sub = info_subcommands_abbrev.search sub, :unknown
+          sub = info_subcommands_abbrev.search sub, :unknown do |candidates|
+            # note: unreached now
+            @ui.puts "Ambiguous command '#{sub}': #{candidates.join(' ')}"
+          end
         end
 
         case sub
