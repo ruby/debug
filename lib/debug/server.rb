@@ -144,7 +144,8 @@ module DEBUGGER__
 
         # TODO: protocol version
         if v != VERSION
-          raise GreetingError, "Incompatible version (server:#{VERSION} and client:#{$1})"
+          @sock.puts msg = "out DEBUGGER: Incompatible version (server:#{VERSION} and client:#{$1})"
+          raise GreetingError, msg
         end
         parse_option(params)
 
