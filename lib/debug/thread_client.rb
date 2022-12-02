@@ -427,7 +427,7 @@ module DEBUGGER__
     def frame_eval src, re_raise: false, binding_location: false
       @success_last_eval = false
 
-      b = current_frame.eval_binding
+      b = current_frame&.eval_binding || TOPLEVEL_BINDING
 
       special_local_variables current_frame do |name, var|
         b.local_variable_set(name, var) if /\%/ !~ name
@@ -810,7 +810,7 @@ module DEBUGGER__
       case args.first
       when :method
         klass_name, op, method_name, cond, cmd, path = args[1..]
-        bp = MethodBreakpoint.new(current_frame.eval_binding, klass_name, op, method_name, cond: cond, command: cmd, path: path)
+        bp = MethodBreakpoint.new(current_frame&.eval_binding || TOPLEVEL_BINDING, klass_name, op, method_name, cond: cond, command: cmd, path: path)
         begin
           bp.enable
         rescue NameError => e
