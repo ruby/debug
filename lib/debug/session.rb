@@ -2421,8 +2421,20 @@ module DEBUGGER__
       end
     end
 
-    private def __fork_setup_for_debugger
-      fork_mode = CONFIG[:fork_mode]
+    module DaemonInterceptor
+      def daemon
+        return super unless defined?(SESSION) && SESSION.active?
+
+        _, child_hook = __fork_setup_for_debugger(:child)
+
+        super.tap do
+          child_hook.call
+        end
+      end
+    end
+
+    private def __fork_setup_for_debugger fork_mode = nil
+      fork_mode ||= CONFIG[:fork_mode]
 
       if fork_mode == :both && CONFIG[:parent_on_fork]
         fork_mode = :parent
@@ -2487,6 +2499,7 @@ module DEBUGGER__
     module ::Process
       class << self
         prepend ForkInterceptor
+        prepend DaemonInterceptor
       end
     end
 
@@ -2522,6 +2535,7 @@ module DEBUGGER__
     module ::Process
       class << self
         prepend ForkInterceptor
+        prepend DaemonInterceptor
       end
     end
   end

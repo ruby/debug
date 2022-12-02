@@ -91,10 +91,10 @@ module DEBUGGER__
           if remote && !NO_REMOTE && MULTITHREADED_TEST
             begin
               th = [
-                new_thread { debug_code_on_local },
+                (new_thread { debug_code_on_local } unless remote == :remote_only),
                 new_thread { debug_code_on_unix_domain_socket },
                 new_thread { debug_code_on_tcpip },
-              ]
+              ].compact
 
               th.each do |t|
                 if fail_msg = t.join.value
@@ -109,11 +109,11 @@ module DEBUGGER__
               th.each {|t| t.join}
             end
           elsif remote && !NO_REMOTE
-            debug_code_on_local
+            debug_code_on_local unless remote == :remote_only
             debug_code_on_unix_domain_socket
             debug_code_on_tcpip
           else
-            debug_code_on_local
+            debug_code_on_local unless remote == :remote_only
           end
         end
       end
