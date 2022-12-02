@@ -13,23 +13,28 @@ module DEBUGGER__
       false
     end
 
-    def activate session, on_fork: false
-      unless CONFIG[:no_sigint_hook]
-        prev_handler = trap(:SIGINT){
-          if session.active?
-            ThreadClient.current.on_trap :SIGINT
-          end
-        }
-        session.intercept_trap_sigint_start prev_handler
-      end
+    def activate_sigint
+      prev_handler = trap(:SIGINT){
+        if SESSION.active?
+          ThreadClient.current.on_trap :SIGINT
+        end
+      }
+      SESSION.intercept_trap_sigint_start prev_handler
     end
 
-    def deactivate
+    def deactivate_sigint
       if SESSION.intercept_trap_sigint?
         prev = SESSION.intercept_trap_sigint_end
         trap(:SIGINT, prev)
       end
+    end
 
+    def activate session, on_fork: false
+      activate_sigint unless CONFIG[:no_sigint_hook]
+    end
+
+    def deactivate
+      deactivate_sigint
       @console.deactivate
     end
 

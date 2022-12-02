@@ -1926,6 +1926,17 @@ module DEBUGGER__
       end
     end
 
+    def set_no_sigint_hook old, new
+      return unless old != new
+      return unless @ui.respond_to? :activate_sigint
+
+      if old # no -> yes
+        @ui.activate_sigint
+      else
+        @ui.deactivate_sigint
+      end
+    end
+
     def save_int_trap cmd
       prev, @intercepted_sigint_cmd = @intercepted_sigint_cmd, cmd
       prev
