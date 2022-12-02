@@ -25,6 +25,9 @@ module DEBUGGER__
         when 'list-socks'
           cleanup_unix_domain_sockets
           puts list_connections
+        when 'list-socks-verbose'
+          cleanup_unix_domain_sockets
+          puts list_connections verbose: true
         when 'setup-autoload'
           setup_autoload
         else
@@ -91,10 +94,24 @@ module DEBUGGER__
         end
       end
 
-      def list_connections
-        Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*').find_all do |path|
+      def list_connections verbose: false
+        socks = Dir.glob(DEBUGGER__.create_unix_domain_socket_name_prefix + '*').find_all do |path|
           File.socket?(path)
         end
+
+        if verbose
+          socks = socks.map{|sock_path|
+            Socket.unix(sock_path){|sock|
+              sock.puts "info cookie: #{CONFIG[:cookie] || '-'}"
+              pid = sock.gets.chomp
+              _dbg = sock.gets.chomp
+              _unm = sock.gets.chomp
+              [sock_path, pid]
+            }
+          }
+        end
+
+        socks
       end
     end
 
@@ -148,18 +165,18 @@ module DEBUGGER__
         end
       else
         Client.cleanup_unix_domain_sockets
-        files = Client.list_connections
+        files = Client.list_connections verbose: true
 
         case files.size
         when 0
           $stderr.puts "No debug session is available."
           exit
         when 1
-          @s = Socket.unix(files.first)
+          @s = Socket.unix(files.first.first)
         else
           $stderr.puts "Please select a debug session:"
-          files.each{|f|
-            $stderr.puts "  #{File.basename(f)}"
+          files.each{|(f, desc)|
+            $stderr.puts "  #{File.basename(f)} (#{desc})"
           }
           exit
         end
