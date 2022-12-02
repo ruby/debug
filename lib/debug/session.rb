@@ -2343,6 +2343,7 @@ module DEBUGGER__
   def self.log level, msg
     if check_loglevel level
       @logfile = STDERR unless defined? @logfile
+      return if @logfile.closed?
 
       if defined? SESSION
         pi = SESSION.process_info
