@@ -166,7 +166,7 @@ module DEBUGGER__
         9| end
       RUBY
     end
-    
+
     def test_1629720194
       debug_code(program) do
         type 's'
@@ -272,7 +272,7 @@ To run the test generator, you can enter `$ bin/gentest target.rb --open=vscode`
 Also, if you enter `$ bin/gentest target.rb --open=chrome` there, Chrome will be executed.
 If you need to modify existing tests, it is basically a good idea to regenerate them by the test generator instead of rewriting them directly.
 Please refer to [the Microsoft "Debug Adapter Protocol" article](https://microsoft.github.io/debug-adapter-protocol/specification) to learn more about DAP formats.
-Please refer to [Procol viewer for "Chrome DevTools Protocol"](https://chromedevtools.github.io/devtools-protocol/) to learn more about CDP formats.
+Please refer to [the "Chrome DevTools Protocol" official documentation](https://chromedevtools.github.io/devtools-protocol/) to learn more about CDP formats.
 
 2. High-level tests
 
@@ -352,7 +352,7 @@ Sends request to rdbg to set exception breakpoints. e.g.
 req_set_exception_breakpoints([{ name: "RuntimeError", condition: "a == 1" }])
 ```
 
-Please note that `setExceptionBreakpoints` resets all exception breakpoints in every request. 
+Please note that `setExceptionBreakpoints` resets all exception breakpoints in every request.
 
 So the following code will only set breakpoint for `Exception`.
 
