@@ -149,6 +149,12 @@ module DEBUGGER__
       if_updated old_conf, conf, :sigdump_sig do |old_sig, new_sig|
         setup_sigdump old_sig, new_sig
       end
+
+      if_updated old_conf, conf, :no_sigint_hook do |old, new|
+        if defined?(SESSION)
+          SESSION.set_no_sigint_hook old, new
+        end
+      end
     end
 
     private def if_updated old_conf, new_conf, key
