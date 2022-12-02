@@ -151,6 +151,10 @@ module DEBUGGER__
       !@q_evt.closed?
     end
 
+    def remote?
+      @ui.remote?
+    end
+
     def stop_stepping? file, line, subsession_id = nil
       if @bps.has_key? [file, line]
         true
@@ -2426,6 +2430,10 @@ module DEBUGGER__
         return super unless defined?(SESSION) && SESSION.active?
 
         _, child_hook = __fork_setup_for_debugger(:child)
+
+        unless SESSION.remote?
+          DEBUGGER__.warn "Can't debug the code after Process.daemon locally. Use the remote debugging feature."
+        end
 
         super.tap do
           child_hook.call
