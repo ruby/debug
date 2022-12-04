@@ -516,6 +516,8 @@ module DEBUGGER__
   end
 
   class Session
+    include GlobalVariablesHelper
+
     def find_waiting_tc id
       @th_clients.each{|th, tc|
         return tc if tc.id == id && tc.waiting?
@@ -562,7 +564,7 @@ module DEBUGGER__
         if ref = @var_map[varid]
           case ref[0]
           when :globals
-            vars = global_variables.sort.map do |name|
+            vars = safe_global_variables.sort.map do |name|
               gv = eval(name.to_s)
               {
                 name: name,
@@ -800,7 +802,7 @@ module DEBUGGER__
           name: 'Global variables',
           presentationHint: 'globals',
           variablesReference: 1, # GLOBAL
-          namedVariables: global_variables.size,
+          namedVariables: safe_global_variables.size,
           indexedVariables: 0,
           expensive: false,
         }]
@@ -887,7 +889,7 @@ module DEBUGGER__
                 message = "Error: Not defined instance variable: #{expr.inspect}"
               end
             when /\A\$\S/
-              global_variables.each{|gvar|
+              safe_global_variables.each{|gvar|
                 if gvar.to_s == expr
                   result = eval(gvar.to_s)
                   break false
