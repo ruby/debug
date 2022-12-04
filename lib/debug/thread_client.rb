@@ -38,6 +38,13 @@ module DEBUGGER__
     end
   end
 
+  module GlobalVariablesHelper
+    SKIP_GLOBAL_LIST = %i[$= $KCODE $-K $SAFE].freeze
+    def safe_global_variables
+      global_variables.reject{|name| SKIP_GLOBAL_LIST.include? name }
+    end
+  end
+
   class ThreadClient
     def self.current
       if thc = Thread.current[:DEBUGGER__ThreadClient]
@@ -50,6 +57,7 @@ module DEBUGGER__
 
     include Color
     include SkipPathHelper
+    include GlobalVariablesHelper
 
     attr_reader :thread, :id, :recorder, :check_bp_fulfillment_map
 
@@ -636,9 +644,8 @@ module DEBUGGER__
       end
     end
 
-    SKIP_GLOBAL_LIST = %i[$= $KCODE $-K $SAFE].freeze
     def show_globals pat
-      global_variables.sort.each{|name|
+      safe_global_variables.sort.each{|name|
         next if SKIP_GLOBAL_LIST.include? name
 
         value = eval(name.to_s)

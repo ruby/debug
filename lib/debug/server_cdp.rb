@@ -696,6 +696,8 @@ module DEBUGGER__
   end
 
   class Session
+    include GlobalVariablesHelper
+
     # FIXME: unify this method with ThreadClient#propertyDescriptor.
     def get_type obj
       case obj
@@ -750,7 +752,7 @@ module DEBUGGER__
             fid = @frame_map[frame_id]
             request_tc [:cdp, :scope, req, fid]
           when 'global'
-            vars = global_variables.sort.map do |name|
+            vars = safe_global_variables.sort.map do |name|
               gv = eval(name.to_s)
               prop = {
                 name: name,
@@ -1040,7 +1042,7 @@ module DEBUGGER__
             case expr
             # Chrome doesn't read instance variables
             when /\A\$\S/
-              global_variables.each{|gvar|
+              safe_global_variables.each{|gvar|
                 if gvar.to_s == expr
                   result = eval(gvar.to_s)
                   break false
