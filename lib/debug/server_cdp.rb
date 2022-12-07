@@ -34,25 +34,26 @@ module DEBUGGER__
 
         loop do
           res = ws_client.extract_data
-          case
-          when res['id'] == 1 && target_info = res.dig('result', 'targetInfos')
+          case res['id']
+          when 1
+            target_info = res.dig('result', 'targetInfos')
             page = target_info.find{|t| t['type'] == 'page'}
             ws_client.send id: 2, method: 'Target.attachToTarget',
                           params: {
                             targetId: page['targetId'],
                             flatten: true
                           }
-          when res['id'] == 2
+          when 2
             s_id = res.dig('result', 'sessionId')
             # TODO: change id
             ws_client.send sessionId: s_id, id: 100, method: 'Network.enable'
             ws_client.send sessionId: s_id, id: 3,
                           method: 'Page.enable'
-          when res['id'] == 3
+          when 3
             s_id = res['sessionId']
             ws_client.send sessionId: s_id, id: 4,
                           method: 'Page.getFrameTree'
-          when res['id'] == 4
+          when 4
             s_id = res['sessionId']
             f_id = res.dig('result', 'frameTree', 'frame', 'id')
             ws_client.send sessionId: s_id, id: 5,
@@ -61,17 +62,19 @@ module DEBUGGER__
                             url: "devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{addr}/#{uuid}",
                             frameId: f_id
                           }
-          when res['method'] == 'Network.webSocketWillSendHandshakeRequest'
-            s_id = res['sessionId']
-            # Display the console by entering ESC key
-            ws_client.send sessionId: s_id, id: 101,  # TODO: change id
-                          method:"Input.dispatchKeyEvent",
-                          params: {
-                            type:"keyDown",
-                            windowsVirtualKeyCode:27 # ESC key
-                          }
-          when res['id'] == 101
+          when 101
             break
+          else
+            if res['method'] == 'Network.webSocketWillSendHandshakeRequest'
+              s_id = res['sessionId']
+              # Display the console by entering ESC key
+              ws_client.send sessionId: s_id, id: 101,  # TODO: change id
+                            method:"Input.dispatchKeyEvent",
+                            params: {
+                              type:"keyDown",
+                              windowsVirtualKeyCode:27 # ESC key
+                            }
+            end
           end
         end
         pid
