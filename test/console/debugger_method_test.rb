@@ -208,5 +208,14 @@ module DEBUGGER__
         type "c"
       end
     end
+
+    def test_require_config_doesnt_cancel_prelude
+      run_ruby(program, options: "-Ilib -rdebug/config") do
+        assert_line_num(5)
+        type "a + b"
+        assert_line_text(/120/)
+        type "c"
+      end
+    end
   end
 end
