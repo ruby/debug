@@ -723,9 +723,8 @@ module DEBUGGER__
   end
 
   class ThreadClient
-
     MAX_LENGTH = 180
-    
+
     def value_inspect obj, short: true
       # TODO: max length should be configuarable?
       str = DEBUGGER__.safe_inspect obj, short: short, max_length: MAX_LENGTH
@@ -847,10 +846,11 @@ module DEBUGGER__
               }
             when String
               vars = [
-                variable('#length', obj.length),
+                variable('#lengthddsfsd', obj.length),
                 variable('#encoding', obj.encoding),
               ]
-              vars << variable('#dump', NaiveString.new(obj)) if obj.length > MAX_LENGTH
+              printed_str = value_inspect(obj)
+              vars << variable('#dump', NaiveString.new(obj)) if printed_str.end_with?('...')
             when Class, Module
               vars << variable('%ancestors', obj.ancestors[1..])
             when Range
