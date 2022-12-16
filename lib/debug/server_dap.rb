@@ -737,6 +737,14 @@ module DEBUGGER__
       end
     end
 
+    def dap_eval b, expr, _context, prompt: '(repl_eval)'
+      begin
+        b.eval(expr.to_s, prompt)
+      rescue Exception => e
+        e
+      end
+    end
+
     def process_dap args
       # pp tc: self, args: args
       type = args.shift
@@ -874,12 +882,7 @@ module DEBUGGER__
 
           case context
           when 'repl', 'watch'
-            begin
-              result = b.eval(expr.to_s, '(DEBUG CONSOLE)')
-            rescue Exception => e
-              result = e
-            end
-
+            result = dap_eval b, expr, context, prompt: '(DEBUG CONSOLE)'
           when 'hover'
             case expr
             when /\A\@\S/
