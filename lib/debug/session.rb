@@ -1686,7 +1686,7 @@ module DEBUGGER__
         DEBUGGER__.debug{ "Enter subsession (nested #{@subsession_stack.size})" }
       else
         DEBUGGER__.debug{ "Enter subsession" }
-        stop_all_threads
+        # stop_all_threads
         @process_group.lock
       end
 
