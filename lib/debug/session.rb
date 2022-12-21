@@ -1322,7 +1322,7 @@ module DEBUGGER__
     # breakpoint management
 
     def bps_pending_until_load?
-      @bps.any?{|key, bp| bp.pending_until_load?}
+      @bps.any?
     end
 
     def iterate_bps
