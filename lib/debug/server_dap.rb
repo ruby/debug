@@ -565,7 +565,11 @@ module DEBUGGER__
           case ref[0]
           when :globals
             vars = safe_global_variables.sort.map do |name|
-              gv = eval(name.to_s)
+              begin
+                gv = eval(name.to_s)
+              rescue Exception => e
+                gv = e.inspect
+              end
               {
                 name: name,
                 value: gv.inspect,
