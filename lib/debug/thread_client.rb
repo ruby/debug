@@ -29,7 +29,7 @@ module DEBUGGER__
     end
 
     def skip_internal_path?(path)
-      path.start_with?(__dir__) || path.start_with?('<internal:')
+      path.start_with?(__dir__) || path.delete_prefix('!eval:').start_with?('<internal:')
     end
 
     def skip_location?(loc)

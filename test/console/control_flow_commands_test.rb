@@ -493,6 +493,20 @@ module DEBUGGER__
     end
   end
 
+  class SkipStepOnInternalCodeTest < ConsoleTestCase
+    def test_skip_step_on_internal_code
+      code = <<~RUBY
+      1| _a = 1.abs # step here and it should not step into Integer#abs's internal source
+      2| _b = _a.abs
+      RUBY
+      debug_code code do
+        type 's'
+        assert_line_num 2
+        type 'c'
+      end
+    end
+  end
+
   #
   # Tests that next/finish work for a deep call stack.
   # We use different logic for computing frame depth when the call stack is above/below 4096.
