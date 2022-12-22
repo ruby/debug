@@ -452,7 +452,11 @@ module DEBUGGER__
           @q_msg << req
 
         else
-          raise "Unknown request: #{req.inspect}"
+          if respond_to? mid = "request_#{req['command']}"
+            send mid, req
+          else
+            raise "Unknown request: #{req.inspect}"
+          end
         end
       end
     ensure
