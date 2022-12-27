@@ -480,9 +480,9 @@ module DEBUGGER__
       # * `u[ntil]`
       #   * Similar to `next` command, but only stop later lines or the end of the current frame.
       #   * Similar to gdb's `advance` command.
-      # * `u[ntil] <[file:]line>
+      # * `u[ntil] <[file:]line>`
       #   * Run til the program reaches given location or the end of the current frame.
-      # * `u[ntil] <name>
+      # * `u[ntil] <name>`
       #   * Run til the program invokes a method `<name>`. `<name>` can be a regexp with `/name/`.
       register_command 'u', 'until',
                        repeat: true,
