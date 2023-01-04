@@ -148,6 +148,93 @@ module DEBUGGER__
     end
   end
 
+  class DapTracer < Tracer
+    def initialize ui, evts, **kw
+      super(ui, **kw)
+      @prev = []
+      @cur = []
+      @evts = evts
+    end
+
+    def log
+      result = @cur
+      prev = @prev[@cur.size..-1]
+      unless prev.nil?
+        result.concat(prev)
+      end
+      result
+    end
+
+    def setup
+      @tracer = TracePoint.new(*@evts){|tp|
+        next if skip?(tp)
+        next unless @evts.include? tp.event
+
+        call_identifier_str =
+          if tp.defined_class
+            minfo(tp)
+          else
+            "block"
+          end
+
+        depth = DEBUGGER__.frame_depth
+
+        case tp.event
+        when :call, :c_call, :b_call
+          append(call_trace_log(depth, call_identifier_str, tp))
+        when :return, :c_return, :b_return
+          return_str = DEBUGGER__.safe_inspect(tp.return_value, short: true, max_length: 10)
+          append(call_trace_log(depth, call_identifier_str, tp, return_str: return_str))
+        when :line
+          append(line_trace_log(depth, tp))
+        end
+      }
+    end
+
+    def append log
+      if @prev.size == 4000
+        if @cur.size == 4000
+          @prev = @cur
+          @cur = []
+        end
+        @cur << log
+      else
+        @prev << log
+      end
+    end
+
+    def call_trace_log depth, name, tp, return_str: nil
+      log = {
+        depth: depth,
+        name: name,
+        threadId: Thread.current.instance_variable_get(:@__thread_client_id),
+        location: {
+          path: tp.path,
+          line: tp.lineno
+        }
+      }
+      log[:returnValue] = return_str if return_str
+      log
+    end
+
+    def line_trace_log depth, tp
+      {
+        depth: depth,
+        threadId: Thread.current.instance_variable_get(:@__thread_client_id),
+        location: {
+          path: tp.path,
+          line: tp.lineno
+        }
+      }
+    end
+
+    def disable
+      super
+      @prev.clear
+      @cur.clear
+    end
+  end
+
   class ExceptionTracer < Tracer
     def setup
       @tracer = TracePoint.new(:raise) do |tp|
