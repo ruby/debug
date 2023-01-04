@@ -240,6 +240,14 @@ module DEBUGGER__
       end
     end
 
+    def req_rdbgTraceInspector_enable events: ['line', 'call', 'return']
+      send_custom_dap_request 'rdbgTraceInspector', command: 'enable', events: events
+    end
+
+    def req_rdbgTraceInspector_disable
+      send_custom_dap_request 'rdbgTraceInspector', command: 'disable'
+    end
+
     def assert_locals_result expected, frame_idx: 0
       case get_target_ui
       when 'vscode'
@@ -322,7 +330,28 @@ module DEBUGGER__
       end
     end
 
+    def assert_rdbgTraceInspector_collect_result expected
+      res = send_custom_dap_request 'rdbgTraceInspector', command: 'collect'
+      logs = res.dig(:body, :logs)
+      expected.each{|exp|
+        matched = logs.find {|log|
+          check_hash_value(exp, log, :returnValue) &&
+          check_hash_value(exp, log, :name) &&
+          check_hash_value(exp[:location], log[:location], :line)
+        }
+        if matched.nil?
+          msg = create_protocol_message "Expected to include\n`#{JSON.pretty_generate exp}`\nIn\n`#{JSON.pretty_generate logs}`\n"
+          flunk(msg)
+        end
+      }
+    end
+
     # Not API
+
+    def check_hash_value hash_a, hash_b, key
+      hash_a.has_key?(key) == hash_b.has_key?(key) &&
+      hash_a[key] == hash_b[key]
+    end
 
     def execute_dap_scenario scenario
       ENV['RUBY_DEBUG_TEST_UI'] = 'vscode'
@@ -536,6 +565,11 @@ module DEBUGGER__
       assert_dap_response("#{command_name}Response".to_sym, res)
 
       res
+    end
+
+    def send_custom_dap_request command, **kw
+      send_request command, **kw
+      return find_crt_dap_response
     end
 
     def send_cdp_request command, **kw

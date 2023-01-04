@@ -9,6 +9,9 @@ module DEBUGGER__
   module UI_DAP
     SHOW_PROTOCOL = ENV['DEBUG_DAP_SHOW_PROTOCOL'] == '1' || ENV['RUBY_DEBUG_DAP_SHOW_PROTOCOL'] == '1'
 
+    # After loading UI_DAP module, load the custom DAP file.
+    require_relative 'dap_custom'
+
     def self.setup debug_port
       if File.directory? '.vscode'
         dir = Dir.pwd
