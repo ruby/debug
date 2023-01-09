@@ -24,4 +24,24 @@ module DEBUGGER__
       end
     end
   end
+
+  class EvaluateOnSomeFramesTest < ProtocolTestCase
+    PROGRAM = <<~RUBY
+      1| a = 2
+      2| def foo
+      3|   a = 4
+      4| end
+      5| foo
+    RUBY
+
+    def test_eval_evaluates_arithmetic_expressions
+      run_protocol_scenario PROGRAM do
+        req_add_breakpoint 4
+        req_continue
+        assert_repl_result({value: '4', type: 'Integer'}, 'a', frame_idx: 0)
+        assert_repl_result({value: '2', type: 'Integer'}, 'a', frame_idx: 1)
+        req_terminate_debuggee
+      end
+    end
+  end
 end
