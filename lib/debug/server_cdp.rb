@@ -1071,7 +1071,7 @@ module DEBUGGER__
             begin
               orig_stdout = $stdout
               $stdout = StringIO.new
-              result = current_frame.binding.eval(expr.to_s, '(DEBUG CONSOLE)')
+              result = b.eval(expr.to_s, '(DEBUG CONSOLE)')
             rescue Exception => e
               result = e
               res[:exceptionDetails] = exceptionDetails(e, 'Uncaught')
