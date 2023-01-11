@@ -224,7 +224,7 @@ module DEBUGGER__
 
         # get variables
         res = send_dap_request 'variables', variablesReference: locals_reference
-        res.dig(:body, :variables).map { |loc| { name: loc[:name], value: loc[:value], type: loc[:type] } }
+        res.dig(:body, :variables).map { |loc| { name: loc[:name], value: loc[:value], type: loc[:type], variablesReference: loc[:variablesReference] } }
       when 'chrome'
         current_frame = @crt_frames.first
         locals_scope = current_frame[:scopeChain].find { |f| f[:type] == type }
