@@ -127,29 +127,36 @@ module DEBUGGER__
     def program
       <<~RUBY
          1|
-         1| class C0
-         2|   C0_CONST1 = -1
-         3|   C0_CONST2 = -2
-         4| end
-         5|
-         6| class D
-         7|   D_CONST1 = 1
-         8|   D_CONST2 = 1
-         9|   class C1 < C0
-        10|     CONST1 = 1
-        11|     CONST2 = 2
-        12|     l1 = 10
-        13|     l2 = 20
-        14|     @i1 = 100
-        15|     @i2 = 200
-        16|
-        17|     def foo
-        18|       :foo
-        19|     end
-        20|   end
-        21| end
-        22|
-        23| D::C1.new.foo
+         2| class C0
+         3|   C0_CONST1 = -1
+         4|   C0_CONST2 = -2
+         5| end
+         6|
+         7| class D
+         8|   D_CONST1 = 1
+         9|   D_CONST2 = 1
+        10|   class C1 < C0
+        11|     CONST1 = 1
+        12|     CONST2 = 2
+        13|     l1 = 10
+        14|     l2 = 20
+        15|     @i1 = 100
+        16|     @i2 = 200
+        17|
+        18|     def foo
+        19|       :foo
+        20|     end
+        21|   end
+        22| end
+        23|
+        24| class E
+        25|   E_CONST1 = C0
+        26|   def self.foo
+        27|     D
+        28|   end
+        29| end
+        30|
+        31| D::C1.new.foo
       RUBY
     end
 
@@ -211,6 +218,34 @@ module DEBUGGER__
         # #<RuntimeError: The `SortedSet` class has been extracted from the `set` library.
         #                 You must use the `sorted_set` gem or other alternatives.
         type 'c'
+      end
+    end
+
+    def test_info_constant_with_expression
+      debug_code(program) do
+        type "b 31"
+        type "c"
+        assert_line_num 31
+
+        type "info constants E"
+        assert_line_text([
+          /E_CONST1 = C0/,
+        ])
+
+        type "info constants E.foo"
+        assert_line_text([
+          /C1 = D::C1/,
+          /D_CONST1 = 1/,
+          /D_CONST2 = 1/,
+        ])
+
+        type "info constants E::E_CONST1"
+        assert_line_text([
+          /C0_CONST1 = -1/,
+          /C0_CONST2 = -2/,
+        ])
+
+        type "c"
       end
     end
   end
