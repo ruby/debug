@@ -450,11 +450,7 @@ module DEBUGGER__
     end
 
     def send_response req, **res
-      if res.empty?
-        @ws_server.send id: req['id'], result: {}
-      else
-        @ws_server.send id: req['id'], result: res
-      end
+      @ws_server.send id: req['id'], result: res
     end
 
     def send_fail_response req, **res
@@ -462,11 +458,7 @@ module DEBUGGER__
     end
 
     def send_event method, **params
-      if params.empty?
-        @ws_server.send method: method, params: {}
-      else
-        @ws_server.send method: method, params: params
-      end
+      @ws_server.send method: method, params: params
     end
 
     INVALID_REQUEST = -32600
@@ -681,11 +673,7 @@ module DEBUGGER__
     end
 
     def fire_event event, **result
-      if result.empty?
-        send_event event
-      else
-        send_event event, **result
-      end
+      send_event event, **result
     end
 
     def sock skip: false
