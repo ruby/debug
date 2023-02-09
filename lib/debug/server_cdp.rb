@@ -660,6 +660,7 @@ module DEBUGGER__
     def cleanup_reader
       super
       Process.kill :KILL, @chrome_pid if @chrome_pid
+    rescue Errno::ESRCH # continue if @chrome_pid process is not found
     end
 
     ## Called by the SESSION thread
