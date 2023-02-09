@@ -406,14 +406,13 @@ module DEBUGGER__
       require_relative 'server_cdp'
 
       @uuid = SecureRandom.uuid
-      unless @chrome_pid = UI_CDP.setup_chrome(@local_addr.inspect_sockaddr, @uuid)
-        DEBUGGER__.warn <<~EOS
-          With Chrome browser, type the following URL in the address-bar:
+      @chrome_pid = UI_CDP.setup_chrome(@local_addr.inspect_sockaddr, @uuid)
+      DEBUGGER__.warn <<~EOS
+        With Chrome browser, type the following URL in the address-bar:
 
-             devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{@local_addr.inspect_sockaddr}/#{@uuid}
+           devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{@local_addr.inspect_sockaddr}/#{@uuid}
 
-          EOS
-      end
+        EOS
     end
 
     def accept
