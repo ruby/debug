@@ -94,7 +94,7 @@ module DEBUGGER__
       CONFIG[:no_color] = nil
     end
 
-    SESSION_class = Struct.new('SESSION')
+    SESSION_class = Struct.new('SESSION', :a)
 
     private
 
