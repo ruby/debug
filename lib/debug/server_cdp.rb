@@ -745,7 +745,11 @@ module DEBUGGER__
             request_tc [:cdp, :scope, req, fid]
           when 'global'
             vars = safe_global_variables.sort.map do |name|
-              gv = eval(name.to_s)
+              begin
+                gv = eval(name.to_s)
+              rescue Errno::ENOENT
+                gv = nil
+              end
               prop = {
                 name: name,
                 value: {
