@@ -28,5 +28,26 @@ module DEBUGGER__
         type 'c'
       end
     end
+
+    def program_with_daemon_arguments
+      <<~'RUBY'
+        1| trap(:HUP, 'IGNORE')
+        2| puts 'Daemon starting'
+        3| Process.daemon(false, false)
+        4| puts 'Daemon started'
+      RUBY
+    end
+
+    def test_daemon_patch
+      debug_code program_with_daemon_arguments, remote: :remote_only do
+        type 'b 3'
+        type 'c'
+        assert_line_num 3
+        type 'b 4'
+        type 'c'
+        assert_line_num 4
+        type 'c'
+      end
+    end
   end
 end
