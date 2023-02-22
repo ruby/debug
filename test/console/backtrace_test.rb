@@ -136,7 +136,7 @@ module DEBUGGER__
         omit "Skip test with load files. Cannot create files in HOME directory."
       end
 
-      file = File.open(foo_path, 'w+') { |f| f.write(foo_file) }
+      File.open(foo_path, 'w+') { |f| f.write(foo_file) }
       debug_code(program) do
         type 'c'
         type 'bt'
