@@ -2438,7 +2438,7 @@ module DEBUGGER__
     end
 
     module DaemonInterceptor
-      def daemon
+      def daemon(*args)
         return super unless defined?(SESSION) && SESSION.active?
 
         _, child_hook = __fork_setup_for_debugger(:child)
