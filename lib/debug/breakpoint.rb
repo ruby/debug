@@ -244,14 +244,10 @@ module DEBUGGER__
         end
       else
         ObjectSpace.each_iseq do |iseq|
-          # this patch is waiting for https://bugs.ruby-lang.org/issues/19348's fix to be backported and released
-          begin
-            if DEBUGGER__.compare_path((iseq.absolute_path || iseq.path), self.path) &&
-              iseq.first_lineno <= self.line &&
-              iseq.type != :ensure # ensure iseq is copied (duplicated)
-              yield iseq
-            end
-          rescue TypeError
+          if DEBUGGER__.compare_path((iseq.absolute_path || iseq.path), self.path) &&
+             iseq.first_lineno <= self.line &&
+             iseq.type != :ensure # ensure iseq is copied (duplicated)
+            yield iseq
           end
         end
       end
