@@ -440,7 +440,10 @@ module DEBUGGER__
             send_response req,
                           result: "",
                           variablesReference: 0
-            debugger do: dbg_expr
+            # Workaround for https://github.com/ruby/debug/issues/900
+            cmds = ['#debugger', nil, dbg_expr]
+            commands = [*cmds[1], *cmds[2]].map{|c| c.split(';;').join("\n")}
+            ::DEBUGGER__::SESSION.add_preset_commands cmds[0], commands, kick: false, continue: false
           else
             @q_msg << req
           end
