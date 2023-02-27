@@ -46,7 +46,7 @@ Rake::TestTask.new(:test_protocol) do |t|
 end
 
 task test: 'test_console' do
-  warn '`rake test` doesn\'t run protocol tests. Use `rake test-all` to test all.'
+  warn '`rake test` doesn\'t run protocol tests. Use `rake test_all` to test all.'
 end
 
 task test_all: [:test_console, :test_protocol]
