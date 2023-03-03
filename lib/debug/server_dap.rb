@@ -453,7 +453,7 @@ module DEBUGGER__
 
         else
           if respond_to? mid = "request_#{req['command']}"
-            send mid, req
+            __send__ mid, req
           else
             raise "Unknown request: #{req.inspect}"
           end
