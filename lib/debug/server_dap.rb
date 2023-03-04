@@ -973,7 +973,11 @@ module DEBUGGER__
         }
 
       else
-        raise "Unknown req: #{args.inspect}"
+        if respond_to? mid = "request_#{type}"
+          __send__ mid, req
+        else
+          raise "Unknown request: #{args.inspect}"
+        end
       end
     end
 
