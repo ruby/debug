@@ -651,7 +651,11 @@ module DEBUGGER__
           fail_response req
         end
       else
-        raise "Unknown DAP request: #{req.inspect}"
+        if respond_to? mid = "request_#{req['command']}"
+          __send__ mid, req
+        else
+          raise "Unknown request: #{req.inspect}"
+        end
       end
     end
 
