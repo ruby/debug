@@ -125,6 +125,7 @@ module DEBUGGER__
     def dap_setup bytes
       CONFIG.set_config no_color: true
       @seq = 0
+      @send_lock = Mutex.new
 
       case self
       when UI_UnixDomainServer
@@ -212,9 +213,13 @@ module DEBUGGER__
       if sock = @sock
         kw[:seq] = @seq += 1
         str = JSON.dump(kw)
-        sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
+        @send_lock.synchronize do
+          sock.write "Content-Length: #{str.bytesize}\r\n\r\n#{str}"
+        end
         show_protocol '<', str
       end
+    rescue Errno::EPIPE => e
+      $stderr.puts "#{e.inspect} rescued during sending message"
     end
 
     def send_response req, success: true, message: nil, **kw
