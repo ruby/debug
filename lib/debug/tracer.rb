@@ -54,6 +54,10 @@ module DEBUGGER__
       @tracer.disable
     end
 
+    def enabled?
+      @tracer.enabled?
+    end
+
     def description
       nil
     end

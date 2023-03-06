@@ -532,5 +532,31 @@ module DEBUGGER__
         end
       end
     end
+
+    class TraceOnAfterStoppingOnceTest < ConsoleTestCase
+      def program
+        <<~RUBY
+          1| a=1
+          2|
+          3| b=1
+          4|
+          5| c=1
+          6| p a
+        RUBY
+      end
+  
+      def test_1656237686
+        debug_code(program) do
+          type 'trace line'
+          type 'trace off'
+          type 'trace line'
+          type 'b 5'
+          type 'c'
+          assert_line_num 5
+          assert_line_text(/DEBUGGER \(trace\/line\)/)
+          type 'kill!'
+        end
+      end
+    end
   end
 end
