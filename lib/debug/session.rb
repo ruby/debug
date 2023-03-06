@@ -1524,7 +1524,7 @@ module DEBUGGER__
     # tracers
 
     def add_tracer tracer
-      if @tracers.has_key? tracer.key
+      if @tracers[tracer.key]&.enabled?
         tracer.disable
         @ui.puts "Duplicated tracer: #{tracer}"
       else
