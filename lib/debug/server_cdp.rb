@@ -668,17 +668,9 @@ module DEBUGGER__
 
     ## Called by the SESSION thread
 
-    def respond req, **result
-      send_response req, **result
-    end
-
-    def respond_fail req, **result
-      send_fail_response req, **result
-    end
-
-    def fire_event event, **result
-      send_event event, **result
-    end
+    alias respond send_response
+    alias respond_fail send_fail_response
+    alias fire_event send_event
 
     def sock skip: false
       yield $stderr
