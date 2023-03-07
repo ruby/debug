@@ -128,6 +128,8 @@ module DEBUGGER__
       @obj_map = {} # { object_id => ... } for CDP
 
       @tp_thread_begin = nil
+      @tp_thread_end = nil
+
       @commands = {}
       @unsafe_context = false
 
@@ -169,8 +171,9 @@ module DEBUGGER__
       @ui = ui if ui
 
       @tp_thread_begin&.disable
+      @tp_thread_end&.disable
       @tp_thread_begin = nil
-
+      @tp_thread_end = nil
       @ui.activate self, on_fork: on_fork
 
       q = Queue.new
@@ -192,6 +195,11 @@ module DEBUGGER__
         end
         @tp_thread_begin.enable
 
+        @tp_thread_end = TracePoint.new(:thread_end) do |tp|
+          @th_clients.delete(Thread.current)
+        end
+        @tp_thread_end.enable
+
         # session start
         q << true
         session_server_main
@@ -205,6 +213,7 @@ module DEBUGGER__
       @thread_stopper.disable
       @tp_load_script.disable
       @tp_thread_begin.disable
+      @tp_thread_end.disable
       @bps.each_value{|bp| bp.disable}
       @th_clients.each_value{|thc| thc.close}
       @tracers.values.each{|t| t.disable}
@@ -219,11 +228,13 @@ module DEBUGGER__
 
       # activate new ui
       @tp_thread_begin.disable
+      @tp_thread_end.disable
       @ui.activate self
       if @ui.respond_to?(:reader_thread) && thc = get_thread_client(@ui.reader_thread)
         thc.mark_as_management
       end
       @tp_thread_begin.enable
+      @tp_thread_end.enable
     end
 
     def pop_event
