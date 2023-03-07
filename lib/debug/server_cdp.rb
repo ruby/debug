@@ -549,6 +549,9 @@ module DEBUGGER__
             activate_bp bps
           end
           send_response req
+        when 'Debugger.pause'
+          send_response req
+          Process.kill(UI_ServerBase::TRAP_SIGNAL, Process.pid)
 
         # breakpoint
         when 'Debugger.getPossibleBreakpoints'
