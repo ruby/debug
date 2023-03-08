@@ -335,12 +335,13 @@ module DEBUGGER__
       attach_to_dap_server
       scenario.call
     ensure
-      @reader_thread&.kill
-      @sock&.close
       kill_remote_debuggee test_info
       if name = test_info.failed_process
         flunk create_protocol_message "Expected the debuggee program to finish"
       end
+      # Because the debuggee may be terminated by executing the following operations, we need to run them after `kill_remote_debuggee` method.
+      @reader_thread&.kill
+      @sock&.close
     end
 
     def execute_cdp_scenario_ scenario
@@ -365,12 +366,13 @@ module DEBUGGER__
       @crt_frames = res.dig(:params, :callFrames)
       scenario.call
     ensure
-      @reader_thread&.kill
-      @web_sock&.close
       kill_remote_debuggee test_info
       if name = test_info.failed_process
         flunk create_protocol_message "Expected the debuggee program to finish"
       end
+      # Because the debuggee may be terminated by executing the following operations, we need to run them after `kill_remote_debuggee` method.
+      @reader_thread&.kill
+      @web_sock&.close
     end
 
     def execute_cdp_scenario scenario
