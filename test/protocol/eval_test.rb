@@ -23,6 +23,19 @@ module DEBUGGER__
         req_terminate_debuggee
       end
     end
+
+    def test_eval_executes_commands
+      run_protocol_scenario PROGRAM, cdp: false do
+        req_add_breakpoint 3
+        req_continue
+        assert_repl_result({value: '', type: nil}, ",b 5 ;; b 6")
+        req_continue
+        assert_line_num 5
+        req_continue
+        assert_line_num 6
+        req_terminate_debuggee
+      end
+    end
   end
 
   class EvaluateOnSomeFramesTest < ProtocolTestCase
