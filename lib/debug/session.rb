@@ -177,7 +177,11 @@ module DEBUGGER__
       @ui.activate self, on_fork: on_fork
 
       q = Queue.new
+      first_q = Queue.new
       @session_server = Thread.new do
+        # make sure `@session_server` is assigned
+        first_q.pop; first_q = nil
+
         Thread.current.name = 'DEBUGGER__::SESSION@server'
         Thread.current.abort_on_exception = true
 
@@ -204,6 +208,7 @@ module DEBUGGER__
         q << true
         session_server_main
       end
+      first_q << :ok
 
       q.pop
     end
