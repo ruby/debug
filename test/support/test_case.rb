@@ -14,7 +14,7 @@ require_relative 'assertions'
 module DEBUGGER__
   class TestCase < Test::Unit::TestCase
     TestInfo = Struct.new(:queue, :mode, :prompt_pattern, :remote_info,
-                          :backlog, :last_backlog, :internal_info, :failed_process)
+                          :backlog, :last_backlog, :internal_info)
 
     RemoteInfo = Struct.new(:r, :w, :pid, :sock_path, :port, :reader_thread, :debuggee_backlog)
 
