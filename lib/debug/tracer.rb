@@ -89,11 +89,6 @@ module DEBUGGER__
       end
     end
 
-    def puts msg
-      @output.puts msg
-      @output.flush
-    end
-
     def minfo tp
       return "block{}" if tp.event == :b_call
 
