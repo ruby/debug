@@ -251,17 +251,17 @@ module DEBUGGER__
     end
 
     def recv_request
-      r = IO.select([@sock])
+      IO.select([@sock])
 
       @session.process_group.sync do
         raise RetryBecauseCantRead unless IO.select([@sock], nil, nil, 0)
 
-        case header = @sock.gets
+        case @sock.gets
         when /Content-Length: (\d+)/
           b = @sock.read(2)
           raise b.inspect unless b == "\r\n"
 
-          l = @sock.read(s = $1.to_i)
+          l = @sock.read($1.to_i)
           show_protocol :>, l
           JSON.load(l)
         when nil
@@ -551,7 +551,7 @@ module DEBUGGER__
       when 'stackTrace'
         tid = req.dig('arguments', 'threadId')
 
-        if tc = find_waiting_tc(tid)
+        if find_waiting_tc(tid)
           request_tc [:dap, :backtrace, req]
         else
           fail_response req
@@ -560,7 +560,7 @@ module DEBUGGER__
         frame_id = req.dig('arguments', 'frameId')
         if @frame_map[frame_id]
           tid, fid = @frame_map[frame_id]
-          if tc = find_waiting_tc(tid)
+          if find_waiting_tc(tid)
             request_tc [:dap, :scopes, req, fid]
           else
             fail_response req
@@ -596,7 +596,7 @@ module DEBUGGER__
             frame_id = ref[1]
             tid, fid = @frame_map[frame_id]
 
-            if tc = find_waiting_tc(tid)
+            if find_waiting_tc(tid)
               request_tc [:dap, :scope, req, fid]
             else
               fail_response req
@@ -605,7 +605,7 @@ module DEBUGGER__
           when :variable
             tid, vid = ref[1], ref[2]
 
-            if tc = find_waiting_tc(tid)
+            if find_waiting_tc(tid)
               request_tc [:dap, :variable, req, vid]
             else
               fail_response req
@@ -624,7 +624,7 @@ module DEBUGGER__
           tid, fid = @frame_map[frame_id]
           expr = req.dig('arguments', 'expression')
 
-          if tc = find_waiting_tc(tid)
+          if find_waiting_tc(tid)
             request_tc [:dap, :evaluate, req, fid, expr, context]
           else
             fail_response req
@@ -645,7 +645,7 @@ module DEBUGGER__
         frame_id = req.dig('arguments', 'frameId')
         tid, fid = @frame_map[frame_id]
 
-        if tc = find_waiting_tc(tid)
+        if find_waiting_tc(tid)
           text = req.dig('arguments', 'text')
           line = req.dig('arguments', 'line')
           if col  = req.dig('arguments', 'column')

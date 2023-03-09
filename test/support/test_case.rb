@@ -223,11 +223,11 @@ module DEBUGGER__
           sock.print "GET #{path} HTTP/1.1\r\n"
           sock.close_write
           loop do
-            case header = sock.gets
+            case sock.gets
             when /Content-Length: (\d+)/
               b = sock.read(2)
               raise b.inspect unless b == "\r\n"
-      
+
               l = sock.read $1.to_i
               return JSON.parse l, symbolize_names: true
             end

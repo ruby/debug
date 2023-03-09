@@ -49,7 +49,7 @@ module DEBUGGER__
         lines = iseq.script_lines&.map(&:chomp)
         line = iseq.first_line
         if line > 1
-          lines = [*([''] * (line - 1)), *lines]
+          [*([''] * (line - 1)), *lines]
         else
           lines
         end
