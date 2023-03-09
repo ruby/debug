@@ -98,7 +98,6 @@ module DEBUGGER__
             candidates = ['C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe']
             path = get_chrome_path candidates
           end
-          uuid = SecureRandom.uuid
           # The path is based on https://github.com/sindresorhus/open/blob/v8.4.0/index.js#L128.
           stdin, stdout, stderr, wait_thr = *Open3.popen3("#{ENV['SystemRoot']}\\System32\\WindowsPowerShell\\v1.0\\powershell")
           tf = Tempfile.create(['debug-', '.txt'])

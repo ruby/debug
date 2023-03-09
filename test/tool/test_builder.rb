@@ -477,7 +477,7 @@ module DEBUGGER__
           when /\[\>\]\s(.*)/
             begin
               req = JSON.parse $1
-            rescue JSON::ParserError => e
+            rescue JSON::ParserError
               $stderr.print data
               next
             end
@@ -504,7 +504,7 @@ module DEBUGGER__
           when /\[\<\]\s(.*)/
             begin
               res = JSON.parse $1
-            rescue JSON::ParserError => e
+            rescue JSON::ParserError
               $stderr.print data
               next
             end
