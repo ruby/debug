@@ -200,7 +200,7 @@ module DEBUGGER__
           # kill debug console process
           read.close
           write.close
-          kill_safely pid, :debugger, test_info
+          kill_safely pid
         end
       end
     end
