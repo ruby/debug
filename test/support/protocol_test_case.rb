@@ -334,9 +334,12 @@ module DEBUGGER__
 
       attach_to_dap_server
       scenario.call
+    rescue Test::Unit::AssertionFailedError => e
+      is_assertion_failure = true
+      raise e
     ensure
       kill_remote_debuggee test_info
-      if test_info.failed_process
+      if test_info.failed_process && !is_assertion_failure
         flunk create_protocol_message "Expected the debuggee program to finish"
       end
       # Because the debuggee may be terminated by executing the following operations, we need to run them after `kill_remote_debuggee` method.
@@ -365,9 +368,12 @@ module DEBUGGER__
       res = find_response :method, 'Debugger.paused', 'C<D'
       @crt_frames = res.dig(:params, :callFrames)
       scenario.call
+    rescue Test::Unit::AssertionFailedError => e
+      is_assertion_failure = true
+      raise e
     ensure
       kill_remote_debuggee test_info
-      if test_info.failed_process
+      if test_info.failed_process && !is_assertion_failure
         flunk create_protocol_message "Expected the debuggee program to finish"
       end
       # Because the debuggee may be terminated by executing the following operations, we need to run them after `kill_remote_debuggee` method.
