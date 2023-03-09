@@ -8,6 +8,7 @@ require 'fileutils'
 module DEBUGGER__
   module UI_DAP
     SHOW_PROTOCOL = ENV['DEBUG_DAP_SHOW_PROTOCOL'] == '1' || ENV['RUBY_DEBUG_DAP_SHOW_PROTOCOL'] == '1'
+    REGISTERED_REQUESTS = {}
 
     def self.setup debug_port
       if File.directory? '.vscode'
@@ -62,6 +63,14 @@ module DEBUGGER__
 
         MESSAGE
       end
+    end
+
+    def self.register_request *names, &b
+      cmd = RequestHandler.new(b)
+
+      names.each{|name|
+        REGISTERED_REQUESTS[name] = cmd
+      }
     end
 
     def show_protocol dir, msg
@@ -274,188 +283,222 @@ module DEBUGGER__
       retry
     end
 
+    class RequestHandler
+      def initialize(block)
+        @block = block
+      end
+
+      attr_reader :block
+    end
+
+    ## boot/configuration
+    register_request 'launch' do |req|
+      send_response req
+      # `launch` runs on debuggee on the same file system
+      UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap') || true
+      @nonstop = true
+    end
+
+    register_request 'attach' do |req|
+      send_response req
+      UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
+
+      if req.dig('arguments', 'nonstop') == true
+        @nonstop = true
+      else
+        @nonstop = false
+      end
+    end
+
+    register_request 'configurationDone' do |req|
+      send_response req
+
+      if @nonstop
+        @q_msg << 'continue'
+      else
+        if SESSION.in_subsession?
+          send_event 'stopped', reason: 'pause',
+                                threadId: 1, # maybe ...
+                                allThreadsStopped: true
+        end
+      end
+    end
+
+    register_request 'setBreakpoints' do |req, args|
+      req_path = args.dig('source', 'path')
+      path = UI_DAP.local_to_remote_path(req_path)
+
+      if path
+        SESSION.clear_line_breakpoints path
+
+        bps = []
+        args['breakpoints'].each{|bp|
+          line = bp['line']
+          if cond = bp['condition']
+            bps << SESSION.add_line_breakpoint(path, line, cond: cond)
+          else
+            bps << SESSION.add_line_breakpoint(path, line)
+          end
+        }
+        send_response req, breakpoints: (bps.map do |bp| {verified: true,} end)
+      else
+        send_response req, success: false, message: "#{req_path} is not available"
+      end
+    end
+
+    register_request 'setFunctionBreakpoints' do |req|
+      send_response req
+    end
+
+    register_request 'setExceptionBreakpoints' do |req, args|
+      process_filter = ->(filter_id, cond = nil) {
+        bp =
+          case filter_id
+          when 'any'
+            SESSION.add_catch_breakpoint 'Exception', cond: cond
+          when 'RuntimeError'
+            SESSION.add_catch_breakpoint 'RuntimeError', cond: cond
+          else
+            nil
+          end
+          {
+            verified: !bp.nil?,
+            message: bp.inspect,
+          }
+        }
+
+        SESSION.clear_catch_breakpoints 'Exception', 'RuntimeError'
+
+        filters = args.fetch('filters').map {|filter_id|
+          process_filter.call(filter_id)
+        }
+
+        filters += args.fetch('filterOptions', {}).map{|bp_info|
+        process_filter.call(bp_info['filterId'], bp_info['condition'])
+      }
+
+      send_response req, breakpoints: filters
+    end
+
+    register_request('disconnect') do |req, args|
+      terminate = args.fetch("terminateDebuggee", false)
+
+      SESSION.clear_all_breakpoints
+      send_response req
+
+      if SESSION.in_subsession?
+        if terminate
+          @q_msg << 'kill!'
+        else
+          @q_msg << 'continue'
+        end
+      else
+        if terminate
+          @q_msg << 'kill!'
+          pause
+        end
+      end
+    end
+
+    ## control
+    register_request 'continue' do |req|
+      @q_msg << 'c'
+      send_response req, allThreadsContinued: true
+    end
+
+    register_request 'next' do |req|
+      begin
+        @session.check_postmortem
+        @q_msg << 'n'
+        send_response req
+      rescue PostmortemError
+        send_response req,
+                      success: false, message: 'postmortem mode',
+                      result: "'Next' is not supported while postmortem mode"
+      end
+    end
+
+    register_request 'stepIn' do |req|
+      begin
+        @session.check_postmortem
+        @q_msg << 's'
+        send_response req
+      rescue PostmortemError
+        send_response req,
+                      success: false, message: 'postmortem mode',
+                      result: "'stepIn' is not supported while postmortem mode"
+      end
+    end
+
+    register_request 'stepOut' do |req|
+      begin
+        @session.check_postmortem
+        @q_msg << 'fin'
+        send_response req
+      rescue PostmortemError
+        send_response req,
+                      success: false, message: 'postmortem mode',
+                      result: "'stepOut' is not supported while postmortem mode"
+      end
+    end
+
+    register_request 'terminate' do |req|
+      send_response req
+      exit
+    end
+
+    register_request 'pause' do |req|
+      send_response req
+      Process.kill(UI_ServerBase::TRAP_SIGNAL, Process.pid)
+    end
+
+    register_request 'reverseContinue' do |req|
+      send_response req,
+                    success: false, message: 'cancelled',
+                    result: "Reverse Continue is not supported. Only \"Step back\" is supported."
+    end
+
+    register_request 'stepBack' do |req|
+      @q_msg << req
+    end
+
+    ## query
+    register_request 'threads' do |req|
+      send_response req, threads: SESSION.managed_thread_clients.map{|tc|
+        { id: tc.id,
+          name: tc.name,
+        }
+      }
+    end
+
+    register_request 'evaluate' do |req|
+      expr = req.dig('arguments', 'expression')
+      if /\A\s*,(.+)\z/ =~ expr
+        dbg_expr = $1
+        send_response req,
+                      result: "",
+                      variablesReference: 0
+        debugger do: dbg_expr
+      else
+        @q_msg << req
+      end
+    end
+
+    register_request 'stackTrace',
+                      'scopes',
+                      'variables',
+                      'source',
+                      'completions' do |req|
+      @q_msg << req
+    end
+
     def process
       while req = recv_request
         raise "not a request: #{req.inspect}" unless req['type'] == 'request'
         args = req.dig('arguments')
 
-        case req['command']
-
-        ## boot/configuration
-        when 'launch'
-          send_response req
-          # `launch` runs on debuggee on the same file system
-          UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap') || true
-          @nonstop = true
-
-        when 'attach'
-          send_response req
-          UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
-
-          if req.dig('arguments', 'nonstop') == true
-            @nonstop = true
-          else
-            @nonstop = false
-          end
-
-        when 'configurationDone'
-          send_response req
-
-          if @nonstop
-            @q_msg << 'continue'
-          else
-            if SESSION.in_subsession?
-              send_event 'stopped', reason: 'pause',
-                                    threadId: 1, # maybe ...
-                                    allThreadsStopped: true
-            end
-          end
-
-        when 'setBreakpoints'
-          req_path = args.dig('source', 'path')
-          path = UI_DAP.local_to_remote_path(req_path)
-
-          if path
-            SESSION.clear_line_breakpoints path
-
-            bps = []
-            args['breakpoints'].each{|bp|
-              line = bp['line']
-              if cond = bp['condition']
-                bps << SESSION.add_line_breakpoint(path, line, cond: cond)
-              else
-                bps << SESSION.add_line_breakpoint(path, line)
-              end
-            }
-            send_response req, breakpoints: (bps.map do |bp| {verified: true,} end)
-          else
-            send_response req, success: false, message: "#{req_path} is not available"
-          end
-
-        when 'setFunctionBreakpoints'
-          send_response req
-
-        when 'setExceptionBreakpoints'
-          process_filter = ->(filter_id, cond = nil) {
-            bp =
-              case filter_id
-              when 'any'
-                SESSION.add_catch_breakpoint 'Exception', cond: cond
-              when 'RuntimeError'
-                SESSION.add_catch_breakpoint 'RuntimeError', cond: cond
-              else
-                nil
-              end
-              {
-                verified: !bp.nil?,
-                message: bp.inspect,
-              }
-            }
-
-            SESSION.clear_catch_breakpoints 'Exception', 'RuntimeError'
-
-            filters = args.fetch('filters').map {|filter_id|
-              process_filter.call(filter_id)
-            }
-
-            filters += args.fetch('filterOptions', {}).map{|bp_info|
-            process_filter.call(bp_info['filterId'], bp_info['condition'])
-          }
-
-          send_response req, breakpoints: filters
-
-        when 'disconnect'
-          terminate = args.fetch("terminateDebuggee", false)
-
-          SESSION.clear_all_breakpoints
-          send_response req
-
-          if SESSION.in_subsession?
-            if terminate
-              @q_msg << 'kill!'
-            else
-              @q_msg << 'continue'
-            end
-          else
-            if terminate
-              @q_msg << 'kill!'
-              pause
-            end
-          end
-
-        ## control
-        when 'continue'
-          @q_msg << 'c'
-          send_response req, allThreadsContinued: true
-        when 'next'
-          begin
-            @session.check_postmortem
-            @q_msg << 'n'
-            send_response req
-          rescue PostmortemError
-            send_response req,
-                          success: false, message: 'postmortem mode',
-                          result: "'Next' is not supported while postmortem mode"
-          end
-        when 'stepIn'
-          begin
-            @session.check_postmortem
-            @q_msg << 's'
-            send_response req
-          rescue PostmortemError
-            send_response req,
-                          success: false, message: 'postmortem mode',
-                          result: "'stepIn' is not supported while postmortem mode"
-          end
-        when 'stepOut'
-          begin
-            @session.check_postmortem
-            @q_msg << 'fin'
-            send_response req
-          rescue PostmortemError
-            send_response req,
-                          success: false, message: 'postmortem mode',
-                          result: "'stepOut' is not supported while postmortem mode"
-          end
-        when 'terminate'
-          send_response req
-          exit
-        when 'pause'
-          send_response req
-          Process.kill(UI_ServerBase::TRAP_SIGNAL, Process.pid)
-        when 'reverseContinue'
-          send_response req,
-                        success: false, message: 'cancelled',
-                        result: "Reverse Continue is not supported. Only \"Step back\" is supported."
-        when 'stepBack'
-          @q_msg << req
-
-        ## query
-        when 'threads'
-          send_response req, threads: SESSION.managed_thread_clients.map{|tc|
-            { id: tc.id,
-              name: tc.name,
-            }
-          }
-
-        when 'evaluate'
-          expr = req.dig('arguments', 'expression')
-          if /\A\s*,(.+)\z/ =~ expr
-            dbg_expr = $1
-            send_response req,
-                          result: "",
-                          variablesReference: 0
-            debugger do: dbg_expr
-          else
-            @q_msg << req
-          end
-        when 'stackTrace',
-             'scopes',
-             'variables',
-             'source',
-             'completions'
-          @q_msg << req
-
+        if (cmd = REGISTERED_REQUESTS[req['command']])
+          self.instance_exec(req, args, &cmd.block)
         else
           if respond_to? mid = "request_#{req['command']}"
             __send__ mid, req
