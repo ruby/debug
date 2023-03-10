@@ -149,10 +149,10 @@ If the file already exists, **only method** will be added to it.
 ```ruby
 # frozen_string_literal: true
 
-require_relative '../support/test_case'
+require_relative '../support/console_test_case'
 
 module DEBUGGER__
-  class FooTest < TestCase
+  class FooTest < ConsoleTestCase
     def program
       <<~RUBY
         1| module Foo
