@@ -243,7 +243,7 @@ module DEBUGGER__
     def assert_locals_result expected, frame_idx: 0
       case get_target_ui
       when 'vscode'
-        actual_locals = gather_dap_variables(frame_idx: frame_idx, type: "locals")
+        actual_locals = gather_variables(frame_idx: frame_idx, type: "locals")
 
         expected.each do |exp|
           if exp[:type] == "String"
