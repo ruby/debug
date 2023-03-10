@@ -157,7 +157,7 @@ module DEBUGGER__
     def create_scenario_and_program
       <<-TEST.chomp
 
-  class #{@class}#{@current_time} < TestCase
+  class #{@class}#{@current_time} < ConsoleTestCase
     def program
       <<~RUBY
         #{format_program}
