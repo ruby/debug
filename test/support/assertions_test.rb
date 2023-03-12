@@ -12,7 +12,7 @@ module DEBUGGER__
 
     def test_the_helper_takes_a_string_expectation_and_escape_it
       assert_raise_message(/Expected to include `"foobar\\\\?/) do
-        debug_code(program) do
+        debug_code(program, remote: false) do
           assert_line_text("foobar?")
         end
       end
