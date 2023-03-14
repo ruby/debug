@@ -12,7 +12,7 @@ module DEBUGGER__
 
     def test_the_test_fails_when_debugger_exits_early
       assert_raise_message(/Expected all commands\/assertions to be executed/) do
-        debug_code(program) do
+        debug_code(program, remote: false) do
           type 'continue'
           type 'foo'
         end
@@ -35,7 +35,7 @@ module DEBUGGER__
 
     def test_the_test_fails_when_the_repl_prompt_does_not_finish_even_though_scenario_is_empty
       assert_raise_message(/Expected the REPL prompt to finish/) do
-        debug_code(program) do
+        debug_code(program, remote: false) do
         end
       end
     end
@@ -72,6 +72,58 @@ module DEBUGGER__
       assert_raise_message(/Expected the debuggee program to finish/) do
         prepare_test_environment(program, steps) do
           debug_code_on_tcpip()
+        end
+      end
+    end
+  end
+
+  class PseudoTerminalTerminationTestForRemoteDebuggee < ConsoleTestCase
+    def program
+      <<~RUBY
+        a = 1
+      RUBY
+    end
+
+    def test_the_test_unix_domain_socket_mode_fails_when_debugger_exits_early
+      steps = Proc.new{
+        type 'continue'
+        type 'foo'
+      }
+
+      assert_raise_message(/Expected all commands\/assertions to be executed/) do
+        prepare_test_environment(program, steps) do
+          debug_code_on_unix_domain_socket()
+        end
+      end
+    end
+
+    def test_the_test_tcpip_mode_fails_when_debugger_exits_early
+      steps = Proc.new{
+        type 'continue'
+        type 'foo'
+      }
+
+      assert_raise_message(/Expected all commands\/assertions to be executed/) do
+        prepare_test_environment(program, steps) do
+          debug_code_on_tcpip()
+        end
+      end
+    end
+
+    def test_the_test_unix_domain_socket_mode_fails_when_the_repl_prompt_does_not_finish_even_though_scenario_is_empty
+      steps = Proc.new{}
+      assert_raise_message(/Expected the REPL prompt to finish/) do
+        prepare_test_environment(program, steps) do
+          debug_code_on_unix_domain_socket()
+        end
+      end
+    end
+
+    def test_the_test_tcpip_mode_fails_when_the_repl_prompt_does_not_finish_even_though_scenario_is_empty
+      steps = Proc.new{}
+      assert_raise_message(/Expected the REPL prompt to finish/) do
+        prepare_test_environment(program, steps) do
+          debug_code_on_unix_domain_socket()
         end
       end
     end
