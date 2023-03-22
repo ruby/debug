@@ -656,7 +656,7 @@ module DEBUGGER__
           fail_response req
         end
       else
-        if respond_to? mid = "request_#{req['command']}"
+        if respond_to? mid = "custom_dap_request_#{req['command']}"
           __send__ mid, req
         else
           raise "Unknown request: #{req.inspect}"
@@ -712,7 +712,11 @@ module DEBUGGER__
       when :completions
         @ui.respond req, result
       else
-        raise "unsupported: #{args.inspect}"
+        if respond_to? mid = "custom_dap_request_event_#{type}"
+          __send__ mid, req
+        else
+          raise "unsupported: #{args.inspect}"
+        end
       end
     end
 
