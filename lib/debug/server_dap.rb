@@ -468,10 +468,6 @@ module DEBUGGER__
       send_event :terminated unless @sock.closed?
     end
 
-    def request_rdbgRecordInspector req
-      @q_msg << req
-    end
-
     ## called by the SESSION thread
 
     def respond req, res
@@ -668,43 +664,6 @@ module DEBUGGER__
       end
     end
 
-    def request_rdbgRecordInspector req
-      cmd = req.dig('arguments', 'command')
-      case cmd
-      when 'enable'
-        request_tc [:record, :on]
-        @ui.respond req, {}
-      when 'disable'
-        request_tc [:record, :off]
-        @ui.respond req, {}
-      when 'step'
-        tid = req.dig('arguments', 'threadId')
-        count = req.dig('arguments', 'count')
-        if tc = find_waiting_tc(tid)
-          tc << [:step, :in, count]
-        else
-          fail_response req
-        end
-      when 'stepBack'
-        tid = req.dig('arguments', 'threadId')
-        count = req.dig('arguments', 'count')
-        if tc = find_waiting_tc(tid)
-          tc << [:step, :back, count]
-        else
-          fail_response req
-        end
-      when 'collect'
-        tid = req.dig('arguments', 'threadId')
-        if tc = find_waiting_tc(tid)
-          tc << [:dap, :rdbgRecordInspector, req]
-        else
-          fail_response req
-        end
-      else
-        raise "Unknown command #{cmd}"
-      end
-    end
-
     def dap_event args
       # puts({dap_event: args}.inspect)
       type, req, result = args
@@ -751,10 +710,6 @@ module DEBUGGER__
           @ui.respond req, result
         end
       when :completions
-        @ui.respond req, result
-
-      # custom request
-      when :rdbgRecordInspector
         @ui.respond req, result
       else
         raise "unsupported: #{args.inspect}"
@@ -1024,26 +979,6 @@ module DEBUGGER__
           raise "Unknown request: #{args.inspect}"
         end
       end
-    end
-
-    def request_rdbgRecordInspector req
-      logs = []
-      log_index = nil
-      unless @recorder.nil?
-        log_index = @recorder.log_index
-        @recorder.log.each{|frames|
-          crt_frame = frames[0]
-          logs << {
-            name: crt_frame.name,
-            location: {
-              path: crt_frame.location.path,
-              line: crt_frame.location.lineno,
-            },
-            depth: crt_frame.frame_depth
-          }
-        }
-      end
-      event! :dap_result, :rdbgRecordInspector, req, logs: logs, stoppedIndex: log_index
     end
 
     def search_const b, expr
