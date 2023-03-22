@@ -425,8 +425,9 @@ module DEBUGGER__
     unless (dir_uid = fs.uid) == (uid = Process.uid)
       raise "#{path} uid is #{dir_uid}, but Process.uid is #{uid}"
     end
-    unless (dir_mode = fs.mode) == 040700 # 4: dir, 7:rwx
-      raise "#{path}'s mode is #{dir_mode.to_s(8)} (should be 040700)"
+
+    if fs.world_writable? && !fs.sticky?
+      raise "#{path} is world writable but not sticky"
     end
 
     path
