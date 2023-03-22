@@ -664,7 +664,7 @@ module DEBUGGER__
       end
     end
 
-    def dap_event args
+    def process_protocol_request_event args
       # puts({dap_event: args}.inspect)
       type, req, result = args
 

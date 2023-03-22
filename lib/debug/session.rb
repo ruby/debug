@@ -351,7 +351,7 @@ module DEBUGGER__
         wait_command_loop
 
       when :dap_result
-        dap_event ev_args # server.rb
+        process_protocol_request_event ev_args # server.rb
         wait_command_loop
       when :cdp_result
         cdp_event ev_args
