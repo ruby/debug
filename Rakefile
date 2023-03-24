@@ -54,4 +54,4 @@ task test: 'test_console' do
   warn '`rake test` doesn\'t run protocol tests. Use `rake test_all` to test all.'
 end
 
-task test_all: [:test_console, :test_protocol]
+task test_all: [:test_test, :test_console, :test_protocol]
