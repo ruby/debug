@@ -664,7 +664,7 @@ module DEBUGGER__
       end
     end
 
-    def dap_event args
+    def process_protocol_result args
       # puts({dap_event: args}.inspect)
       type, req, result = args
 
@@ -798,7 +798,7 @@ module DEBUGGER__
           }
         end
 
-        event! :dap_result, :backtrace, req, {
+        event! :protocol_result, :backtrace, req, {
           stackFrames: frames,
           totalFrames: @target_frames.size,
         }
@@ -815,7 +815,7 @@ module DEBUGGER__
             0
           end
 
-        event! :dap_result, :scopes, req, scopes: [{
+        event! :protocol_result, :scopes, req, scopes: [{
           name: 'Local variables',
           presentationHint: 'locals',
           # variablesReference: N, # filled by SESSION
@@ -837,7 +837,7 @@ module DEBUGGER__
           variable(var, val)
         end
 
-        event! :dap_result, :scope, req, variables: vars, tid: self.id
+        event! :protocol_result, :scope, req, variables: vars, tid: self.id
       when :variable
         vid = args.shift
         obj = @var_map[vid]
@@ -885,7 +885,7 @@ module DEBUGGER__
             end
           end
         end
-        event! :dap_result, :variable, req, variables: (vars || []), tid: self.id
+        event! :protocol_result, :variable, req, variables: (vars || []), tid: self.id
 
       when :evaluate
         fid, expr, context = args
@@ -940,7 +940,7 @@ module DEBUGGER__
           result = 'Error: Can not evaluate on this frame'
         end
 
-        event! :dap_result, :evaluate, req, message: message, tid: self.id, **evaluate_result(result)
+        event! :protocol_result, :evaluate, req, message: message, tid: self.id, **evaluate_result(result)
 
       when :completions
         fid, text = args
@@ -950,7 +950,7 @@ module DEBUGGER__
           words = IRB::InputCompletor::retrieve_completion_data(word, bind: b).compact
         end
 
-        event! :dap_result, :completions, req, targets: (words || []).map{|phrase|
+        event! :protocol_result, :completions, req, targets: (words || []).map{|phrase|
           detail = nil
 
           if /\b([_a-zA-Z]\w*[!\?]?)\z/ =~ phrase

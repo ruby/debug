@@ -823,7 +823,7 @@ module DEBUGGER__
       end
     end
 
-    def cdp_event args
+    def process_protocol_result args
       type, req, result = args
 
       case type
@@ -1013,7 +1013,7 @@ module DEBUGGER__
           result[:data] = evaluate_result exception
           result[:reason] = 'exception'
         end
-        event! :cdp_result, :backtrace, req, result
+        event! :protocol_result, :backtrace, req, result
       when :evaluate
         res = {}
         fid, expr, group = args
@@ -1074,7 +1074,7 @@ module DEBUGGER__
         end
 
         res[:result] = evaluate_result(result)
-        event! :cdp_result, :evaluate, req, message: message, response: res, output: output
+        event! :protocol_result, :evaluate, req, message: message, response: res, output: output
       when :scope
         fid = args.shift
         frame = @target_frames[fid]
@@ -1097,7 +1097,7 @@ module DEBUGGER__
             vars.unshift variable(name, val)
           end
         end
-        event! :cdp_result, :scope, req, vars
+        event! :protocol_result, :scope, req, vars
       when :properties
         oid = args.shift
         result = []
@@ -1139,14 +1139,14 @@ module DEBUGGER__
           }
           prop += [internalProperty('#class', M_CLASS.bind_call(obj))]
         end
-        event! :cdp_result, :properties, req, result: result, internalProperties: prop
+        event! :protocol_result, :properties, req, result: result, internalProperties: prop
       when :exception
         oid = args.shift
         exc = nil
         if obj = @obj_map[oid]
           exc = exceptionDetails obj, obj.to_s
         end
-        event! :cdp_result, :exception, req, exceptionDetails: exc
+        event! :protocol_result, :exception, req, exceptionDetails: exc
       end
     end
 
