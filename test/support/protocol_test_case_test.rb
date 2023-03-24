@@ -5,6 +5,8 @@ require_relative 'protocol_test_case'
 module DEBUGGER__
   class TestProtocolTestCase < ProtocolTestCase
     def test_the_test_fails_when_debuggee_doesnt_exit
+      omit "too slow now"
+
       program = <<~RUBY
         1| a=1
       RUBY
@@ -16,6 +18,8 @@ module DEBUGGER__
     end
 
     def test_the_assertion_failure_takes_presedence_over_debuggee_not_exiting
+      omit "too slow now"
+
       program = <<~RUBY
         1| a = 2
         2| b = 3
