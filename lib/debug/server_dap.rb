@@ -441,11 +441,11 @@ module DEBUGGER__
         when 'evaluate'
           expr = req.dig('arguments', 'expression')
           if /\A\s*,(.+)\z/ =~ expr
-            dbg_expr = $1
+            dbg_expr = $1.strip
             dbg_expr.split(';;') { |cmd| @q_msg << cmd }
 
             send_response req,
-                          result: "",
+                          result: "(rdbg:command) #{dbg_expr}",
                           variablesReference: 0
           else
             @q_msg << req
