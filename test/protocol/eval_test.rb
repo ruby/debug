@@ -28,7 +28,7 @@ module DEBUGGER__
       run_protocol_scenario PROGRAM, cdp: false do
         req_add_breakpoint 3
         req_continue
-        assert_repl_result({value: '', type: nil}, ",b 5 ;; b 6")
+        assert_repl_result({value: '(rdbg:command) b 5 ;; b 6', type: nil}, ",b 5 ;; b 6")
         req_continue
         assert_line_num 5
         req_continue
