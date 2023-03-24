@@ -457,7 +457,7 @@ module DEBUGGER__
           @q_msg << req
 
         else
-          if respond_to? mid = "request_#{req['command']}"
+          if respond_to? mid = "custom_dap_request_#{req['command']}"
             __send__ mid, req
           else
             raise "Unknown request: #{req.inspect}"
@@ -973,7 +973,7 @@ module DEBUGGER__
         }
 
       else
-        if respond_to? mid = "request_#{type}"
+        if respond_to? mid = "custom_dap_request_#{type}"
           __send__ mid, req
         else
           raise "Unknown request: #{args.inspect}"
