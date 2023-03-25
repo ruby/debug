@@ -314,7 +314,6 @@ module DEBUGGER__
         when 'setBreakpoints'
           req_path = args.dig('source', 'path')
           path = UI_DAP.local_to_remote_path(req_path)
-
           if path
             SESSION.clear_line_breakpoints path
 

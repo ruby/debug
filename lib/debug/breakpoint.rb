@@ -101,10 +101,6 @@ module DEBUGGER__
     def generate_label(name)
       colorize(" BP - #{name} ", [:YELLOW, :BOLD, :REVERSE])
     end
-
-    def pending_until_load?
-      false
-    end
   end
 
   if RUBY_VERSION.to_f <= 2.7
@@ -163,10 +159,6 @@ module DEBUGGER__
       @pending = !@iseq
     end
 
-    def pending_until_load?
-      @pending
-    end
-
     def setup
       return unless @type
 
@@ -207,6 +199,8 @@ module DEBUGGER__
       if @pending && !@oneshot
         DEBUGGER__.info "#{self} is activated."
       end
+
+      @pending = false
     end
 
     def activate_exact iseq, events, line
@@ -298,6 +292,10 @@ module DEBUGGER__
 
     def inspect
       "<#{self.class.name} #{self.to_s}>"
+    end
+
+    def path_is? path
+      DEBUGGER__.compare_path(@path, path)
     end
   end
 

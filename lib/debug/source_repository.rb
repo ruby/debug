@@ -34,7 +34,7 @@ module DEBUGGER__
       end
 
       def add iseq, src
-        # do nothing
+        # only manage loaded file names
         if (path = (iseq.absolute_path || iseq.path)) && File.exist?(path)
           if @loaded_file_map.has_key? path
             return path, true # reloaded

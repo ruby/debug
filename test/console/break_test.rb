@@ -819,7 +819,7 @@ module DEBUGGER__
       RUBY
     end
 
-    def test_break_on_realoded_file
+    def test_break_on_realoded_file_pending
       with_extra_tempfile do |extra_file|
         debug_code(program(extra_file.path)) do
           type "break #{extra_file.path}:2 do: p :xyzzy"
@@ -835,6 +835,42 @@ module DEBUGGER__
 
           type 'c'
         end
+      end
+    end
+
+    def test_break_on_reloaded_file
+      code = <<~'DEBUG_CODE'
+        1| require 'tempfile'
+        2| tf = Tempfile.new('debug_gem_test')
+        3| tf.puts(<<RUBY)
+        4|  def foo
+        5|   p 1
+        6| end
+        7| RUBY
+        8| tf.close
+        9| load tf.path
+       10| # p :loeaded
+       11| debugger do: "b #{tf.path}:2"
+       12| foo
+       13| tf.open
+       14| tf.seek 0
+       15| tf.puts(<<RUBY)
+       16| def foo
+       17|   p 0
+       18|   p 1
+       19| end
+       20| RUBY
+       21| tf.close
+       22| load tf.path
+       23| foo
+      DEBUG_CODE
+
+      debug_code code do
+        type 'c'
+        assert_line_num 2 # on tempfile
+        type 'c'
+        assert_line_num 2 # on tempfile
+        type 'c'
       end
     end
   end
