@@ -133,13 +133,11 @@ module DEBUGGER__
       @commands = {}
       @unsafe_context = false
 
-      has_keep_script_lines = RubyVM.respond_to? :keep_script_lines
+      @has_keep_script_lines = RubyVM.respond_to? :keep_script_lines
 
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
-        if !has_keep_script_lines || bps_pending_until_load?
-          eval_script = tp.eval_script unless has_keep_script_lines
-          ThreadClient.current.on_load tp.instruction_sequence, eval_script
-        end
+        eval_script = tp.eval_script unless @has_keep_script_lines
+        ThreadClient.current.on_load tp.instruction_sequence, eval_script
       }
       @tp_load_script.enable
 
@@ -1334,10 +1332,6 @@ module DEBUGGER__
 
     # breakpoint management
 
-    def bps_pending_until_load?
-      @bps.any?{|key, bp| bp.pending_until_load?}
-    end
-
     def iterate_bps
       deleted_bps = []
       i = 0
@@ -1513,7 +1507,7 @@ module DEBUGGER__
     def clear_line_breakpoints path
       path = resolve_path(path)
       clear_breakpoints do |k, bp|
-        bp.is_a?(LineBreakpoint) && DEBUGGER__.compare_path(k.first, path)
+        bp.is_a?(LineBreakpoint) && bp.path_is?(path)
       end
     rescue Errno::ENOENT
       # just ignore
@@ -1737,24 +1731,25 @@ module DEBUGGER__
       file_path, reloaded = @sr.add(iseq, src)
       @ui.event :load, file_path, reloaded
 
-      pending_line_breakpoints = @bps.find_all do |key, bp|
-        LineBreakpoint === bp && !bp.iseq
-      end
-
-      pending_line_breakpoints.each do |_key, bp|
-        if DEBUGGER__.compare_path(bp.path, (iseq.absolute_path || iseq.path))
-          bp.try_activate iseq
-        end
-      end
-
-      if reloaded
-        @bps.find_all do |key, bp|
-          LineBreakpoint === bp && DEBUGGER__.compare_path(bp.path, file_path)
+      # check breakpoints
+      if file_path
+        @bps.find_all do |_key, bp|
+          LineBreakpoint === bp && bp.path_is?(file_path)
         end.each do |_key, bp|
-          @bps.delete bp.key # to allow duplicate
-          if nbp = LineBreakpoint.copy(bp, iseq)
-            add_bp nbp
+          if !bp.iseq
+            bp.try_activate iseq
+          elsif reloaded
+            @bps.delete bp.key # to allow duplicate
+            if nbp = LineBreakpoint.copy(bp, iseq)
+              add_bp nbp
+            end
           end
+        end
+      else # !file_path => file_path is not existing
+        @bps.find_all do |_key, bp|
+          LineBreakpoint === bp && !bp.iseq && DEBUGGER__.compare_path(bp.path, (iseq.absolute_path || iseq.path))
+        end.each do |_key, bp|
+          bp.try_activate iseq
         end
       end
     end
