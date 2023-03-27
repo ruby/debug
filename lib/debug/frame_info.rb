@@ -147,6 +147,15 @@ module DEBUGGER__
       end
     end
 
+    def iseq_parameters_info
+      case frame_type
+      when :block, :method
+        parameters_info
+      else
+        nil
+      end
+    end
+
     def parameters_info
       vars = iseq.parameters_symbols
       vars.map{|var|
