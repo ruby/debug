@@ -1300,8 +1300,12 @@ module DEBUGGER__
               frame._callee = b.eval('__callee__')
             end
           }
-          @log << frames
+          append(frames)
         }
+      end
+
+      def append frames
+        @log << frames
       end
 
       def enable

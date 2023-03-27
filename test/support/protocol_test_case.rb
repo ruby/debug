@@ -219,6 +219,22 @@ module DEBUGGER__
       end
     end
 
+    def req_rdbgTraceInspector_trace_enable events: ['traceLine', 'traceCall', 'traceReturn', 'traceParams']
+      send_custom_dap_request 'rdbgTraceInspector', command: 'trace', subCommand: 'enable', events: events
+    end
+
+    def req_rdbgTraceInspector_trace_disable
+      send_custom_dap_request 'rdbgTraceInspector', command: 'trace', subCommand: 'disable'
+    end
+
+    def req_rdbgTraceInspector_record_enable
+      send_custom_dap_request 'rdbgTraceInspector', command: 'record', subCommand: 'enable'
+    end
+
+    def req_rdbgTraceInspector_record_disable
+      send_custom_dap_request 'rdbgTraceInspector', command: 'record', subCommand: 'disable'
+    end
+
     def assert_locals_result expected, frame_idx: 0
       case get_target_ui
       when 'vscode'
@@ -301,7 +317,50 @@ module DEBUGGER__
       end
     end
 
+    def req_rdbgTraceInspector_record_step_back count
+      send_custom_dap_request 'rdbgTraceInspector', command: 'record', subCommand: 'stepBack', threadId: 1, count: count
+    end
+
+    def req_rdbgTraceInspector_record_step count
+      send_custom_dap_request 'rdbgTraceInspector', command: 'record', subCommand: 'step', threadId: 1, count: count
+    end
+
+    def assert_rdbgTraceInspector_record_collect_result expected
+      res = send_custom_dap_request 'rdbgTraceInspector', command: 'record', subCommand: 'collect', threadId: 1
+      assert_collect_result(res, expected) do |exp, log|
+        check_hash_values(exp, log, :name) &&
+        check_hash_values(exp[:location], log[:location], :line)
+      end
+    end
+
+    def assert_rdbgTraceInspector_trace_collect_result expected
+      res = send_custom_dap_request 'rdbgTraceInspector', command: 'trace', subCommand: 'collect'
+      assert_collect_result(res, expected) do |exp, log|
+        check_hash_values(exp, log, :returnValue) &&
+        check_hash_values(exp, log, :name) &&
+        check_hash_values(exp[:location], log[:location], :line)
+      end
+    end
+
     # Not API
+
+    def assert_collect_result res, expected
+      logs = res.dig(:body, :logs)
+      expected.each{|exp|
+        matched = logs.find {|log|
+          yield exp, log
+        }
+        if matched.nil?
+          msg = create_protocol_message "Expected to include\n`#{JSON.pretty_generate exp}`\nIn\n`#{JSON.pretty_generate logs}`\n"
+          flunk(msg)
+        end
+      }
+    end
+
+    def check_hash_values hash_a, hash_b, key
+      hash_a.has_key?(key) == hash_b.has_key?(key) &&
+      hash_a[key] == hash_b[key]
+    end
 
     def attach_to_cdp_server_
       body = get_request HOST, @remote_info.port, '/json'
@@ -556,6 +615,11 @@ module DEBUGGER__
       assert_dap_response("#{command_name}Response".to_sym, res)
 
       res
+    end
+
+    def send_custom_dap_request command, **kw
+      send_request command, **kw
+      return find_crt_dap_response
     end
 
     def send_cdp_request command, **kw

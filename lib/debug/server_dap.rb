@@ -274,6 +274,14 @@ module DEBUGGER__
       retry
     end
 
+    def load_rdbgExtension req
+      if exts = req.dig('arguments', 'rdbgExtension')
+        exts.each{|ext|
+          require_relative "dap_custom/#{File.basename(ext)}"
+        }
+      end
+    end
+
     def process
       while req = recv_request
         raise "not a request: #{req.inspect}" unless req['type'] == 'request'
@@ -288,6 +296,8 @@ module DEBUGGER__
           UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap') || true
           @nonstop = true
 
+          load_rdbgExtension req
+
         when 'attach'
           send_response req
           UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap')
@@ -297,6 +307,8 @@ module DEBUGGER__
           else
             @nonstop = false
           end
+
+          load_rdbgExtension req
 
         when 'configurationDone'
           send_response req
