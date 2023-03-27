@@ -713,7 +713,7 @@ module DEBUGGER__
         @ui.respond req, result
       else
         if respond_to? mid = "custom_dap_request_event_#{type}"
-          __send__ mid, req
+          __send__ mid, req, result
         else
           raise "unsupported: #{args.inspect}"
         end
