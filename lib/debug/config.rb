@@ -265,6 +265,8 @@ module DEBUGGER__
       require 'optparse'
       require_relative 'version'
 
+      have_shown_version = false
+
       opt = OptionParser.new do |o|
         o.banner = "#{$0} [options] -- [debuggee options]"
         o.separator ''
@@ -372,6 +374,16 @@ module DEBUGGER__
         o.separator ''
         o.separator 'Other options:'
 
+        o.on('-v', 'Show version number') do
+          puts o.ver
+          have_shown_version = true
+        end
+
+        o.on('--version', 'Show version number and exit') do
+          puts o.ver
+          exit
+        end
+
         o.on("-h", "--help", "Print help") do
           puts o
           exit
@@ -394,6 +406,14 @@ module DEBUGGER__
       end
 
       opt.parse!(argv)
+
+      if argv.empty?
+        case
+        when have_shown_version && config[:mode] == :start
+          pp config
+          exit
+        end
+      end
 
       config
     end
