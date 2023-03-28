@@ -1230,7 +1230,15 @@ module DEBUGGER__
     rescue SuspendReplay, SystemExit, Interrupt
       raise
     rescue Exception => e
-      pp ["DEBUGGER Exception: #{__FILE__}:#{__LINE__}", e, e.backtrace]
+      STDERR.puts e.cause.inspect
+      STDERR.puts e.inspect
+      Thread.list.each{|th|
+        STDERR.puts "@@@ #{th}"
+        th.backtrace.each{|b|
+          STDERR.puts " > #{b}"
+        }
+      }
+      p ["DEBUGGER Exception: #{__FILE__}:#{__LINE__}", e, e.backtrace]
       raise
     ensure
       @returning = false
