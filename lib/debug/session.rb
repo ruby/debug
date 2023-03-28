@@ -343,7 +343,7 @@ module DEBUGGER__
           opt = ev_args[3]
           add_tracer ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
         else
-          # ignore
+          stop_all_threads
         end
 
         wait_command_loop
@@ -900,13 +900,13 @@ module DEBUGGER__
       # * `p <expr>`
       #   * Evaluate like `p <expr>` on the current frame.
       register_command 'p' do |arg|
-        request_tc [:eval, :p, arg.to_s]
+        request_eval :p, arg.to_s
       end
 
       # * `pp <expr>`
       #   * Evaluate like `pp <expr>` on the current frame.
       register_command 'pp' do |arg|
-        request_tc [:eval, :pp, arg.to_s]
+        request_eval :pp, arg.to_s
       end
 
       # * `eval <expr>`
@@ -917,7 +917,7 @@ module DEBUGGER__
           @ui.puts "\nTo evaluate the variable `#{cmd}`, use `pp #{cmd}` instead."
           :retry
         else
-          request_tc [:eval, :call, arg]
+          request_eval :call, arg
         end
       end
 
@@ -928,7 +928,7 @@ module DEBUGGER__
           @ui.puts "not supported on the remote console."
           :retry
         end
-        request_tc [:eval, :irb]
+        request_eval :irb, nil
       end
 
       ### Trace
@@ -1148,7 +1148,7 @@ module DEBUGGER__
         @repl_prev_line = nil
         check_unsafe
 
-        request_tc [:eval, :pp, line]
+        request_eval :pp, line
       end
 
     rescue Interrupt
@@ -1162,6 +1162,11 @@ module DEBUGGER__
       @ui.puts "[REPL ERROR] #{e.inspect}"
       @ui.puts e.backtrace.map{|e| '  ' + e}
       return :retry
+    end
+
+    def request_eval type, src
+      restart_all_threads
+      request_tc [:eval, type, src]
     end
 
     def step_command type, arg

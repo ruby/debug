@@ -35,4 +35,30 @@ module DEBUGGER__
       end
     end
   end
+
+  class EvalThreadTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| th0 = Thread.new{sleep}
+      2| m = Mutex.new; q = Queue.new
+      3| th1 = Thread.new do
+      4|   m.lock; q << true
+      5|   sleep 1
+      6|   m.unlock
+      7| end
+      8| q.pop # wait for locking
+      9| p :ok
+      RUBY
+    end
+
+    def test_eval_with_threads
+      debug_code program do
+        type 'b 9'
+        type 'c'
+        type 'm.lock.nil?'
+        assert_line_text 'false'
+        type 'c'
+      end
+    end
+  end
 end
