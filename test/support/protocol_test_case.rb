@@ -475,10 +475,10 @@ module DEBUGGER__
     HOST = '127.0.0.1'
 
     JAVASCRIPT_TYPE_TO_CLASS_MAPS = {
-      'string' => String,
-      'number' => Integer,
-      'boolean' => [TrueClass, FalseClass],
-      'symbol' => Symbol
+      'string' => "String",
+      'number' => "Integer",
+      'boolean' => ["TrueClass", "FalseClass"],
+      'symbol' => "Symbol"
     }
 
     def assert_eval_result context, expression, expected, frame_idx
@@ -517,7 +517,7 @@ module DEBUGGER__
 
         failure_msg = FailureMessage.new{create_protocol_message "result:\n#{JSON.pretty_generate res}"}
 
-        cl = res.dig(:result, :result, :className) || JAVASCRIPT_TYPE_TO_CLASS_MAPS[res.dig(:result, :result, :type)].inspect
+        cl = res.dig(:result, :result, :className) || JAVASCRIPT_TYPE_TO_CLASS_MAPS[res.dig(:result, :result, :type)]
         result_type = Array cl
         assert_include result_type, expected[:type], failure_msg
 
