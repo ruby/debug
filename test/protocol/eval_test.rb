@@ -13,13 +13,14 @@ module DEBUGGER__
       6| f = 6
     RUBY
 
-    def test_eval_evaluates_arithmetic_expressions
+    def test_eval_evaluates_expressions
       run_protocol_scenario PROGRAM do
         req_add_breakpoint 5
         req_continue
         assert_repl_result({value: '2', type: 'Integer'}, 'a')
         assert_repl_result({value: '4', type: 'Integer'}, 'd')
         assert_repl_result({value: '3', type: 'Integer'}, '1+2')
+        assert_repl_result({value: 'false', type: 'FalseClass'}, 'a == 1')
         req_terminate_debuggee
       end
     end
