@@ -1024,16 +1024,6 @@ module DEBUGGER__
       variable nil, r
     end
 
-    def type_name obj
-      klass = M_CLASS.bind_call(obj)
-
-      begin
-        klass.name || klass.to_s
-      rescue Exception => e
-        "<Error: #{e.message} (#{e.backtrace.first}>"
-      end
-    end
-
     def variable_ name, obj, indexedVariables: 0, namedVariables: 0
       if indexedVariables > 0 || namedVariables > 0
         vid = @var_map.size + 1
@@ -1051,17 +1041,20 @@ module DEBUGGER__
         str = value_inspect(obj)
       end
 
+      klass = M_CLASS.bind_call(obj)
+      type_name = M_NAME.bind_call(klass)
+
       if name
         { name: name,
           value: str,
-          type: type_name(obj),
+          type: type_name,
           variablesReference: vid,
           indexedVariables: indexedVariables,
           namedVariables: namedVariables,
         }
       else
         { result: str,
-          type: type_name(obj),
+          type: type_name,
           variablesReference: vid,
           indexedVariables: indexedVariables,
           namedVariables: namedVariables,

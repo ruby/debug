@@ -102,35 +102,7 @@ module DEBUGGER__
         variable_info = locals.find { |local| local[:name] == "f" }
 
         assert_match /#<Foo:.*>/, variable_info[:value]
-        assert_match /<Error: wrong number of arguments \(given 0, expected 1\) /, variable_info[:type]
-
-        req_terminate_debuggee
-      end
-    end
-  end
-
-  class DAPOverwrittenToSMethod < ProtocolTestCase
-    PROGRAM = <<~RUBY
-      1| class Foo
-      2|   def self.name
-      3|     nil
-      4|   end
-      5|   def self.to_s(value) end
-      6| end
-      7| f = Foo.new
-      8| __LINE__
-    RUBY
-
-    def test_overwritten_to_s_method
-      run_protocol_scenario PROGRAM, cdp: false do
-        req_add_breakpoint 8
-        req_continue
-
-        locals = gather_variables
-
-        variable_info = locals.find { |local| local[:name] == "f" }
-        assert_match /#<Foo:.*>/, variable_info[:value]
-        assert_match /<Error: wrong number of arguments \(given 0, expected 1\) /, variable_info[:type]
+        assert_equal "Foo", variable_info[:type]
 
         req_terminate_debuggee
       end

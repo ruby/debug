@@ -14,6 +14,7 @@ module DEBUGGER__
   M_RESPOND_TO_P = method(:respond_to?).unbind
   M_METHOD = method(:method).unbind
   M_OBJECT_ID = method(:object_id).unbind
+  M_NAME = method(:name).unbind
 
   module SkipPathHelper
     def skip_path?(path)
