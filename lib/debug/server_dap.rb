@@ -66,10 +66,8 @@ module DEBUGGER__
     end
 
     def self.register_request *names, &b
-      cmd = RequestHandler.new(b)
-
       names.each{|name|
-        REGISTERED_REQUESTS[name] = cmd
+        REGISTERED_REQUESTS[name] = b
       }
     end
 
@@ -283,14 +281,6 @@ module DEBUGGER__
       retry
     end
 
-    class RequestHandler
-      def initialize(block)
-        @block = block
-      end
-
-      attr_reader :block
-    end
-
     ## boot/configuration
     register_request 'launch' do |req|
       send_response req
@@ -498,7 +488,7 @@ module DEBUGGER__
         args = req.dig('arguments')
 
         if (cmd = REGISTERED_REQUESTS[req['command']])
-          self.instance_exec(req, args, &cmd.block)
+          self.instance_exec(req, args, &cmd)
         else
           if respond_to? mid = "request_#{req['command']}"
             __send__ mid, req
