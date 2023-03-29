@@ -57,4 +57,27 @@ module DEBUGGER__
       end
     end
   end
+
+  class EvaluateThreadTest < ProtocolTestCase
+    PROGRAM = <<~RUBY
+      1| th0 = Thread.new{sleep}
+      2| m = Mutex.new; q = Queue.new
+      3| th1 = Thread.new do
+      4|   m.lock; q << true
+      5|   sleep 1
+      6|   m.unlock
+      7| end
+      8| q.pop # wait for locking
+      9| p :ok
+    RUBY
+
+    def test_eval_with_threads
+      run_protocol_scenario PROGRAM, cdp: false do
+        req_add_breakpoint 9
+        req_continue
+        assert_repl_result({value: 'false', type: 'FalseClass'}, 'm.lock.nil?', frame_idx: 0)
+        req_continue
+      end
+    end
+  end
 end
