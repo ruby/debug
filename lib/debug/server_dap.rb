@@ -625,6 +625,7 @@ module DEBUGGER__
           expr = req.dig('arguments', 'expression')
 
           if find_waiting_tc(tid)
+            restart_all_threads
             request_tc [:dap, :evaluate, req, fid, expr, context]
           else
             fail_response req
@@ -701,6 +702,7 @@ module DEBUGGER__
         register_vars result[:variables], tid
         @ui.respond req, result
       when :evaluate
+        stop_all_threads
         message = result.delete :message
         if message
           @ui.respond req, success: false, message: message
