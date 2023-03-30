@@ -248,6 +248,38 @@ module DEBUGGER__
         type "c"
       end
     end
+
+    def test_info_constant_with_expression_errors
+      debug_code(program) do
+        type "b 31"
+        type "c"
+        assert_line_num 31
+
+        type "info constants foo"
+        assert_line_text([
+          /eval error: undefined local variable or method `foo' for main/,
+          /.*/,
+          /nil \(by foo\) is not a Module./
+        ])
+
+        type "c"
+      end
+    end
+
+    def test_info_constant_with_non_module_expression
+      debug_code(program) do
+        type "b 31"
+        type "c"
+        assert_line_num 31
+
+        type "info constants 3"
+        assert_line_text([
+          /3 \(by 3\) is not a Module./
+        ])
+
+        type "c"
+      end
+    end
   end
 
   class InfoIvarsTest < ConsoleTestCase
