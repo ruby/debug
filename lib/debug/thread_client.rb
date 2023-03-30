@@ -612,7 +612,7 @@ module DEBUGGER__
           iter_consts _self, &block
           return
         else
-          raise "#{_self.inspect} (by #{expr}) is not a Module."
+          puts "#{_self.inspect} (by #{expr}) is not a Module."
         end
       elsif _self = current_frame&.self
         cs = {}
