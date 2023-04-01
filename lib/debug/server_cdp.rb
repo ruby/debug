@@ -849,27 +849,25 @@ module DEBUGGER__
           unless s_id = @scr_id_map[path]
             s_id = (@scr_id_map.size + 1).to_s
             @scr_id_map[path] = s_id
+            lineno = 0
+            src = ''
             if path && File.exist?(path)
               src = File.read(path)
+              @src_map[s_id] = src
+              lineno = src.lines.count
             end
-            @src_map[s_id] = src
-          end
-          if src = @src_map[s_id]
-            lineno = src.lines.count
-          else
-            lineno = 0
-          end
-          frame[:location][:scriptId] = s_id
-          frame[:functionLocation][:scriptId] = s_id
-          @ui.fire_event 'Debugger.scriptParsed',
+            @ui.fire_event 'Debugger.scriptParsed',
                           scriptId: s_id,
-                          url: frame[:url],
+                          url: path,
                           startLine: 0,
                           startColumn: 0,
                           endLine: lineno,
                           endColumn: 0,
                           executionContextId: 1,
                           hash: src.hash.inspect
+          end
+          frame[:location][:scriptId] = s_id
+          frame[:functionLocation][:scriptId] = s_id
 
           frame[:scopeChain].each {|s|
             oid = s.dig(:object, :objectId)
