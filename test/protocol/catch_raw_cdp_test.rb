@@ -4,7 +4,7 @@ require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
 
-  class CatchTest1647168678 < ProtocolTestCase
+  class CatchTest1680366940 < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| module Foo
       2|   class Bar
@@ -17,7 +17,7 @@ module DEBUGGER__
       9| end
     RUBY
 
-    def test_1647168678
+    def test_1680366940
       run_cdp_scenario PROGRAM do
         [
           *INITIALIZE_CDP_MSGS,
@@ -125,111 +125,31 @@ module DEBUGGER__
           },
           {
             id: 10,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 10,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Object"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 11,
             method: "Debugger.setPauseOnExceptions",
             params: {
               state: "uncaught"
             }
           },
           {
+            id: 10,
+            result: {
+            }
+          },
+          {
             id: 11,
-            result: {
-            }
-          },
-          {
-            id: 12,
-            method: "Debugger.setPauseOnExceptions",
-            params: {
-              state: "all"
-            }
-          },
-          {
-            id: 12,
-            result: {
-            }
-          },
-          {
-            id: 13,
             method: "Debugger.resume",
             params: {
               terminateOnResume: false
             }
           },
           {
-            id: 13,
+            id: 11,
             result: {
             }
           },
           {
             method: "Debugger.resumed",
             params: {
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
             }
           },
           {
@@ -365,7 +285,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 14,
+            id: 12,
             method: "Runtime.getProperties",
             params: {
               objectId: "0:local",
@@ -376,18 +296,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 15,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 14,
+            id: 12,
             result: {
               result: [
                 {
@@ -417,44 +326,14 @@ module DEBUGGER__
             }
           },
           {
-            id: 15,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Class"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "_raised",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    subtype: "error",
-                    className: "RuntimeError"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 16,
+            id: 13,
             method: "Debugger.resume",
             params: {
               terminateOnResume: false
             }
           },
           {
-            id: 16,
+            id: 13,
             result: {
             }
           },

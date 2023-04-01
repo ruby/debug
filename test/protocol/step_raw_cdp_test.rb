@@ -4,7 +4,7 @@ require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
   
-  class StepTest1647142777 < ProtocolTestCase
+  class StepTest1680366703 < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| module Foo
       2|   class Bar
@@ -18,23 +18,10 @@ module DEBUGGER__
 
     RUBY
     
-    def test_1647142777
+    def test_1680366703
       run_cdp_scenario PROGRAM do
         [
           *INITIALIZE_CDP_MSGS,
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
           {
             method: "Debugger.paused",
             params: {
@@ -126,35 +113,6 @@ module DEBUGGER__
           },
           {
             id: 10,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 10,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Object"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 11,
             method: "Debugger.stepInto",
             params: {
               breakOnAsyncCall: true,
@@ -164,39 +122,13 @@ module DEBUGGER__
             }
           },
           {
-            id: 11,
+            id: 10,
             result: {
             }
           },
           {
             method: "Debugger.resumed",
             params: {
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
             }
           },
           {
@@ -286,7 +218,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 12,
+            id: 11,
             method: "Runtime.getProperties",
             params: {
               objectId: "0:local",
@@ -297,18 +229,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 13,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 12,
+            id: 11,
             result: {
               result: [
                 {
@@ -337,36 +258,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 13,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Module"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "bar",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 14,
+            id: 12,
             method: "Debugger.stepInto",
             params: {
               breakOnAsyncCall: true,
@@ -376,52 +268,13 @@ module DEBUGGER__
             }
           },
           {
-            id: 14,
+            id: 12,
             result: {
             }
           },
           {
             method: "Debugger.resumed",
             params: {
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
             }
           },
           {
@@ -550,7 +403,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 15,
+            id: 13,
             method: "Runtime.getProperties",
             params: {
               objectId: "0:local",
@@ -561,7 +414,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 15,
+            id: 13,
             result: {
               result: [
                 {
@@ -579,36 +432,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 16,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 16,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Class"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 17,
+            id: 14,
             method: "Debugger.stepInto",
             params: {
               breakOnAsyncCall: true,
@@ -618,39 +442,13 @@ module DEBUGGER__
             }
           },
           {
-            id: 17,
+            id: 14,
             result: {
             }
           },
           {
             method: "Debugger.resumed",
             params: {
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
             }
           },
           {
@@ -740,7 +538,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 18,
+            id: 15,
             method: "Runtime.getProperties",
             params: {
               objectId: "0:local",
@@ -751,18 +549,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 19,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 18,
+            id: 15,
             result: {
               result: [
                 {
@@ -791,36 +578,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 19,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Module"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "bar",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 20,
+            id: 16,
             method: "Debugger.stepInto",
             params: {
               breakOnAsyncCall: true,
@@ -830,52 +588,13 @@ module DEBUGGER__
             }
           },
           {
-            id: 20,
+            id: 16,
             result: {
             }
           },
           {
             method: "Debugger.resumed",
             params: {
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
             }
           },
           {
@@ -1004,7 +723,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 21,
+            id: 17,
             method: "Runtime.getProperties",
             params: {
               objectId: "0:local",
@@ -1015,18 +734,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 22,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 21,
+            id: 17,
             result: {
               result: [
                 {
@@ -1044,25 +752,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 22,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Class"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 23,
+            id: 18,
             method: "Debugger.stepInto",
             params: {
               breakOnAsyncCall: true,
@@ -1072,52 +762,13 @@ module DEBUGGER__
             }
           },
           {
-            id: 23,
+            id: 18,
             result: {
             }
           },
           {
             method: "Debugger.resumed",
             params: {
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
             }
           },
           {
@@ -1246,7 +897,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 24,
+            id: 19,
             method: "Runtime.getProperties",
             params: {
               objectId: "0:local",
@@ -1257,18 +908,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 25,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 24,
+            id: 19,
             result: {
               result: [
                 {
@@ -1297,36 +937,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 25,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Class"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "_return",
-                  value: {
-                    type: "string",
-                    description: /.+/,
-                    value: /.+/,
-                    objectId: /.+/
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 26,
+            id: 20,
             method: "Debugger.stepInto",
             params: {
               breakOnAsyncCall: true,
@@ -1336,39 +947,13 @@ module DEBUGGER__
             }
           },
           {
-            id: 26,
+            id: 20,
             result: {
             }
           },
           {
             method: "Debugger.resumed",
             params: {
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 9,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
             }
           },
           {
@@ -1458,7 +1043,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 27,
+            id: 21,
             method: "Runtime.getProperties",
             params: {
               objectId: "0:local",
@@ -1469,18 +1054,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 28,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 27,
+            id: 21,
             result: {
               result: [
                 {
@@ -1509,36 +1083,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 28,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Module"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "bar",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 29,
+            id: 22,
             method: "Debugger.stepInto",
             params: {
               breakOnAsyncCall: true,
@@ -1548,7 +1093,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 29,
+            id: 22,
             result: {
             }
           },
