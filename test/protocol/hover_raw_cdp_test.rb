@@ -4,7 +4,7 @@ require_relative '../support/protocol_test_case'
 
 module DEBUGGER__
 
-  class HoverTest1647163915 < ProtocolTestCase
+  class HoverTest1680367110 < ProtocolTestCase
     PROGRAM = <<~RUBY
       1| a = 1
       2| b = 2
@@ -14,7 +14,7 @@ module DEBUGGER__
 
     RUBY
 
-    def test_1647163915
+    def test_1680367110
       run_cdp_scenario PROGRAM do
         [
           *INITIALIZE_CDP_MSGS,
@@ -177,125 +177,18 @@ module DEBUGGER__
           },
           {
             id: 10,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 10,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Object"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "a",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "b",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "c",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "d",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "e",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 11,
-            method: "Debugger.getPossibleBreakpoints",
-            params: {
-              start: {
-                scriptId: "1",
-                lineNumber: 0,
-                columnNumber: 0
-              },
-              restrictToFunction: true
-            }
-          },
-          {
-            id: 11,
-            result: {
-              locations: [
-                {
-                  scriptId: /.+/,
-                  lineNumber: 0
-                }
-              ]
-            }
-          },
-          {
-            id: 12,
             method: "Debugger.setBreakpointsActive",
             params: {
               active: true
             }
           },
           {
-            id: 12,
+            id: 10,
             result: {
             }
           },
           {
-            id: 13,
+            id: 11,
             method: "Debugger.setBreakpointByUrl",
             params: {
               lineNumber: 3,
@@ -305,7 +198,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 13,
+            id: 11,
             result: {
               breakpointId: /.+/,
               locations: [
@@ -317,7 +210,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 14,
+            id: 12,
             method: "Debugger.getPossibleBreakpoints",
             params: {
               start: {
@@ -334,7 +227,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 14,
+            id: 12,
             result: {
               locations: [
                 {
@@ -345,33 +238,20 @@ module DEBUGGER__
             }
           },
           {
-            id: 15,
+            id: 13,
             method: "Debugger.resume",
             params: {
               terminateOnResume: false
             }
           },
           {
-            id: 15,
+            id: 13,
             result: {
             }
           },
           {
             method: "Debugger.resumed",
             params: {
-            }
-          },
-          {
-            method: "Debugger.scriptParsed",
-            params: {
-              scriptId: /.+/,
-              url: /.+/,
-              startLine: 0,
-              startColumn: 0,
-              endLine: 5,
-              endColumn: 0,
-              executionContextId: 1,
-              hash: /.+/
             }
           },
           {
@@ -422,7 +302,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 16,
+            id: 14,
             method: "Runtime.getProperties",
             params: {
               objectId: "0:local",
@@ -433,18 +313,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 17,
-            method: "Runtime.getProperties",
-            params: {
-              objectId: "0:local",
-              ownProperties: false,
-              accessorPropertiesOnly: false,
-              nonIndexedPropertiesOnly: false,
-              generatePreview: true
-            }
-          },
-          {
-            id: 16,
+            id: 14,
             result: {
               result: [
                 {
@@ -517,83 +386,10 @@ module DEBUGGER__
             }
           },
           {
-            id: 17,
-            result: {
-              result: [
-                {
-                  name: "%self",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "Object"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "a",
-                  value: {
-                    type: "number",
-                    description: /.+/,
-                    value: 1,
-                    objectId: /.+/
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "b",
-                  value: {
-                    type: "number",
-                    description: /.+/,
-                    value: 2,
-                    objectId: /.+/
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "c",
-                  value: {
-                    type: "number",
-                    description: /.+/,
-                    value: 3,
-                    objectId: /.+/
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "d",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                },
-                {
-                  name: "e",
-                  value: {
-                    type: "object",
-                    description: /.+/,
-                    objectId: /.+/,
-                    className: "NilClass"
-                  },
-                  configurable: true,
-                  enumerable: true
-                }
-              ]
-            }
-          },
-          {
-            id: 18,
+            id: 15,
             method: "Debugger.evaluateOnCallFrame",
             params: {
-              callFrameId: "b0517caf9ad3aa17aec13bda2d6a7e41",
+              callFrameId: "749f0545d098a59afc45091a1b8edc35",
               expression: "c",
               objectGroup: "popover",
               includeCommandLineAPI: false,
@@ -616,7 +412,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 18,
+            id: 15,
             result: {
               result: {
                 type: "number",
@@ -627,22 +423,22 @@ module DEBUGGER__
             }
           },
           {
-            id: 19,
+            id: 16,
             method: "Runtime.releaseObjectGroup",
             params: {
               objectGroup: "popover"
             }
           },
           {
-            id: 19,
+            id: 16,
             result: {
             }
           },
           {
-            id: 20,
+            id: 17,
             method: "Debugger.evaluateOnCallFrame",
             params: {
-              callFrameId: "b0517caf9ad3aa17aec13bda2d6a7e41",
+              callFrameId: "749f0545d098a59afc45091a1b8edc35",
               expression: "b",
               objectGroup: "popover",
               includeCommandLineAPI: false,
@@ -665,7 +461,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 20,
+            id: 17,
             result: {
               result: {
                 type: "number",
@@ -676,22 +472,22 @@ module DEBUGGER__
             }
           },
           {
-            id: 21,
+            id: 18,
             method: "Runtime.releaseObjectGroup",
             params: {
               objectGroup: "popover"
             }
           },
           {
-            id: 21,
+            id: 18,
             result: {
             }
           },
           {
-            id: 22,
+            id: 19,
             method: "Debugger.evaluateOnCallFrame",
             params: {
-              callFrameId: "b0517caf9ad3aa17aec13bda2d6a7e41",
+              callFrameId: "749f0545d098a59afc45091a1b8edc35",
               expression: "a",
               objectGroup: "popover",
               includeCommandLineAPI: false,
@@ -714,7 +510,7 @@ module DEBUGGER__
             }
           },
           {
-            id: 22,
+            id: 19,
             result: {
               result: {
                 type: "number",
@@ -725,26 +521,26 @@ module DEBUGGER__
             }
           },
           {
-            id: 23,
+            id: 20,
             method: "Runtime.releaseObjectGroup",
             params: {
               objectGroup: "popover"
             }
           },
           {
-            id: 23,
+            id: 20,
             result: {
             }
           },
           {
-            id: 24,
+            id: 21,
             method: "Debugger.resume",
             params: {
               terminateOnResume: false
             }
           },
           {
-            id: 24,
+            id: 21,
             result: {
             }
           }
