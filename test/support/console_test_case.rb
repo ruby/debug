@@ -195,12 +195,15 @@ module DEBUGGER__
         # result of `gets` return this exception in some platform
         rescue Timeout::Error
           assert_block(create_message("TIMEOUT ERROR (#{TIMEOUT_SEC} sec)", test_info)) { false }
+        rescue Test::Unit::AssertionFailedError
+          is_assertion_failure = true
+          raise
         ensure
-          kill_remote_debuggee test_info
+          kill_remote_debuggee test_info, force: is_assertion_failure
           # kill debug console process
           read.close
           write.close
-          kill_safely pid
+          kill_safely pid, force: is_assertion_failure
         end
       end
     end

@@ -18,8 +18,6 @@ module DEBUGGER__
     end
 
     def test_the_assertion_failure_takes_presedence_over_debuggee_not_exiting
-      omit "too slow now"
-
       program = <<~RUBY
         1| a = 2
         2| b = 3
