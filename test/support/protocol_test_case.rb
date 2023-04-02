@@ -346,8 +346,12 @@ module DEBUGGER__
       is_assertion_failure = true
       raise e
     ensure
-      if kill_remote_debuggee(test_info) && !is_assertion_failure
-        flunk create_protocol_message "Expected the debuggee program to finish"
+      if is_assertion_failure
+        kill_remote_debuggee(test_info, force: true)
+      else
+        if kill_remote_debuggee(test_info)
+          flunk create_protocol_message "Expected the debuggee program to finish"
+        end
       end
       # Because the debuggee may be terminated by executing the following operations, we need to run them after `kill_remote_debuggee` method.
       @reader_thread&.kill
@@ -379,8 +383,12 @@ module DEBUGGER__
       is_assertion_failure = true
       raise e
     ensure
-      if kill_remote_debuggee(test_info) && !is_assertion_failure
-        flunk create_protocol_message "Expected the debuggee program to finish"
+      if is_assertion_failure
+        kill_remote_debuggee(test_info, force: true)
+      else
+        if kill_remote_debuggee(test_info)
+          flunk create_protocol_message "Expected the debuggee program to finish"
+        end
       end
       # Because the debuggee may be terminated by executing the following operations, we need to run them after `kill_remote_debuggee` method.
       @reader_thread&.kill

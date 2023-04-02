@@ -122,8 +122,10 @@ module DEBUGGER__
       true
     end
 
-    def kill_safely pid
-      return false if wait_pid pid, TIMEOUT_SEC
+    def kill_safely pid, force: false
+      unless force
+        return false if wait_pid pid, TIMEOUT_SEC
+      end
 
       Process.kill :TERM, pid
       return true if wait_pid pid, 0.2
@@ -141,10 +143,10 @@ module DEBUGGER__
       end
     end
 
-    def kill_remote_debuggee test_info
+    def kill_remote_debuggee test_info, force: false
       return false unless r = test_info.remote_info
 
-      force_killed = kill_safely r.pid
+      force_killed = kill_safely r.pid, force: force
       r.reader_thread.kill
       # Because the debuggee may be terminated by executing the following operations, we need to run them after `kill_safely` method.
       r.r.close

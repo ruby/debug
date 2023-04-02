@@ -51,8 +51,6 @@ module DEBUGGER__
     end
 
     def test_the_test_fails_when_debuggee_on_unix_domain_socket_mode_doesnt_exist_after_scenarios
-      omit "too slow now"
-
       assert_raise_message(/Expected to include `"foobar\\\\?/) do
         prepare_test_environment(program, steps) do
           debug_code_on_unix_domain_socket()
@@ -61,8 +59,6 @@ module DEBUGGER__
     end
 
     def test_the_test_fails_when_debuggee_on_tcpip_mode_doesnt_exist_after_scenarios
-      omit "too slow now"
-
       assert_raise_message(/Expected to include `"foobar\\\\?/) do
         prepare_test_environment(program, steps) do
           debug_code_on_tcpip()
