@@ -65,30 +65,9 @@ module DEBUGGER__
     end
 
     def attach_to_cdp_server
-      body = get_request HOST, @remote_info.port, '/json'
-      Timeout.timeout(TIMEOUT_SEC) do
-        sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Disconnected.'
+      retry_connect do
+        attach_to_cdp_server_
       end
-
-      sock = Socket.tcp HOST, @remote_info.port
-      uuid = body[0][:id]
-
-      Timeout.timeout(TIMEOUT_SEC) do
-        sleep 0.001 until @remote_info.debuggee_backlog.join.match?(/Disconnected\.\R.*Connected/)
-      end
-
-      @web_sock = WebSocketClient.new sock
-      @web_sock.handshake @remote_info.port, uuid
-      @id = 1
-      @reader_thread = Thread.new do
-        while res = @web_sock.extract_data
-          @queue.push res
-        end
-      rescue Detach
-      end
-      sleep 0.001 while @reader_thread.status != 'sleep'
-      @reader_thread.run
-      INITIALIZE_CDP_MSGS.each{|msg| send(**msg)}
     end
 
     def req_dap_disconnect(terminate_debuggee:)
@@ -324,6 +303,33 @@ module DEBUGGER__
 
     # Not API
 
+    def attach_to_cdp_server_
+      body = get_request HOST, @remote_info.port, '/json'
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.001 until @remote_info.debuggee_backlog.join.include? 'Disconnected.'
+      end
+
+      sock = Socket.tcp HOST, @remote_info.port
+      uuid = body[0][:id]
+
+      Timeout.timeout(TIMEOUT_SEC) do
+        sleep 0.001 until @remote_info.debuggee_backlog.join.match?(/Disconnected\.\R.*Connected/)
+      end
+
+      @web_sock = WebSocketClient.new sock
+      @web_sock.handshake @remote_info.port, uuid
+      @id = 1
+      @reader_thread = Thread.new do
+        while res = @web_sock.extract_data
+          @queue.push res
+        end
+      rescue Detach
+      end
+      sleep 0.001 while @reader_thread.status != 'sleep'
+      @reader_thread.run
+      INITIALIZE_CDP_MSGS.each{|msg| send(**msg)}
+    end
+
     def execute_dap_scenario scenario
       ENV['RUBY_DEBUG_TEST_UI'] = 'vscode'
 
@@ -396,9 +402,15 @@ module DEBUGGER__
     end
 
     def execute_cdp_scenario scenario
+      retry_connect do
+        execute_cdp_scenario_ scenario
+      end
+    end
+
+    def retry_connect
       retry_cnt = 0
       begin
-        execute_cdp_scenario_ scenario
+        yield
       rescue Errno::ECONNREFUSED
         if (retry_cnt += 1) > 10
           STDERR.puts "retry #{retry_cnt} but can not connect!"
