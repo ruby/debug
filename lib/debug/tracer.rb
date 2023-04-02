@@ -147,6 +147,78 @@ module DEBUGGER__
     end
   end
 
+  # MultiTracer is designated for DAP.
+  class MultiTracer < Tracer
+    MAX_LOG_SIZE = 4000
+    def initialize ui, evts, **kw
+      @evts = evts
+      @log = []
+      super(ui, **kw)
+    end
+
+    attr_reader :log
+
+    def setup
+      @tracer = TracePoint.new(*@evts){|tp|
+        next if skip?(tp)
+
+        case tp.event
+        when :call, :c_call, :b_call
+          append(call_trace_log(tp))
+        when :return, :c_return, :b_return
+          return_str = DEBUGGER__.safe_inspect(tp.return_value, short: true, max_length: 120)
+          append(call_trace_log(tp, return_str: return_str))
+        when :line
+          append(line_trace_log(tp))
+        end
+      }
+    end
+
+    def call_identifier_str tp
+      if tp.defined_class
+        minfo(tp)
+      else
+        "block"
+      end
+    end
+
+    def append log
+      if @log.size >= MAX_LOG_SIZE
+        @log.shift
+      end
+      @log << log
+    end
+
+    def call_trace_log tp, return_str: nil
+      log = {
+        depth: DEBUGGER__.frame_depth,
+        name: call_identifier_str(tp),
+        threadId: Thread.current.instance_variable_get(:@__thread_client_id),
+        location: {
+          path: tp.path,
+          line: tp.lineno
+        }
+      }
+      log[:returnValue] = return_str if return_str
+      log
+    end
+
+    def line_trace_log tp
+      {
+        depth: DEBUGGER__.frame_depth,
+        threadId: Thread.current.instance_variable_get(:@__thread_client_id),
+        location: {
+          path: tp.path,
+          line: tp.lineno
+        }
+      }
+    end
+
+    def skip? tp
+      super || !@evts.include?(tp.event)
+    end
+  end
+
   class ExceptionTracer < Tracer
     def setup
       @tracer = TracePoint.new(:raise) do |tp|
@@ -238,4 +310,3 @@ module DEBUGGER__
     end
   end
 end
-
