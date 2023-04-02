@@ -1,5 +1,5 @@
 module DEBUGGER__
-  module RdbgRecordInspector
+  module RecordInspector
     module Custom_UI_DAP
       def custom_dap_request_rdbgRecordInspector(req)
         @q_msg << req

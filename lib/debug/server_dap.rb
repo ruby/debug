@@ -9,9 +9,6 @@ module DEBUGGER__
   module UI_DAP
     SHOW_PROTOCOL = ENV['DEBUG_DAP_SHOW_PROTOCOL'] == '1' || ENV['RUBY_DEBUG_DAP_SHOW_PROTOCOL'] == '1'
 
-    # After loading UI_DAP module, load the custom DAP file.
-    require_relative 'dap_custom'
-
     def self.setup debug_port
       if File.directory? '.vscode'
         dir = Dir.pwd
@@ -290,6 +287,12 @@ module DEBUGGER__
           # `launch` runs on debuggee on the same file system
           UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap') || true
           @nonstop = true
+
+          if exts = req.dig('arguments', 'extension')
+            exts.each{|ext|
+              require_relative "dap_custom/#{ext}"
+            }
+          end
 
         when 'attach'
           send_response req
