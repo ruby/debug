@@ -2,6 +2,7 @@
 
 require 'objspace'
 require 'pp'
+require 'stringio'
 
 require_relative 'color'
 
@@ -202,6 +203,8 @@ module DEBUGGER__
         @output << "\n"
       when Array
         str.each{|s| puts s}
+      when StringIO
+        @output << "#{prefix}#{str.string.chomp}\n"
       else
         @output << "#{prefix}#{str.chomp}\n"
       end

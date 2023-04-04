@@ -50,7 +50,7 @@ module DEBUGGER__
       def color_pp obj, width
         with_inspection_error_guard do
           if !CONFIG[:no_color]
-            IRB::ColorPrinter.pp(obj, "".dup, width)
+            IRB::ColorPrinter.pp(obj, StringIO.new, width)
           else
             obj.pretty_inspect
           end
