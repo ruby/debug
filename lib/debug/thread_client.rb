@@ -608,12 +608,17 @@ module DEBUGGER__
 
     def get_consts expr = nil, only_self: false, &block
       if expr && !expr.empty?
-        _self = frame_eval(expr)
-        if M_KIND_OF_P.bind_call(_self, Module)
-          iter_consts _self, &block
-          return
+        begin
+          _self = frame_eval(expr, re_raise: true)
+        rescue Exception => e
+          # ignore
         else
-          puts "#{_self.inspect} (by #{expr}) is not a Module."
+          if M_KIND_OF_P.bind_call(_self, Module)
+            iter_consts _self, &block
+            return
+          else
+            puts "#{_self.inspect} (by #{expr}) is not a Module."
+          end
         end
       elsif _self = current_frame&.self
         cs = {}

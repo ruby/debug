@@ -258,8 +258,6 @@ module DEBUGGER__
         type "info constants foo"
         assert_line_text([
           /eval error: undefined local variable or method `foo' for main/,
-          /.*/,
-          /nil \(by foo\) is not a Module./
         ])
 
         type "c"
