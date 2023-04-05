@@ -133,4 +133,26 @@ module DEBUGGER__
       end
     end
   end
+
+  class DAPAnonymousClassInstance < ProtocolTestCase
+    PROGRAM = <<~RUBY
+      1| f = Class.new.new
+      2| __LINE__
+    RUBY
+
+    def test_anonymous_class_instance
+      run_protocol_scenario PROGRAM, cdp: false do
+        req_add_breakpoint 2
+        req_continue
+
+        locals = gather_variables
+
+        variable_info = locals.find { |local| local[:name] == "f" }
+        assert_match /#<Class:.*>/, variable_info[:value]
+        assert_match /#<Class:.*>/, variable_info[:type]
+
+        req_terminate_debuggee
+      end
+    end
+  end
 end

@@ -1047,14 +1047,14 @@ module DEBUGGER__
       if name
         { name: name,
           value: str,
-          type: type_name,
+          type: type_name || klass.to_s,
           variablesReference: vid,
           indexedVariables: indexedVariables,
           namedVariables: namedVariables,
         }
       else
         { result: str,
-          type: type_name,
+          type: type_name || klass.to_s,
           variablesReference: vid,
           indexedVariables: indexedVariables,
           namedVariables: namedVariables,
