@@ -2147,6 +2147,13 @@ module DEBUGGER__
     end
   end
 
+  # experimental API
+  def extend_feature session: nil, thread_client: nil, ui: nil
+    Session.include session if session
+    ThreadClient.include thread_client if thread_client
+    @ui.extend ui if ui
+  end
+
   # manual configuration methods
 
   def self.add_line_breakpoint file, line, **kw
