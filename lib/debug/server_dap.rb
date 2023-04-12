@@ -869,7 +869,7 @@ module DEBUGGER__
               }
             when String
               vars = [
-                variable('#lengthddsfsd', obj.length),
+                variable('#length', obj.length),
                 variable('#encoding', obj.encoding),
               ]
               printed_str = value_inspect(obj)
