@@ -1993,6 +1993,13 @@ module DEBUGGER__
     def after_fork_parent
       @ui.after_fork_parent
     end
+
+    # experimental API
+    def extend_feature session: nil, thread_client: nil, ui: nil
+      Session.include session if session
+      ThreadClient.include thread_client if thread_client
+      @ui.extend ui if ui
+    end
   end
 
   class ProcessGroup
@@ -2145,13 +2152,6 @@ module DEBUGGER__
 
     def flush
     end
-  end
-
-  # experimental API
-  def extend_feature session: nil, thread_client: nil, ui: nil
-    Session.include session if session
-    ThreadClient.include thread_client if thread_client
-    @ui.extend ui if ui
   end
 
   # manual configuration methods
