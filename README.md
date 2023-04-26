@@ -583,6 +583,7 @@ The `<...>` notation means the argument.
 
 ### Breakpoint
 
+#### Set breakpoint
 * `b[reak]`
   * Show all breakpoints.
 * `b[reak] <line>`
@@ -604,6 +605,8 @@ The `<...>` notation means the argument.
 * `b[reak] if: <expr>`
   * break if: `<expr>` is true at any lines.
   * Note that this feature is super slow.
+
+#### Set breakpoint (via catch)
 * `catch <Error>`
   * Set breakpoint on raising `<Error>`.
 * `catch ... if: <expr>`
@@ -614,6 +617,8 @@ The `<...>` notation means the argument.
   * stops and run `<command>`, and continue.
 * `catch ... path: <path>`
   * stops if the exception is raised from a `<path>`. `<path>` can be a regexp with `/regexp/`.
+
+#### Set breakpoint (via watch)
 * `watch @ivar`
   * Stop the execution when the result of current scope's `@ivar` is changed.
   * Note that this feature is super slow.
@@ -625,6 +630,8 @@ The `<...>` notation means the argument.
   * stops and run `<command>`, and continue.
 * `watch ... path: <path>`
   * stops if the path matches `<path>`. `<path>` can be a regexp with `/regexp/`.
+
+#### Delete breakpoint(s)
 * `del[ete]`
   * delete all breakpoints.
 * `del[ete] <bpnum>`
