@@ -300,6 +300,7 @@ module DEBUGGER__
         when 'collect'
           logs = []
           log_index = nil
+          trace_cnt = 0
           unless @recorder.nil?
             log_index = @recorder.log_index
             @recorder.log.each{|frames|
@@ -320,9 +321,10 @@ module DEBUGGER__
               end
               logs << log
             }
+            trace_cnt = @recorder.dropped_trace_cnt
+            @recorder.dropped_trace_cnt = 0
           end
-          event! :protocol_result, :rdbgTraceInspector, req, logs: logs, stoppedIndex: log_index, dropped_trace_cnt: @recorder.dropped_trace_cnt
-          @recorder.dropped_trace_cnt = 0
+          event! :protocol_result, :rdbgTraceInspector, req, logs: logs, stoppedIndex: log_index, dropped_trace_cnt: trace_cnt
         else
           raise "Unknown command #{cmd}"
         end
