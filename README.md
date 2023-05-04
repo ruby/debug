@@ -476,6 +476,7 @@ config set no_color true
   * `RUBY_DEBUG_NO_SIGINT_HOOK` (`no_sigint_hook`): Do not suspend on SIGINT (default: false)
   * `RUBY_DEBUG_NO_RELINE` (`no_reline`): Do not use Reline library (default: false)
   * `RUBY_DEBUG_NO_HINT` (`no_hint`): Do not show the hint on the REPL (default: false)
+  * `RUBY_DEBUG_NO_LINENO` (`no_lineno`): Do not show line numbers (default: false)
 
 * CONTROL
   * `RUBY_DEBUG_SKIP_PATH` (`skip_path`): Skip showing/entering frames for given paths
@@ -908,6 +909,8 @@ Attach mode:
   'rdbg -A host port' tries to connect to host:port via TCP/IP.
 
 Other options:
+    -v                               Show version number
+        --version                    Show version number and exit
     -h, --help                       Print help
         --util=NAME                  Utility mode (used by tools)
         --stop-at-load               Stop immediately when the debugging feature is loaded.
