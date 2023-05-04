@@ -101,7 +101,7 @@ module DEBUGGER__
 
         variable_info = locals.find { |local| local[:name] == "f" }
 
-        assert_match /#<Foo:.*>/, variable_info[:value]
+        assert_match(/\#<Foo:.*>/, variable_info[:value])
         assert_equal "Foo", variable_info[:type]
 
         req_terminate_debuggee
@@ -126,7 +126,7 @@ module DEBUGGER__
         locals = gather_variables
 
         variable_info = locals.find { |local| local[:name] == "f" }
-        assert_match /#<Foo:.*>/, variable_info[:value]
+        assert_match(/\#<Foo:.*>/, variable_info[:value])
         assert_equal "Foo", variable_info[:type]
 
         req_terminate_debuggee
@@ -148,8 +148,8 @@ module DEBUGGER__
         locals = gather_variables
 
         variable_info = locals.find { |local| local[:name] == "f" }
-        assert_match /#<Class:.*>/, variable_info[:value]
-        assert_match /#<Class:.*>/, variable_info[:type]
+        assert_match(/\#<Class:.*>/, variable_info[:value])
+        assert_match(/\#<Class:.*>/, variable_info[:type])
 
         req_terminate_debuggee
       end
