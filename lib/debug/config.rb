@@ -21,6 +21,7 @@ module DEBUGGER__
     no_sigint_hook: ['RUBY_DEBUG_NO_SIGINT_HOOK', "UI: Do not suspend on SIGINT",               :bool, "false"],
     no_reline:      ['RUBY_DEBUG_NO_RELINE',      "UI: Do not use Reline library",              :bool, "false"],
     no_hint:        ['RUBY_DEBUG_NO_HINT',        "UI: Do not show the hint on the REPL",       :bool, "false"],
+    no_lineno:      ['RUBY_DEBUG_NO_LINENO',      "UI: Do not show line numbers",               :bool, "false"],
 
     # control setting
     skip_path:      ['RUBY_DEBUG_SKIP_PATH',      "CONTROL: Skip showing/entering frames for given paths", :path],

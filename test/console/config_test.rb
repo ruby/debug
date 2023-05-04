@@ -411,4 +411,23 @@ module DEBUGGER__
       end
     end
   end
+
+  class NoLinenoTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| a = :a
+      2| b = :b
+      3| c = :c
+      RUBY
+    end
+
+    def test_no_lineno
+      debug_code(program) do
+        type 'config set no_lineno true'
+        type 'list'
+        assert_no_line_text(/^\s*\d/)
+        type 'c'
+      end
+    end
+  end
 end

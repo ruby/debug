@@ -469,10 +469,14 @@ module DEBUGGER__
       if file_lines = frame.file_lines
         frame_line = frame.location.lineno - 1
 
-        lines = file_lines.map.with_index do |e, i|
-          cur = i == frame_line ? '=>' : '  '
-          line = colorize_dim('%4d|' % (i+1))
-          "#{cur}#{line} #{e}"
+        if CONFIG[:no_lineno]
+          lines = file_lines
+        else
+          lines = file_lines.map.with_index do |e, i|
+            cur = i == frame_line ? '=>' : '  '
+            line = colorize_dim('%4d|' % (i+1))
+            "#{cur}#{line} #{e}"
+          end
         end
 
         unless start_line
