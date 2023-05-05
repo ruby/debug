@@ -24,6 +24,32 @@ module DEBUGGER__
         type 'c'
       end
     end
+
+    def test_trap_with
+      debug_code %q{
+        1| trap(:INT){} # Symbol
+        2| _ = 1
+      }, remote: false do
+        type 'n'
+        type 'n'
+      end
+
+      debug_code %q{
+        1| trap('INT'){} # String
+        2| _ = 1
+      }, remote: false do
+        type 'n'
+        type 'n'
+      end
+
+      debug_code %q{
+        1| trap(Signal.list['INT']){} if Signal.list['INT'] # Integer
+        2| _ = 1
+      }, remote: false do
+        type 'n'
+        type 'n'
+      end
+    end
   end
 end
 
