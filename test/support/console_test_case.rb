@@ -98,7 +98,7 @@ module DEBUGGER__
 
               th.each do |t|
                 if fail_msg = t.join.value
-                  th.each(&:kill)
+                  th.each{|t| t.raise Test::Unit::AssertionFailedError}
                   flunk fail_msg
                 end
               end
