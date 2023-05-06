@@ -71,7 +71,7 @@ module DEBUGGER__
           name: call_identifier_str(tp),
           threadId: Thread.current.instance_variable_get(:@__thread_client_id),
           location: {
-            path: tp.path,
+            path: File.expand_path(tp.path),
             line: tp.lineno
           }
         }
@@ -85,7 +85,7 @@ module DEBUGGER__
           depth: DEBUGGER__.frame_depth,
           threadId: Thread.current.instance_variable_get(:@__thread_client_id),
           location: {
-            path: tp.path,
+            path: File.expand_path(tp.path),
             line: tp.lineno
           }
         }
