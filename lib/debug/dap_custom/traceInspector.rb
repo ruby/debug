@@ -71,7 +71,7 @@ module DEBUGGER__
           name: call_identifier_str(tp),
           threadId: Thread.current.instance_variable_get(:@__thread_client_id),
           location: {
-            path: tp.path,
+            path: File.expand_path(tp.path),
             line: tp.lineno
           }
         }
@@ -85,7 +85,7 @@ module DEBUGGER__
           depth: DEBUGGER__.frame_depth,
           threadId: Thread.current.instance_variable_get(:@__thread_client_id),
           location: {
-            path: tp.path,
+            path: File.expand_path(tp.path),
             line: tp.lineno
           }
         }
@@ -308,7 +308,7 @@ module DEBUGGER__
               log = {
                 name: crt_frame.name,
                 location: {
-                  path: crt_frame.location.path,
+                  path: crt_frame.realpath || crt_frame.path,
                   line: crt_frame.location.lineno,
                 },
                 depth: crt_frame.frame_depth
