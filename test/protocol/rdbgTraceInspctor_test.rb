@@ -13,7 +13,7 @@ module DEBUGGER__
     RUBY
 
     def test_defaut_setting
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtension] = ["traceInspector"]
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtensions] = ["traceInspector"]
       run_protocol_scenario(PROGRAM, cdp: false) do
         req_rdbgTraceInspector_trace_enable
         req_add_breakpoint 5
@@ -43,11 +43,11 @@ module DEBUGGER__
         req_terminate_debuggee
       end
     ensure
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtension
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtensions
     end
 
     def test_call_event
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtension] = ["traceInspector"]
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtensions] = ["traceInspector"]
       run_protocol_scenario(PROGRAM, cdp: false) do
         req_rdbgTraceInspector_trace_enable(events: ['traceCall'])
         req_add_breakpoint 5
@@ -65,11 +65,11 @@ module DEBUGGER__
         req_terminate_debuggee
       end
     ensure
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtension
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtensions
     end
 
     def test_return_event
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtension] = ["traceInspector"]
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtensions] = ["traceInspector"]
       run_protocol_scenario(PROGRAM, cdp: false) do
         req_rdbgTraceInspector_trace_enable(events: ['traceReturn'])
         req_add_breakpoint 5
@@ -88,11 +88,11 @@ module DEBUGGER__
         req_terminate_debuggee
       end
     ensure
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtension
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtensions
     end
 
     def test_line_event
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtension] = ["traceInspector"]
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtensions] = ["traceInspector"]
       run_protocol_scenario(PROGRAM, cdp: false) do
         req_rdbgTraceInspector_trace_enable(events: ['traceLine'])
         req_add_breakpoint 5
@@ -109,11 +109,11 @@ module DEBUGGER__
         req_terminate_debuggee
       end
     ensure
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtension
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtensions
     end
 
     def test_restart_trace
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtension] = ["traceInspector"]
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtensions] = ["traceInspector"]
       run_protocol_scenario(PROGRAM, cdp: false) do
         req_rdbgTraceInspector_trace_enable
         req_rdbgTraceInspector_trace_disable
@@ -132,7 +132,7 @@ module DEBUGGER__
         req_terminate_debuggee
       end
     ensure
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtension
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtensions
     end
   end
 
@@ -150,7 +150,7 @@ module DEBUGGER__
     RUBY
 
     def test_defaut_setting
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtension] = ["traceInspector"]
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtensions] = ["traceInspector"]
       run_protocol_scenario(PROGRAM, cdp: false) do
         req_rdbgTraceInspector_record_enable
         req_add_breakpoint 5
@@ -178,11 +178,11 @@ module DEBUGGER__
         req_terminate_debuggee
       end
     ensure
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtension
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtensions
     end
 
     def test_restart_trace
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtension] = ["traceInspector"]
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments][:rdbgExtensions] = ["traceInspector"]
       run_protocol_scenario(PROGRAM, cdp: false) do
         req_rdbgTraceInspector_record_enable
         req_rdbgTraceInspector_record_disable
@@ -212,7 +212,7 @@ module DEBUGGER__
         req_terminate_debuggee
       end
     ensure
-      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtension
+      DEBUGGER__::INITIALIZE_DAP_MSGS[1][:arguments].delete :rdbgExtensions
     end
   end
 end
