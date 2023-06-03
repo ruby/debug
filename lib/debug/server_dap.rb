@@ -301,6 +301,14 @@ module DEBUGGER__
       send_event :terminated unless @sock.closed?
     end
 
+    def hide_class_item req
+      if req.dig('arguments', 'hideClassItem') == true
+        @hide_class_item = true
+      else
+        @hide_class_item = false
+      end
+    end
+
     def process_request req
       raise "not a request: #{req.inspect}" unless req['type'] == 'request'
       args = req.dig('arguments')
@@ -315,6 +323,7 @@ module DEBUGGER__
         @nonstop = true
 
         load_extensions req
+        hide_class_item req
 
       when 'attach'
         send_response req
@@ -327,6 +336,7 @@ module DEBUGGER__
         end
 
         load_extensions req
+        hide_class_item req
 
       when 'configurationDone'
         send_response req
@@ -479,9 +489,13 @@ module DEBUGGER__
         else
           @q_msg << req
         end
+      when 'variables'
+        if @hide_class_item
+          req['arguments']['hideClassItem'] = true
+        end
+        @q_msg << req
       when 'stackTrace',
            'scopes',
-           'variables',
            'source',
            'completions'
         @q_msg << req
@@ -914,7 +928,9 @@ module DEBUGGER__
               vars += M_INSTANCE_VARIABLES.bind_call(obj).sort.map{|iv|
                 variable(iv, M_INSTANCE_VARIABLE_GET.bind_call(obj, iv))
               }
-              vars.unshift variable('#class', M_CLASS.bind_call(obj))
+              unless req.dig('arguments', 'hideClassItem')
+                vars.unshift variable('#class', M_CLASS.bind_call(obj))
+              end
             end
           end
         end
