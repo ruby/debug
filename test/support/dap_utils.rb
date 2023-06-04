@@ -96,7 +96,7 @@ module DEBUGGER__
       sock
     end
 
-    TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
+    TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 30).to_i
 
     def run_dap_scenario program, &msgs
       begin

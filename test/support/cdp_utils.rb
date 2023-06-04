@@ -63,7 +63,7 @@ module DEBUGGER__
       MSG
     end
 
-    TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
+    TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 30).to_i
     HOST = '127.0.0.1'
 
     def run_cdp_scenario program, &msgs
