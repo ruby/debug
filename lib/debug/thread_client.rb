@@ -5,6 +5,10 @@ require 'pp'
 
 require_relative 'color'
 
+class ::Thread
+  attr_accessor :debug_thread_client
+end
+
 module DEBUGGER__
   M_INSTANCE_VARIABLES = method(:instance_variables).unbind
   M_INSTANCE_VARIABLE_GET = method(:instance_variable_get).unbind
@@ -48,12 +52,7 @@ module DEBUGGER__
 
   class ThreadClient
     def self.current
-      if thc = Thread.current[:DEBUGGER__ThreadClient]
-        thc
-      else
-        thc = SESSION.get_thread_client
-        Thread.current[:DEBUGGER__ThreadClient] = thc
-      end
+      Thread.current.debug_thread_client ||= SESSION.get_thread_client
     end
 
     include Color
