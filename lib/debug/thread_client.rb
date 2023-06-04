@@ -862,8 +862,19 @@ module DEBUGGER__
     class SuspendReplay < Exception
     end
 
+    if ::Fiber.respond_to?(:blocking)
+      private def fiber_blocking
+        ::Fiber.blocking{yield}
+      end
+    else
+      private def fiber_blocking
+        yield
+      end
+    end
+    
+
     def wait_next_action
-      wait_next_action_
+      fiber_blocking{wait_next_action_}
     rescue SuspendReplay
       replay_suspend
     end
