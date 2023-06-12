@@ -5,7 +5,7 @@
 # This workflow will download a prebuilt Ruby version, install dependencies and run tests with Rake
 # For more information see: https://github.com/marketplace/actions/setup-ruby-jruby-and-truffleruby
 
-name: Protocol
+name: Launchable
 
 on:
   push:
@@ -20,7 +20,6 @@ env:
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -29,7 +28,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - run: echo ${{ github.event.label.name }}
     - name: Set up Ruby
     # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
     # change this to (see https://github.com/ruby/setup-ruby#versioning):
@@ -61,8 +59,13 @@ jobs:
     - name: launchable record tests
       run: launchable record tests file *.xml
       if: always()
+  close-pr:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
     - name: Close Pull Request
       if: contains(github.head_ref, 'create-pull-request/')
       run: gh pr close "$PR_URL"
       env:
         PR_URL: ${{github.event.pull_request.html_url}}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
