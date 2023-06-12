@@ -17,4 +17,3 @@ jobs:
           token: ${{secrets.PAT}}
           branch-suffix: random
           delete-branch: true
-          labels: close-pr
