@@ -29,7 +29,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - run: echo ${{ toJson(github.event.pull_request.labels.*.name)}}
+    - run: echo ${{ github.event.label.name }}
     - name: Set up Ruby
     # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
     # change this to (see https://github.com/ruby/setup-ruby#versioning):
@@ -37,6 +37,12 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+    - run: |
+        echo '1' $GITHUB_REF
+        echo '2' ${{ github.ref }}
+        echo '3' ${{ github.ref_name }}
+        echo '4' ${{ github.head_ref }}
+        echo '5' ${{ github.base_ref }}
     - uses: actions/setup-python@v4
       with:
         python-version: "3.10"
