@@ -36,6 +36,7 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+    - run: echo ${{github.ref_name}}
     - uses: actions/setup-python@v4
       with:
         python-version: "3.10"
