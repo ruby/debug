@@ -1,0 +1,15 @@
+name: Update Dependencies
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '30 * * * *'
+jobs:
+  update-dep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Changes
+        run: |
+          echo "foo" > foo.txt
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
