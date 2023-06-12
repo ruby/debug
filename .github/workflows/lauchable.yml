@@ -36,7 +36,6 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-    - run: echo ${{ github.ref }}
     - uses: actions/setup-python@v4
       with:
         python-version: "3.10"
@@ -62,7 +61,7 @@ jobs:
       run: launchable record tests file *.xml
       if: always()
     - name: Close Pull Request
-      if: contains(github.ref_name, 'create-pull-request/')
+      if: contains(github.event.pull_request.labels.*.name, 'close-pr')
       run: gh pr close "$PR_URL"
       env:
         PR_URL: ${{github.event.pull_request.html_url}}
