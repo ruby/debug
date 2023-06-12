@@ -61,3 +61,8 @@ jobs:
     - name: launchable record tests
       run: launchable record tests file *.xml
       if: always()
+    - name: Close Pull Request
+      if: contains(github.ref_name, 'create-pull-request/')
+      run: gh pr close "$PR_URL"
+      env:
+        PR_URL: ${{github.event.pull_request.html_url}}
