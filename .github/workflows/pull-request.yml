@@ -16,3 +16,14 @@ jobs:
         with:
           token: ${{secrets.PAT}}
           branch-suffix: random
+      - name: Wait for tests to succeed
+        uses: lewagon/wait-on-check-action@v1.3.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          running-workflow-name: 'create-pr'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 240
+      - name: Close Pull Request
+        run: gh pr close "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
