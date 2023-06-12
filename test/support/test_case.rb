@@ -7,6 +7,7 @@ require 'pty'
 require 'timeout'
 require 'json'
 require 'rbconfig'
+require "test/unit/runner/junitxml"
 require_relative '../../lib/debug/client'
 
 require_relative 'assertions'

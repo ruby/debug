@@ -55,3 +55,9 @@ task test: 'test_console' do
 end
 
 task test_all: [:test_test, :test_console, :test_protocol]
+
+Rake::TestTask.new(:launchable) do |t|
+  t.test_files = FileList["test/support/*_test.rb"]
+  t.test_files = FileList["test/console/*_test.rb"]
+  t.test_files = FileList["test/protocol/*_test.rb"]
+end
