@@ -2534,7 +2534,7 @@ module DEBUGGER__
           sig
         end
 
-      case sig&.to_s&.to_sym
+      case sym
       when :INT, :SIGINT
         if defined?(SESSION) && SESSION.active? && SESSION.intercept_trap_sigint?
           return SESSION.save_int_trap(command.empty? ? command_proc : command.first)
