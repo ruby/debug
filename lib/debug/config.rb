@@ -324,7 +324,7 @@ module DEBUGGER__
           when 'tcp'
             config[:open] = true
             config[:port] ||= 0
-          when 'vscode', 'chrome', 'cdp'
+          when 'vscode', 'dap', 'chrome', 'cdp'
             config[:open] = f&.downcase
           else
             raise "Unknown option for --open: #{f}"

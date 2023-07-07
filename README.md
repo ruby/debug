@@ -138,7 +138,7 @@ d => 4
 [1, 2, 3, 4]
 ```
 
-### Invoke the program from the debugger as a traditional debuggers
+### Invoke the program from the debugger as a traditional debugger
 
 If you don't want to modify the source code, you can set breakpoints with a debug command `break` (`b` for short).
 Using `rdbg` command (or `bundle exec rdbg`) to launch the program without any modifications, you can run the program with the debugger.
@@ -253,7 +253,7 @@ Examples:
 * `rdbg -c -- bundle exec rake test`
 * `rdbg -c -- ruby target.rb` is same as `rdbg target.rb`
 
-NOTE: `--` is needed to separate the command line options for `rdbg` and invoking command. For example, `rdbg -c rake -T` is recognized like `rdbg -c -T -- rake`. It should be `rdbg -c -- rake -T`.
+NOTE: `--` is needed to separate the command line options for `rdbg` from the invoked command. For example, `rdbg -c rake -T` is recognized like `rdbg -c -T -- rake`. It should be `rdbg -c -- rake -T`.
 
 NOTE: If you want to use bundler (`bundle` command), you need to write `gem debug` line in your `Gemfile`.
 
@@ -358,15 +358,20 @@ $ RUBY_DEBUG_PORT=12345 ruby target.rb
 
 ### Integration with external debugger frontend
 
-You can attach with external debugger frontend with VSCode and Chrome.
+You can start a debugging session for an external debugger frontend using:
 
-```
+```shell
 $ rdbg --open=[frontend] target.rb
 ```
 
-will open a debug port and `[frontend]` can attach to the port.
+The currently available frontends are:
 
-Also `open` command allows opening the debug port.
+| Flag | Frontend |
+|------|----------|
+| <nobr>`--open=vscode`</nobr>  | Starts a DAP session and automatically opens Visual Studio Code. |
+| <nobr>`--open=dap`</nobr>     | Starts a debug adapter protocol (DAP) session, _without_ opening Visual Studio code. This allows for another DAP client to connect instead.
+| <nobr>`--open=chrome`</nobr>  | Starts a CDP session and automatically opens Chrome. |
+| <nobr>`--open=cdp`</nobr>     | Starts a Chrome debug protocol (CDP) session, _without_ opening Chrome. This allows for another CDP client to connect instead.
 
 #### VSCode integration
 
