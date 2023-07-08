@@ -224,11 +224,11 @@ module DEBUGGER__
     end
 
     def load_history
-      read_history_file.count{|line|
+      read_history_file.each{|line|
         line.strip!
         history << line unless line.empty?
-      }
+      } if history.empty?
+      history.count
     end
   end # class Console
 end
-
