@@ -1,6 +1,6 @@
 [![Ruby](https://github.com/ruby/debug/actions/workflows/ruby.yml/badge.svg?branch=master)](https://github.com/ruby/debug/actions/workflows/ruby.yml?query=branch%3Amaster) [![Protocol](https://github.com/ruby/debug/actions/workflows/protocol.yml/badge.svg)](https://github.com/ruby/debug/actions/workflows/protocol.yml)
 
-# debug.rb
+# debug.r
 
 This library provides debugging functionality to Ruby (MRI) 2.6 and later.
 
