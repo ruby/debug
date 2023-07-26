@@ -29,4 +29,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "irb", ">= 1.5.0" # for binding.irb(show_code: false)
   spec.add_dependency "reline", ">= 0.3.1"
+  spec.add_development_dependency "zeitwerk", "~> 2.6.9"
 end

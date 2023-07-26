@@ -142,7 +142,9 @@ module DEBUGGER__
       end
 
       if_updated old_conf, conf, :postmortem do |_, new_p|
-        if defined?(SESSION)
+        # puts("const_defined? #{ DEBUGGER__.const_defined?(:SESSION)}, defined? #{defined?(SESSION)}")
+        # if defined?(SESSION)
+        if DEBUGGER__.const_defined?(:SESSION)
           SESSION.postmortem = new_p
         end
       end
@@ -152,7 +154,8 @@ module DEBUGGER__
       end
 
       if_updated old_conf, conf, :no_sigint_hook do |old, new|
-        if defined?(SESSION)
+        # if defined?(SESSION)
+        if DEBUGGER__.const_defined?(:SESSION)
           SESSION.set_no_sigint_hook old, new
         end
       end
