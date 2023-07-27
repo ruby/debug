@@ -2340,11 +2340,11 @@ module DEBUGGER__
       obj.inspect
     end
   rescue NoMethodError => e
-    klass, oid = M_CLASS.bind_call(obj), M_OBJECT_ID.bind_call(obj)
+    klass, oid = Reflection.class_of(obj), Reflection.object_id_of(obj)
     if obj == (r = e.receiver)
       "<\##{klass.name}#{oid} does not have \#inspect>"
     else
-      rklass, roid = M_CLASS.bind_call(r), M_OBJECT_ID.bind_call(r)
+      rklass, roid = Reflection.class_of(r), Reflection.object_id_of(r)
       "<\##{klass.name}:#{roid} contains <\##{rklass}:#{roid} and it does not have #inspect>"
     end
   rescue Exception => e
@@ -2622,13 +2622,4 @@ end
 class Binding
   alias break debugger
   alias b debugger
-end
-
-# for Ruby 2.6 compatibility
-unless method(:p).unbind.respond_to? :bind_call
-  class UnboundMethod
-    def bind_call(obj, *args)
-      self.bind(obj).call(*args)
-    end
-  end
 end
