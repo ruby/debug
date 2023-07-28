@@ -196,6 +196,31 @@ module DEBUGGER__
       assert_equal expected, @inspector.named_members_of(point)
     end
 
+    def test_debug_representation_hook
+      object_with_simple_repr = ClassWithCustomDebugRepresentation.new({ a: 1, b: 2 })
+
+      expected = [
+        # We should always show the `#class` when using this hook, even if the
+        # debug_representation is a simple value.
+        Variable.internal(name: '#class', value: ClassWithCustomDebugRepresentation),
+        Variable.new(name: ':a', value: 1),
+        Variable.new(name: ':b', value: 2),
+      ]
+
+      assert_equal expected, @inspector.named_members_of(object_with_simple_repr)
+
+      object_with_complex_repr = ClassWithCustomDebugRepresentation.new(Point.new(x: 1, y: 2))
+
+      expected = [
+        # Make sure we don't add the '#class' twice for non-simple debug representations
+        Variable.internal(name: '#class', value: ClassWithCustomDebugRepresentation),
+        Variable.new(name: :@x, value: 1),
+        Variable.new(name: :@y, value: 2),
+      ]
+
+      assert_equal expected, @inspector.named_members_of(object_with_complex_repr)
+    end
+
     private
 
     class PointStruct < Struct.new(:x, :y, keyword_init: true)
@@ -209,6 +234,16 @@ module DEBUGGER__
       def initialize(x:, y:)
         @x = x
         @y = y
+      end
+    end
+
+    class ClassWithCustomDebugRepresentation
+      def initialize(debug_representation)
+        @debug_representation = debug_representation
+      end
+
+      def debug_representation
+        @debug_representation
       end
     end
   end

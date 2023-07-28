@@ -17,6 +17,19 @@ module DEBUGGER__
     def named_members_of(obj)
       return [] if NaiveString === obj
 
+      if M_RESPOND_TO.bind_call(obj, :debug_representation)
+        debug_representation = obj.debug_representation
+        members = named_members_of(debug_representation)
+
+        # Discard the "#class" member of the debug representation, if any.
+        members.delete_if { |m| m.name == '#class' }
+
+        # Add the real "#class" of the object being inspected.
+        members.unshift Variable.internal(name: '#class', value: M_CLASS.bind_call(obj))
+
+        return members
+      end
+
       members = case obj
       when Hash then obj.map { |k, v| Variable.new(name: value_inspect(k), value: v) }
       when Struct then obj.members.map { |name| Variable.new(name: name, value: obj[name]) }
@@ -69,6 +82,7 @@ module DEBUGGER__
 
     # TODO: Replace with Reflection helpers once they are merged
     # https://github.com/ruby/debug/pull/1002
+    M_RESPOND_TO = method(:respond_to?).unbind
     M_INSTANCE_VARIABLES = method(:instance_variables).unbind
     M_INSTANCE_VARIABLE_GET = method(:instance_variable_get).unbind
     M_CLASS = method(:class).unbind
