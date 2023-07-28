@@ -18,7 +18,7 @@ module DEBUGGER__
       return [] if NaiveString === obj
 
       members = case obj
-      when Hash then obj.map { |k, v| Variable.new(name: value_inspect(k), value: v) }
+      when Hash then obj.map { |k, v| Variable.new(name: inspect_hash_key(k), value: v) }
       when Struct then obj.members.map { |name| Variable.new(name: name, value: obj[name]) }
       when String
         members = [
@@ -54,6 +54,15 @@ module DEBUGGER__
       self.class.value_inspect(obj, short: short)
     end
 
+    def inspect_hash_key(key)
+      # Special-case for symbols so debugger UIs render `a: 1` instead of two colons like `:a: 1`
+      return key.to_s if key.is_a?(Symbol)
+
+      value_inspect(key)
+    end
+
+    MAX_LENGTH = 180
+
     def self.value_inspect(obj, short: true)
       # TODO: max length should be configurable?
       str = LimitedPP.safe_inspect obj, short: short, max_length: MAX_LENGTH
@@ -64,8 +73,6 @@ module DEBUGGER__
         str.encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
       end
     end
-
-    MAX_LENGTH = 180
 
     # TODO: Replace with Reflection helpers once they are merged
     # https://github.com/ruby/debug/pull/1002

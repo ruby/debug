@@ -48,7 +48,7 @@ module DEBUGGER__
 
       expected = [
         Variable.internal(name: '#class', value: Hash),
-        Variable.new(name: ':sym', value: "has Symbol key"),
+        Variable.new(name: 'sym', value: "has Symbol key"),
         Variable.new(name: '"str"', value: "has String key"),
         Variable.new(name: '1', value: "has Integer key"),
       ]
