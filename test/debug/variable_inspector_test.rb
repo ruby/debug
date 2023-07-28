@@ -47,7 +47,6 @@ module DEBUGGER__
       )
 
       expected = [
-        Variable.internal(name: '#class', value: Hash),
         Variable.new(name: ':sym', value: "has Symbol key"),
         Variable.new(name: '"str"', value: "has String key"),
         Variable.new(name: '1', value: "has Integer key"),
@@ -73,7 +72,6 @@ module DEBUGGER__
 
     def test_named_members_of_string
       expected = [
-        Variable.internal(name: '#class', value: String),
         Variable.internal(name: '#length', value: 5),
         Variable.internal(name: '#encoding', value: Encoding::UTF_8),
         # skip #dump member for short strings
@@ -85,7 +83,6 @@ module DEBUGGER__
       long_string = "A long string " + ('*' * 1000)
 
       expected = [
-        Variable.internal(name: '#class', value: String),
         Variable.internal(name: '#length', value: long_string.length),
         Variable.internal(name: '#encoding', value: Encoding::UTF_8),
         Variable.internal(name: '#dump', value: VariableInspector::NaiveString.new(long_string)),
@@ -95,10 +92,7 @@ module DEBUGGER__
     end
 
     def test_named_members_of_class
-      expected = [
-        Variable.internal(name: '#class', value: Class),
-        Variable.internal(name: '%ancestors', value: PointStruct.ancestors.drop(1)),
-      ]
+      expected = [Variable.internal(name: '%ancestors', value: PointStruct.ancestors.drop(1)),]
 
       assert_equal expected, @inspector.named_members_of(PointStruct)
     end
@@ -109,10 +103,7 @@ module DEBUGGER__
         include *ancestors
       end
 
-      expected = [
-        Variable.internal(name: '#class', value: Module),
-        Variable.internal(name: '%ancestors', value: ancestors),
-      ]
+      expected = [Variable.internal(name: '%ancestors', value: ancestors)]
 
       assert_equal expected, @inspector.named_members_of(mod)
     end
@@ -194,6 +185,31 @@ module DEBUGGER__
       point = Point.new(x: 1, y: 2)
 
       assert_equal expected, @inspector.named_members_of(point)
+    end
+
+    def test_hide_class_of_simple_values
+      assert_not_includes @inspector.named_members_of(nil).map(&:name), "#class"
+      assert_not_includes @inspector.named_members_of(true), "#class"
+      assert_not_includes @inspector.named_members_of(false), "#class"
+      assert_not_includes @inspector.named_members_of(:symbol), "#class"
+      assert_not_includes @inspector.named_members_of("string"), "#class"
+      assert_not_includes @inspector.named_members_of(123), "#class"
+      assert_not_includes @inspector.named_members_of(123.4), "#class"
+      assert_not_includes @inspector.named_members_of(Class.new), "#class"
+      assert_not_includes @inspector.named_members_of(Module.new), "#class"
+      assert_not_includes @inspector.named_members_of(Array.new), "#class"
+      assert_not_includes @inspector.named_members_of(Hash.new), "#class"
+    end
+
+    def test_show_class_of_subclasses_of_simple_types
+      # Skipping these classes, which can't be subclassed meaningfully (or at all):
+      # NilClass, TrueClass, FalseClass, Symbol, Integer, Float, Class, Module
+      string_subclass = Class.new(String)
+      array_subclass = Class.new(Array)
+      hash_subclass = Class.new(Hash) # E.g. HashWithIndifferentAccess would behave this way
+      assert_includes @inspector.named_members_of(string_subclass.new), Variable.internal(name: "#class", value: string_subclass)
+      assert_includes @inspector.named_members_of(array_subclass.new), Variable.internal(name: "#class", value: array_subclass)
+      assert_includes @inspector.named_members_of(hash_subclass.new), Variable.internal(name: "#class", value: hash_subclass)
     end
 
     private

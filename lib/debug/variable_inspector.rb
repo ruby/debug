@@ -42,13 +42,24 @@ module DEBUGGER__
         Variable.new(name: iv, value: M_INSTANCE_VARIABLE_GET.bind_call(obj, iv))
       end
 
-      members.unshift Variable.internal(name: '#class', value: M_CLASS.bind_call(obj))
       members.concat(ivars_members)
+
+      unless simple_value?(obj)
+        members.unshift Variable.internal(name: '#class', value: M_CLASS.bind_call(obj))
+      end
 
       members
     end
 
     private
+
+    SIMPLE_VALUE_TYPES = [NilClass, FalseClass, TrueClass, Symbol, String, Integer, Float, Class, Module, Array, Hash]
+
+    # A "simple" value is one that does not need its `#class` to be shown.
+    def simple_value?(o)
+      # Check `#instance_of?` instead of `#is_a?` so objects of subclasses show their `#class` for added clarity.
+      SIMPLE_VALUE_TYPES.any? { |t| M_INSTANCE_OF.bind_call(o, t) }
+    end
 
     def value_inspect(obj, short: true)
       self.class.value_inspect(obj, short: short)
@@ -69,6 +80,7 @@ module DEBUGGER__
 
     # TODO: Replace with Reflection helpers once they are merged
     # https://github.com/ruby/debug/pull/1002
+    M_INSTANCE_OF = method(:instance_of?).unbind
     M_INSTANCE_VARIABLES = method(:instance_variables).unbind
     M_INSTANCE_VARIABLE_GET = method(:instance_variable_get).unbind
     M_CLASS = method(:class).unbind
