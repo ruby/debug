@@ -2212,7 +2212,7 @@ module DEBUGGER__
     CONFIG.set_config(**kw)
     require_relative 'server'
 
-    if DEBUGGER__.const_defined?(:SESSION)
+    if defined? SESSION
       SESSION.reset_ui UI_TcpServer.new(host: host, port: port)
     else
       initialize_session{ UI_TcpServer.new(host: host, port: port) }
@@ -2225,7 +2225,7 @@ module DEBUGGER__
     CONFIG.set_config(**kw)
     require_relative 'server'
 
-    if DEBUGGER__::const_defined?(:SESSION)
+    if defined? SESSION
       SESSION.reset_ui UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path)
     else
       initialize_session{ UI_UnixDomainServer.new(sock_dir: sock_dir, sock_path: sock_path) }
@@ -2376,7 +2376,7 @@ module DEBUGGER__
       @logfile = STDERR unless defined? @logfile
       return if @logfile.closed?
 
-      if DEBUGGER__::const_defined?(:SESSION)
+      if defined? SESSION
         pi = SESSION.process_info
         process_info = pi ? "[#{pi}]" : nil
       end
