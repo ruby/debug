@@ -1739,15 +1739,19 @@ module DEBUGGER__
       # check breakpoints
       if file_path
         @bps.find_all do |_key, bp|
-          LineBreakpoint === bp && bp.path_is?(file_path)
+          LineBreakpoint === bp && bp.path_is?(file_path) && (iseq.first_lineno..iseq.last_line).cover?(bp.line)
         end.each do |_key, bp|
           if !bp.iseq
             bp.try_activate iseq
           elsif reloaded
             @bps.delete bp.key # to allow duplicate
-            if nbp = LineBreakpoint.copy(bp, iseq)
-              add_bp nbp
-            end
+
+            # When we delete a breakpoint from the @bps hash, we also need to deactivate it or else its tracepoint event
+            # will continue to be enabled and we'll suspend on ghost breakpoints
+            bp.delete
+
+            nbp = LineBreakpoint.copy(bp, iseq)
+            add_bp nbp
           end
         end
       else # !file_path => file_path is not existing
