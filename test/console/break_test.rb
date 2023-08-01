@@ -873,6 +873,34 @@ module DEBUGGER__
         type 'c'
       end
     end
+
+    def test_removing_breakpoint_on_reloaded_file
+      code = <<~'DEBUG_CODE'
+        1| require 'tempfile'
+        2| tf = Tempfile.new('debug_gem_test', mode: File::TRUNC)
+        3| tf.write(<<~RUBY)
+        4|   def foo
+        5|     "hello"
+        6|   end
+        7| RUBY
+        8| tf.close
+        9| load tf.path
+       10| alias bar foo
+       11| debugger do: "b #{tf.path}:2"
+       12| bar
+       13| load tf.path
+       14| bar
+       15| load tf.path
+       16| bar
+      DEBUG_CODE
+
+      debug_code code do
+        type "c"
+        assert_line_num 2
+
+        type "c"
+      end
+    end
   end
 
   class BreakAtLineTest < ConsoleTestCase
