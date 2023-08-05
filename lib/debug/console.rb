@@ -56,10 +56,10 @@ module DEBUGGER__
         Reline.prompt_proc = -> args, *kw do
           case state = parse_input(args.first, commands)
           when nil, :command
-            [prompt, prompt]
+            [prompt]
           when :ruby
-            [prompt.sub('rdbg'){colorize('ruby', [:RED])}] * 2
-          end
+            [prompt.sub('rdbg'){colorize('ruby', [:RED])}]
+          end * args.size
         end
 
         Reline.completion_proc = -> given do
@@ -96,7 +96,7 @@ module DEBUGGER__
           when nil
             buff
           when :ruby
-            colorize_code(buff.chomp)
+            colorize_code(buff)
           end
         end unless CONFIG[:no_hint]
 
