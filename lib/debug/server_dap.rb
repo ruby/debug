@@ -788,7 +788,9 @@ module DEBUGGER__
 
     def dap_eval b, expr, _context, prompt: '(repl_eval)'
       begin
-        b.eval(expr.to_s, prompt)
+        tp_allow_reentry do
+          b.eval(expr.to_s, prompt)
+        end
       rescue Exception => e
         e
       end

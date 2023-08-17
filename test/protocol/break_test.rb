@@ -83,4 +83,56 @@ module DEBUGGER__
       end
     end
   end
+
+  class NestedBreakTest < ProtocolTestCase
+    PROGRAM = <<~RUBY
+     1| def foo(x)
+     2|   x
+     3| end
+     4|
+     5| foo("foo")
+    RUBY
+
+    def test_breakpoint_can_be_triggered_inside_suspenssion
+      run_protocol_scenario PROGRAM, cdp: false do
+        req_add_breakpoint 2
+        req_continue
+        assert_line_num 2
+
+        assert_locals_result(
+          [
+            { name: "%self", value: "main", type: "Object" },
+            { name: "x", value: "foo", type: "String" },
+          ]
+        )
+
+        # Only if TracePoint.allow_reentry is available, we can trigger TracePoint events
+        # inside another TracePoint event, which is essential for nested breakpoints.
+        if TracePoint.respond_to? :allow_reentry
+          evaluate("foo('bar')")
+
+          assert_line_num 2
+          assert_locals_result(
+            [
+              { name: "%self", value: "main", type: "Object" },
+              { name: "x", value: "bar", type: "String" },
+            ]
+          )
+        end
+
+        req_terminate_debuggee
+      end
+    end
+
+    private
+
+    def evaluate(expression)
+      res = send_dap_request 'stackTrace',
+                    threadId: 1,
+                    startFrame: 0,
+                    levels: 20
+      f_id = res.dig(:body, :stackFrames, 0, :id)
+      send_request 'evaluate', expression: expression, frameId: f_id, context: "repl"
+    end
+  end
 end
