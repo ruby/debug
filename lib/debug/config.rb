@@ -46,6 +46,7 @@ module DEBUGGER__
     host:           ['RUBY_DEBUG_HOST',         "REMOTE: TCP/IP remote debugging: host", :string, "127.0.0.1"],
     sock_path:      ['RUBY_DEBUG_SOCK_PATH',    "REMOTE: UNIX Domain Socket remote debugging: socket path"],
     sock_dir:       ['RUBY_DEBUG_SOCK_DIR',     "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
+    sock_suffix:    ['RUBY_DEBUG_SOCK_SUFFIX',  "REMOTE: UNIX Domain Socket remote debugging: socket suffix"],
     local_fs_map:   ['RUBY_DEBUG_LOCAL_FS_MAP', "REMOTE: Specify local fs map", :path_map],
     skip_bp:        ['RUBY_DEBUG_SKIP_BP',      "REMOTE: Skip breakpoints if no clients are attached", :bool, 'false'],
     cookie:         ['RUBY_DEBUG_COOKIE',       "REMOTE: Cookie for negotiation"],
@@ -496,7 +497,11 @@ module DEBUGGER__
 
   def self.create_unix_domain_socket_name_prefix(base_dir = unix_domain_socket_dir)
     user = ENV['USER'] || 'UnknownUser'
-    File.join(base_dir, "ruby-debug-#{user}")
+    filename = "ruby-debug-#{user}"
+    if !CONFIG[:sock_suffix].nil?
+      filename += "-#{CONFIG[:sock_suffix]}"
+    end
+    File.join(base_dir, filename)
   end
 
   def self.create_unix_domain_socket_name(base_dir = unix_domain_socket_dir)
