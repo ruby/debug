@@ -2524,16 +2524,6 @@ module DEBUGGER__
 
   module TrapInterceptor
     def trap sig, *command, &command_proc
-      sym =
-        case sig
-        when String
-          sig.to_sym
-        when Integer
-          Signal.signame(sig)&.to_sym
-        else
-          sig
-        end
-
       case sig&.to_s&.to_sym
       when :INT, :SIGINT
         if defined?(SESSION) && SESSION.active? && SESSION.intercept_trap_sigint?

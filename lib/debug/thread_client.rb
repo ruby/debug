@@ -614,7 +614,7 @@ module DEBUGGER__
       if expr && !expr.empty?
         begin
           _self = frame_eval(expr, re_raise: true)
-        rescue Exception => e
+        rescue Exception
           # ignore
         else
           if M_KIND_OF_P.bind_call(_self, Module)
