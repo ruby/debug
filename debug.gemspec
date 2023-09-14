@@ -28,5 +28,5 @@ Gem::Specification.new do |spec|
   spec.extensions    = ['ext/debug/extconf.rb']
 
   spec.add_dependency "irb", ">= 1.5.0" # for binding.irb(show_code: false)
-  spec.add_dependency "reline", ">= 0.3.1"
+  spec.add_dependency "reline", ">= 0.3.8"
 end
