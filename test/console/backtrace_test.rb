@@ -22,7 +22,7 @@ module DEBUGGER__
     14|   end
     15| end
     16|
-    17| 3.times do
+    17| [1, 2, 3].each do
     18|   Foo.new.first_call
     19| end
       RUBY
@@ -33,7 +33,7 @@ module DEBUGGER__
         type 'b 18'
         type 'c'
         type 'bt'
-        assert_line_text(/\[C\] Integer#times/)
+        assert_line_text(/\[C\] Array#each/)
         type 'kill!'
       end
     end
