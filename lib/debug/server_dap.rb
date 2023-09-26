@@ -4,7 +4,6 @@ require 'json'
 require 'irb/completion'
 require 'tmpdir'
 require 'fileutils'
-require_relative 'variable'
 require_relative 'variable_inspector'
 
 module DEBUGGER__
