@@ -9,7 +9,6 @@ require 'open3'
 require 'tmpdir'
 require 'tempfile'
 require 'timeout'
-require_relative 'variable'
 require_relative 'variable_inspector'
 
 module DEBUGGER__
