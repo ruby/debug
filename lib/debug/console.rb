@@ -5,30 +5,9 @@ module DEBUGGER__
       raise LoadError if CONFIG[:no_reline]
       require 'reline'
 
-      # reline 0.2.7 or later is required.
-      raise LoadError if Reline::VERSION < '0.2.7'
-
       require_relative 'color'
+
       include Color
-
-      begin
-        prev = trap(:SIGWINCH, nil)
-        trap(:SIGWINCH, prev)
-        SIGWINCH_SUPPORTED = true
-      rescue ArgumentError
-        SIGWINCH_SUPPORTED = false
-      end
-
-      # 0.2.7 has SIGWINCH issue on non-main thread
-      class ::Reline::LineEditor
-        m = Module.new do
-          def reset(prompt = '', encoding:)
-            super
-            Signal.trap(:SIGWINCH, nil)
-          end
-        end
-        prepend m
-      end if SIGWINCH_SUPPORTED
 
       def parse_input buff, commands
         c, rest = get_command buff
