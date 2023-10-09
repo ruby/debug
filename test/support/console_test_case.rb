@@ -217,6 +217,7 @@ module DEBUGGER__
       ENV['RUBY_DEBUG_TEST_UI'] = 'terminal'
       ENV['RUBY_DEBUG_NO_RELINE'] = 'true'
       ENV['RUBY_DEBUG_HISTORY_FILE'] = ''
+      ENV['TERM'] = 'dumb'
 
       write_temp_file(strip_line_num(program))
       @scenario = []
