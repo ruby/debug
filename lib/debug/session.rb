@@ -936,10 +936,11 @@ module DEBUGGER__
       #   * Invoke `irb` on the current frame.
       register_command 'irb' do |arg|
         if @ui.remote?
-          @ui.puts "not supported on the remote console."
+          @ui.puts "\nIRB is supported on the remote console."
           :retry
+        else
+          request_eval :irb, nil
         end
-        request_eval :irb, nil
       end
 
       ### Trace
