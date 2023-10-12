@@ -5,6 +5,8 @@ require 'irb/completion'
 require 'tmpdir'
 require 'fileutils'
 
+require_relative 'completor'
+
 module DEBUGGER__
   module UI_DAP
     SHOW_PROTOCOL = ENV['DEBUG_DAP_SHOW_PROTOCOL'] == '1' || ENV['RUBY_DEBUG_DAP_SHOW_PROTOCOL'] == '1'
@@ -980,7 +982,7 @@ module DEBUGGER__
         frame = get_frame(fid)
 
         if (b = frame&.binding) && word = text&.split(/[\s\{]/)&.last
-          words = IRB::InputCompletor::retrieve_completion_data(word, bind: b).compact
+          words = Completor.retrieve_completion_data(word, b)
         end
 
         event! :protocol_result, :completions, req, targets: (words || []).map{|phrase|
