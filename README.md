@@ -2,7 +2,7 @@
 
 # debug.rb
 
-This library provides debugging functionality to Ruby (MRI) 2.6 and later.
+This library provides debugging functionality to Ruby (MRI) 2.7 and later.
 
 This debug.rb is replacement of traditional lib/debug.rb standard library which is implemented by `set_trace_func`.
 New debug.rb has several advantages:
