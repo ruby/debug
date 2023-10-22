@@ -474,7 +474,7 @@ module DEBUGGER__
         when 'Debugger.getScriptSource'
           @q_msg << req
         when 'Debugger.enable'
-          send_response req
+          send_response req, debuggerId: rand.to_s
           @q_msg << req
         when 'Runtime.enable'
           send_response req
