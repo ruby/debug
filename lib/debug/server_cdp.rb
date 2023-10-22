@@ -59,7 +59,7 @@ module DEBUGGER__
             ws_client.send sessionId: s_id, id: 5,
                           method: 'Page.navigate',
                           params: {
-                            url: "devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{addr}/#{uuid}",
+                            url: "devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&noJavaScriptCompletion=true&ws=#{addr}/#{uuid}",
                             frameId: f_id
                           }
           when 101

@@ -410,7 +410,7 @@ module DEBUGGER__
       DEBUGGER__.warn <<~EOS
         With Chrome browser, type the following URL in the address-bar:
 
-           devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&ws=#{@local_addr.inspect_sockaddr}/#{@uuid}
+           devtools://devtools/bundled/inspector.html?v8only=true&panel=sources&noJavaScriptCompletion=true&ws=#{@local_addr.inspect_sockaddr}/#{@uuid}
 
         EOS
     end
