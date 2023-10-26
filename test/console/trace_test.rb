@@ -473,6 +473,36 @@ module DEBUGGER__
       end
     end
 
+    class ThreadLockingTest < ConsoleTestCase
+      def program
+        <<~RUBY
+      1| th0 = Thread.new{sleep}
+      2| $m = Mutex.new
+      3| th1 = Thread.new do
+      4|   $m.lock
+      5|   sleep 1
+      6|   $m.unlock
+      7| end
+      8|
+      9| def inspect
+      10|   m.lock
+      11|   ""
+      12| end
+      13|
+      14| sleep 0.5
+      15| debugger
+        RUBY
+      end
+
+      def test_object_tracer_doesnt_cause_deadlock
+        debug_code(program) do
+          type 'c'
+          type 'trace object self'
+          type 'c'
+        end
+      end
+    end
+
     class TraceCallReceiverTest < ConsoleTestCase
       def program
         <<~RUBY
@@ -544,7 +574,7 @@ module DEBUGGER__
           6| p a
         RUBY
       end
-  
+
       def test_1656237686
         debug_code(program) do
           type 'trace line'

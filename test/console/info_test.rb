@@ -367,4 +367,36 @@ module DEBUGGER__
       end
     end
   end
+
+  class InfoThreadLockingTest < ConsoleTestCase
+    def program
+      <<~RUBY
+     1| th0 = Thread.new{sleep}
+     2| $m = Mutex.new
+     3| th1 = Thread.new do
+     4|   $m.lock
+     5|   sleep 1
+     6|   $m.unlock
+     7| end
+     8|
+     9| o = Object.new
+    10| def o.inspect
+    11|   $m.lock
+    12|   "foo"
+    13| end
+    14|
+    15| sleep 0.5
+    16| debugger
+      RUBY
+    end
+
+    def test_info_doesnt_cause_deadlock
+      debug_code(program) do
+        type 'c'
+        type 'info'
+        assert_line_text(/%self = main/)
+        type 'c'
+      end
+    end
+  end
 end

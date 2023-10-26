@@ -256,6 +256,11 @@ module DEBUGGER__
       @tc << req
     end
 
+    def request_tc_with_freed_threads(req)
+      restart_all_threads
+      request_tc(req)
+    end
+
     def process_event evt
       # variable `@internal_info` is only used for test
       tc, output, ev, @internal_info, *ev_args = evt
@@ -314,7 +319,7 @@ module DEBUGGER__
         if @displays.empty?
           wait_command_loop
         else
-          request_tc [:eval, :display, @displays]
+          request_eval :display, @displays
         end
       when :result
         raise "[BUG] not in subsession" if @subsession_stack.empty?
@@ -329,6 +334,7 @@ module DEBUGGER__
             end
           end
 
+          stop_all_threads
         when :method_breakpoint, :watch_breakpoint
           bp = ev_args[1]
           if bp
@@ -342,6 +348,7 @@ module DEBUGGER__
           obj_inspect = ev_args[2]
           opt = ev_args[3]
           add_tracer ObjectTracer.new(@ui, obj_id, obj_inspect, **opt)
+          stop_all_threads
         else
           stop_all_threads
         end
@@ -810,15 +817,15 @@ module DEBUGGER__
 
         case sub
         when nil
-          request_tc [:show, :default, pat] # something useful
+          request_tc_with_freed_threads [:show, :default, pat] # something useful
         when :locals
-          request_tc [:show, :locals, pat]
+          request_tc_with_freed_threads [:show, :locals, pat]
         when :ivars
-          request_tc [:show, :ivars, pat, opt]
+          request_tc_with_freed_threads [:show, :ivars, pat, opt]
         when :consts
-          request_tc [:show, :consts, pat, opt]
+          request_tc_with_freed_threads [:show, :consts, pat, opt]
         when :globals
-          request_tc [:show, :globals, pat]
+          request_tc_with_freed_threads [:show, :globals, pat]
         when :threads
           thread_list
           :retry
@@ -838,7 +845,7 @@ module DEBUGGER__
       #   * Show you available methods and instance variables of the given object.
       #   * If the object is a class/module, it also lists its constants.
       register_command 'outline', 'o', 'ls', unsafe: false do |arg|
-        request_tc [:show, :outline, arg]
+        request_tc_with_freed_threads [:show, :outline, arg]
       end
 
       # * `display`
@@ -848,9 +855,9 @@ module DEBUGGER__
       register_command 'display', postmortem: false do |arg|
         if arg && !arg.empty?
           @displays << arg
-          request_tc [:eval, :try_display, @displays]
+          request_eval :try_display, @displays
         else
-          request_tc [:eval, :display, @displays]
+          request_eval :display, @displays
         end
       end
 
@@ -864,7 +871,7 @@ module DEBUGGER__
           if @displays[n = $1.to_i]
             @displays.delete_at n
           end
-          request_tc [:eval, :display, @displays]
+          request_eval :display, @displays
         when nil
           if ask "clear all?", 'N'
             @displays.clear
@@ -983,7 +990,7 @@ module DEBUGGER__
           :retry
 
         when /\Aobject\s+(.+)/
-          request_tc [:trace, :object, $1.strip, {pattern: pattern, into: into}]
+          request_tc_with_freed_threads [:trace, :object, $1.strip, {pattern: pattern, into: into}]
 
         when /\Aoff\s+(\d+)\z/
           if t = @tracers.values[$1.to_i]
@@ -1165,8 +1172,7 @@ module DEBUGGER__
     end
 
     def request_eval type, src
-      restart_all_threads
-      request_tc [:eval, type, src]
+      request_tc_with_freed_threads [:eval, type, src]
     end
 
     def step_command type, arg
