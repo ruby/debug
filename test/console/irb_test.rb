@@ -41,5 +41,22 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    def test_irb_console_config_activates_irb
+      ENV["RUBY_DEBUG_IRB_CONSOLE"] = "true"
+
+      debug_code(program, remote: false) do
+        type '123'
+        assert_line_text 'irb:rdbg(main):002> 123'
+        type 'irb_info'
+        assert_line_text('IRB version:')
+        type 'next'
+        type 'info'
+        assert_line_text([/a = 1/, /b = nil/])
+        type 'q!'
+      end
+    ensure
+      ENV["RUBY_DEBUG_IRB_CONSOLE"] = nil
+    end
   end
 end
