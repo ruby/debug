@@ -501,8 +501,6 @@ config set no_color true
   * `RUBY_DEBUG_HOST` (`host`): TCP/IP remote debugging: host (default: 127.0.0.1)
   * `RUBY_DEBUG_SOCK_PATH` (`sock_path`): UNIX Domain Socket remote debugging: socket path
   * `RUBY_DEBUG_SOCK_DIR` (`sock_dir`): UNIX Domain Socket remote debugging: socket directory
-  * `RUBY_DEBUG_SOCK_PREFIX` (`sock_prefix`): UNIX Domain Socket remote debugging: socket prefix
-  * `RUBY_DEBUG_SOCK_SUFFIX` (`sock_suffix`): UNIX Domain Socket remote debugging: socket suffix
   * `RUBY_DEBUG_LOCAL_FS_MAP` (`local_fs_map`): Specify local fs map
   * `RUBY_DEBUG_SKIP_BP` (`skip_bp`): Skip breakpoints if no clients are attached (default: false)
   * `RUBY_DEBUG_COOKIE` (`cookie`): Cookie for negotiation
