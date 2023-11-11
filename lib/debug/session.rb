@@ -256,9 +256,13 @@ module DEBUGGER__
       @tc << req
     end
 
-    def request_tc_with_freed_threads(req)
+    def request_tc_with_restarted_threads(req)
       restart_all_threads
       request_tc(req)
+    end
+
+    def request_eval type, src
+      request_tc_with_restarted_threads [:eval, type, src]
     end
 
     def process_event evt
@@ -817,15 +821,15 @@ module DEBUGGER__
 
         case sub
         when nil
-          request_tc_with_freed_threads [:show, :default, pat] # something useful
+          request_tc_with_restarted_threads [:show, :default, pat] # something useful
         when :locals
-          request_tc_with_freed_threads [:show, :locals, pat]
+          request_tc_with_restarted_threads [:show, :locals, pat]
         when :ivars
-          request_tc_with_freed_threads [:show, :ivars, pat, opt]
+          request_tc_with_restarted_threads [:show, :ivars, pat, opt]
         when :consts
-          request_tc_with_freed_threads [:show, :consts, pat, opt]
+          request_tc_with_restarted_threads [:show, :consts, pat, opt]
         when :globals
-          request_tc_with_freed_threads [:show, :globals, pat]
+          request_tc_with_restarted_threads [:show, :globals, pat]
         when :threads
           thread_list
           :retry
@@ -845,7 +849,7 @@ module DEBUGGER__
       #   * Show you available methods and instance variables of the given object.
       #   * If the object is a class/module, it also lists its constants.
       register_command 'outline', 'o', 'ls', unsafe: false do |arg|
-        request_tc_with_freed_threads [:show, :outline, arg]
+        request_tc_with_restarted_threads [:show, :outline, arg]
       end
 
       # * `display`
@@ -990,7 +994,7 @@ module DEBUGGER__
           :retry
 
         when /\Aobject\s+(.+)/
-          request_tc_with_freed_threads [:trace, :object, $1.strip, {pattern: pattern, into: into}]
+          request_tc_with_restarted_threads [:trace, :object, $1.strip, {pattern: pattern, into: into}]
 
         when /\Aoff\s+(\d+)\z/
           if t = @tracers.values[$1.to_i]
@@ -1169,10 +1173,6 @@ module DEBUGGER__
       @ui.puts "[REPL ERROR] #{e.inspect}"
       @ui.puts e.backtrace.map{|e| '  ' + e}
       return :retry
-    end
-
-    def request_eval type, src
-      request_tc_with_freed_threads [:eval, type, src]
     end
 
     def step_command type, arg
