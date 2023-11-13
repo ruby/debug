@@ -202,6 +202,11 @@ module DEBUGGER__
         end
         @tp_thread_end.enable
 
+        if CONFIG[:irb_console]
+          require_relative "irb_integration"
+          thc.activate_irb_integration
+        end
+
         # session start
         q << true
         session_server_main
