@@ -165,15 +165,16 @@ module DEBUGGER__
         end
       else
         Client.cleanup_unix_domain_sockets
-        files = Client.list_connections verbose: true
+        files = Client.list_connections
 
         case files.size
         when 0
           $stderr.puts "No debug session is available."
           exit
         when 1
-          @s = Socket.unix(files.first.first)
+          @s = Socket.unix(files.first)
         else
+          files = Client.list_connections verbose: true
           $stderr.puts "Please select a debug session:"
           files.each{|(f, desc)|
             $stderr.puts "  #{File.basename(f)} (#{desc})"
