@@ -504,6 +504,7 @@ config set no_color true
   * `RUBY_DEBUG_LOCAL_FS_MAP` (`local_fs_map`): Specify local fs map
   * `RUBY_DEBUG_SKIP_BP` (`skip_bp`): Skip breakpoints if no clients are attached (default: false)
   * `RUBY_DEBUG_COOKIE` (`cookie`): Cookie for negotiation
+  * `RUBY_DEBUG_SESSION_NAME` (`session_name`): Session name for differentiating multiple sessions
   * `RUBY_DEBUG_CHROME_PATH` (`chrome_path`): Platform dependent path of Chrome (For more information, See [here](https://github.com/ruby/debug/pull/334/files#diff-5fc3d0a901379a95bc111b86cf0090b03f857edfd0b99a0c1537e26735698453R55-R64))
 
 * OBSOLETE
@@ -883,6 +884,7 @@ Debug console mode:
         --port=PORT                  Listening TCP/IP port
         --host=HOST                  Listening TCP/IP host
         --cookie=COOKIE              Set a cookie for connection
+        --session-name=NAME          Session name
 
   Debug console mode runs Ruby program with the debug console.
 
