@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{Debugging functionality for Ruby. This is completely rewritten debug.rb which was contained by the ancient Ruby versions.}
   spec.homepage      = "https://github.com/ruby/debug"
   spec.licenses      = ["Ruby", "BSD-2-Clause"]
-  spec.required_ruby_version = Gem::Requirement.new(">= 2.7.0")
+  spec.required_ruby_version = Gem::Requirement.new(">= 2.6.0")
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
@@ -27,6 +27,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.extensions    = ['ext/debug/extconf.rb']
 
-  spec.add_dependency "irb", ">= 1.8.3" # for irb:debug integration
+  spec.add_dependency "irb", ">= 1.5.0" # for binding.irb(show_code: false)
   spec.add_dependency "reline", ">= 0.3.8"
 end

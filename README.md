@@ -477,7 +477,6 @@ config set no_color true
   * `RUBY_DEBUG_NO_RELINE` (`no_reline`): Do not use Reline library (default: false)
   * `RUBY_DEBUG_NO_HINT` (`no_hint`): Do not show the hint on the REPL (default: false)
   * `RUBY_DEBUG_NO_LINENO` (`no_lineno`): Do not show line numbers (default: false)
-  * `RUBY_DEBUG_IRB_CONSOLE` (`irb_console`): Use IRB as the console (default: false)
 
 * CONTROL
   * `RUBY_DEBUG_SKIP_PATH` (`skip_path`): Skip showing/entering frames for given paths
