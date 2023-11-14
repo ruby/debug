@@ -458,7 +458,7 @@ module DEBUGGER__
     require 'tmpdir'
 
     if tmpdir = Dir.tmpdir
-      path = File.join(tmpdir, "ruby-debug-sock-#{Process.uid}")
+      path = File.join(tmpdir, "rdbg-#{Process.uid}")
 
       unless File.exist?(path)
         d = Dir.mktmpdir
@@ -471,7 +471,7 @@ module DEBUGGER__
 
   def self.unix_domain_socket_homedir
     if home = ENV['HOME']
-      path = File.join(home, '.ruby-debug-sock')
+      path = File.join(home, '.rdbg-sock')
 
       unless File.exist?(path)
         Dir.mkdir(path, 0700)
@@ -495,8 +495,7 @@ module DEBUGGER__
   end
 
   def self.create_unix_domain_socket_name_prefix(base_dir = unix_domain_socket_dir)
-    user = ENV['USER'] || 'UnknownUser'
-    File.join(base_dir, "ruby-debug-#{user}")
+    File.join(base_dir, "rdbg")
   end
 
   def self.create_unix_domain_socket_name(base_dir = unix_domain_socket_dir)

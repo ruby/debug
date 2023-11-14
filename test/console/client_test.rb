@@ -10,7 +10,7 @@ module DEBUGGER__
         Client.util("gen-sockpath")
       end
 
-      assert_match(/ruby-debug-/, output)
+      assert_match(/rdbg-/, output)
     end
 
     def test_list_socks
@@ -19,7 +19,7 @@ module DEBUGGER__
       end
 
       unless output.empty?
-        assert_match(/ruby-debug-/, output)
+        assert_match(/rdbg-/, output)
       end
     end
 
