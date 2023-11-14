@@ -133,7 +133,7 @@ module DEBUGGER__
         require 'etc'
 
         check_cookie $1
-        @sock.puts "PID: #{Process.pid}, $0: #{$0}"
+        @sock.puts "PID: #{Process.pid}, $0: #{$0}, session_name: #{CONFIG[:session_name]}"
         @sock.puts "debug #{VERSION} on #{RUBY_DESCRIPTION}"
         @sock.puts "uname: #{Etc.uname.inspect}"
         @sock.close
@@ -149,7 +149,9 @@ module DEBUGGER__
         end
         parse_option(params)
 
-        puts "DEBUGGER (client): Connected. PID:#{Process.pid}, $0:#{$0}"
+        session_name = CONFIG[:session_name]
+        session_name_str = ", session_name:#{session_name}" if session_name
+        puts "DEBUGGER (client): Connected. PID:#{Process.pid}, $0:#{$0}#{session_name_str}"
         puts "DEBUGGER (client): Type `Ctrl-C` to enter the debug console." unless @need_pause_at_first
         puts
 
