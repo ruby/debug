@@ -696,15 +696,15 @@ module DEBUGGER__
       register_command 'bt', 'backtrace', unsafe: false do |arg|
         case arg
         when /\A(\d+)\z/
-          request_tc [:show, :backtrace, arg.to_i, nil]
+          request_tc_with_restarted_threads [:show, :backtrace, arg.to_i, nil]
         when /\A\/(.*)\/\z/
           pattern = $1
-          request_tc [:show, :backtrace, nil, Regexp.compile(pattern)]
+          request_tc_with_restarted_threads [:show, :backtrace, nil, Regexp.compile(pattern)]
         when /\A(\d+)\s+\/(.*)\/\z/
           max, pattern = $1, $2
-          request_tc [:show, :backtrace, max.to_i, Regexp.compile(pattern)]
+          request_tc_with_restarted_threads [:show, :backtrace, max.to_i, Regexp.compile(pattern)]
         else
-          request_tc [:show, :backtrace, nil, nil]
+          request_tc_with_restarted_threads [:show, :backtrace, nil, nil]
         end
       end
 

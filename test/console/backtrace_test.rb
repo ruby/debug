@@ -188,4 +188,45 @@ module DEBUGGER__
       end
     end
   end
+
+   class ThreadLockingTraceTest < ConsoleTestCase
+    def program
+      <<~RUBY
+     1| th0 = Thread.new{sleep}
+     2| $m = Mutex.new
+     3| th1 = Thread.new do
+     4|   $m.lock
+     5|   sleep 1
+     6|   $m.unlock
+     7| end
+     8|
+     9| o = Object.new
+    10| def o.inspect
+    11|   $m.lock
+    12|   "foo".tap { $m.unlock }
+    13| end
+    14|
+    15| def foo(o)
+    16|  debugger
+    17| end
+    18| sleep 0.5
+    19| foo(o)
+      RUBY
+    end
+
+    def test_backtrace_prints_without_hanging
+      debug_code(program) do
+        type "c"
+
+        type "bt"
+        assert_line_text(/Object#foo\(o=foo\)/)
+        type "bt"
+        assert_line_text(/Object#foo\(o=foo\)/)
+        type "bt"
+        assert_line_text(/Object#foo\(o=foo\)/)
+
+        type "kill!"
+      end
+    end
+  end
 end
