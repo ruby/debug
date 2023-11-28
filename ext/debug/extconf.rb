@@ -4,6 +4,7 @@ File.write("debug_version.h", "#define RUBY_DEBUG_VERSION \"#{DEBUGGER__::VERSIO
 $distcleanfiles << "debug_version.h"
 
 if defined? RubyVM
+  $defs << '-DHAVE_RB_ISEQ'
   $defs << '-DHAVE_RB_ISEQ_PARAMETERS'
   $defs << '-DHAVE_RB_ISEQ_CODE_LOCATION'
 
