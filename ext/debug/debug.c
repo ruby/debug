@@ -180,13 +180,17 @@ iseq_last_line(VALUE iseqw)
 }
 #endif
 
+#ifdef HAVE_RB_ISEQ
 void Init_iseq_collector(void);
+#endif
 
 void
 Init_debug(void)
 {
+#ifdef HAVE_RB_ISEQ
     VALUE rb_mRubyVM = rb_const_get(rb_cObject, rb_intern("RubyVM"));
     VALUE rb_cISeq = rb_const_get(rb_mRubyVM, rb_intern("InstructionSequence"));
+#endif
     rb_mDebugger = rb_const_get(rb_cObject, rb_intern("DEBUGGER__"));
     rb_cFrameInfo = rb_const_get(rb_mDebugger, rb_intern("FrameInfo"));
 
@@ -210,5 +214,7 @@ Init_debug(void)
     rb_define_method(rb_cISeq, "last_line", iseq_last_line, 0);
 #endif
 
+#ifdef HAVE_RB_ISEQ
     Init_iseq_collector();
+#endif
 }
