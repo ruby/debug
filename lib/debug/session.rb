@@ -82,7 +82,7 @@ class RubyVM::InstructionSequence
   def first_line
     self.to_a[4][:code_location][0]
   end unless method_defined?(:first_line)
-end
+end if defined?(RubyVM::InstructionSequence)
 
 module DEBUGGER__
   PresetCommands = Struct.new(:commands, :source, :auto_continue)
@@ -133,7 +133,7 @@ module DEBUGGER__
       @commands = {}
       @unsafe_context = false
 
-      @has_keep_script_lines = RubyVM.respond_to? :keep_script_lines
+      @has_keep_script_lines = defined?(RubyVM.keep_script_lines)
 
       @tp_load_script = TracePoint.new(:script_compiled){|tp|
         eval_script = tp.eval_script unless @has_keep_script_lines
