@@ -416,7 +416,6 @@ module DEBUGGER__
       if argv.empty?
         case
         when have_shown_version && config[:mode] == :start
-          pp config
           exit
         end
       end
