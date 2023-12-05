@@ -23,7 +23,7 @@ module DEBUGGER__
     def test_irb_command_is_disabled_in_remote_mode
       debug_code(program, remote: :remote_only) do
         type 'irb'
-        assert_line_text 'IRB is supported on the remote console.'
+        assert_line_text 'IRB is not supported on the remote console.'
         type 'q!'
       end
     end
