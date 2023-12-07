@@ -180,7 +180,7 @@ DEBUGGER: Session start (pid: 7656)
 #1  BP - Line  /mnt/c/ko1/src/rb/ruby-debug/target.rb:5 (line)
 ```
 
-You can see that two breakpoints are registered. Let's continue the program by `continue` command.
+You can see that two breakpoints are registered. Let's continue the program by using the `continue` command.
 
 ```shell
 (rdbg) continue
@@ -200,8 +200,8 @@ Stop by #0  BP - Line  /mnt/c/ko1/src/rb/ruby-debug/target.rb:3 (line)
 ```
 
 You can see that we can stop at line 3.
-Let's see the local variables with `info` command, and continue.
-You can also confirm that the program will suspend at line 5 and you can use `info` command again.
+Let's see the local variables with the `info` command, and continue.
+You can also confirm that the program will suspend at line 5 and you can use the `info` command again.
 
 ```shell
 (rdbg) info
@@ -245,7 +245,7 @@ It will help if you want to know what the program is doing.
 If you want to run a command written in Ruby like `rake`, `rails`, `bundle`, `rspec`, and so on, you can use `rdbg -c` option.
 
 * Without `-c` option, `rdbg <name>` means that `<name>` is Ruby script and invoke it like `ruby <name>` with the debugger.
-* With `-c` option, `rdbg -c <name>` means that `<name>` is command in `PATH` and simply invoke it with the debugger.
+* With `-c` option, `rdbg -c <name>` means that `<name>` is a command in `PATH` and simply invokes it with the debugger.
 
 Examples:
 * `rdbg -c -- rails server`
@@ -263,12 +263,12 @@ Like other languages, you can use this debugger on the VSCode.
 
 1. Install [VSCode rdbg Ruby Debugger - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg)
 2. Open `.rb` file (e.g. `target.rb`)
-3. Register breakpoints with "Toggle breakpoint" in Run menu (or type F9 key)
+3. Register breakpoints with "Toggle breakpoint" in the Run menu (or type F9 key)
 4. Choose "Start debugging" in "Run" menu (or type F5 key)
 5. You will see a dialog "Debug command line" and you can choose your favorite command line you want to run.
 6. Chosen command line is invoked with `rdbg -c`, and VSCode shows the details at breakpoints.
 
-Please refer [Debugging in Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging) for operations on VSCode.
+Please refer to [Debugging in Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging) for operations on VSCode.
 
 You can configure the extension in `.vscode/launch.json`.
 Please see the extension page for more details.
@@ -283,7 +283,7 @@ You can use this debugger as a remote debugger. For example, it will help in the
   * Your application uses pipe for STDIN or STDOUT.
 * Your application is running as a daemon and you want to query the running status (checking a backtrace and so on).
 
-You can run your application as a remote debugged, and the remote debugger console can attach to the debuggee anytime.
+You can run your application as a remote debuggee, and the remote debugger console can attach to the debuggee anytime.
 
 ### Invoke as a remote debuggee
 
@@ -305,7 +305,7 @@ DEBUGGER: Debugger can attach via UNIX domain socket (/home/ko1/.ruby-debug-sock
 DEBUGGER: wait for debugger connection...
 ```
 
-By default, `rdbg --open` uses UNIX domain socket and generates path name automatically (`/home/ko1/.ruby-debug-sock/ruby-debug-ko1-7773` in this case).
+By default, `rdbg --open` uses UNIX domain socket and generates the path name automatically (`/home/ko1/.ruby-debug-sock/ruby-debug-ko1-7773` in this case).
 
 You can connect to the debuggee with `rdbg --attach` command (`rdbg -A` for short).
 
@@ -324,11 +324,11 @@ $ rdbg -A
 (rdbg:remote)
 ```
 
-If there is no other opening ports on the default directory, `rdbg --attach` command chooses the only one opening UNIX domain socket and connects to it. If there are more files, you need to specify the file.
+If there are no other opening ports on the default directory, `rdbg --attach` command chooses the only one opening UNIX domain socket and connects to it. If there are more files, you need to specify the file.
 
 When `rdbg --attach` connects to the debuggee, you can use any debug commands (set breakpoints, continue the program, and so on) like the local debug console. When a debuggee program exits, the remote console will also terminate.
 
-NOTE: If you use `quit` command, only the remote console exits and the debuggee program continues to run (and you can connect it again). If you want to exit the debuggee program, use `kill` command.
+NOTE: If you use the `quit` command, only the remote console exits and the debuggee program continues to run (and you can connect it again). If you want to exit the debuggee program, use `kill` command.
 
 If you want to use TCP/IP for the remote debugging, you need to specify the port and host with `--port` like `rdbg --open --port 12345` and it binds to `localhost:12345`.
 
@@ -343,11 +343,11 @@ Note that all messages communicated between the debugger and the debuggee are *N
 
 #### `require 'debug/open'` in a program
 
-If you can modify the program, you can open debugging port by adding `require 'debug/open'` line in the program.
+If you can modify the program, you can open the debugging port by adding `require 'debug/open'` line in the program.
 
 If you don't want to stop the program at the beginning, you can also use `require 'debug/open_nonstop'`.
 Using `debug/open_nonstop` is useful if you want to open a backdoor to the application.
-However, it is also danger because it can become another vulnerability.
+However, it is also dangerous because it can become another vulnerability.
 Please use it carefully.
 
 By default, UNIX domain socket is used for the debugging port. To use TCP/IP, you can set the `RUBY_DEBUG_PORT` environment variable.
@@ -372,7 +372,7 @@ Also `open` command allows opening the debug port.
 
 ([vscode-rdbg v0.0.9](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg) or later is required)
 
-If you don't run a debuggee Ruby process on VSCode, you can attach to VSCode later with the following steps.
+If you don't run a debuggee Ruby process on VSCode, you can attach it to VSCode later with the following steps.
 
 `rdbg --open=vscode` opens the debug port and tries to invoke the VSCode (`code` command).
 
@@ -815,7 +815,7 @@ Emacs support available.
 
 #### Start by method
 
-After loading `debug/session`, you can start debug session with the following methods. They are convenient if you want to specify debug configurations in your program.
+After loading `debug/session`, you can start a debug session with the following methods. They are convenient if you want to specify debug configurations in your program.
 
 * `DEBUGGER__.start(**kw)`: start debug session with local console.
 * `DEBUGGER__.open(**kw)`: open debug port with configuration (without configurations open with UNIX domain socket)
