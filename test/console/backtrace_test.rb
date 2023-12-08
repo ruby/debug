@@ -189,7 +189,7 @@ module DEBUGGER__
     end
   end
 
-   class ThreadLockingTraceTest < ConsoleTestCase
+  class ThreadLockingTraceTest < ConsoleTestCase
     def program
       <<~RUBY
      1| th0 = Thread.new{sleep}
