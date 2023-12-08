@@ -96,7 +96,7 @@ module DEBUGGER__
     RUBY = ENV['RUBY'] || RbConfig.ruby
     RDBG_EXECUTABLE = "#{RUBY} #{__dir__}/../../exe/rdbg"
 
-    TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 30).to_i
+    TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
     def get_target_ui
       ENV['RUBY_DEBUG_TEST_UI']

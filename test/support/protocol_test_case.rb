@@ -644,7 +644,7 @@ module DEBUGGER__
       end
     end
 
-    TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 30).to_i
+    TIMEOUT_SEC = (ENV['RUBY_DEBUG_TIMEOUT_SEC'] || 10).to_i
 
     def assert_dap_response expected_def, result_res
       return unless defined? DAP_HASH
