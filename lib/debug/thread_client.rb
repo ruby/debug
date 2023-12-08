@@ -865,10 +865,6 @@ module DEBUGGER__
       private def fiber_blocking
         ::Fiber.blocking{yield}
       end
-    elsif ::Fiber.method_defined?(:blocking?)
-      private def fiber_blocking
-        ::Fiber.new(blocking: true){yield}.resume
-      end
     else
       private def fiber_blocking
         yield
