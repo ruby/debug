@@ -72,7 +72,7 @@ module DEBUGGER__
     def test_debugger_stops_immediately
       run_rdbg(program, options: "--stop-at-load") do
         # stops at the earliest possible location
-        assert_line_text(/\[C\] Kernel#require/)
+        assert_line_text(/\[C\] Kernel[#\.]require/)
         type "c"
         type "a + 'bar'"
         assert_line_text(/foobar/)

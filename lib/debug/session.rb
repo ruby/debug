@@ -2190,6 +2190,7 @@ module DEBUGGER__
       case loc.absolute_path
       when dir_prefix
       when %r{rubygems/core_ext/kernel_require\.rb}
+      when %r{bundled_gems\.rb}
       else
         return loc if loc.absolute_path
       end
