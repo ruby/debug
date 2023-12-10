@@ -21,7 +21,7 @@ module DEBUGGER__
         PTY.spawn({ "HOME" => pwd }, ruby, '-e', 'puts ENV["HOME"]') do |r,|
           home_cannot_change = r.gets.chomp != pwd
         end
-        home_cannot_change
+        !home_cannot_change
       end
 
     class << self
