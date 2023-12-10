@@ -85,7 +85,7 @@ module DEBUGGER__
       MSG
     end
 
-    def debug_code(program, remote: true, &test_steps)
+    def debug_code(program, remote: true, verbose: false, &test_steps)
       Timeout.timeout(60) do
         prepare_test_environment(program, test_steps) do
           if remote && !NO_REMOTE && MULTITHREADED_TEST
@@ -109,17 +109,17 @@ module DEBUGGER__
               th.each {|t| t.join}
             end
           elsif remote && !NO_REMOTE
-            debug_code_on_local unless remote == :remote_only
+            debug_code_on_local verbose: verbose unless remote == :remote_only
             debug_code_on_unix_domain_socket
             debug_code_on_tcpip
           else
-            debug_code_on_local unless remote == :remote_only
+            debug_code_on_local verbose: verbose unless remote == :remote_only
           end
         end
       end
     end
 
-    def run_test_scenario cmd, test_info
+    def run_test_scenario cmd, test_info, verbose: false
       PTY.spawn({ "HOME" => pty_home_dir }, cmd) do |read, write, pid|
         test_info.backlog = []
         test_info.last_backlog = []
@@ -206,6 +206,8 @@ module DEBUGGER__
           kill_safely pid, force: is_assertion_failure
         end
       end
+    ensure
+      pp backlog: test_info.backlog if verbose
     end
 
     def assert_program_finish test_info, pid, name
@@ -249,10 +251,10 @@ module DEBUGGER__
       kill_remote_debuggee remote_info
     end
 
-    private def debug_code_on_local
+    private def debug_code_on_local verbose: false
       test_info = TestInfo.new(dup_scenario, 'LOCAL', /\(rdbg\)/)
       cmd = "#{RDBG_EXECUTABLE} #{temp_file_path}"
-      run_test_scenario cmd, test_info
+      run_test_scenario cmd, test_info, verbose: verbose
     end
 
     private def debug_code_on_unix_domain_socket
