@@ -62,15 +62,23 @@ di_body(const rb_debug_inspector_t *dc, void *ptr)
     long i;
 
     for (i=1; i<len; i++) {
-        VALUE loc, e;
+        VALUE e;
         VALUE iseq = rb_debug_inspector_frame_iseq_get(dc, i);
+        VALUE loc = RARRAY_AREF(locs, i);
+        VALUE path;
 
         if (!NIL_P(iseq)) {
-            VALUE path = iseq_realpath(iseq);
-            if (!NIL_P(path) && !NIL_P(skip_path_prefix) && str_start_with(path, skip_path_prefix)) continue;
+            path = iseq_realpath(iseq);
+        }
+        else {
+            // C frame
+            path = rb_funcall(loc, rb_intern("path"), 0);
         }
 
-        loc = RARRAY_AREF(locs, i);
+        if (!NIL_P(path) && !NIL_P(skip_path_prefix) && str_start_with(path, skip_path_prefix)) {
+            continue;
+        }
+
         e = di_entry(loc,
                      rb_debug_inspector_frame_self_get(dc, i),
                      rb_debug_inspector_frame_binding_get(dc, i),
