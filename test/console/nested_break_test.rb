@@ -10,7 +10,7 @@ module DEBUGGER__
        2|   b = a + 1  # break
        3| end
        4| def bar
-       5|   x = 1        # break
+       5|   x = 1      # break
        6| end
        7| bar
        8| x = 2
@@ -35,7 +35,7 @@ module DEBUGGER__
           type 'p a'
           assert_line_text(/42/)
           type 'c'
-          assert_line_num 7
+          assert_line_num 7 # because restored `up` line
         end
 
         # pop nested break
@@ -43,6 +43,27 @@ module DEBUGGER__
 
         type 'bt'
         assert_line_text(/=>\#1/)
+
+        type 'c'
+      end
+    end
+
+    def test_nested_break_bt
+      debug_code program do
+        type 'break 2'
+        type 'break 5'
+        type 'c'
+
+        assert_line_num 5
+        type 'p foo(42)'
+
+        if TracePoint.respond_to? :allow_reentry
+          # nested break
+          assert_line_num 2
+          type 'bt'
+          assert_no_line_text 'thread_client.rb'
+          type 'c'
+        end
 
         type 'c'
       end
@@ -62,7 +83,7 @@ module DEBUGGER__
           assert_line_num 2
           type 'p foo(142)'
           type 'bt'
-          assert_line_text(/\#9/) # TODO: can be changed
+          assert_line_text(/\#7\s+<main>/) # TODO: can be changed
 
           type 'c'
           assert_line_text(/143/)
