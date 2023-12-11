@@ -9,6 +9,15 @@ module DEBUGGER__
       warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
     end
 
+    if WITH_COVERAGE
+      require "simplecov"
+
+      Test::Unit.at_exit do
+        SimpleCov.start
+        SimpleCov.at_exit_behavior
+      end
+    end
+
     # CIs usually doesn't allow overriding the HOME path
     # we also don't need to worry about adding or being affected by ~/.rdbgrc on CI
     # so we can just use the original home page there
@@ -251,7 +260,13 @@ module DEBUGGER__
 
     private def debug_code_on_local
       test_info = TestInfo.new(dup_scenario, 'LOCAL', /\(rdbg\)/)
-      cmd = "#{RDBG_EXECUTABLE} #{temp_file_path}"
+
+      if WITH_COVERAGE
+        cmd = "#{RUBY} -I#{Dir.pwd}/lib -r#{__dir__}/simplecov_rdbg #{temp_file_path}"
+      else
+        cmd = "#{RDBG_EXECUTABLE} #{temp_file_path}"
+      end
+
       run_test_scenario cmd, test_info
     end
 
