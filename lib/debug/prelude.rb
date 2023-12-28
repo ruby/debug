@@ -5,7 +5,7 @@ return if defined?(::DEBUGGER__::Session)
 
 # Put the following line in your login script (e.g. ~/.bash_profile) with modified path:
 #
-#   export RUBYOPT="-r /path/to/debug/prelude $(RUBYOPT)"
+#   export RUBYOPT="-r /path/to/debug/prelude ${RUBYOPT}"
 #
 module Kernel
   def debugger(*a, up_level: 0, **kw)
