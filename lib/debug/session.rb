@@ -2300,11 +2300,19 @@ module DEBUGGER__
   end
 
   def self.load_rc
-    [[File.expand_path('~/.rdbgrc'), true],
-     [File.expand_path('~/.rdbgrc.rb'), true],
-     # ['./.rdbgrc', true], # disable because of security concern
-     [CONFIG[:init_script], false],
-     ].each{|(path, rc)|
+    rc_file_paths = [
+      [File.expand_path('~/.rdbgrc'), true],
+      [File.expand_path('~/.rdbgrc.rb'), true],
+      # ['./.rdbgrc', true], # disable because of security concern
+    ]
+
+    if (xdg_home = ENV["XDG_CONFIG_HOME"])
+      rc_file_paths << [File.expand_path(File.join(xdg_home, "rdbg", "config")), true]
+    end
+
+    rc_file_paths << [CONFIG[:init_script], false]
+
+    rc_file_paths.each{|(path, rc)|
       next unless path
       next if rc && CONFIG[:no_rc] # ignore rc
 
