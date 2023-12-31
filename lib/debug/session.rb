@@ -938,7 +938,7 @@ module DEBUGGER__
       end
 
       # * `irb`
-      #   * Invoke `irb` on the current frame.
+      #   * Activate and switch to `irb:rdbg` console
       register_command 'irb' do |arg|
         if @ui.remote?
           @ui.puts "\nIRB is not supported on the remote console."
