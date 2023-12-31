@@ -713,7 +713,7 @@ The `<...>` notation means the argument.
 * `eval <expr>`
   * Evaluate `<expr>` on the current frame.
 * `irb`
-  * Invoke `irb` on the current frame.
+  * Activate and switch to `irb:rdbg` console
 
 ### Trace
 
