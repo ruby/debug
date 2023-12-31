@@ -153,13 +153,20 @@ module DEBUGGER__
     end
 
     def history_file
-      history_file = CONFIG[:history_file]
+      path =
+        if !CONFIG[:history_file].empty? && File.exist?(File.expand_path(CONFIG[:history_file]))
+          CONFIG[:history_file]
+        elsif (xdg_home = ENV['XDG_DATA_HOME'])
+          File.join(xdg_home, 'rdbg', 'history')
+        else
+          '~/.rdbg_history'
+        end
 
-      if !history_file.empty?
-        File.expand_path(history_file)
-      else
-        history_file
-      end
+      path = File.expand_path(path)
+
+      FileUtils.mkdir_p(File.dirname(path)) unless File.exist?(path)
+
+      path
     end
 
     FH = "# Today's OMIKUJI: "
