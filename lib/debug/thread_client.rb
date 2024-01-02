@@ -1056,9 +1056,6 @@ module DEBUGGER__
             end
           when :call
             result = frame_eval(eval_src)
-          when :irb
-            require_relative "irb_integration"
-            activate_irb_integration
           when :display, :try_display
             failed_results = []
             eval_src.each_with_index{|src, i|

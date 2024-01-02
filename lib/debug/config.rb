@@ -158,6 +158,26 @@ module DEBUGGER__
           SESSION.set_no_sigint_hook old, new
         end
       end
+
+      if_updated old_conf, conf, :irb_console do |old, new|
+        if defined?(SESSION) && SESSION.active?
+          # irb_console is switched from true to false
+          if old
+            Reline.completion_proc = nil
+            Reline.output_modifier_proc = nil
+            Reline.autocompletion = false
+            Reline.dig_perfect_match_proc = nil
+            SESSION.reset_ui UI_LocalConsole.new
+          # irb_console is switched from false to true
+          else
+            if CONFIG[:open]
+              SESSION.instance_variable_get(:@ui).puts "\nIRB is not supported on the remote console."
+            else
+              SESSION.activate_irb_integration
+            end
+          end
+        end
+      end
     end
 
     private def if_updated old_conf, new_conf, key
