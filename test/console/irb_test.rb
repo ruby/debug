@@ -35,6 +35,12 @@ module DEBUGGER__
         assert_line_text 'IRB is not supported on the remote console.'
         type 'q!'
       end
+
+      debug_code(program, remote: :remote_only) do
+        type 'config set irb_console true'
+        assert_line_text 'IRB is not supported on the remote console.'
+        type 'q!'
+      end
     end
 
     def test_irb_command_switches_console_to_irb
@@ -47,6 +53,11 @@ module DEBUGGER__
         type 'next'
         type 'info'
         assert_line_text([/a = 1/, /b = nil/])
+
+        # disable irb console
+        type 'config set irb_console false'
+        type '456'
+        assert_raw_line_text '(rdbg) 456'
         type 'q!'
       end
     end
@@ -62,10 +73,25 @@ module DEBUGGER__
         type 'next'
         type 'info'
         assert_line_text([/a = 1/, /b = nil/])
+
+        # disable irb console
+        type 'config set irb_console false'
+        type '456'
+        assert_raw_line_text '(rdbg) 456'
         type 'q!'
       end
     ensure
       ENV["RUBY_DEBUG_IRB_CONSOLE"] = nil
+    end
+
+    private
+
+    # assert_line_text ignores the prompt line, so we can't use it to assert the prompt transition
+    # assert_raw_line_text is a workaround for that
+    def assert_raw_line_text(expectation)
+      @scenario.push(Proc.new do |test_info|
+        assert_include(test_info.last_backlog.join, expectation)
+      end)
     end
   end
 end
