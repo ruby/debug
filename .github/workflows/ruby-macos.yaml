@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby-version: ['3.2', 'head']
+        ruby-version: ["3.2", "3.3", "head"]
 
     steps:
     - uses: actions/checkout@v4
