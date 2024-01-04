@@ -619,14 +619,6 @@ module DEBUGGER__
                   variablesReference: 30,
                   namedVariables: /\d+/
                 },
-                {
-                  # This is an extra entry caused by an out-of-bounds index access in server_dap.rb
-                  name: "9",
-                  value: nil,
-                  type: NilClass,
-                  variablesReference: 31,
-                  namedVariables: /\d+/
-                }
               ]
             }
           },
@@ -649,7 +641,7 @@ module DEBUGGER__
             message: "Success",
             body: {
               type: "Integer",
-              variablesReference: 32,
+              variablesReference: 31,
               namedVariables: /\d+/,
               result: "3"
             }
@@ -658,7 +650,7 @@ module DEBUGGER__
             seq: 23,
             command: "variables",
             arguments: {
-              variablesReference: 32
+              variablesReference: 31
             },
             type: "request"
           },
@@ -675,7 +667,7 @@ module DEBUGGER__
                   name: "#class",
                   value: "Integer",
                   type: "Class",
-                  variablesReference: 33,
+                  variablesReference: 32,
                   namedVariables: /\d+/
                 }
               ]
@@ -700,7 +692,7 @@ module DEBUGGER__
             message: "Success",
             body: {
               type: "Integer",
-              variablesReference: 34,
+              variablesReference: 33,
               namedVariables: /\d+/,
               result: "2"
             }
@@ -709,7 +701,7 @@ module DEBUGGER__
             seq: 25,
             command: "variables",
             arguments: {
-              variablesReference: 34
+              variablesReference: 33
             },
             type: "request"
           },
@@ -726,7 +718,7 @@ module DEBUGGER__
                   name: "#class",
                   value: "Integer",
                   type: "Class",
-                  variablesReference: 35,
+                  variablesReference: 34,
                   namedVariables: /\d+/
                 }
               ]
@@ -751,7 +743,7 @@ module DEBUGGER__
             message: "Success",
             body: {
               type: "Integer",
-              variablesReference: 36,
+              variablesReference: 35,
               namedVariables: /\d+/,
               result: "1"
             }
@@ -760,7 +752,7 @@ module DEBUGGER__
             seq: 27,
             command: "variables",
             arguments: {
-              variablesReference: 36
+              variablesReference: 35
             },
             type: "request"
           },
@@ -777,7 +769,7 @@ module DEBUGGER__
                   name: "#class",
                   value: "Integer",
                   type: "Class",
-                  variablesReference: 37,
+                  variablesReference: 36,
                   namedVariables: /\d+/
                 }
               ]
