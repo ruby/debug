@@ -869,8 +869,10 @@ module DEBUGGER__
         event! :protocol_result, :scope, req, variables: vars, tid: self.id
       when :variable
         vid = args.shift
-        obj = @var_map[vid]
-        if obj
+
+        if @var_map.key?(vid)
+          obj = @var_map[vid]
+
           members = case req.dig('arguments', 'filter')
           when 'indexed'
             VariableInspector.new.indexed_members_of(
