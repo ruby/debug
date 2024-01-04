@@ -849,14 +849,12 @@ module DEBUGGER__
           presentationHint: 'locals',
           # variablesReference: N, # filled by SESSION
           namedVariables: lnum,
-          indexedVariables: 0,
           expensive: false,
         }, {
           name: 'Global variables',
           presentationHint: 'globals',
           variablesReference: 1, # GLOBAL
           namedVariables: safe_global_variables.size,
-          indexedVariables: 0,
           expensive: false,
         }]
       when :scope
@@ -1052,17 +1050,18 @@ module DEBUGGER__
           value: member.inspect_value,
           type: member.value_type_name,
           variablesReference: vid,
+          indexedVariables: indexedVariables,
+          namedVariables: namedVariables,
         }
       else
         {
           value: member.inspect_value,
           type: member.value_type_name,
           variablesReference: vid,
+          indexedVariables: indexedVariables,
+          namedVariables: namedVariables,
         }
       end
-
-      variable[:indexedVariables] = indexedVariables unless indexedVariables == 0
-      variable[:namedVariables] = namedVariables unless namedVariables == 0
 
       variable
     end
