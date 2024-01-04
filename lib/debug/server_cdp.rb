@@ -1114,7 +1114,9 @@ module DEBUGGER__
       when :properties
         oid = args.shift
 
-        if obj = @obj_map[oid]
+        if @obj_map.key?(oid)
+          obj = @obj_map[oid]
+
           members = if Array === obj
             VariableInspector.new.indexed_members_of(obj, start: 0, count: obj.size)
           else
