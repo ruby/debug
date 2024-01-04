@@ -7,7 +7,9 @@ module DEBUGGER__
     def indexed_members_of(obj, start:, count:)
       return [] if start > (obj.length - 1)
 
-      (start...(start + count)).map do |i|
+      capped_count = [count, obj.length - start].min
+
+      (start...(start + capped_count)).map do |i|
         Variable.new(name: i.to_s, value: obj[i])
       end
     end
