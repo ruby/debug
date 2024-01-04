@@ -883,7 +883,7 @@ module DEBUGGER__
                   namedVariables: /\d+/,
                   indexedVariables: 0,
                   expensive: false,
-                  variablesReference: 11
+                  variablesReference: 12
                 },
                 {
                   name: "Global variables",
@@ -917,7 +917,7 @@ module DEBUGGER__
                   name: "%self",
                   value: "Foo",
                   type: "Module",
-                  variablesReference: 12,
+                  variablesReference: 13,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
@@ -925,7 +925,7 @@ module DEBUGGER__
                   name: "bar",
                   value: "nil",
                   type: "NilClass",
-                  variablesReference: 13,
+                  variablesReference: 14,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 }
