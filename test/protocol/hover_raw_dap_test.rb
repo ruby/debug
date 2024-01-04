@@ -578,80 +578,81 @@ module DEBUGGER__
               variables: [
                 {
                   name: "0",
-                  value: /.*/,
-                  type: /.*/,
+                  value: "JSON::Ext::Generator::GeneratorMethods::Integer",
+                  type: "Module",
                   variablesReference: 22,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
                   name: "1",
-                  value: /.*/,
-                  type: /.*/,
+                  value: "Numeric",
+                  type: "Class",
                   variablesReference: 23,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
                   name: "2",
-                  value: /.*/,
-                  type: /.*/,
+                  value: "Comparable",
+                  type: "Module",
                   variablesReference: 24,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
                   name: "3",
-                  value: /.*/,
-                  type: /.*/,
+                  value: "Object",
+                  type: "Class",
                   variablesReference: 25,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
                   name: "4",
-                  value: /.*/,
-                  type: /.*/,
+                  value: "JSON::Ext::Generator::GeneratorMethods::Object",
+                  type: "Module",
                   variablesReference: 26,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
                   name: "5",
-                  value: /.*/,
-                  type: /.*/,
+                  value: "PP::ObjectMixin",
+                  type: "Module",
                   variablesReference: 27,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
                   name: "6",
-                  value: /.*/,
-                  type: /.*/,
+                  value: "DEBUGGER__::TrapInterceptor",
+                  type: "Module",
                   variablesReference: 28,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
                   name: "7",
-                  value: /.*/,
-                  type: /.*/,
+                  value: "Kernel",
+                  type: "Module",
                   variablesReference: 29,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
                   name: "8",
-                  value: /.*/,
-                  type: /.*/,
+                  value: "BasicObject",
+                  type: "Class",
                   variablesReference: 30,
                   indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
+                  # This is an extra entry caused by an out-of-bounds index access in server_dap.rb
                   name: "9",
-                  value: /.*/,
-                  type: /.*/,
+                  value: nil,
+                  type: NilClass,
                   variablesReference: 31,
                   indexedVariables: 0,
                   namedVariables: /\d+/

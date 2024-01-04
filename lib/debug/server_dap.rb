@@ -880,6 +880,7 @@ module DEBUGGER__
           case req.dig('arguments', 'filter')
           when 'indexed'
             start = req.dig('arguments', 'start') || 0
+            # FIXME: `req.dig('arguments', 'count')` needs to be capped to be `<= obj.size`.
             count = req.dig('arguments', 'count') || obj.size
             vars = (start ... (start + count)).map{|i|
               variable(i.to_s, obj[i])
