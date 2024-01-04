@@ -9,6 +9,8 @@ require 'open3'
 require 'tmpdir'
 require 'tempfile'
 require 'timeout'
+require_relative 'variable'
+require_relative 'variable_inspector'
 
 module DEBUGGER__
   module UI_CDP
@@ -1112,46 +1114,29 @@ module DEBUGGER__
         event! :protocol_result, :scope, req, vars
       when :properties
         oid = args.shift
-        result = []
-        prop = []
 
         if obj = @obj_map[oid]
-          case obj
-          when Array
-            result = obj.map.with_index{|o, i|
-              variable i.to_s, o
-            }
-          when Hash
-            result = obj.map{|k, v|
-              variable(k, v)
-            }
-          when Struct
-            result = obj.members.map{|m|
-              variable(m, obj[m])
-            }
-          when String
-            prop = [
-              internalProperty('#length', obj.length),
-              internalProperty('#encoding', obj.encoding)
-            ]
-          when Class, Module
-            result = obj.instance_variables.map{|iv|
-              variable(iv, obj.instance_variable_get(iv))
-            }
-            prop = [internalProperty('%ancestors', obj.ancestors[1..])]
-          when Range
-            prop = [
-              internalProperty('#begin', obj.begin),
-              internalProperty('#end', obj.end),
-            ]
+          members = if Array === obj
+            VariableInspector.new.indexed_members_of(obj, start: 0, count: obj.size)
+          else
+            VariableInspector.new.named_members_of(obj)
           end
 
-          result += M_INSTANCE_VARIABLES.bind_call(obj).map{|iv|
-            variable(iv, M_INSTANCE_VARIABLE_GET.bind_call(obj, iv))
-          }
-          prop += [internalProperty('#class', M_CLASS.bind_call(obj))]
+          result = members.filter_map do |member|
+            next if member.internal?
+            variable(member.name, member.value)
+          end
+
+          internal_properties = members.filter_map do |member|
+            next unless member.internal?
+            internalProperty(member.name, member.value)
+          end
+        else
+          result = []
+          internal_properties = []
         end
-        event! :protocol_result, :properties, req, result: result, internalProperties: prop
+
+        event! :protocol_result, :properties, req, result: result, internalProperties: internal_properties
       when :exception
         oid = args.shift
         exc = nil
