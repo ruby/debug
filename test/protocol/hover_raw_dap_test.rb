@@ -14,6 +14,7 @@ module DEBUGGER__
     RUBY
 
     def test_hover_works_correctly
+      omit "This test is designed for Ruby 3.1 and later versions because ancestor classes are changed" if RUBY_VERSION.to_f <= 3.0
       run_dap_scenario PROGRAM do
         [
           *INITIALIZE_DAP_MSGS,
