@@ -489,7 +489,12 @@ module DEBUGGER__
                         id: SecureRandom.hex
         when 'Runtime.terminateExecution'
           send_response req
-          exit
+          if SESSION.in_subsession?
+            @q_msg << 'kill!'
+          else
+            @q_msg << 'kill!'
+            pause
+          end
         when 'Page.startScreencast', 'Emulation.setTouchEmulationEnabled', 'Emulation.setEmitTouchEventsForMouse',
           'Runtime.compileScript', 'Page.getResourceContent', 'Overlay.setPausedInDebuggerMessage',
           'Runtime.releaseObjectGroup', 'Runtime.discardConsoleEntries', 'Log.clear', 'Runtime.runIfWaitingForDebugger'
