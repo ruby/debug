@@ -384,11 +384,11 @@ module DEBUGGER__
   class BreakAtCMethod2Test < ConsoleTestCase
     def program
       <<~RUBY
-        1| binding.b(do: "b Array#each")
+        1| binding.b(do: "b Array#reverse_each")
         2|
         3| result = ""
         4|
-        5| [1, 2, 3].each do |i|
+        5| [1, 2, 3].reverse_each do |i|
         6|   result += i.to_s
         7| end
         8|
