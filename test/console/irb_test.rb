@@ -6,11 +6,20 @@ module DEBUGGER__
   class IrbTest < ConsoleTestCase
     def setup
       @original_pager = ENV["PAGER"]
+      @original_home = ENV["HOME"]
+      @original_xdg_config_home = ENV["XDG_CONFIG_HOME"]
+      @original_irbrc = ENV["IRBRC"]
+
       ENV["PAGER"] = "cat"
+      ENV["HOME"] = ENV["XDG_CONFIG_HOME"] = Dir.mktmpdir
+      ENV["IRBRC"] = nil
     end
 
     def teardown
       ENV["PAGER"] = @original_pager
+      ENV["HOME"] = @original_home
+      ENV["XDG_CONFIG_HOME"] = @original_xdg_config_home
+      ENV["IRBRC"] = @original_irbrc
     end
 
     def program
