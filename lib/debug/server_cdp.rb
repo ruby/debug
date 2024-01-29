@@ -419,6 +419,7 @@ module DEBUGGER__
 
       def extract_data
         first_group = @sock.getbyte
+        raise Detach if first_group == nil
         fin = first_group & 0b10000000 != 128
         raise 'Unsupported' if fin
 
