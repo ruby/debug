@@ -2,7 +2,6 @@
 
 require 'json'
 require 'digest/sha1'
-require 'base64'
 require 'securerandom'
 require 'stringio'
 require 'open3'
@@ -298,7 +297,7 @@ module DEBUGGER__
         show_protocol :<, res
 
         if res.match /^Sec-WebSocket-Accept: (.*)\r\n/
-          correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+          correct_key = Digest::SHA1.base64digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
           raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless $1 == correct_key
         else
           raise "Unknown response: #{res}"
@@ -379,7 +378,7 @@ module DEBUGGER__
         show_protocol '>', req
 
         if req.match /^Sec-WebSocket-Key: (.*)\r\n/
-          accept = Base64.strict_encode64 Digest::SHA1.digest "#{$1}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+          accept = Digest::SHA1.base64digest "#{$1}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
           res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: #{accept}\r\n\r\n"
           @sock.print res
           show_protocol :<, res
