@@ -6,6 +6,17 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  # GITHUB_PULL_REQUEST_URL are used for commenting test reports in Launchable Github App.
+  # https://github.com/launchableinc/cli/blob/v1.80.1/launchable/utils/link.py#L42
+  GITHUB_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
+  # The following envs are necessary in Launchable tokenless authentication.
+  # https://github.com/launchableinc/cli/blob/v1.80.1/launchable/utils/authentication.py#L20
+  LAUNCHABLE_ORGANIZATION: "ruby"
+  LAUNCHABLE_WORKSPACE: "debug"
+  # https://github.com/launchableinc/cli/blob/v1.80.1/launchable/utils/authentication.py#L71
+  GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
 jobs:
   test:
 
@@ -18,6 +29,27 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        # Set fetch-depth: 0 so that Launchable can receive commits information.
+        fetch-depth: 0
+    # Launchable requires Python and Java
+    # https://www.launchableinc.com/docs/resources/cli-reference/
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'adopt'
+        java-version: '8'
+    # Setup Launchable
+    - name: Launchable - install command
+      run: pip install launchable
+    - name: Launchable - verify
+      run: launchable verify
+    - name: Launchable - record build
+      run: launchable record build --name ${GITHUB_PR_HEAD_SHA}
+
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
@@ -27,4 +59,7 @@ jobs:
       run: |
         bundle exec rake clobber
         bundle exec rake compile
-        bundle exec rake test_console
+        TESTOPTS="--runner=junitxml --junitxml-output-file=ruby-macos.xml" bundle exec rake test_console
+    - name: launchable record tests
+      run: launchable record tests --flavor test=console --flavor os=macos-latest --flavor ruby=${{ matrix.ruby-version }} file ruby-macos.xml
+      if: always()
