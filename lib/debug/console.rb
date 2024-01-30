@@ -143,7 +143,7 @@ module DEBUGGER__
       rescue LoadError
         def readline prompt
           print prompt
-          gets
+          $stdin.gets
         end
 
         def history
