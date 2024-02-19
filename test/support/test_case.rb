@@ -11,8 +11,6 @@ require_relative '../../lib/debug/client'
 
 require_relative 'assertions'
 
-# Load this library only in the debug CI to prevent LoadError
-# when these tests are executed in ruby/ruby.
 if ENV['LAUNCHABLE_ORGANIZATION'] && ENV['LAUNCHABLE_WORKSPACE']
   # "test/unit/runner/junitxml" is used for reporting test result in JUnit XML format.
   require "test/unit/runner/junitxml"
