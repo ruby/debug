@@ -15,7 +15,7 @@ env:
   LAUNCHABLE_ORGANIZATION: "ruby"
   LAUNCHABLE_WORKSPACE: "debug"
   # https://github.com/launchableinc/cli/blob/v1.80.1/launchable/utils/authentication.py#L71
-  GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
 jobs:
   test:
