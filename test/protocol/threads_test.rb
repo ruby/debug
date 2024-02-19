@@ -20,8 +20,8 @@ module DEBUGGER__
 
         assert_threads_result(
           [
-            /\.rb:\d:in `<main>'/,
-            /\.rb:\d:in `block in foo'/
+            /\.rb:\d:in [`']<main>'/,
+            /\.rb:\d:in [`']block in (Object#)?foo'/
           ]
         )
 
