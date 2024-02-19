@@ -34,7 +34,7 @@ module DEBUGGER__
             type "catch Exception"
             type "c"
             type "_raised"
-            assert_line_text(/undefined local variable or method `foo' for main/)
+            assert_line_text(/undefined local variable or method [`']foo' for main/)
             type "c"
           end
         end
@@ -43,7 +43,7 @@ module DEBUGGER__
           debug_code(program) do
             type "catch Exception pre: p _raised"
             type "c"
-            assert_line_text(/undefined local variable or method `foo' for main/)
+            assert_line_text(/undefined local variable or method [`']foo' for main/)
             type "c"
           end
         end
@@ -96,7 +96,7 @@ module DEBUGGER__
 
             # stops for NoMethodError because _raised is not defined in the program
             type "_raised"
-            assert_line_text(/undefined local variable or method `_raised' for main/)
+            assert_line_text(/undefined local variable or method [`']_raised' for main/)
             type "c"
           end
         end
@@ -155,7 +155,7 @@ module DEBUGGER__
             type "c"
             # stops for NoMethodError because _return is not defined in the program
             type "_raised"
-            assert_line_text(/undefined local variable or method `_return' for main/)
+            assert_line_text(/undefined local variable or method [`']_return' for main/)
             type "c"
           end
         end
