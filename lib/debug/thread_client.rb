@@ -989,7 +989,7 @@ module DEBUGGER__
                   true
                 else
                   true if depth >= DEBUGGER__.frame_depth - 3 &&
-                          caller_locations(2, 1).first.label == target_location_label
+                          caller_locations(2, 1).first.base_label == target_location_label
                           # TODO: imcomplete condition
                 end
               end
@@ -1005,7 +1005,7 @@ module DEBUGGER__
                   true if pat === tp.callee_id.to_s
                 else # :return, :b_return
                   true if depth >= DEBUGGER__.frame_depth - 3 &&
-                          caller_locations(2, 1).first.label == target_location_label
+                          caller_locations(2, 1).first.base_label == target_location_label
                           # TODO: imcomplete condition
                 end
               end
