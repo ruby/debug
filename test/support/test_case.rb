@@ -7,8 +7,6 @@ require 'pty'
 require 'timeout'
 require 'json'
 require 'rbconfig'
-# "test/unit/runner/junitxml" is used for reporting test result in JUnit XML format.
-require "test/unit/runner/junitxml"
 require_relative '../../lib/debug/client'
 
 require_relative 'assertions'
