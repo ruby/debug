@@ -120,7 +120,7 @@ module DEBUGGER__
               threads: [
                 {
                   id: 1,
-                  name: "#1 #{temp_file_path}:1:in `<main>'"
+                  name: /\#1 #{temp_file_path}:1:in [`']<main>'/
                 }
               ]
             }
@@ -141,7 +141,7 @@ module DEBUGGER__
               threads: [
                 {
                   id: 1,
-                  name: "#1 #{temp_file_path}:1:in `<main>'"
+                  name: /\#1 #{temp_file_path}:1:in [`']<main>'/
                 }
               ]
             }
