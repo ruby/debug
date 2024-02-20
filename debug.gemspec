@@ -29,5 +29,4 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "irb", "~> 1.10" # for irb:debug integration
   spec.add_dependency "reline", ">= 0.3.8"
-  spec.add_dependency "base64"
 end

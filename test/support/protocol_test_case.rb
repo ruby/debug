@@ -1,7 +1,6 @@
 require 'net/http'
 require 'uri'
 require 'digest/sha1'
-require 'base64'
 
 require_relative 'test_case'
 require_relative 'dap_utils'
@@ -924,7 +923,7 @@ module DEBUGGER__
       @sock.print "GET /#{uuid} HTTP/1.1\r\nHost: 127.0.0.1:#{port}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: #{key}==\r\n\r\n"
       server_key = get_server_key
 
-      correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+      correct_key = Digest::SHA1.base64digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
       raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless server_key == correct_key
     end
 
