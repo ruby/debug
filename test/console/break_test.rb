@@ -39,7 +39,7 @@ module DEBUGGER__
         type 'break Foo::Bar#b'
         assert_line_text(/#0  BP - Method \(pending\)  Foo::Bar#b/)
         type 'continue'
-        assert_line_num 8
+        assert_line_num 6
         type 'kill!'
       end
     end
