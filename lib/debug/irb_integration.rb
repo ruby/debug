@@ -24,4 +24,14 @@ module DEBUGGER__
       IRB::Context.prepend(IrbPatch)
     end
   end
+
+  class Session
+    def deactivate_irb_integration
+      Reline.completion_proc = nil
+      Reline.output_modifier_proc = nil
+      Reline.autocompletion = false
+      Reline.dig_perfect_match_proc = nil
+      reset_ui UI_LocalConsole.new
+    end
+  end
 end

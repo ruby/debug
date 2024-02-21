@@ -163,11 +163,7 @@ module DEBUGGER__
         if defined?(SESSION) && SESSION.active?
           # irb_console is switched from true to false
           if old
-            Reline.completion_proc = nil
-            Reline.output_modifier_proc = nil
-            Reline.autocompletion = false
-            Reline.dig_perfect_match_proc = nil
-            SESSION.reset_ui UI_LocalConsole.new
+            SESSION.deactivate_irb_integration
           # irb_console is switched from false to true
           else
             if CONFIG[:open]
