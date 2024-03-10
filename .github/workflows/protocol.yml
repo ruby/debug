@@ -30,8 +30,9 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true
-    - name: Run tests
+    - name: Set up tests
       run: |
         bundle exec rake clobber
         bundle exec rake compile
-        bundle exec rake test_protocol
+    - name: Run tests
+      run: bundle exec rake test_protocol
