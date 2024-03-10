@@ -111,6 +111,7 @@ module DEBUGGER__
       case get_target_ui
       when 'vscode'
         send_dap_request 'continue', threadId: 1
+        find_response :event, 'stopped', 'V<D'
       when 'chrome'
         send_cdp_request 'Debugger.resume'
         res = find_response :method, 'Debugger.paused', 'C<D'
@@ -122,6 +123,7 @@ module DEBUGGER__
       case get_target_ui
       when 'vscode'
         send_dap_request 'stepIn', threadId: 1
+        find_response :event, 'stopped', 'V<D'
       when 'chrome'
         send_cdp_request 'Debugger.stepInto'
         res = find_response :method, 'Debugger.paused', 'C<D'
@@ -133,6 +135,7 @@ module DEBUGGER__
       case get_target_ui
       when 'vscode'
         send_dap_request 'next', threadId: 1
+        find_response :event, 'stopped', 'V<D'
       when 'chrome'
         send_cdp_request 'Debugger.stepOver'
         res = find_response :method, 'Debugger.paused', 'C<D'
@@ -144,6 +147,7 @@ module DEBUGGER__
       case get_target_ui
       when 'vscode'
         send_dap_request 'stepOut', threadId: 1
+        find_response :event, 'stopped', 'V<D'
       when 'chrome'
         send_cdp_request 'Debugger.stepOut'
         res = find_response :method, 'Debugger.paused', 'C<D'

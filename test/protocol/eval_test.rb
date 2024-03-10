@@ -77,7 +77,7 @@ module DEBUGGER__
         req_add_breakpoint 9
         req_continue
         assert_repl_result({value: 'false', type: 'FalseClass'}, 'm.lock.nil?', frame_idx: 0)
-        req_continue
+        req_terminate_debuggee
       end
     end
   end
