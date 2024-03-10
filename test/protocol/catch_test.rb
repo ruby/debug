@@ -26,14 +26,14 @@ module DEBUGGER__
       run_protocol_scenario PROGRAM, cdp: false do
         req_set_exception_breakpoints([{ name: "RuntimeError" }])
         req_set_exception_breakpoints([])
-        req_continue
+        req_terminate_debuggee
       end
     end
 
     def test_set_exception_breakpoints_accepts_condition
       run_protocol_scenario PROGRAM, cdp: false do
         req_set_exception_breakpoints([{ name: "RuntimeError", condition: "a == 2" }])
-        req_continue
+        req_terminate_debuggee
       end
 
       run_protocol_scenario PROGRAM, cdp: false do
