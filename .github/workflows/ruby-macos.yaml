@@ -24,6 +24,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        # Set fetch-depth: 10 so that Launchable can receive commits information.
+        fetch-depth: 10
+    - name: Set up Launchable
+      uses: ./.github/actions/launchable/setup
+      with:
+        os: macos-latest
+        test-task: test_console
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:

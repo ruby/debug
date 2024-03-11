@@ -11,6 +11,13 @@ require_relative '../../lib/debug/client'
 
 require_relative 'assertions'
 
+# Load this library only in the debug CI to prevent LoadError
+# when these tests are executed in ruby/ruby.
+if ENV['LAUNCHABLE_ORGANIZATION'] && ENV['LAUNCHABLE_WORKSPACE']
+  # "test/unit/runner/launchable" is used for uploading test result to Launchable.
+  require "test/unit/runner/launchable"
+end
+
 module DEBUGGER__
   class TestCase < Test::Unit::TestCase
     TestInfo = Struct.new(:queue, :mode, :prompt_pattern, :remote_info,
