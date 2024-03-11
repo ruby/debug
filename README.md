@@ -783,6 +783,15 @@ The `<...>` notation means the argument.
 * `h[elp] <command>`
   * Show help for the given command.
 
+### Custom alias on IRB console
+
+If you are using IRB as console (through `RUBY_DEBUG_IRB_CONSOLE`), you can create your own command alias, by placing the following on `.irbrc`:
+
+```
+IRB.conf[:COMMAND_ALIASES][:w] = :whereami
+```
+
+The config above will make the key `w` behave like the `whereami` command.
 
 ## Debugger API
 
