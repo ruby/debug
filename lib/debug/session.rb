@@ -2301,6 +2301,7 @@ module DEBUGGER__
 
     if (xdg_home = ENV["XDG_CONFIG_HOME"])
       rc_file_paths << [File.expand_path(File.join(xdg_home, "rdbg", "config")), true]
+      rc_file_paths << [File.expand_path(File.join(xdg_home, "rdbg", "config.rb")), true]
     end
 
     rc_file_paths << [CONFIG[:init_script], false]
