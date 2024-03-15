@@ -376,9 +376,9 @@ module DEBUGGER__
       # do nothing
     end
 
-    def vscode_setup debug_port
+    def vscode_setup debug_port, launch_vscode: true
       require_relative 'server_dap'
-      UI_DAP.setup debug_port
+      UI_DAP.setup debug_port if launch_vscode
     end
   end
 
@@ -442,8 +442,10 @@ module DEBUGGER__
           case CONFIG[:open]
           when 'chrome'
             chrome_setup
+          when 'dap-server' # Start in Debug Adapter Protocol mode without launching Visual Studio Code
+            vscode_setup @local_addr.inspect_sockaddr, launch_vscode: false
           when 'vscode'
-            vscode_setup @local_addr.inspect_sockaddr
+            vscode_setup @local_addr.inspect_sockaddr, launch_vscode: true
           end
 
           Socket.accept_loop(socks) do |sock, client|
@@ -496,7 +498,12 @@ module DEBUGGER__
       end
 
       ::DEBUGGER__.warn "Debugger can attach via UNIX domain socket (#{@sock_path})"
-      vscode_setup @sock_path if CONFIG[:open] == 'vscode'
+      case CONFIG[:open]
+      when 'dap-server' # Start in Debug Adapter Protocol mode without launching Visual Studio Code
+        vscode_setup @sock_path, launch_vscode: false
+      when 'vscode'
+        vscode_setup @sock_path, launch_vscode: true
+      end
 
       begin
         Socket.unix_server_loop @sock_path do |sock, client|
