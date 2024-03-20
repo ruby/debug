@@ -784,6 +784,30 @@ The `<...>` notation means the argument.
   * Show help for the given command.
 
 
+### Using IRB as the Debug Console
+
+Starting from version `v1.9`, you can now use IRB as the debug console. This integration brings additional features such as:
+
+* Autocompletion
+* Support for multi-line input
+* Access to commands not available in `debug`, like `show_source` or `show_doc`
+* [Configurable command aliases](https://docs.ruby-lang.org/en/master/IRB.html#module-IRB-label-Command+Aliases)
+
+To switch to the IRB console, simply use the `irb` command in the debug console.
+
+Once activated, you'll notice the prompt changes to:
+
+```txt
+irb:rdbg(main):001>
+```
+
+If you want to make IRB the default console for all sessions, configure the `irb_console` setting by either:
+
+* Setting the `RUBY_DEBUG_IRB_CONSOLE=true` environment variable
+* Or adding `config set irb_console 1` to your `~/.rdbgrc`
+
+To disable the IRB console in the current session, execute `config set irb_console 0` in the console.
+
 ## Debugger API
 
 ### Start debugging
