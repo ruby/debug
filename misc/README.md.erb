@@ -13,10 +13,10 @@ New debug.rb has several advantages:
   * TCP/IP
   * Integration with rich debugger frontends
 
-     Frontend |  [Console](https://github.com/ruby/debug#invoke-as-a-remote-debuggee) | [VSCode](https://github.com/ruby/debug#vscode-integration) | [Chrome DevTool](#chrome-devtool-integration) |
-     ---|---|---|---|
-     Connection | UDS, TCP/IP | UDS, TCP/IP | TCP/IP |
-     Requirement | No | [vscode-rdbg](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg) | Chrome |
+     | Frontend    | [Console](https://github.com/ruby/debug#invoke-as-a-remote-debuggee) | [VSCode](https://github.com/ruby/debug#vscode-integration)                                  | [Chrome DevTool](#chrome-devtool-integration) |
+     | ----------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------- |
+     | Connection  | UDS, TCP/IP                                                          | UDS, TCP/IP                                                                                 | TCP/IP                                        |
+     | Requirement | No                                                                   | [vscode-rdbg](https://marketplace.visualstudio.com/items?itemName=KoichiSasada.vscode-rdbg) | Chrome                                        |
 
 * Extensible: application can introduce debugging support in several ways:
   * By `rdbg` command
@@ -289,10 +289,10 @@ You can run your application as a remote debuggee, and the remote debugger conso
 
 There are multiple ways to run your program as a debuggee:
 
-Stop at program start | [`rdbg` option](https://github.com/ruby/debug#rdbg---open-or-rdbg--o-for-short) | [require](https://github.com/ruby/debug#require-debugopen-in-a-program) | [debugger API](https://github.com/ruby/debug#start-by-method)
----|---|---|---|
-Yes | `rdbg --open` | `require "debug/open"` | `DEBUGGER__.open`
-No | `rdbg --open --nonstop` | `require "debug/open_nonstop"` | `DEBUGGER__.open(nonstop: true)`
+| Stop at program start | [`rdbg` option](https://github.com/ruby/debug#rdbg---open-or-rdbg--o-for-short) | [require](https://github.com/ruby/debug#require-debugopen-in-a-program) | [debugger API](https://github.com/ruby/debug#start-by-method) |
+| --------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Yes                   | `rdbg --open`                                                                   | `require "debug/open"`                                                  | `DEBUGGER__.open`                                             |
+| No                    | `rdbg --open --nonstop`                                                         | `require "debug/open_nonstop"`                                          | `DEBUGGER__.open(nonstop: true)`                              |
 
 #### `rdbg --open` (or `rdbg -O` for short)
 
