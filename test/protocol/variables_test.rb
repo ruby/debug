@@ -76,7 +76,7 @@ module DEBUGGER__
         res = send_dap_request 'variables', variablesReference: variables_reference
 
         instance_vars = res.dig(:body, :variables)
-        assert_equal instance_vars.map { |var| var[:name] }, ["#class", "@a", "@b", "@c"]
+        assert_equal ["#class", "@a", "@b", "@c"], instance_vars.map { |var| var[:name] }
 
         req_terminate_debuggee
       end
