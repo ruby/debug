@@ -121,26 +121,26 @@ frame_depth(VALUE self)
 
 // iseq
 
-const struct rb_iseq *rb_iseqw_to_iseq(VALUE iseqw);
+const rb_iseq_t *rb_iseqw_to_iseq(VALUE iseqw);
 
 #ifdef HAVE_RB_ISEQ_TYPE
-VALUE rb_iseq_type(const struct rb_iseq *);
+VALUE rb_iseq_type(const rb_iseq_t *);
 
 static VALUE
 iseq_type(VALUE iseqw)
 {
-    const struct rb_iseq *iseq = rb_iseqw_to_iseq(iseqw);
+    const rb_iseq_t *iseq = rb_iseqw_to_iseq(iseqw);
     return rb_iseq_type(iseq);
 }
 #endif
 
 #ifdef HAVE_RB_ISEQ_PARAMETERS
-VALUE rb_iseq_parameters(const struct rb_iseq *, int is_proc);
+VALUE rb_iseq_parameters(const rb_iseq_t *, int is_proc);
 
 static VALUE
 iseq_parameters_symbols(VALUE iseqw)
 {
-    const struct rb_iseq *iseq = rb_iseqw_to_iseq(iseqw);
+    const rb_iseq_t *iseq = rb_iseqw_to_iseq(iseqw);
     VALUE params = rb_iseq_parameters(iseq, 0);
     VALUE ary = rb_ary_new();
 
@@ -167,12 +167,12 @@ iseq_parameters_symbols(VALUE iseqw)
 #endif
 
 #ifdef HAVE_RB_ISEQ_CODE_LOCATION
-void rb_iseq_code_location(const struct rb_iseq *, int *first_lineno, int *first_column, int *last_lineno, int *last_column);
+void rb_iseq_code_location(const rb_iseq_t *, int *first_lineno, int *first_column, int *last_lineno, int *last_column);
 
 static VALUE
 iseq_first_line(VALUE iseqw)
 {
-    const struct rb_iseq *iseq = rb_iseqw_to_iseq(iseqw);
+    const rb_iseq_t *iseq = rb_iseqw_to_iseq(iseqw);
     int line;
     rb_iseq_code_location(iseq, &line, NULL, NULL, NULL);
     return INT2NUM(line);
@@ -181,7 +181,7 @@ iseq_first_line(VALUE iseqw)
 static VALUE
 iseq_last_line(VALUE iseqw)
 {
-    const struct rb_iseq *iseq = rb_iseqw_to_iseq(iseqw);
+    const rb_iseq_t *iseq = rb_iseqw_to_iseq(iseqw);
     int line;
     rb_iseq_code_location(iseq, NULL, NULL, &line, NULL);
     return INT2NUM(line);
