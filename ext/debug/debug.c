@@ -8,13 +8,13 @@ static VALUE rb_mDebugger;
 
 // iseq
 typedef struct rb_iseq_struct rb_iseq_t;
+const rb_iseq_t *rb_iseqw_to_iseq(VALUE iseqw);
 VALUE rb_iseq_realpath(const rb_iseq_t *iseq);
 
 static VALUE
 iseq_realpath(VALUE iseqw)
 {
-    rb_iseq_t *iseq = DATA_PTR(iseqw);
-    return rb_iseq_realpath(iseq);
+    return rb_iseq_realpath(rb_iseqw_to_iseq(iseqw));
 }
 
 static VALUE rb_cFrameInfo;
