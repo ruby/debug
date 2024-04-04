@@ -1079,13 +1079,13 @@ module DEBUGGER__
           when :up
             if @current_frame_index + 1 < @target_frames.size
               @current_frame_index += 1
-              show_src max_lines: 1
+              show_src
               show_frame(@current_frame_index)
             end
           when :down
             if @current_frame_index > 0
               @current_frame_index -= 1
-              show_src max_lines: 1
+              show_src
               show_frame(@current_frame_index)
             end
           when :set
