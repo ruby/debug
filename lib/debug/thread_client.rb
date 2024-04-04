@@ -1079,13 +1079,13 @@ module DEBUGGER__
           when :up
             if @current_frame_index + 1 < @target_frames.size
               @current_frame_index += 1
-              show_src max_lines: 1
+              show_src max_lines: CONFIG[:show_src_lines_frame]
               show_frame(@current_frame_index)
             end
           when :down
             if @current_frame_index > 0
               @current_frame_index -= 1
-              show_src max_lines: 1
+              show_src max_lines: CONFIG[:show_src_lines_frame]
               show_frame(@current_frame_index)
             end
           when :set
@@ -1097,7 +1097,7 @@ module DEBUGGER__
                 puts "out of frame index: #{index}"
               end
             end
-            show_src max_lines: 1
+            show_src max_lines: CONFIG[:show_src_lines_frame]
             show_frame(@current_frame_index)
           else
             raise "unsupported frame operation: #{arg.inspect}"
