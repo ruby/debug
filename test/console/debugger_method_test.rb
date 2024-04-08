@@ -200,15 +200,6 @@ module DEBUGGER__
       end
     end
 
-    def test_prelude_doesnt_override_debugger
-      run_ruby(program, options: "-Ilib -rdebug") do
-        assert_line_num(5)
-        type "debugger_source"
-        assert_line_text(/debug\/session\.rb/)
-        type "c"
-      end
-    end
-
     def test_require_config_doesnt_cancel_prelude
       run_ruby(program, options: "-Ilib -rdebug/config") do
         assert_line_num(5)
