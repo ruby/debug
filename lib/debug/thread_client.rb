@@ -44,7 +44,7 @@ module DEBUGGER__
   end
 
   module GlobalVariablesHelper
-    SKIP_GLOBAL_LIST = %i[$= $KCODE $-K $SAFE].freeze
+    SKIP_GLOBAL_LIST = %i[$= $KCODE $-K $SAFE $FILENAME].freeze
     def safe_global_variables
       global_variables.reject{|name| SKIP_GLOBAL_LIST.include? name }
     end
