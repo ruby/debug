@@ -47,7 +47,7 @@ module DEBUGGER__
       debug_code(program, remote: false) do
         type 'irb'
         type '123'
-        assert_line_text 'irb:rdbg(main):002> 123'
+        assert_raw_line_text 'irb:rdbg(main):002> 123'
         type 'irb_info'
         assert_line_text('IRB version:')
         type 'next'
@@ -67,7 +67,7 @@ module DEBUGGER__
 
       debug_code(program, remote: false) do
         type '123'
-        assert_line_text 'irb:rdbg(main):002> 123'
+        assert_raw_line_text 'irb:rdbg(main):002> 123'
         type 'irb_info'
         assert_line_text('IRB version:')
         type 'next'
