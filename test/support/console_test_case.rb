@@ -225,7 +225,12 @@ module DEBUGGER__
       @scenario = []
       test_steps.call
       @scenario.freeze
-      inject_lib_to_load_path
+
+      ENV['RUBYOPT'] = "-I #{__dir__}/../../lib"
+
+      if ENV.key?('BUNDLE_GEMFILE')
+        ENV["RUBYOPT"] += " -rbundler/setup"
+      end
 
       block.call
 
@@ -283,7 +288,7 @@ module DEBUGGER__
       prepare_test_environment(program, test_steps) do
         test_info = TestInfo.new(dup_scenario, 'LOCAL', /\(rdbg\)/)
         cmd = "#{RDBG_EXECUTABLE} #{options} -- #{temp_file_path}"
-        cmd = "RUBYOPT=#{rubyopt} #{cmd}" if rubyopt
+        ENV["RUBYOPT"] += " #{rubyopt}" if rubyopt
         run_test_scenario cmd, test_info
       end
     end
@@ -299,10 +304,6 @@ module DEBUGGER__
           block.call
         end
       end
-    end
-
-    def inject_lib_to_load_path
-      ENV['RUBYOPT'] = "-I #{__dir__}/../../lib"
     end
 
     def assert_empty_queue test_info, exception: nil
