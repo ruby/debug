@@ -1142,6 +1142,18 @@ module DEBUGGER__
       end
     end
 
+    ASSIGN_OPERATORS_REGEXP = Regexp.union(%w[= += -= *= /= %= **= &= |= &&= ||= ^= <<= >>=])
+
+    def self.command?(line, commands:)
+      return false if line.lines.size != 1
+
+      command, arg = line.lstrip.split(/\s+/, 2)
+      return false unless commands.has_key? command
+
+      # assignment-like expression should be treated as ruby code, not as commands.
+      !arg || !arg.start_with?(ASSIGN_OPERATORS_REGEXP) || arg.start_with?(/==|=~/)
+    end
+
     def process_command line
       if line.empty?
         if @repl_prev_line
@@ -1153,10 +1165,10 @@ module DEBUGGER__
         @repl_prev_line = line
       end
 
-      /([^\s]+)(?:\s+(.+))?/ =~ line
-      cmd_name, cmd_arg = $1, $2
-
-      if cmd = @commands[cmd_name]
+      if Session.command?(line, commands: @commands)
+        /([^\s]+)(?:\s+(.+))?/ =~ line
+        cmd_name, cmd_arg = $1, $2
+        cmd = @commands[cmd_name]
         check_postmortem      if !cmd.postmortem
         check_unsafe          if cmd.unsafe
         cancel_auto_continue  if cmd.cancel_auto_continue
