@@ -15,7 +15,7 @@ module DEBUGGER__
       debug_code(program) do
         type "c"
         type "p h"
-        assert_line_text('{:foo=>"bar"}')
+        assert_line_text({ foo: "bar" }.inspect)
         type "c"
       end
     end
@@ -24,7 +24,7 @@ module DEBUGGER__
       debug_code(program) do
         type "c"
         type "pp h"
-        assert_line_text([/\{:foo=>/, /"bar"\}/])
+        assert_line_text({ foo: "bar" }.pretty_print_inspect)
         type "c"
       end
     end
