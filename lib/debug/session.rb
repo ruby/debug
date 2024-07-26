@@ -1120,8 +1120,14 @@ module DEBUGGER__
         when 'vscode'
           CONFIG[:open] = 'vscode'
           ::DEBUGGER__.open nonstop: true
-        when 'chrome', 'cdp'
+        when 'dap'
+          CONFIG[:open] = 'dap'
+          ::DEBUGGER__.open nonstop: true
+        when 'chrome'
           CONFIG[:open] = 'chrome'
+          ::DEBUGGER__.open_tcp host: CONFIG[:host], port: (CONFIG[:port] || 0), nonstop: true
+        when 'cdp'
+          CONFIG[:open] = 'cdp'
           ::DEBUGGER__.open_tcp host: CONFIG[:host], port: (CONFIG[:port] || 0), nonstop: true
         else
           raise "Unknown arg: #{arg}"
