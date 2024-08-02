@@ -244,16 +244,16 @@ It will help if you want to know what the program is doing.
 
 If you want to run a command written in Ruby like `rake`, `rails`, `bundle`, `rspec`, and so on, you can use `rdbg -c` option.
 
-* Without `-c` option, `rdbg <name>` means that `<name>` is Ruby script and invoke it like `ruby <name>` with the debugger.
-* With `-c` option, `rdbg -c <name>` means that `<name>` is a command in `PATH` and simply invokes it with the debugger.
+* Without the `-c` option, `rdbg <name>` means that `<name>` is a Ruby script and invokes it like `ruby <name>` with the debugger.
+* With the `-c` option, `rdbg -c <name>` means that `<name>` is a command in `PATH` and simply invokes it with the debugger.
 
 Examples:
 * `rdbg -c -- rails server`
 * `rdbg -c -- bundle exec ruby foo.rb`
 * `rdbg -c -- bundle exec rake test`
-* `rdbg -c -- ruby target.rb` is same as `rdbg target.rb`
+* `rdbg -c -- ruby target.rb` is the same as `rdbg target.rb`
 
-NOTE: `--` is needed to separate the command line options for `rdbg` and invoking command. For example, `rdbg -c rake -T` is recognized like `rdbg -c -T -- rake`. It should be `rdbg -c -- rake -T`.
+NOTE: `--` is needed to separate the command line options for `rdbg` and the invoking command. For example, `rdbg -c rake -T` is recognized like `rdbg -c -T -- rake`. It should be `rdbg -c -- rake -T`.
 
 NOTE: If you want to use bundler (`bundle` command), you need to write `gem debug` line in your `Gemfile`.
 
