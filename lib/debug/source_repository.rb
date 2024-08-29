@@ -22,6 +22,16 @@ module DEBUGGER__
       end
     end
 
+    def orig_src iseq
+      lines = iseq_src iseq
+      line = iseq.first_line
+      if line > 1
+        [*([''] * (line - 1)), *lines]
+      else
+        lines
+      end
+    end
+
     if defined?(RubyVM.keep_script_lines)
       # Ruby 3.1 and later
       RubyVM.keep_script_lines = true
@@ -45,14 +55,8 @@ module DEBUGGER__
         end
       end
 
-      def orig_src iseq
-        lines = iseq.script_lines&.map(&:chomp)
-        line = iseq.first_line
-        if line > 1
-          [*([''] * (line - 1)), *lines]
-        else
-          lines
-        end
+      private def iseq_src iseq
+        iseq.script_lines&.map(&:chomp)
       end
 
       def get_colored iseq
@@ -132,7 +136,7 @@ module DEBUGGER__
         end
       end
 
-      def orig_src iseq
+      private def iseq_src iseq
         if si = get_si(iseq)
           si.src
         end
