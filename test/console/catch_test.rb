@@ -44,29 +44,29 @@ module DEBUGGER__
 
     def test_catch_works_with_command
       debug_code(program) do
-        type 'catch ZeroDivisionError pre: p "1234"'
+        type 'catch ZeroDivisionError pre: p "catching zero division"'
         assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
-        assert_line_text(/1234/)
+        assert_line_text(/catching zero division/)
         type 'continue'
         type 'continue'
       end
 
       debug_code(program) do
-        type 'catch ZeroDivisionError do: p "1234"'
+        type 'catch ZeroDivisionError do: p "catching zero division"'
         assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
-        assert_line_text(/1234/)
+        assert_line_text(/catching zero division/)
         type 'continue'
       end
     end
 
     def test_catch_works_with_condition
       debug_code(program) do
-        type 'catch ZeroDivisionError if: a == 2 do: p "1234"'
+        type 'catch ZeroDivisionError if: a == 2 do: p "catching zero division"'
         assert_line_text(/#0  BP - Catch  "ZeroDivisionError"/)
         type 'continue'
-        assert_no_line_text(/1234/)
+        assert_no_line_text(/catching zero division/)
         type 'continue'
       end
     end
