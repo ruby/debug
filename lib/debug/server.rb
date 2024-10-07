@@ -399,6 +399,13 @@ module DEBUGGER__
           raise "Specify digits for port number"
         end
       end
+      @port_range = if @port.zero?
+        0
+      else
+        port_range_str = (port_range || CONFIG[:port_range] || "0").to_s
+        raise "Specify a positive integer <=16 for port range" unless port_range_str.match?(/\A\d+\z/) && port_range_str.to_i <= 16
+        port_range_str.to_i
+      end
       @uuid = nil # for CDP
 
       super()
@@ -452,7 +459,9 @@ module DEBUGGER__
           end
         end
       rescue Errno::EADDRINUSE
-        if retry_cnt < 10
+        number_of_retries = @port_range.zero? ? 10 : @port_range
+        if retry_cnt < number_of_retries
+          @port += 1 unless @port_range.zero?
           retry_cnt += 1
           sleep 0.1
           retry
