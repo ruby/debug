@@ -330,7 +330,9 @@ When `rdbg --attach` connects to the debuggee, you can use any debug commands (s
 
 NOTE: If you use the `quit` command, only the remote console exits and the debuggee program continues to run (and you can connect it again). If you want to exit the debuggee program, use `kill` command.
 
-If you want to use TCP/IP for the remote debugging, you need to specify the port and host with `--port` like `rdbg --open --port 12345` and it binds to `localhost:12345`.
+If you want to use TCP/IP for the remote debugging, you need to specify the port and host with `--port` like `rdbg --open --port 12345` and it binds to `localhost:12345`. You can add an optional `--port_range` option to try multiple ports in a reliable way. For example, `rdbg --open --port 12345 --port_range 10` will try to bind to 12345, 12346, 12347, ... until it finds an available port.
+
+```shell
 
 To connect to the debuggee, you need to specify the port.
 
@@ -499,6 +501,7 @@ config set no_color true
 * REMOTE
   * `RUBY_DEBUG_OPEN` (`open`): Open remote port (same as `rdbg --open` option)
   * `RUBY_DEBUG_PORT` (`port`): TCP/IP remote debugging: port
+  * `RUBY_DEBUG_PORT_RANGE` (`port_range`): TCP/IP remote debugging: length of port range
   * `RUBY_DEBUG_HOST` (`host`): TCP/IP remote debugging: host (default: 127.0.0.1)
   * `RUBY_DEBUG_SOCK_PATH` (`sock_path`): UNIX Domain Socket remote debugging: socket path
   * `RUBY_DEBUG_SOCK_DIR` (`sock_dir`): UNIX Domain Socket remote debugging: socket directory
@@ -907,6 +910,7 @@ Debug console mode:
                                      Now rdbg, vscode and chrome is supported.
         --sock-path=SOCK_PATH        UNIX Domain socket path
         --port=PORT                  Listening TCP/IP port
+        --port-range=PORT_RANGE      Number of ports to try to connect to
         --host=HOST                  Listening TCP/IP host
         --cookie=COOKIE              Set a cookie for connection
         --session-name=NAME          Session name
