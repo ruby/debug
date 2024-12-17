@@ -688,7 +688,7 @@ module DEBUGGER__
       yield $stderr
     end
 
-    def puts result=''
+    def puts result = ""
       # STDERR.puts "puts: #{result}"
       # send_event 'output', category: 'stderr', output: "PUTS!!: " + result.to_s
     end
