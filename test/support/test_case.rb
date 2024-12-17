@@ -173,9 +173,16 @@ module DEBUGGER__
       Timeout.timeout(TIMEOUT_SEC) do
         begin
           eof = remote_info.r.eof? # check first byte
-          line = remote_info.r.gets
+          line = +""
+          while true
+            c = remote_info.r.read(1)
+            break if c == "\n"
+            line << c
+          end
+
+          # line << remote_info.r.gets
         rescue Errno::EIO
-          pp(cmd: cmd, env: {'HOME' => homedir}, eof: eof)
+          pp(cmd: cmd, env: {'HOME' => homedir}, eof: eof, line: line)
           raise
         end
         remote_info.debuggee_backlog << line
