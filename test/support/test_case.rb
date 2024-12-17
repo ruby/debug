@@ -171,7 +171,12 @@ module DEBUGGER__
       msg1 = msg2 = nil
 
       Timeout.timeout(TIMEOUT_SEC) do
-        line = remote_info.r.gets
+        begin
+          line = remote_info.r.gets
+        rescue Errno::EIO
+          pp(cmd: cmd, env: {'HOME' => homedir})
+          raise
+        end
         remote_info.debuggee_backlog << line
 
         # wait for two lines (order is unstable)
