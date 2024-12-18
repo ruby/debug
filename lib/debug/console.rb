@@ -10,11 +10,10 @@ module DEBUGGER__
       include Color
 
       def parse_input buff, commands
-        c, rest = get_command buff
         case
-        when commands.keys.include?(c)
+        when Session.command?(buff, commands: commands)
           :command
-        when !rest && /\A\s*[a-z]*\z/ =~ c
+        when buff.lines.size <= 1 && buff.match?(/\A\s*[a-z]*\s*\z/)
           nil
         else
           :ruby
@@ -29,16 +28,14 @@ module DEBUGGER__
         prev_output_modifier_proc = Reline.output_modifier_proc
         prev_prompt_proc = Reline.prompt_proc
 
-        # prompt state
-        state = nil # :command, :ruby, nil (unknown)
-
-        Reline.prompt_proc = -> args, *kw do
-          case state = parse_input(args.first, commands)
+        Reline.prompt_proc = -> lines, *kw do
+          input = lines.map { |line| "#{line}\n" }.join
+          case parse_input(input, commands)
           when nil, :command
             [prompt]
           when :ruby
             [prompt.sub('rdbg'){colorize('ruby', [:RED])}]
-          end * args.size
+          end * lines.size
         end
 
         Reline.completion_proc = -> given do
@@ -58,10 +55,10 @@ module DEBUGGER__
         end
 
         Reline.output_modifier_proc = -> buff, **kw do
-          c, rest = get_command buff
-
-          case state
+          case parse_input(buff, commands)
           when :command
+            # buff is single line if it's command
+            /\A(?<leading_spaces>\s*)(?<c>[^\s]+)(?<rest>.*)/ =~ buff.chomp
             cmd = colorize(c, [:CYAN, :UNDERLINE])
 
             if commands[c] == c
@@ -71,7 +68,7 @@ module DEBUGGER__
             end
 
             rest = rest ? colorize_code(rest) : ''
-            cmd + rest + rprompt
+            [leading_spaces, cmd, rest, rprompt].join
           when nil
             buff
           when :ruby
@@ -85,15 +82,6 @@ module DEBUGGER__
         Reline.completion_proc = prev_completion_proc
         Reline.output_modifier_proc = prev_output_modifier_proc
         Reline.prompt_proc = prev_prompt_proc
-      end
-
-      private def get_command line
-        case line.chomp
-        when /\A(\s*[a-z]+)(\s.*)?\z$/
-          return $1.strip, $2
-        else
-          line.strip
-        end
       end
 
       def readline prompt
