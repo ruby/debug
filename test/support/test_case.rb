@@ -168,6 +168,7 @@ module DEBUGGER__
       remote_info.debuggee_backlog = []
 
       line = nil
+      lines = []
       msg1 = msg2 = nil
       redo_cnt = 0
 
@@ -183,9 +184,10 @@ module DEBUGGER__
 
           # line << remote_info.r.gets
         rescue Errno::EIO
-          pp(cmd: cmd, env: {'HOME' => homedir}, eof: eof, line: line, redo_cnt: redo_cnt, msg1: msg1, msg2: msg2)
+          pp(cmd: cmd, env: {'HOME' => homedir}, eof: eof, line: line, redo_cnt: redo_cnt, msg1: msg1, msg2: msg2, lines: lines)
           raise
         end
+        lines << line
         remote_info.debuggee_backlog << line
 
         # wait for two lines (order is unstable)
