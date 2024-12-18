@@ -169,6 +169,7 @@ module DEBUGGER__
 
       line = nil
       msg1 = msg2 = nil
+      redo_cnt = 0
 
       Timeout.timeout(TIMEOUT_SEC) do
         begin
@@ -182,7 +183,7 @@ module DEBUGGER__
 
           # line << remote_info.r.gets
         rescue Errno::EIO
-          pp(cmd: cmd, env: {'HOME' => homedir}, eof: eof, line: line)
+          pp(cmd: cmd, env: {'HOME' => homedir}, eof: eof, line: line, redo_cnt: redo_cnt, msg1: msg1, msg2: msg2)
           raise
         end
         remote_info.debuggee_backlog << line
@@ -196,6 +197,7 @@ module DEBUGGER__
         end
 
         break if msg1 && msg2
+        redo_cnt += 1
         redo # loop
       end
 
