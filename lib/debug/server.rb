@@ -402,7 +402,7 @@ module DEBUGGER__
       @port_range = if @port.zero?
         0
       else
-        port_range_str = (port_range || CONFIG[:port_range] || "0").to_s
+        port_range_str = (CONFIG[:port_range] || "0").to_s
         raise "Specify a positive integer <=16 for port range" unless port_range_str.match?(/\A\d+\z/) && port_range_str.to_i <= 16
         port_range_str.to_i
       end

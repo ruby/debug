@@ -180,6 +180,9 @@ module DEBUGGER__
           msg1 = true
         when /\ADEBUGGER: wait for debugger connection/
           msg2 = true
+        else
+          # unknown lines
+          STDERR.puts "> #{line}"
         end
 
         break if msg1 && msg2
