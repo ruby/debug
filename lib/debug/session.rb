@@ -931,7 +931,6 @@ module DEBUGGER__
       register_command 'eval', 'call' do |arg|
         if arg == nil || arg.empty?
           show_help 'eval'
-          @ui.puts "\nTo evaluate the variable `#{cmd}`, use `pp #{cmd}` instead."
           :retry
         else
           request_eval :call, arg
