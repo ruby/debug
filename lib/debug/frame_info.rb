@@ -86,7 +86,9 @@ module DEBUGGER__
 
     def block_identifier
       return unless frame_type == :block
-      _, level, block_loc = location.label.match(BLOCK_LABL_REGEXP).to_a
+      re_match = location.label.match(BLOCK_LABL_REGEXP)
+      _, level, block_loc = re_match ? re_match.to_a : [nil, nil, location.label]
+
       [level || "", block_loc]
     end
 
