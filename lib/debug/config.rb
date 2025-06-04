@@ -23,6 +23,7 @@ module DEBUGGER__
     no_reline:           ['RUBY_DEBUG_NO_RELINE',      "UI: Do not use Reline library",              :bool, "false"],
     no_hint:             ['RUBY_DEBUG_NO_HINT',        "UI: Do not show the hint on the REPL",       :bool, "false"],
     no_lineno:           ['RUBY_DEBUG_NO_LINENO',      "UI: Do not show line numbers",               :bool, "false"],
+    no_repeat:           ['RUBY_DEBUG_NO_REPEAT',      "UI: Do not repeat last line when empty line",:bool, "false"],
     irb_console:         ["RUBY_DEBUG_IRB_CONSOLE",    "UI: Use IRB as the console",                 :bool, "false"],
 
     # control setting
