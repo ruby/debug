@@ -7,6 +7,8 @@ if defined? RubyVM
   $defs << '-DHAVE_RB_ISEQ'
   $defs << '-DHAVE_RB_ISEQ_PARAMETERS'
   $defs << '-DHAVE_RB_ISEQ_CODE_LOCATION'
+  $defs << '-DHAVE_RB_DEBUG_INSPECTOR_FRAME_COUNT'
+  $defs << '-DHAVE_RB_DEBUG_INSPECTOR_FRAME_LOC_GET'
 
   if RUBY_VERSION >= '3.1.0'
     $defs << '-DHAVE_RB_ISEQ_TYPE'
@@ -22,6 +24,11 @@ else
   # from Ruby 3.1
   have_func "rb_iseq_type(NULL)",
             [["VALUE rb_iseq_type(void *);"]]
+  # from Ruby 3.5
+  have_func "rb_debug_inspector_frame_count(NULL)",
+            [["VALUE rb_debug_inspector_frame_count(void *);"]]
+  have_func "rb_debug_inspector_frame_loc_get(NULL, 0)",
+            [["VALUE rb_debug_inspector_frame_loc_get(void *, int index);"]]
 end
 
 create_makefile 'debug/debug'

@@ -56,15 +56,23 @@ static VALUE
 di_body(const rb_debug_inspector_t *dc, void *ptr)
 {
     VALUE skip_path_prefix = (VALUE)ptr;
+#if defined(HAVE_RB_DEBUG_INSPECTOR_FRAME_COUNT) && defined(HAVE_RB_DEBUG_INSPECTOR_FRAME_LOC_GET)
+    long len = rb_debug_inspector_frame_count(dc);
+#else
     VALUE locs = rb_debug_inspector_backtrace_locations(dc);
-    VALUE ary = rb_ary_new();
     long len = RARRAY_LEN(locs);
+#endif
+    VALUE ary = rb_ary_new();
     long i;
 
     for (i=1; i<len; i++) {
         VALUE e;
         VALUE iseq = rb_debug_inspector_frame_iseq_get(dc, i);
+#if defined(HAVE_RB_DEBUG_INSPECTOR_FRAME_COUNT) && defined(HAVE_RB_DEBUG_INSPECTOR_FRAME_LOC_GET)
+        VALUE loc = rb_debug_inspector_frame_loc_get(dc, i);
+#else
         VALUE loc = RARRAY_AREF(locs, i);
+#endif
         VALUE path;
 
         if (!NIL_P(iseq)) {
