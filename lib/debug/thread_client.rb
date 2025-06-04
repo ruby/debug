@@ -350,6 +350,7 @@ module DEBUGGER__
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
+          next if skip_internal_path?(tp.path)
           loc = caller_locations(1, 1).first
           next if skip_location?(loc)
           next if iter && (iter -= 1) > 0
@@ -369,6 +370,7 @@ module DEBUGGER__
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
+          next if skip_internal_path?(tp.path)
           loc = caller_locations(1, 1).first
           next if skip_location?(loc)
           next if iter && (iter -= 1) > 0
