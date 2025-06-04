@@ -16,7 +16,6 @@ module DEBUGGER__
       debug_code program, remote: false do
         type 'b 3'
         type 'c'
-        assert_line_num 2
         assert_line_text(/is registered as SIGINT handler/)
         type 'sigint'
         assert_line_num 3

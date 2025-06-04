@@ -83,7 +83,7 @@ module DEBUGGER__
           assert_line_num 2
           type 'p foo(142)'
           type 'bt'
-          assert_line_text(/\#7\s+<main>/) # TODO: can be changed
+          assert_line_text(/\#\d+\s+<main>/)
 
           type 'c'
           assert_line_text(/143/)
