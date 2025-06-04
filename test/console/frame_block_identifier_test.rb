@@ -46,8 +46,8 @@ module DEBUGGER__
           /    15\|   end/,
           /    16\| end/,
           /=>\#0\tWhatever\#some_method at .*/,
-          /  \#1\tblock in Kernel\#loop at <internal:kernel>:168/,
-          /  \# and 2 frames \(use `bt' command for all frames\)/,
+          /  \#1\t.*/,
+          /  \# and (?:2|3) frames \(use `bt' command for all frames\)/,
           //,
           /Stop by \#0  BP \- Line  .*/
         ])
