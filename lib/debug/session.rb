@@ -1144,7 +1144,7 @@ module DEBUGGER__
 
     def process_command line
       if line.empty?
-        if @repl_prev_line
+        if @repl_prev_line && !CONFIG[:no_repeat]
           line = @repl_prev_line
         else
           return :retry
