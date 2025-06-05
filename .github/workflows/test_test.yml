@@ -7,24 +7,40 @@ on:
     branches: [ master ]
 
 jobs:
-  test:
+  ruby-versions:
+    uses: ruby/actions/.github/workflows/ruby_versions.yml@master
+    with:
+      engine: cruby
+      min_version: 3.0
+      versions: '["debug"]'
 
+  test:
+    needs: ruby-versions
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        ruby-version: ['3.0', '3.1', '3.2', 'head', 'debug']
+        ruby-version: ${{ fromJson(needs.ruby-versions.outputs.versions) }}
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        # Set fetch-depth: 10 so that Launchable can receive commits information.
+        fetch-depth: 10
+    - name: Set up Launchable
+      uses: ./.github/actions/launchable/setup
+      with:
+        os: ubuntu-latest
+        test-task: test_test
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true
-    - name: Run tests
+    - name: Set up tests
       run: |
         bundle exec rake clobber
         bundle exec rake compile
-        bundle exec rake test_test
+    - name: Run tests
+      run: bundle exec rake test_test

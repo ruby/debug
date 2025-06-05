@@ -2,7 +2,6 @@
 
 require 'json'
 require 'digest/sha1'
-require 'base64'
 require 'securerandom'
 require 'stringio'
 require 'open3'
@@ -131,7 +130,7 @@ module DEBUGGER__
           stdout.close
           data = stderr.readpartial 4096
           stderr.close
-          if data.match /DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/
+          if data.match(/DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/)
             port = $1
             path = $2
           end
@@ -158,7 +157,7 @@ module DEBUGGER__
             raise NotFoundChromeEndpointError
           end
           stderr.close
-          if data.match /DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/
+          if data.match(/DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/)
             port = $1
             path = $2
           end
@@ -190,7 +189,7 @@ module DEBUGGER__
         while i < ITERATIONS
           i += 1
           if File.exist?(tf) && data = File.read(tf)
-            if data.match /DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/
+            if data.match(/DevTools listening on ws:\/\/127.0.0.1:(\d+)(.*)/)
               port = $1
               path = $2
               return [port, path]
@@ -297,8 +296,8 @@ module DEBUGGER__
         res = @sock.readpartial 4092
         show_protocol :<, res
 
-        if res.match /^Sec-WebSocket-Accept: (.*)\r\n/
-          correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+        if res.match(/^Sec-WebSocket-Accept: (.*)\r\n/)
+          correct_key = Digest::SHA1.base64digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
           raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless $1 == correct_key
         else
           raise "Unknown response: #{res}"
@@ -378,8 +377,8 @@ module DEBUGGER__
         req = @sock.readpartial 4096
         show_protocol '>', req
 
-        if req.match /^Sec-WebSocket-Key: (.*)\r\n/
-          accept = Base64.strict_encode64 Digest::SHA1.digest "#{$1}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+        if req.match(/^Sec-WebSocket-Key: (.*)\r\n/)
+          accept = Digest::SHA1.base64digest "#{$1}258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
           res = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: #{accept}\r\n\r\n"
           @sock.print res
           show_protocol :<, res
@@ -658,7 +657,7 @@ module DEBUGGER__
 
     def activate_bp bps
       bps.each_key{|k|
-        if k.match /^\d+:(\d+):(.*)/
+        if k.match(/^\d+:(\d+):(.*)/)
           line = $1
           path = $2
           SESSION.add_line_breakpoint(path, line.to_i + 1)
@@ -689,7 +688,7 @@ module DEBUGGER__
       yield $stderr
     end
 
-    def puts result=''
+    def puts result = ""
       # STDERR.puts "puts: #{result}"
       # send_event 'output', category: 'stderr', output: "PUTS!!: " + result.to_s
     end

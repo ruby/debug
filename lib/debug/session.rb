@@ -202,11 +202,6 @@ module DEBUGGER__
         end
         @tp_thread_end.enable
 
-        if CONFIG[:irb_console] && !CONFIG[:open]
-          require_relative "irb_integration"
-          thc.activate_irb_integration
-        end
-
         # session start
         q << true
         session_server_main
@@ -214,6 +209,12 @@ module DEBUGGER__
       first_q << :ok
 
       q.pop
+
+      # For activating irb:rdbg with startup config like `RUBY_DEBUG_IRB_CONSOLE=1`
+      # Because in that case the `Config#if_updated` callback would not be triggered
+      if CONFIG[:irb_console] && !CONFIG[:open]
+        activate_irb_integration
+      end
     end
 
     def deactivate
@@ -930,7 +931,6 @@ module DEBUGGER__
       register_command 'eval', 'call' do |arg|
         if arg == nil || arg.empty?
           show_help 'eval'
-          @ui.puts "\nTo evaluate the variable `#{cmd}`, use `pp #{cmd}` instead."
           :retry
         else
           request_eval :call, arg
@@ -938,14 +938,15 @@ module DEBUGGER__
       end
 
       # * `irb`
-      #   * Invoke `irb` on the current frame.
+      #   * Activate and switch to `irb:rdbg` console
       register_command 'irb' do |arg|
         if @ui.remote?
           @ui.puts "\nIRB is not supported on the remote console."
-          :retry
         else
-          request_eval :irb, nil
+          config_set :irb_console, true
         end
+
+        :retry
       end
 
       ### Trace
@@ -1142,7 +1143,7 @@ module DEBUGGER__
 
     def process_command line
       if line.empty?
-        if @repl_prev_line
+        if @repl_prev_line && !CONFIG[:no_repeat]
           line = @repl_prev_line
         else
           return :retry
@@ -1874,6 +1875,12 @@ module DEBUGGER__
       if @unsafe_context
         raise RuntimeError, "#{@repl_prev_line.dump} is not allowed on unsafe context."
       end
+    end
+
+    def activate_irb_integration
+      require_relative "irb_integration"
+      thc = get_thread_client(@session_server)
+      thc.activate_irb_integration
     end
 
     def enter_postmortem_session exc

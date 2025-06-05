@@ -501,7 +501,7 @@ module DEBUGGER__
       send_response(req, **res)
     end
 
-    def puts result
+    def puts result = ""
       # STDERR.puts "puts: #{result}"
       send_event 'output', category: 'console', output: "#{result&.chomp}\n"
     end

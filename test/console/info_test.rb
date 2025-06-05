@@ -107,7 +107,7 @@ module DEBUGGER__
         type 'b 7'
         type 'c'
         type 'info threads'
-        assert_line_text(/#0 \(sleep\)@.*:7:in `<main>'/)
+        assert_line_text(/#0 \(sleep\)@.*:7:in [`']<main>'/)
         type 'kill!'
       end
     end
@@ -257,7 +257,7 @@ module DEBUGGER__
 
         type "info constants foo"
         assert_line_text([
-          /eval error: undefined local variable or method `foo' for main/,
+          /eval error: undefined local variable or method [`']foo' for main/,
         ])
 
         type "c"

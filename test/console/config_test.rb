@@ -105,6 +105,81 @@ module DEBUGGER__
     end
   end
 
+  class ShowSrcLinesFrameTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| class Foo
+      2|   def self.a
+      3|     p 1
+      4|     p 2
+      5|     p 3
+      6|     p 3
+      7|     p 5
+      8|     p 6
+      9|     p 7
+     10|     p 8
+     11|     p 9
+     12|     p 10
+     13|     b
+     14|   end
+     15|
+     16|   def self.b
+     17|     binding.b
+     18|     p 11
+     19|   end
+     20| end
+     21|
+     22| Foo.a
+      RUBY
+    end
+
+    def test_show_src_lines_control_the_lines_displayed_on_up
+      debug_code(program) do
+        type 'config set show_src_lines_frame 2'
+        type 'continue'
+        type 'up'
+        assert_line_text([
+          /12\|     p 10/,
+          /=>  13\|     b/,
+        ])
+        assert_no_line_text(/11\|/)
+        assert_no_line_text(/14\|/)
+        type 'continue'
+      end
+    end
+
+    def test_show_src_lines_control_the_lines_displayed_on_down
+      debug_code(program) do
+        type 'config set show_src_lines_frame 2'
+        type 'continue'
+        type 'up'
+        type 'down'
+        assert_line_text([
+          /16\|   def self\.b/,
+          /=>  17\|     binding\.b/
+        ])
+        assert_no_line_text(/15\|/)
+        assert_no_line_text(/18\|/)
+        type 'continue'
+      end
+    end
+
+    def test_show_src_lines_control_the_lines_displayed_on_set
+      debug_code(program) do
+        type 'config set show_src_lines_frame 2'
+        type 'continue'
+        type 'frame'
+        assert_line_text([
+          /16\|   def self\.b/,
+          /=>  17\|     binding\.b/
+        ])
+        assert_no_line_text(/15\|/)
+        assert_no_line_text(/18\|/)
+        type 'continue'
+      end
+    end
+  end
+
   class ShowOrigSrcTest < ConsoleTestCase
     def program
       <<~RUBY

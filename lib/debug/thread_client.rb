@@ -44,7 +44,7 @@ module DEBUGGER__
   end
 
   module GlobalVariablesHelper
-    SKIP_GLOBAL_LIST = %i[$= $KCODE $-K $SAFE].freeze
+    SKIP_GLOBAL_LIST = %i[$= $KCODE $-K $SAFE $FILENAME].freeze
     def safe_global_variables
       global_variables.reject{|name| SKIP_GLOBAL_LIST.include? name }
     end
@@ -350,6 +350,7 @@ module DEBUGGER__
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
+          next if skip_internal_path?(tp.path)
           loc = caller_locations(1, 1).first
           next if skip_location?(loc)
           next if iter && (iter -= 1) > 0
@@ -369,6 +370,7 @@ module DEBUGGER__
           next if tp.path.start_with?(__dir__)
           next if tp.path.start_with?('<internal:trace_point>')
           next unless File.exist?(tp.path) if CONFIG[:skip_nosrc]
+          next if skip_internal_path?(tp.path)
           loc = caller_locations(1, 1).first
           next if skip_location?(loc)
           next if iter && (iter -= 1) > 0
@@ -989,7 +991,7 @@ module DEBUGGER__
                   true
                 else
                   true if depth >= DEBUGGER__.frame_depth - 3 &&
-                          caller_locations(2, 1).first.label == target_location_label
+                          caller_locations(2, 1).first.base_label == target_location_label
                           # TODO: imcomplete condition
                 end
               end
@@ -1005,7 +1007,7 @@ module DEBUGGER__
                   true if pat === tp.callee_id.to_s
                 else # :return, :b_return
                   true if depth >= DEBUGGER__.frame_depth - 3 &&
-                          caller_locations(2, 1).first.label == target_location_label
+                          caller_locations(2, 1).first.base_label == target_location_label
                           # TODO: imcomplete condition
                 end
               end
@@ -1056,9 +1058,6 @@ module DEBUGGER__
             end
           when :call
             result = frame_eval(eval_src)
-          when :irb
-            require_relative "irb_integration"
-            activate_irb_integration
           when :display, :try_display
             failed_results = []
             eval_src.each_with_index{|src, i|
@@ -1082,13 +1081,13 @@ module DEBUGGER__
           when :up
             if @current_frame_index + 1 < @target_frames.size
               @current_frame_index += 1
-              show_src max_lines: 1
+              show_src max_lines: CONFIG[:show_src_lines_frame]
               show_frame(@current_frame_index)
             end
           when :down
             if @current_frame_index > 0
               @current_frame_index -= 1
-              show_src max_lines: 1
+              show_src max_lines: CONFIG[:show_src_lines_frame]
               show_frame(@current_frame_index)
             end
           when :set
@@ -1100,7 +1099,7 @@ module DEBUGGER__
                 puts "out of frame index: #{index}"
               end
             end
-            show_src max_lines: 1
+            show_src max_lines: CONFIG[:show_src_lines_frame]
             show_frame(@current_frame_index)
           else
             raise "unsupported frame operation: #{arg.inspect}"

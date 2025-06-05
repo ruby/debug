@@ -1,7 +1,6 @@
 require 'net/http'
 require 'uri'
 require 'digest/sha1'
-require 'base64'
 
 require_relative 'test_case'
 require_relative 'dap_utils'
@@ -112,6 +111,7 @@ module DEBUGGER__
       case get_target_ui
       when 'vscode'
         send_dap_request 'continue', threadId: 1
+        find_response :event, 'stopped', 'V<D'
       when 'chrome'
         send_cdp_request 'Debugger.resume'
         res = find_response :method, 'Debugger.paused', 'C<D'
@@ -123,6 +123,7 @@ module DEBUGGER__
       case get_target_ui
       when 'vscode'
         send_dap_request 'stepIn', threadId: 1
+        find_response :event, 'stopped', 'V<D'
       when 'chrome'
         send_cdp_request 'Debugger.stepInto'
         res = find_response :method, 'Debugger.paused', 'C<D'
@@ -134,6 +135,7 @@ module DEBUGGER__
       case get_target_ui
       when 'vscode'
         send_dap_request 'next', threadId: 1
+        find_response :event, 'stopped', 'V<D'
       when 'chrome'
         send_cdp_request 'Debugger.stepOver'
         res = find_response :method, 'Debugger.paused', 'C<D'
@@ -145,6 +147,7 @@ module DEBUGGER__
       case get_target_ui
       when 'vscode'
         send_dap_request 'stepOut', threadId: 1
+        find_response :event, 'stopped', 'V<D'
       when 'chrome'
         send_cdp_request 'Debugger.stepOut'
         res = find_response :method, 'Debugger.paused', 'C<D'
@@ -924,7 +927,7 @@ module DEBUGGER__
       @sock.print "GET /#{uuid} HTTP/1.1\r\nHost: 127.0.0.1:#{port}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: #{key}==\r\n\r\n"
       server_key = get_server_key
 
-      correct_key = Base64.strict_encode64 Digest::SHA1.digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+      correct_key = Digest::SHA1.base64digest "#{key}==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
       raise "The Sec-WebSocket-Accept value: #{$1} is not valid" unless server_key == correct_key
     end
 

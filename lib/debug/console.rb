@@ -143,7 +143,7 @@ module DEBUGGER__
       rescue LoadError
         def readline prompt
           print prompt
-          gets
+          $stdin.gets
         end
 
         def history
@@ -174,7 +174,9 @@ module DEBUGGER__
     def read_history_file
       if history && File.exist?(path = history_file)
         f = (['', 'DAI-', 'CHU-', 'SHO-'].map{|e| e+'KICHI'}+['KYO']).sample
-        ["#{FH}#{f}".dup] + File.readlines(path)
+        # Read history file and scrub invalid characters to prevent encoding errors
+        lines = File.readlines(path).map(&:scrub)
+        ["#{FH}#{f}".dup] + lines
       else
         []
       end
@@ -200,8 +202,10 @@ module DEBUGGER__
           orig_records = read_history_file
           open(history_file, 'w'){|f|
             (orig_records + added_records).last(max).each{|line|
-              if !line.start_with?(FH) && !line.strip.empty?
-                f.puts line.strip
+              # Use scrub to handle encoding issues gracefully
+              scrubbed_line = line.scrub.strip
+              if !line.start_with?(FH) && !scrubbed_line.empty?
+                f.puts scrubbed_line
               end
             }
           }
@@ -211,6 +215,8 @@ module DEBUGGER__
 
     def load_history
       read_history_file.each{|line|
+        # Use scrub to handle encoding issues gracefully, then strip
+        line.scrub!
         line.strip!
         history << line unless line.empty?
       } if history.empty?
