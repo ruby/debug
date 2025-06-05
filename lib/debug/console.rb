@@ -209,7 +209,8 @@ module DEBUGGER__
     def load_history
       read_history_file.each{|line|
         # Use scrub to handle encoding issues gracefully, then strip
-        line.scrub.strip!
+        line.scrub!
+        line.strip!
         history << line unless line.empty?
       } if history.empty?
       history.count
