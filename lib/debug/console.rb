@@ -167,22 +167,9 @@ module DEBUGGER__
     def read_history_file
       if history && File.exist?(path = history_file)
         f = (['', 'DAI-', 'CHU-', 'SHO-'].map{|e| e+'KICHI'}+['KYO']).sample
-        begin
-          # Force UTF-8 encoding to handle history files with Unicode characters
-          lines = File.readlines(path, encoding: 'UTF-8')
-          ["#{FH}#{f}".dup] + lines
-        rescue ArgumentError, Encoding::UndefinedConversionError
-          # If UTF-8 reading fails, try with binary mode and force UTF-8
-          begin
-            lines = File.readlines(path, mode: 'rb').map do |line|
-              line.force_encoding('UTF-8').scrub('?')
-            end
-            ["#{FH}#{f}".dup] + lines
-          rescue
-            # If all encoding attempts fail, return empty history to avoid crash
-            ["#{FH}#{f}".dup]
-          end
-        end
+        # Read history file and scrub invalid characters to prevent encoding errors
+        lines = File.readlines(path).map(&:scrub)
+        ["#{FH}#{f}".dup] + lines
       else
         []
       end
@@ -206,20 +193,12 @@ module DEBUGGER__
 
         if !added_records.empty? && !path.empty?
           orig_records = read_history_file
-          open(history_file, 'w', encoding: 'UTF-8'){|f|
+          open(history_file, 'w'){|f|
             (orig_records + added_records).last(max).each{|line|
-              begin
-                # Ensure proper encoding before calling strip
-                if line.encoding != Encoding::UTF_8
-                  line = line.encode('UTF-8', invalid: :replace, undef: :replace)
-                end
-                stripped_line = line.strip
-                if !line.start_with?(FH) && !stripped_line.empty?
-                  f.puts stripped_line
-                end
-              rescue Encoding::CompatibilityError, ArgumentError
-                # Skip lines that cannot be properly encoded to avoid crashes
-                next
+              # Use scrub to handle encoding issues gracefully
+              scrubbed_line = line.scrub.strip
+              if !line.start_with?(FH) && !scrubbed_line.empty?
+                f.puts scrubbed_line
               end
             }
           }
@@ -229,17 +208,9 @@ module DEBUGGER__
 
     def load_history
       read_history_file.each{|line|
-        begin
-          # Ensure proper encoding before calling strip!
-          if line.encoding != Encoding::UTF_8
-            line = line.encode('UTF-8', invalid: :replace, undef: :replace)
-          end
-          line.strip!
-          history << line unless line.empty?
-        rescue Encoding::CompatibilityError, ArgumentError
-          # Skip lines that cannot be properly encoded to avoid crashes
-          next
-        end
+        # Use scrub to handle encoding issues gracefully, then strip
+        line.scrub.strip!
+        history << line unless line.empty?
       } if history.empty?
       history.count
     end
