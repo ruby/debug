@@ -129,7 +129,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 2
                 },
@@ -138,7 +137,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -166,7 +164,6 @@ module DEBUGGER__
                   value: "main",
                   type: "Object",
                   variablesReference: 3,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -420,7 +417,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 4
                 },
@@ -429,7 +425,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -457,7 +452,6 @@ module DEBUGGER__
                   value: "Foo",
                   type: "Module",
                   variablesReference: 5,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -465,7 +459,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 6,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -575,7 +568,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 7
                 },
@@ -584,7 +576,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -612,7 +603,6 @@ module DEBUGGER__
                   value: "Foo",
                   type: "Module",
                   variablesReference: 8,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -620,7 +610,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 9,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -741,7 +730,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 10
                 },
@@ -750,7 +738,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -881,16 +868,14 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
-                  variablesReference: 11
+                  variablesReference: 12
                 },
                 {
                   name: "Global variables",
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -917,16 +902,14 @@ module DEBUGGER__
                   name: "%self",
                   value: "Foo",
                   type: "Module",
-                  variablesReference: 12,
-                  indexedVariables: 0,
+                  variablesReference: 13,
                   namedVariables: /\d+/
                 },
                 {
                   name: "bar",
                   value: "nil",
                   type: "NilClass",
-                  variablesReference: 13,
-                  indexedVariables: 0,
+                  variablesReference: 14,
                   namedVariables: /\d+/
                 }
               ]
