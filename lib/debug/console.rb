@@ -153,26 +153,24 @@ module DEBUGGER__
     end
 
     def history_file
-      path =
-        if !CONFIG[:history_file].empty? && File.exist?(File.expand_path(CONFIG[:history_file]))
-          CONFIG[:history_file]
-        elsif (xdg_home = ENV['XDG_DATA_HOME'])
-          File.join(xdg_home, 'rdbg', 'history')
-        else
-          '~/.rdbg_history'
-        end
-
-      path = File.expand_path(path)
+      case
+      when (path = CONFIG[:history_file]) && !path.empty?
+        path = File.expand_path(path)
+      when (path = File.expand_path("~/.rdbg_history")) && File.exist?(path) # for compatibility
+        # path
+      else
+        state_dir = ENV['XDG_STATE_HOME'] || File.join(Dir.home, '.local', 'state')
+        path = File.join(File.expand_path(state_dir), 'rdbg', 'history')
+      end
 
       FileUtils.mkdir_p(File.dirname(path)) unless File.exist?(path)
-
       path
     end
 
     FH = "# Today's OMIKUJI: "
 
     def read_history_file
-      if history && File.exist?(path = history_file)
+      if history && File.exist?(path = history_file())
         f = (['', 'DAI-', 'CHU-', 'SHO-'].map{|e| e+'KICHI'}+['KYO']).sample
         # Read history file and scrub invalid characters to prevent encoding errors
         lines = File.readlines(path).map(&:scrub)
@@ -195,12 +193,12 @@ module DEBUGGER__
     def deactivate
       if history && @init_history_lines
         added_records = history.to_a[@init_history_lines .. -1]
-        path = history_file
+        path = history_file()
         max = CONFIG[:save_history]
 
         if !added_records.empty? && !path.empty?
           orig_records = read_history_file
-          open(history_file, 'w'){|f|
+          open(history_file(), 'w'){|f|
             (orig_records + added_records).last(max).each{|line|
               # Use scrub to handle encoding issues gracefully
               scrubbed_line = line.scrub.strip
