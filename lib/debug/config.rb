@@ -40,7 +40,7 @@ module DEBUGGER__
     init_script:         ['RUBY_DEBUG_INIT_SCRIPT', "BOOT: debug command script path loaded at first stop"],
     commands:            ['RUBY_DEBUG_COMMANDS',    "BOOT: debug commands invoked at first stop. Commands should be separated by `;;`"],
     no_rc:               ['RUBY_DEBUG_NO_RC',       "BOOT: ignore loading ~/.rdbgrc(.rb)",                               :bool, "false"],
-    history_file:        ['RUBY_DEBUG_HISTORY_FILE',"BOOT: history file",               :string, "~/.rdbg_history"],
+    history_file:        ['RUBY_DEBUG_HISTORY_FILE',"BOOT: history file (default: $XDG_STATE_HOME/rdbg/history)",        :string, nil],
     save_history:        ['RUBY_DEBUG_SAVE_HISTORY',"BOOT: maximum save history lines", :int, "10000"],
 
     # remote setting
