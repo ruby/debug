@@ -442,7 +442,10 @@ module DEBUGGER__
         end
       else
         @ui.puts "INTERNAL_INFO: #{JSON.generate(@internal_info)}" if ENV['RUBY_DEBUG_TEST_UI'] == 'terminal'
-        line = @ui.readline prompt
+        t = Time.now
+        while line = @ui.readline(prompt)
+          break if line != '' || Time.now - t > 0.1
+        end
       end
 
       case line
