@@ -10,7 +10,7 @@ size_t rb_obj_memsize_of(VALUE);
 // implementation specific.
 enum imemo_type {
     imemo_iseq = 7,
-    imemo_mask = 0x07
+    imemo_mask = 0xf
 };
 
 static inline enum imemo_type
