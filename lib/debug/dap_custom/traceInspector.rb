@@ -101,6 +101,11 @@ module DEBUGGER__
     end
 
     class Custom_Recorder < ThreadClient::Recorder
+      module LOG_STATUS
+        FULL_BACKUP = 0
+        INCREMENTAL = 1
+      end
+
       def initialize max_log_size: nil
         if max_log_size
           @max_log_size = max_log_size
@@ -108,7 +113,47 @@ module DEBUGGER__
           @max_log_size = 50000
         end
         @dropped_trace_cnt = 0
-        super()
+        @log = []
+        @index = 0
+        @backup_frames = nil
+        @log_statuses = []
+        thread = Thread.current
+
+        @tp_recorder ||= TracePoint.new(:line){|tp|
+          next unless Thread.current == thread
+          # can't be replaced by skip_location
+          next if skip_internal_path?(tp.path)
+          loc = caller_locations(1, 1).first
+          next if skip_location?(loc)
+
+          frames = get_frames_diff
+          frames.each{|frame|
+            if b = frame.binding
+              frame.binding = nil
+              frame._local_variables = b.local_variables.map{|name|
+                [name, b.local_variable_get(name)]
+              }.to_h
+              frame._callee = b.eval('__callee__')
+            end
+          }
+          append(frames)
+        }
+      end
+
+      # returns only frames that should be inserted
+      def get_frames_diff # => []
+        frames = DEBUGGER__.capture_frames(__dir__)
+        prev_frames = @log.last
+        if prev_frames.nil?
+          @log_statuses << LOG_STATUS::FULL_BACKUP
+          return frames
+        end
+        if prev_frames[0].location_str == frames[1]&.location_str
+          @log_statuses << LOG_STATUS::INCREMENTAL
+          return [frames.first]
+        end
+        @log_statuses << LOG_STATUS::FULL_BACKUP
+        frames
       end
 
       attr_accessor :dropped_trace_cnt
@@ -119,6 +164,31 @@ module DEBUGGER__
           @log.shift
         end
         @log << frames
+      end
+
+      def current_frame
+        if @index == 0
+          f = @backup_frames
+          @backup_frames = nil
+          f
+        else
+          collect_frames
+        end
+      end
+
+      def collect_frames
+        log_idx = log_index
+        first = log_idx
+        until @log_statuses[first] == LOG_STATUS::FULL_BACKUP
+          first -= 1
+        end
+        all_frames = []
+        @log[first..log_idx].reverse_each{|frames|
+          frames.each{|f|
+            all_frames << f
+          }
+        }
+        all_frames
       end
     end
 
