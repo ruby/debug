@@ -739,6 +739,8 @@ module DEBUGGER__
 
       # * `whereami`
       #   * Show the current frame with source code.
+      # * `@`
+      #   * Same as `whereami`.
       register_command 'whereami', '@', unsafe: false do
         request_tc [:show, :whereami]
       end
