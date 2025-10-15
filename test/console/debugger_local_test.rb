@@ -19,6 +19,18 @@ module DEBUGGER__
           type "c"
         end
       end
+
+      def test_evaluated_result_is_set_as_underscore_local
+        debug_code(program) do
+          type "_"
+          assert_line_text(/nil/)
+          type "3 * 3"
+          type "foo = _"
+          type "9 == foo"
+          assert_line_text(/true/)
+          type "c"
+        end
+      end
     end
 
     class RaisedTest < ConsoleTestCase
