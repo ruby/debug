@@ -84,6 +84,20 @@ module DEBUGGER__
       ENV["RUBY_DEBUG_IRB_CONSOLE"] = nil
     end
 
+    def test_irb_console_evaluated_result_is_set_as_underscore_local
+      debug_code(program, remote: false) do
+        type 'irb'
+        type "_"
+        assert_line_text(/nil/)
+        type "3 * 3"
+        assert_raw_line_text 'irb:rdbg(main):003> 3 * 3'
+        type "foo = _"
+        type "9 == foo"
+        assert_line_text(/true/)
+        type "c"
+      end
+    end
+
     private
 
     # assert_line_text ignores the prompt line, so we can't use it to assert the prompt transition
