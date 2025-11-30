@@ -358,7 +358,7 @@ module DEBUGGER__
           }
           send_response req, breakpoints: (bps.map do |bp| {verified: true,} end)
         else
-          send_response req, success: false, message: "#{req_path} is not available"
+          send_response req, breakpoints: (args['breakpoints'].map do |bp| {verified: false, message: "#{req_path} could not be located; specify source location in launch.json with \"localfsMap\" or \"localfs\""} end)
         end
 
       when 'setFunctionBreakpoints'
