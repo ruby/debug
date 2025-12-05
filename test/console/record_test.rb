@@ -315,4 +315,24 @@ module DEBUGGER__
       end
     end
   end
+
+  class RecordOnBasicClassTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| class Test < BasicObject
+      2|   def test
+      3|     42
+      4|   end
+      5| end
+      6| Test.new.test
+      RUBY
+    end
+
+    def test_issue1152
+      debug_code program do
+        type 'record on'
+        type 'c'
+      end
+    end
+  end
 end

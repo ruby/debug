@@ -1310,7 +1310,7 @@ module DEBUGGER__
               frame._local_variables = b.local_variables.map{|name|
                 [name, b.local_variable_get(name)]
               }.to_h
-              frame._callee = b.eval('__callee__')
+              frame._callee = b.eval('::Kernel.__callee__')
             end
           }
           append(frames)
