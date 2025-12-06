@@ -443,7 +443,9 @@ module DEBUGGER__
         b.local_variable_set(name, var) if /\%/ !~ name
       end
 
+      b.local_variable_set(:_, @last_result)
       result = frame_eval_core(src, b, binding_location: binding_location)
+      @last_result = result
 
       @success_last_eval = true
       result
