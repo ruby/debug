@@ -255,6 +255,17 @@ module DEBUGGER__
         end
       end
 
+      def test_break_only_path
+        with_extra_tempfile "foohtml" do |extra_file|
+          debug_code(program(extra_file.path)) do
+            type "break path: #{extra_file.path}"
+            type 'c'
+            assert_line_text(/#{extra_file.path}/)
+            type 'c'
+          end
+        end
+      end
+
       def test_the_path_option_supersede_skip_path_config
         # skips the extra_file's breakpoint
         with_extra_tempfile do |extra_file|
