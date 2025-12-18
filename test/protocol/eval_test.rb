@@ -49,6 +49,7 @@ module DEBUGGER__
     RUBY
 
     def test_eval_evaluates_arithmetic_expressions
+      omit 'this test is fragile on older versions' if RUBY_VERSION < '3.4.0'
       run_protocol_scenario PROGRAM do
         req_add_breakpoint 4
         req_continue
