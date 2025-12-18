@@ -23,7 +23,7 @@ module DEBUGGER__
       b.eval(expr)
     rescue Exception => e
       puts "[EVAL ERROR]"
-      puts "  expr: #{expr}"
+      puts "  expr: #{expr.inspect}"
       puts "  err: #{e} (#{e.class})"
       puts "Error caused by #{self}."
       nil
@@ -352,7 +352,7 @@ module DEBUGGER__
         next if ThreadClient.current.management?
         next if skip_path?(tp.path)
 
-        if need_suspend? safe_eval(tp.binding, @cond)
+        if @cond.nil? || need_suspend?(safe_eval(tp.binding, @cond))
           suspend
         end
       }
