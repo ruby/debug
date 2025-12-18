@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'socket'
+require 'fileutils'
 require_relative 'config'
 require_relative 'version'
 
