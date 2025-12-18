@@ -163,6 +163,7 @@ module DEBUGGER__
         path = File.join(File.expand_path(state_dir), 'rdbg', 'history')
       end
 
+      require 'fileutils'
       FileUtils.mkdir_p(File.dirname(path)) unless File.exist?(path)
       path
     end
