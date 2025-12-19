@@ -124,7 +124,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 2
                 },
@@ -133,7 +132,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -161,7 +159,6 @@ module DEBUGGER__
                   value: "main",
                   type: "Object",
                   variablesReference: 3,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -169,7 +166,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 4,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -177,7 +173,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 5,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -185,7 +180,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 6,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -193,7 +187,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 7,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -201,7 +194,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 8,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -209,7 +201,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 9,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -357,7 +348,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 10
                 },
@@ -366,7 +356,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -394,7 +383,6 @@ module DEBUGGER__
                   value: "main",
                   type: "Object",
                   variablesReference: 11,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -402,7 +390,6 @@ module DEBUGGER__
                   value: "2",
                   type: "Integer",
                   variablesReference: 12,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -410,7 +397,6 @@ module DEBUGGER__
                   value: "3",
                   type: "Integer",
                   variablesReference: 13,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -418,7 +404,6 @@ module DEBUGGER__
                   value: "1",
                   type: "Integer",
                   variablesReference: 14,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -426,7 +411,6 @@ module DEBUGGER__
                   value: "4",
                   type: "Integer",
                   variablesReference: 15,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -434,7 +418,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 16,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -442,7 +425,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 17,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -519,7 +501,6 @@ module DEBUGGER__
             body: {
               type: "Integer",
               variablesReference: 18,
-              indexedVariables: 0,
               namedVariables: /\d+/,
               result: "2"
             }
@@ -545,7 +526,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 19
                 },
@@ -554,7 +534,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -582,7 +561,6 @@ module DEBUGGER__
                   value: "main",
                   type: "Object",
                   variablesReference: 20,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -590,7 +568,6 @@ module DEBUGGER__
                   value: "2",
                   type: "Integer",
                   variablesReference: 21,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -598,7 +575,6 @@ module DEBUGGER__
                   value: "3",
                   type: "Integer",
                   variablesReference: 22,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -606,7 +582,6 @@ module DEBUGGER__
                   value: "1",
                   type: "Integer",
                   variablesReference: 23,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -614,7 +589,6 @@ module DEBUGGER__
                   value: "4",
                   type: "Integer",
                   variablesReference: 24,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -622,7 +596,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 25,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -630,7 +603,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 26,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -715,7 +687,6 @@ module DEBUGGER__
             body: {
               type: "Integer",
               variablesReference: 27,
-              indexedVariables: 0,
               namedVariables: /\d+/,
               result: "4"
             }
@@ -741,7 +712,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 28
                 },
@@ -750,7 +720,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -778,7 +747,6 @@ module DEBUGGER__
                   value: "main",
                   type: "Object",
                   variablesReference: 29,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -786,7 +754,6 @@ module DEBUGGER__
                   value: "2",
                   type: "Integer",
                   variablesReference: 30,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -794,7 +761,6 @@ module DEBUGGER__
                   value: "3",
                   type: "Integer",
                   variablesReference: 31,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -802,7 +768,6 @@ module DEBUGGER__
                   value: "1",
                   type: "Integer",
                   variablesReference: 32,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -810,7 +775,6 @@ module DEBUGGER__
                   value: "4",
                   type: "Integer",
                   variablesReference: 33,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -818,7 +782,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 34,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -826,7 +789,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 35,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -852,7 +814,6 @@ module DEBUGGER__
             body: {
               type: "Integer",
               variablesReference: 36,
-              indexedVariables: 0,
               namedVariables: /\d+/,
               result: "3"
             }
@@ -878,7 +839,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 37
                 },
@@ -887,7 +847,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -915,7 +874,6 @@ module DEBUGGER__
                   value: "main",
                   type: "Object",
                   variablesReference: 38,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -923,7 +881,6 @@ module DEBUGGER__
                   value: "2",
                   type: "Integer",
                   variablesReference: 39,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -931,7 +888,6 @@ module DEBUGGER__
                   value: "3",
                   type: "Integer",
                   variablesReference: 40,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -939,7 +895,6 @@ module DEBUGGER__
                   value: "1",
                   type: "Integer",
                   variablesReference: 41,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -947,7 +902,6 @@ module DEBUGGER__
                   value: "4",
                   type: "Integer",
                   variablesReference: 42,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -955,7 +909,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 43,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -963,7 +916,6 @@ module DEBUGGER__
                   value: "nil",
                   type: "NilClass",
                   variablesReference: 44,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
