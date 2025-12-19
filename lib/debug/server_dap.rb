@@ -939,7 +939,7 @@ module DEBUGGER__
             case expr
             when /\A\@\S/
               begin
-                result = M_INSTANCE_VARIABLE_GET.bind_call(b.receiver, expr)
+                result = Reflection.instance_variable_get_from(b.receiver, expr)
               rescue NameError
                 message = "Error: Not defined instance variable: #{expr.inspect}"
               end
@@ -961,8 +961,8 @@ module DEBUGGER__
                 result = b.local_variable_get(expr)
               rescue NameError
                 # try to check method
-                if M_RESPOND_TO_P.bind_call(b.receiver, expr, include_all: true)
-                  result = M_METHOD.bind_call(b.receiver, expr)
+                if Reflection.responds_to?(b.receiver, expr, include_all: true)
+                  result = Reflection.method_of(b.receiver, expr)
                 else
                   message = "Error: Can not evaluate: #{expr.inspect}"
                 end
@@ -1042,10 +1042,10 @@ module DEBUGGER__
     end
 
     def type_name obj
-      klass = M_CLASS.bind_call(obj)
+      klass = Reflection.class_of(obj)
 
       begin
-        M_NAME.bind_call(klass) || klass.to_s
+        Reflection.name_of(klass) || klass.to_s
       rescue Exception => e
         "<Error: #{e.message} (#{e.backtrace.first}>"
       end
@@ -1059,7 +1059,7 @@ module DEBUGGER__
         vid = 0
       end
 
-      namedVariables += M_INSTANCE_VARIABLES.bind_call(obj).size
+      namedVariables += Reflection.instance_variables_of(obj).size
 
       if NaiveString === obj
         str = obj.str.dump
