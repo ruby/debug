@@ -466,11 +466,13 @@ module DEBUGGER__
                 max_lines:,
                 start_line: nil,
                 end_line: nil,
-                dir: +1)
+                dir: +1,
+                no_lineno: CONFIG[:no_lineno]
+               )
       if file_lines = frame.file_lines
         frame_line = frame.location.lineno - 1
 
-        if CONFIG[:no_lineno]
+        if no_lineno
           lines = file_lines
         else
           lines = file_lines.map.with_index do |e, i|
@@ -509,7 +511,7 @@ module DEBUGGER__
       exit!
     end
 
-    def show_src(frame_index: @current_frame_index, update_line: false, ignore_show_line: false, max_lines: CONFIG[:show_src_lines], **options)
+    def show_src(frame_index: @current_frame_index, update_line: false, ignore_show_line: false, max_lines: CONFIG[:show_src_lines], no_lineno: CONFIG[:no_lineno], **options)
       if frame = get_frame(frame_index)
         begin
           if ignore_show_line
@@ -517,7 +519,7 @@ module DEBUGGER__
             frame.show_line = nil
           end
 
-          start_line, end_line, lines = *get_src(frame, max_lines: max_lines, **options)
+          start_line, end_line, lines = *get_src(frame, max_lines: max_lines, no_lineno: no_lineno, **options)
 
           if start_line
             if update_line
@@ -1119,7 +1121,7 @@ module DEBUGGER__
             show_src(update_line: true, **(args.first || {}))
 
           when :whereami
-            show_src ignore_show_line: true
+            show_src(ignore_show_line: true, **(args.first || {}))
             show_frames CONFIG[:show_frames]
 
           when :edit
