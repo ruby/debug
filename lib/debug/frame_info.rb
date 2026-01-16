@@ -171,7 +171,7 @@ module DEBUGGER__
 
     private def get_singleton_class obj
       obj.singleton_class # TODO: don't use it
-    rescue TypeError
+    rescue Exception
       nil
     end
 

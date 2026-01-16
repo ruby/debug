@@ -646,7 +646,9 @@ module DEBUGGER__
             success: true,
             message: "Success",
             body: {
-              stackFrames: [
+              stackFrames:
+                RUBY_VERSION < "4.0.0" ? [
+                ##
                 {
                   name: "[C] Integer#/",
                   line: 4,
@@ -690,6 +692,40 @@ module DEBUGGER__
                     sourceReference: 0
                   },
                   id: 5
+                }] : [
+                ## RUBY_VERSION >= '4.0.0'
+                {
+                  name: "Foo::Bar.a",
+                  line: 4,
+                  column: 1,
+                  source: {
+                    name: /#{File.basename temp_file_path}/,
+                    path: /#{temp_file_path}/,
+                    sourceReference: 0
+                  },
+                  id: 2
+                },
+                {
+                  name: "<module:Foo>",
+                  line: 7,
+                  column: 1,
+                  source: {
+                    name: /#{File.basename temp_file_path}/,
+                    path: /#{temp_file_path}/,
+                    sourceReference: 0
+                  },
+                  id: 3
+                },
+                {
+                  name: "<main>",
+                  line: 1,
+                  column: 1,
+                  source: {
+                    name: /#{File.basename temp_file_path}/,
+                    path: /#{temp_file_path}/,
+                    sourceReference: 0
+                  },
+                  id: 4
                 }
               ]
             }
@@ -738,7 +774,7 @@ module DEBUGGER__
             },
             type: "request"
           },
-          {
+          RUBY_VERSION < "4.0.0" ? {
             seq: 19,
             type: "response",
             command: "variables",
@@ -764,6 +800,24 @@ module DEBUGGER__
                   namedVariables: /\d+/
                 }
               ]
+            }
+          } : # RUBY_VERSION >= "4.0.0"
+          {
+            "type": "response",
+            "command": "variables",
+            "request_seq": 16,
+            "success": true,
+            "message": "Success",
+            "body": {
+              "variables": [
+              {
+                "name": "%self",
+                "value": "Foo::Bar",
+                "type": "Class",
+                "variablesReference": 5,
+                "indexedVariables": 0,
+                "namedVariables": 1
+              }]
             }
           },
           {

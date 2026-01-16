@@ -229,4 +229,31 @@ module DEBUGGER__
       end
     end
   end
+
+  class BrokenSingletonMethodBacktraceTest < ConsoleTestCase
+    def program
+      <<~RUBY
+      1| class C
+      2|   def self.foo
+      3|     debugger
+      4|   end
+      5|   def singleton_class
+      6|     raise
+      7|   end
+      8|   def self.singleton_class
+      9|     eval(")") # SyntaxError
+     10|   end
+     11| end
+     12| C.foo
+      RUBY
+    end
+
+    def test_raise_exception
+      debug_code program do
+        type 'c'
+        assert_line_text(/foo/)
+        type 'c'
+      end
+    end
+  end
 end
