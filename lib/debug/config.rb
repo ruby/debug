@@ -74,7 +74,7 @@ module DEBUGGER__
         raise 'Can not make multiple configurations in one process'
       end
 
-      config = self.class.parse_argv(argv)
+      config, _ = *self.class.parse_argv(argv)
 
       # apply defaults
       CONFIG_SET.each do |k, config_detail|
@@ -277,12 +277,6 @@ module DEBUGGER__
           config[key] = parse_config_value(key, val)
         end
       }
-      return config if !argv || argv.empty?
-
-      if argv.kind_of? String
-        require 'shellwords'
-        argv = Shellwords.split(argv)
-      end
 
       require 'optparse'
       require_relative 'version'
@@ -433,6 +427,13 @@ module DEBUGGER__
         o.separator '  Please use the remote debugging feature carefully.'
       end
 
+      return [config, opt] if !argv || argv.empty?
+
+      if argv.kind_of? String
+        require 'shellwords'
+        argv = Shellwords.split(argv)
+      end
+
       opt.parse!(argv)
 
       if argv.empty?
@@ -442,7 +443,7 @@ module DEBUGGER__
         end
       end
 
-      config
+      [config, opt]
     end
 
     def self.config_to_env_hash config
