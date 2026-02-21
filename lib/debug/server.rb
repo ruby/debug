@@ -186,6 +186,9 @@ module DEBUGGER__
         line = @session.process_group.sync do
           unless IO.select([@sock], nil, nil, 0)
             DEBUGGER__.debug{ "UI_Server can not read" }
+            # Wait briefly for the consuming process to publish breakpoint changes
+            sleep 0.05
+            @session.bp_sync_check
             break :can_not_read
           end
           @sock.gets&.chomp.tap{|line|
