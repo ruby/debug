@@ -1806,7 +1806,9 @@ module DEBUGGER__
         DEBUGGER__.debug{ "Leave subsession" }
         bp_sync_publish  # publish breakpoint changes to other processes
         @process_group.unlock
-        @process_group.unlock_wk_lock
+        # Keep wk_lock held during step commands so the same worker
+        # re-enters the subsession without yielding to a sibling.
+        @process_group.unlock_wk_lock if type == :continue
         restart_all_threads
       else
         DEBUGGER__.debug{ "Leave subsession (nested #{@subsession_stack.size})" }
