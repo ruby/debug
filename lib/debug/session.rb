@@ -43,6 +43,7 @@ require 'debug' # invalidate the $LOADED_FEATURE cache
 require 'json' if ENV['RUBY_DEBUG_TEST_UI'] == 'terminal'
 require 'pp'
 require 'set'
+require 'tmpdir'
 
 class RubyVM::InstructionSequence
   def traceable_lines_norec lines
@@ -133,27 +134,36 @@ module DEBUGGER__
 
     def bp_key_from_spec(spec)
       case spec['type']
-      when 'line'  then [spec['path'], spec['line']]
-      when 'catch' then [:catch, spec['pat']]
+      when 'line'   then [spec['path'], spec['line']]
+      when 'catch'  then [:catch, spec['pat']]
+      when 'method' then "#{spec['klass']}#{spec['op']}#{spec['method']}"
       end
     end
 
     def create_bp_from_spec(spec)
       bp = case spec['type']
            when 'line'
+             return unless spec['path'].is_a?(String) && spec['line'].is_a?(Integer)
              LineBreakpoint.new(spec['path'], spec['line'],
                cond: spec['cond'], oneshot: spec['oneshot'],
                hook_call: spec['hook_call'] != false,
                command: spec['command'])
            when 'catch'
-             CatchBreakpoint.new(spec['pat'], cond: spec['cond'])
+             return unless spec['pat'].is_a?(String)
+             CatchBreakpoint.new(spec['pat'],
+               cond: spec['cond'], command: spec['command'],
+               path: spec['path'])
+           when 'method'
+             return unless spec['klass'].is_a?(String) && spec['op'].is_a?(String) && spec['method'].is_a?(String)
+             MethodBreakpoint.new(TOPLEVEL_BINDING, spec['klass'], spec['op'], spec['method'],
+               cond: spec['cond'], command: spec['command'])
            end
 
       add_bp(bp) if bp
     end
 
     def syncable_bp?(bp)
-      bp.to_sync_data != nil
+      bp.syncable?
     end
   end
 
@@ -2141,7 +2151,7 @@ module DEBUGGER__
     def wk_lock
       return if multi?  # MultiProcessGroup handles its own locking
       ensure_wk_lock!
-      @wk_lock_file.flock(File::LOCK_EX)
+      @wk_lock_file&.flock(File::LOCK_EX)
     end
 
     def unlock_wk_lock
@@ -2151,8 +2161,10 @@ module DEBUGGER__
 
     private def ensure_wk_lock!
       return if @wk_lock_file
-      path = File.join('/tmp', "ruby-debug-#{Process.uid}-pgrp-#{Process.getpgrp}.lock")
+      path = File.join(Dir.tmpdir, "ruby-debug-#{Process.uid}-pgrp-#{Process.getpgrp}.lock")
       @wk_lock_file = File.open(path, File::WRONLY | File::CREAT, 0600)
+    rescue SystemCallError => e
+      DEBUGGER__.warn "Failed to create well-known lock file: #{e.message}"
     end
 
     def multi_process!
@@ -2249,11 +2261,20 @@ module DEBUGGER__
     end
 
     def write_breakpoint_state(specs)
-      @bp_sync_version += 1
+      # Read current file version to avoid drift between processes
+      current_v = begin
+        d = JSON.parse(File.read(@state_tempfile.path))
+        d['v']
+      rescue
+        0
+      end
+      @bp_sync_version = [current_v, @bp_sync_version].max + 1
       data = JSON.generate({ 'v' => @bp_sync_version, 'bps' => specs })
       tmp = "#{@state_tempfile.path}.#{Process.pid}.tmp"
-      File.write(tmp, data)
+      File.write(tmp, data, perm: 0600)
       File.rename(tmp, @state_tempfile.path)
+    rescue SystemCallError => e
+      DEBUGGER__.warn "Failed to write breakpoint state: #{e.message}"
     end
 
     def read_breakpoint_state
@@ -2263,7 +2284,7 @@ module DEBUGGER__
       return nil if remote_v <= @bp_sync_version
       @bp_sync_version = remote_v
       data['bps']
-    rescue JSON::ParserError, Errno::ENOENT
+    rescue JSON::ParserError, SystemCallError
       nil
     end
 

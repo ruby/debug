@@ -403,6 +403,7 @@ module DEBUGGER__
         terminate = args.fetch("terminateDebuggee", false)
 
         SESSION.clear_all_breakpoints
+        SESSION.bp_sync_publish
         send_response req
 
         if SESSION.in_subsession?

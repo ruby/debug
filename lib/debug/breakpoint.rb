@@ -25,6 +25,10 @@ module DEBUGGER__
       nil
     end
 
+    def syncable?
+      false
+    end
+
     def safe_eval b, expr
       b.eval(expr)
     rescue Exception => e
@@ -233,6 +237,10 @@ module DEBUGGER__
         'hook_call' => @hook_call, 'command' => @command }
     end
 
+    def syncable?
+      true
+    end
+
     def duplicable?
       @oneshot
     end
@@ -315,7 +323,12 @@ module DEBUGGER__
     attr_reader :last_exc
 
     def to_sync_data
-      { 'type' => 'catch', 'pat' => @pat, 'cond' => @cond }
+      { 'type' => 'catch', 'pat' => @pat, 'cond' => @cond,
+        'command' => @command, 'path' => @path }
+    end
+
+    def syncable?
+      true
     end
 
     def initialize pat, cond: nil, command: nil, path: nil
@@ -442,6 +455,16 @@ module DEBUGGER__
 
   class MethodBreakpoint < Breakpoint
     attr_reader :sig_method_name, :method, :klass
+
+    def to_sync_data
+      { 'type' => 'method', 'klass' => @sig_klass_name,
+        'op' => @sig_op, 'method' => @sig_method_name,
+        'cond' => @cond, 'command' => @command }
+    end
+
+    def syncable?
+      true
+    end
 
     def initialize b, klass_name, op, method_name, cond: nil, command: nil, path: nil
       @sig_klass_name = klass_name
