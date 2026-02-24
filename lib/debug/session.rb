@@ -42,8 +42,6 @@ require 'debug' # invalidate the $LOADED_FEATURE cache
 
 require 'json' if ENV['RUBY_DEBUG_TEST_UI'] == 'terminal'
 require 'pp'
-require 'set'
-require 'tmpdir'
 
 class RubyVM::InstructionSequence
   def traceable_lines_norec lines
@@ -113,19 +111,19 @@ module DEBUGGER__
     end
 
     def reconcile_breakpoints(specs)
-      remote_keys = Set.new
+      remote_keys = {}
 
       specs.each do |spec|
         key = bp_key_from_spec(spec)
         next unless key
-        remote_keys << key
+        remote_keys[key] = true
         unless @bps.key?(key)
           create_bp_from_spec(spec)
         end
       end
 
       @bps.delete_if do |key, bp|
-        if syncable_bp?(bp) && !remote_keys.include?(key)
+        if syncable_bp?(bp) && !remote_keys.key?(key)
           bp.delete
           true
         end
@@ -2163,6 +2161,7 @@ module DEBUGGER__
 
     private def ensure_wk_lock!
       return if @wk_lock_file
+      require 'tmpdir'
       path = File.join(Dir.tmpdir, "ruby-debug-#{Process.uid}-pgrp-#{Process.getpgrp}.lock")
       @wk_lock_file = File.open(path, File::WRONLY | File::CREAT, 0600)
     rescue SystemCallError => e
