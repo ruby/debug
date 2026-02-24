@@ -493,8 +493,8 @@ module DEBUGGER__
     def prompt
       if @postmortem
         '(rdbg:postmortem) '
-      elsif @process_group.multi?
-        "(rdbg@#{process_info}) "
+      elsif (pi = process_info)
+        "(rdbg@#{pi}) "
       else
         '(rdbg) '
       end
@@ -2085,7 +2085,7 @@ module DEBUGGER__
     end
 
     def process_info
-      if @process_group.multi?
+      if @process_group.multi? || @process_group.wk_locked?
         "#{$0}\##{Process.pid}"
       end
     end
@@ -2153,6 +2153,10 @@ module DEBUGGER__
       return if multi?  # MultiProcessGroup handles its own locking
       ensure_wk_lock!
       @wk_lock_file&.flock(File::LOCK_EX)
+    end
+
+    def wk_locked?
+      !multi? && @wk_lock_file
     end
 
     def unlock_wk_lock
