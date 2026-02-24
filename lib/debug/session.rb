@@ -1804,9 +1804,10 @@ module DEBUGGER__
         DEBUGGER__.debug{ "Leave subsession" }
         bp_sync_publish  # publish breakpoint changes to other processes
         @process_group.unlock
-        # Never release wk_lock here — the current worker keeps exclusive
-        # debugger access until its session ends.  Other workers queue up.
-        # The kernel releases flock automatically on process exit.
+        # Keep wk_lock held during step commands so the same worker
+        # re-enters the subsession without yielding to a sibling.
+        # Release on :continue so long-lived workers don't starve others.
+        @process_group.unlock_wk_lock if type == :continue
         restart_all_threads
       else
         DEBUGGER__.debug{ "Leave subsession (nested #{@subsession_stack.size})" }
