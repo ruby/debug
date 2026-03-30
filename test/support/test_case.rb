@@ -173,6 +173,7 @@ module DEBUGGER__
 
       Timeout.timeout(TIMEOUT_SEC) do
         line = remote_info.r.gets
+        line = line.scrub if line
         remote_info.debuggee_backlog << line
 
         # wait for two lines (order is unstable)
