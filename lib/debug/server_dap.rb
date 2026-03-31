@@ -298,6 +298,7 @@ module DEBUGGER__
         process_request(req)
       end
     ensure
+      restore_debuggee_stdio
       send_event :terminated unless @sock.closed?
     end
 
@@ -314,6 +315,7 @@ module DEBUGGER__
         UI_DAP.local_fs_map_set req.dig('arguments', 'localfs') || req.dig('arguments', 'localfsMap') || true
         @nonstop = true
 
+        capture_debuggee_stdio
         load_extensions req
 
       when 'attach'
@@ -326,6 +328,7 @@ module DEBUGGER__
           @nonstop = false
         end
 
+        capture_debuggee_stdio
         load_extensions req
 
       when 'configurationDone'
@@ -397,6 +400,7 @@ module DEBUGGER__
         terminate = args.fetch("terminateDebuggee", false)
 
         SESSION.clear_all_breakpoints
+        restore_debuggee_stdio
         send_response req
 
         if SESSION.in_subsession?
@@ -505,6 +509,56 @@ module DEBUGGER__
       # STDERR.puts "puts: #{result}"
       send_event 'output', category: 'console', output: "#{result&.chomp}\n"
     end
+
+    def capture_debuggee_stdio
+      return if @stdio_captured
+
+      @original_stdout = $stdout
+      @original_stderr = $stderr
+
+      @stdout_reader, @stdout_writer = IO.pipe
+      @stderr_reader, @stderr_writer = IO.pipe
+
+      @stdout_writer.sync = true
+      @stderr_writer.sync = true
+
+      $stdout = @stdout_writer
+      $stderr = @stderr_writer
+      @stdio_captured = true
+
+      @stdout_monitor = start_monitor_thread(@stdout_reader, 'stdout')
+      @stderr_monitor = start_monitor_thread(@stderr_reader, 'stderr')
+    end
+
+    def restore_debuggee_stdio
+      return unless @stdio_captured
+
+      $stdout = @original_stdout if @original_stdout
+      $stderr = @original_stderr if @original_stderr
+
+      [@stdout_writer, @stderr_writer]
+        .filter { |writer| !writer&.closed? }
+        .each(&:close)
+
+      [@stdout_monitor, @stderr_monitor].each { |monitor| monitor&.join }
+      [@stdout_reader, @stderr_reader].each { |reader| reader&.close unless reader&.closed? }
+
+      @stdio_captured = false
+    end
+
+    private
+
+    def start_monitor_thread(reader, category)
+      Thread.new do
+        reader.each_line do |line|
+          send_event 'output', category: category, output: line
+        end
+      rescue IOError, Errno::EBADF
+        # Pipe closed, exit gracefully
+      end
+    end
+
+    public
 
     def ignore_output_on_suspend?
       true
