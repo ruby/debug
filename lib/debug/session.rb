@@ -1678,6 +1678,14 @@ module DEBUGGER__
 
     private def thread_stopper
       TracePoint.new(:line) do
+        # When leave_subsession pops the subsession stack and sets @tc = nil,
+        # there is a window before the TracePoint is disabled where this block
+        # can still fire on other threads. Without this guard, the main thread
+        # (back in IRB's eval loop) would be paused by on_pause, but the
+        # session server is already waiting on @q_evt.pop -- causing a mutual
+        # deadlock ("No live threads left. Deadlock?").
+        next unless in_subsession?
+
         # run on each thread
         tc = ThreadClient.current
         next if tc.management?
