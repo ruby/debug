@@ -2,6 +2,7 @@
 
 require_relative '../../lib/debug/color'
 require_relative '../../lib/debug/config'
+require 'irb/version'
 require 'test/unit'
 require 'test/unit/rr'
 
@@ -33,7 +34,14 @@ module DEBUGGER__
         end
       end
 
-      { "#{GREEN}#<struct #{CLEAR} #{CYAN}foo#{CLEAR}#{GREEN}=#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}#{RED}b#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}#{GREEN}>#{CLEAR}\n": dummy_class.new('b'),
+      # IRB >= 1.18.0 highlights struct member names in cyan (ruby/irb#1189)
+      if Gem::Version.new(IRB::VERSION) >= Gem::Version.new("1.18.0")
+        struct_foo = "#{CYAN}foo#{CLEAR}"
+      else
+        struct_foo = "foo"
+      end
+
+      { "#{GREEN}#<struct #{CLEAR} #{struct_foo}#{GREEN}=#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}#{RED}b#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}#{GREEN}>#{CLEAR}\n": dummy_class.new('b'),
         "#{RED}#{BOLD}\"#{CLEAR}#{RED}hoge#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}\n": 'hoge'}.each do |k, v|
         expected = k.to_s
         obj = v
