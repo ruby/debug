@@ -90,10 +90,86 @@ module DEBUGGER__
 
   class PostmortemError < RuntimeError; end
 
+  module BreakpointSync
+    def bp_sync_publish
+      return unless @process_group.multi?
+      @process_group.write_breakpoint_state(serialize_sync_breakpoints)
+    end
+
+    def bp_sync_check
+      return false unless @process_group.multi?
+      specs = @process_group.read_breakpoint_state
+      return false unless specs
+      reconcile_breakpoints(specs)
+      true
+    end
+
+    private
+
+    def serialize_sync_breakpoints
+      @bps.filter_map { |_key, bp| bp.to_sync_data }
+    end
+
+    def reconcile_breakpoints(specs)
+      remote_keys = {}
+
+      specs.each do |spec|
+        key = bp_key_from_spec(spec)
+        next unless key
+        remote_keys[key] = true
+        unless @bps.key?(key)
+          create_bp_from_spec(spec)
+        end
+      end
+
+      @bps.delete_if do |key, bp|
+        if syncable_bp?(bp) && !remote_keys.key?(key)
+          bp.delete
+          true
+        end
+      end
+    end
+
+    def bp_key_from_spec(spec)
+      case spec['type']
+      when 'line'   then [spec['path'], spec['line']]
+      when 'catch'  then [:catch, spec['pat']]
+      when 'method' then "#{spec['klass']}#{spec['op']}#{spec['method']}"
+      end
+    end
+
+    def create_bp_from_spec(spec)
+      bp = case spec['type']
+           when 'line'
+             return unless spec['path'].is_a?(String) && spec['line'].is_a?(Integer)
+             LineBreakpoint.new(spec['path'], spec['line'],
+               cond: spec['cond'], oneshot: spec['oneshot'],
+               hook_call: spec['hook_call'] != false,
+               command: spec['command'])
+           when 'catch'
+             return unless spec['pat'].is_a?(String)
+             CatchBreakpoint.new(spec['pat'],
+               cond: spec['cond'], command: spec['command'],
+               path: spec['path'])
+           when 'method'
+             return unless spec['klass'].is_a?(String) && spec['op'].is_a?(String) && spec['method'].is_a?(String)
+             MethodBreakpoint.new(TOPLEVEL_BINDING, spec['klass'], spec['op'], spec['method'],
+               cond: spec['cond'], command: spec['command'])
+           end
+
+      add_bp(bp) if bp
+    end
+
+    def syncable_bp?(bp)
+      bp.syncable?
+    end
+  end
+
   class Session
     attr_reader :intercepted_sigint_cmd, :process_group, :subsession_id
 
     include Color
+    include BreakpointSync
 
     def initialize
       @ui = nil
@@ -417,8 +493,8 @@ module DEBUGGER__
     def prompt
       if @postmortem
         '(rdbg:postmortem) '
-      elsif @process_group.multi?
-        "(rdbg@#{process_info}) "
+      elsif (pi = process_info)
+        "(rdbg@#{pi}) "
       else
         '(rdbg) '
       end
@@ -1719,8 +1795,10 @@ module DEBUGGER__
         DEBUGGER__.debug{ "Enter subsession (nested #{@subsession_stack.size})" }
       else
         DEBUGGER__.debug{ "Enter subsession" }
+        @process_group.wk_lock  # blocks until no other debugger is active
         stop_all_threads
         @process_group.lock
+        bp_sync_check  # sync breakpoints from other processes
       end
 
       @subsession_stack << true
@@ -1732,7 +1810,12 @@ module DEBUGGER__
 
       if @subsession_stack.empty?
         DEBUGGER__.debug{ "Leave subsession" }
+        bp_sync_publish  # publish breakpoint changes to other processes
         @process_group.unlock
+        # Keep wk_lock held during step commands so the same worker
+        # re-enters the subsession without yielding to a sibling.
+        # Release on :continue so long-lived workers don't starve others.
+        @process_group.unlock_wk_lock if type == :continue
         restart_all_threads
       else
         DEBUGGER__.debug{ "Leave subsession (nested #{@subsession_stack.size})" }
@@ -2010,7 +2093,7 @@ module DEBUGGER__
     end
 
     def process_info
-      if @process_group.multi?
+      if @process_group.multi? || @process_group.wk_locked?
         "#{$0}\##{Process.pid}"
       end
     end
@@ -2036,6 +2119,7 @@ module DEBUGGER__
   class ProcessGroup
     def initialize
       @lock_file = nil
+      @wk_lock_file = nil
     end
 
     def locked?
@@ -2065,10 +2149,45 @@ module DEBUGGER__
       @lock_file
     end
 
+    # No-ops for single-process mode; overridden by MultiProcessGroup
+    def write_breakpoint_state(specs); end
+    def read_breakpoint_state; nil; end
+
+    # Well-known lock for coordinating independent debugger instances
+    # (e.g., parallel test workers that each load the debugger independently).
+    # Uses process group ID so sibling processes from the same command share the lock.
+    # Blocks until the lock is acquired — other workers wait in line.
+    def wk_lock
+      return if multi?  # MultiProcessGroup handles its own locking
+      ensure_wk_lock!
+      @wk_lock_file&.flock(File::LOCK_EX)
+    end
+
+    def wk_locked?
+      !multi? && @wk_lock_file
+    end
+
+    def unlock_wk_lock
+      return if multi?
+      @wk_lock_file&.flock(File::LOCK_UN)
+    end
+
+    private def ensure_wk_lock!
+      return if @wk_lock_file
+      require 'tmpdir'
+      path = File.join(Dir.tmpdir, "ruby-debug-#{Process.uid}-pgrp-#{Process.getpgrp}.lock")
+      @wk_lock_file = File.open(path, File::WRONLY | File::CREAT, 0600)
+    rescue SystemCallError => e
+      DEBUGGER__.warn "Failed to create well-known lock file: #{e.message}"
+    end
+
     def multi_process!
       require 'tempfile'
+      require 'json'
       @lock_tempfile = Tempfile.open("ruby-debug-lock-")
       @lock_tempfile.close
+      @state_tempfile = Tempfile.open("ruby-debug-state-")
+      @state_tempfile.close
       extend MultiProcessGroup
     end
   end
@@ -2084,6 +2203,7 @@ module DEBUGGER__
           @lock_level = 0
           @lock_file = open(@lock_tempfile.path, 'w')
         end
+        @bp_sync_version = 0
       end
     end
 
@@ -2152,6 +2272,34 @@ module DEBUGGER__
         @lock_file.flock(File::LOCK_UN) unless locked?
         info "Unlocked"
       end
+    end
+
+    def write_breakpoint_state(specs)
+      # Read current file version to avoid drift between processes
+      current_v = begin
+        d = JSON.parse(File.read(@state_tempfile.path))
+        d['v']
+      rescue
+        0
+      end
+      @bp_sync_version = [current_v, @bp_sync_version].max + 1
+      data = JSON.generate({ 'v' => @bp_sync_version, 'bps' => specs })
+      tmp = "#{@state_tempfile.path}.#{Process.pid}.tmp"
+      File.write(tmp, data, perm: 0600)
+      File.rename(tmp, @state_tempfile.path)
+    rescue SystemCallError => e
+      DEBUGGER__.warn "Failed to write breakpoint state: #{e.message}"
+    end
+
+    def read_breakpoint_state
+      return nil unless File.exist?(@state_tempfile.path)
+      data = JSON.parse(File.read(@state_tempfile.path))
+      remote_v = data['v']
+      return nil if remote_v <= @bp_sync_version
+      @bp_sync_version = remote_v
+      data['bps']
+    rescue JSON::ParserError, SystemCallError
+      nil
     end
 
     def sync &b
@@ -2555,6 +2703,7 @@ module DEBUGGER__
         child_hook = -> {
           DEBUGGER__.info "Attaching after process #{parent_pid} fork to child process #{Process.pid}"
           SESSION.process_group.after_fork child: true
+          SESSION.bp_sync_check
           SESSION.activate on_fork: true
         }
       end
