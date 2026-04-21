@@ -97,6 +97,7 @@ module DEBUGGER__
       end
 
       def readline prompt
+        clear_stdin
         readline_setup prompt do
           Reline.readmultiline(prompt, true){ true }
         end
@@ -132,6 +133,7 @@ module DEBUGGER__
         end
 
         def readline prompt
+          clear_stdin
           readline_setup
           Readline.readline(prompt, true)
         end
@@ -142,12 +144,29 @@ module DEBUGGER__
 
       rescue LoadError
         def readline prompt
+          clear_stdin
           print prompt
           $stdin.gets
         end
 
         def history
           nil
+        end
+      end
+    end
+
+    def clear_stdin
+      # consume all STDIN input just before prompt
+      loop do
+        case r = $stdin.read_nonblock(1, exception: false)
+        when "\n"
+          # drop \n
+          next
+        when nil, :wait_readable
+          break
+        else
+          $stdin.ungetc r
+          break
         end
       end
     end
