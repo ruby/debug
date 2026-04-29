@@ -372,6 +372,51 @@ To use TCP/IP, you can set the `RUBY_DEBUG_PORT` environment variable.
 $ RUBY_DEBUG_PORT=12345 ruby target.rb
 ```
 
+#### Filter processes by `$0` with `--open-proctitle`
+
+In multi-process applications (e.g. forking job runners) you may want to enable
+the debug port only in specific processes — for example, only in workers whose
+title was set via `Process.setproctitle` after fork. The `--open-proctitle`
+option (env var `RUBY_DEBUG_OPEN_PROCTITLE`) is matched against `$0` when the
+TCP server starts in each process. The port is opened only when it matches;
+otherwise the listener returns silently and the program runs without a
+debugger attached.
+
+The value can be either a literal string for an exact-match comparison, or a
+regexp wrapped in `/.../` (with optional flags) for pattern matching:
+
+```console
+# Exact match: open only when $0 == "my-worker"
+$ rdbg --port 3003 --open-proctitle 'my-worker' --host 0.0.0.0 -n --open -c './bin/start'
+
+# Regexp: open only when $0 =~ /\Asolid-queue-worker/
+$ rdbg --port 3003 --open-proctitle '/\Asolid-queue-worker/' --host 0.0.0.0 -n --open -c './bin/jobs'
+```
+
+In a forking parent (the supervisor in the example) the value will not match,
+so no port is opened. After each `fork`, the child re-enters the accept loop;
+if its `$0` (set via `Process.setproctitle`) matches, the child opens the port.
+
+To handle the timing window between `fork` and `Process.setproctitle` in the
+child, the matcher waits up to 5 seconds for `$0` to change from the value
+captured on the first accept call before evaluating the match.
+
+Notes and limitations:
+
+- **Use `--nonstop` (`-n`).** Without it, `RUBY_DEBUG_OPEN` arms an
+  initial-suspend breakpoint in the parent before any fork. Non-matching
+  processes would then hit that breakpoint and block waiting for a client
+  that will never connect. With `--nonstop`, no initial breakpoint is set
+  and non-matching processes run unaffected.
+- The match is on `$0`. It does not look at `RUBY_DEBUG_FORK_MODE` or the
+  process tree.
+- Independent of `--port-range`, which addresses port collisions between
+  multiple matching processes. The two can be combined.
+- A value of the form `/.../[flags]` is interpreted as a regexp. Anything
+  else (including paths like `/usr/bin/foo`) is an exact-match string.
+- An invalid regexp raises `ArgumentError` at startup rather than being
+  deferred until the first connection.
+
 ### Integration with external debugger frontend
 
 You can attach with external debugger frontend with VSCode and Chrome.
@@ -520,6 +565,7 @@ config set no_color true
   * `RUBY_DEBUG_PORT` (`port`): TCP/IP remote debugging: port
   * `RUBY_DEBUG_PORT_RANGE` (`port_range`): TCP/IP remote debugging: length of port range
   * `RUBY_DEBUG_HOST` (`host`): TCP/IP remote debugging: host (default: 127.0.0.1)
+  * `RUBY_DEBUG_OPEN_PROCTITLE` (`open_proctitle`): Open the port only when $0 matches this value (string for exact match; /pattern/[flags] for regexp)
   * `RUBY_DEBUG_SOCK_PATH` (`sock_path`): UNIX Domain Socket remote debugging: socket path
   * `RUBY_DEBUG_SOCK_DIR` (`sock_dir`): UNIX Domain Socket remote debugging: socket directory
   * `RUBY_DEBUG_LOCAL_FS_MAP` (`local_fs_map`): Specify local fs map
@@ -938,6 +984,7 @@ Debug console mode:
         --port=PORT                  Listening TCP/IP port
         --port-range=PORT_RANGE      Number of ports to try to connect to
         --host=HOST                  Listening TCP/IP host
+        --open-proctitle=PROCTITLE   Open TCP/IP port only when $0 matches PROCTITLE (string for exact match; /pattern/[flags] for regexp)
         --cookie=COOKIE              Set a cookie for connection
         --session-name=NAME          Session name
 
