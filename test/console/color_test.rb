@@ -33,7 +33,7 @@ module DEBUGGER__
         end
       end
 
-      { "#{GREEN}#<struct #{CLEAR} foo#{GREEN}=#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}#{RED}b#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}#{GREEN}>#{CLEAR}\n": dummy_class.new('b'),
+      { "#{GREEN}#<struct #{CLEAR} #{CYAN}foo#{CLEAR}#{GREEN}=#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}#{RED}b#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}#{GREEN}>#{CLEAR}\n": dummy_class.new('b'),
         "#{RED}#{BOLD}\"#{CLEAR}#{RED}hoge#{CLEAR}#{RED}#{BOLD}\"#{CLEAR}\n": 'hoge'}.each do |k, v|
         expected = k.to_s
         obj = v
