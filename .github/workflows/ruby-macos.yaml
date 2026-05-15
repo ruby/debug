@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: read
+
 jobs:
   ruby-versions:
     uses: ruby/actions/.github/workflows/ruby_versions.yml@master
