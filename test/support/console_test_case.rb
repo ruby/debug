@@ -18,7 +18,7 @@ module DEBUGGER__
         pwd = Dir.pwd
         ruby = ENV['RUBY'] || RbConfig.ruby
         home_cannot_change = false
-        PTY.spawn({ "HOME" => pwd }, ruby, '-e', 'puts ENV["HOME"]') do |r,|
+        PTY.spawn({ "HOME" => pwd }, ruby, '-e', 'puts ENV["HOME"]; sleep 0.1') do |r,|
           home_cannot_change = r.gets.chomp != pwd
         end
         !home_cannot_change
