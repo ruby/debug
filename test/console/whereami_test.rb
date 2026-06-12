@@ -45,6 +45,12 @@ module DEBUGGER__
         assert_no_line_text(/b = 1/)
         assert_line_text(/=>   1\| a = 1/)
 
+        type "@"
+
+        # with @, we should see same output as whereami (above)
+        assert_no_line_text(/b = 1/)
+        assert_line_text(/=>   1\| a = 1/)
+
         type "list"
 
         # list command should work as normal after whereami is executed
