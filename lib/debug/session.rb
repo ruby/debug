@@ -739,8 +739,15 @@ module DEBUGGER__
 
       # * `whereami`
       #   * Show the current frame with source code.
-      register_command 'whereami', unsafe: false do
-        request_tc [:show, :whereami]
+      # * `whereami -n`
+      #   * Show the current frame with source code without line numbers.
+      register_command 'whereami', unsafe: false do |arg|
+        case arg ? arg.strip : nil
+        when "-n"
+          request_tc [:show, :whereami, {no_lineno: true}]
+        else
+          request_tc [:show, :whereami]
+        end
       end
 
       # * `edit`
