@@ -21,6 +21,9 @@ module DEBUGGER__
       irb = IRB::Irb.new(workspace)
       IRB.conf[:MAIN_CONTEXT] = irb.context
       IRB::Debug.setup(irb)
+      if (pi = SESSION.process_info)
+        irb.context.irb_name = "irb:rdbg@#{pi}"
+      end
       IRB::Context.prepend(IrbPatch)
     end
   end

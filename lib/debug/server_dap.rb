@@ -271,6 +271,10 @@ module DEBUGGER__
         end
       end
     rescue RetryBecauseCantRead
+      # Another process consumed the message. Wait briefly for it to
+      # process and publish any breakpoint changes, then sync.
+      sleep 0.05
+      @session.bp_sync_check
       retry
     end
 
@@ -356,6 +360,7 @@ module DEBUGGER__
               bps << SESSION.add_line_breakpoint(path, line)
             end
           }
+          SESSION.bp_sync_publish
           send_response req, breakpoints: (bps.map do |bp| {verified: true,} end)
         else
           send_response req, breakpoints: (args['breakpoints'].map do |bp| {verified: false, message: "#{req_path} could not be located; specify source location in launch.json with \"localfsMap\" or \"localfs\""} end)
@@ -391,12 +396,14 @@ module DEBUGGER__
           process_filter.call(bp_info['filterId'], bp_info['condition'])
         }
 
+        SESSION.bp_sync_publish
         send_response req, breakpoints: filters
 
       when 'disconnect'
         terminate = args.fetch("terminateDebuggee", false)
 
         SESSION.clear_all_breakpoints
+        SESSION.bp_sync_publish
         send_response req
 
         if SESSION.in_subsession?

@@ -6,7 +6,7 @@ module DEBUGGER__
   class Breakpoint
     include SkipPathHelper
 
-    attr_reader :key, :skip_src
+    attr_reader :key, :skip_src, :cond
 
     def initialize cond, command, path, do_enable: true
       @deleted = false
@@ -17,6 +17,16 @@ module DEBUGGER__
 
       setup
       enable if do_enable
+    end
+
+    # Returns a serializable hash for cross-process breakpoint sync,
+    # or nil if this breakpoint type is not syncable.
+    def to_sync_data
+      nil
+    end
+
+    def syncable?
+      false
     end
 
     def safe_eval b, expr
@@ -221,6 +231,16 @@ module DEBUGGER__
       end
     end
 
+    def to_sync_data
+      { 'type' => 'line', 'path' => @path, 'line' => @line,
+        'cond' => @cond, 'oneshot' => @oneshot,
+        'hook_call' => @hook_call, 'command' => @command }
+    end
+
+    def syncable?
+      true
+    end
+
     def duplicable?
       @oneshot
     end
@@ -301,6 +321,15 @@ module DEBUGGER__
 
   class CatchBreakpoint < Breakpoint
     attr_reader :last_exc
+
+    def to_sync_data
+      { 'type' => 'catch', 'pat' => @pat, 'cond' => @cond,
+        'command' => @command, 'path' => @path }
+    end
+
+    def syncable?
+      true
+    end
 
     def initialize pat, cond: nil, command: nil, path: nil
       @pat = pat.freeze
@@ -426,6 +455,16 @@ module DEBUGGER__
 
   class MethodBreakpoint < Breakpoint
     attr_reader :sig_method_name, :method, :klass
+
+    def to_sync_data
+      { 'type' => 'method', 'klass' => @sig_klass_name,
+        'op' => @sig_op, 'method' => @sig_method_name,
+        'cond' => @cond, 'command' => @command }
+    end
+
+    def syncable?
+      true
+    end
 
     def initialize b, klass_name, op, method_name, cond: nil, command: nil, path: nil
       @sig_klass_name = klass_name
