@@ -1058,8 +1058,8 @@ module DEBUGGER__
                 result = b.local_variable_get(expr)
               rescue NameError
                 # try to check method
-                if M_RESPOND_TO_P.bind_call(b.receiver, expr, include_all: true)
-                  result = M_METHOD.bind_call(b.receiver, expr)
+                if Reflection.responds_to?(b.receiver, expr, include_all: true)
+                  result = Reflection.method_of(b.receiver, expr)
                 else
                   message = "Error: Can not evaluate: #{expr.inspect}"
                 end
@@ -1245,7 +1245,7 @@ module DEBUGGER__
         v = prop[:value]
         v.delete :value
         v[:subtype] = subtype if subtype
-        v[:className] = (klass = M_CLASS.bind_call(obj)).name || klass.to_s
+        v[:className] = (klass = Reflection.class_of(obj)).name || klass.to_s
       end
       prop
     end
