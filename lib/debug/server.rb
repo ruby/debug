@@ -2,6 +2,7 @@
 
 require 'socket'
 require 'fileutils'
+require 'singleton'
 require_relative 'config'
 require_relative 'version'
 
@@ -383,11 +384,49 @@ module DEBUGGER__
     end
   end
 
+  # Tracks the value of $0 the first time UI_TcpServer#accept runs in this
+  # process. After fork, the child has its own (inherited) instance and the
+  # original value is used to detect when the child has been renamed via
+  # Process.setproctitle, so the open_proctitle match is evaluated against the
+  # post-rename name.
+  class InitialProcInfo
+    include Singleton
+    attr_accessor :info
+  end
+
   class UI_TcpServer < UI_ServerBase
+    PROCTITLE_WAIT_TIMEOUT = 5
+
+    # Parse the open_proctitle config value:
+    #
+    #   "/pattern/flags"  => Regexp.new(pattern, flags)
+    #   "anything else"   => the string itself (compared with ==)
+    #
+    # Raises ArgumentError on an invalid regexp.
+    def self.parse_open_proctitle(value)
+      return nil if value.nil?
+
+      if (m = value.match(/\A\/(.*)\/([imxnesu]*)\z/m))
+        pattern, flags = m[1], m[2]
+        regexp_options = 0
+        regexp_options |= Regexp::IGNORECASE if flags.include?('i')
+        regexp_options |= Regexp::MULTILINE  if flags.include?('m')
+        regexp_options |= Regexp::EXTENDED   if flags.include?('x')
+        begin
+          Regexp.new(pattern, regexp_options)
+        rescue RegexpError => e
+          raise ArgumentError, "Invalid RUBY_DEBUG_OPEN_PROCTITLE regexp: #{e.message}"
+        end
+      else
+        value
+      end
+    end
+
     def initialize host: nil, port: nil
       @local_addr = nil
       @host = host || CONFIG[:host]
       @port_save_file = nil
+      @open_proctitle = self.class.parse_open_proctitle(CONFIG[:open_proctitle])
       @port = begin
         port_str = (port && port.to_s) || CONFIG[:port] || raise("Specify listening port by RUBY_DEBUG_PORT environment variable.")
         case port_str
@@ -412,6 +451,13 @@ module DEBUGGER__
       super()
     end
 
+    private def open_proctitle_match?(proctitle)
+      case @open_proctitle
+      when Regexp then @open_proctitle.match?(proctitle)
+      else             @open_proctitle == proctitle
+      end
+    end
+
     def chrome_setup
       require_relative 'server_cdp'
 
@@ -426,6 +472,27 @@ module DEBUGGER__
     end
 
     def accept
+      if @open_proctitle
+        initial_info = InitialProcInfo.instance
+        if initial_info.info.nil?
+          initial_info.info = $0
+        else
+          # Wait briefly for the process to rename $0 (e.g. setproctitle after
+          # fork) so the match is evaluated against the post-rename name.
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + PROCTITLE_WAIT_TIMEOUT
+          while $0 == initial_info.info && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+            sleep 0.1
+          end
+        end
+
+        if open_proctitle_match?($0)
+          DEBUGGER__.warn "Process #{$0.inspect} matches #{@open_proctitle.inspect}; opening port"
+        else
+          DEBUGGER__.warn "Process #{$0.inspect} does not match #{@open_proctitle.inspect}; skipping port"
+          return
+        end
+      end
+
       retry_cnt = 0
       super # for fork
 

@@ -48,6 +48,7 @@ module DEBUGGER__
     port:                ['RUBY_DEBUG_PORT',         "REMOTE: TCP/IP remote debugging: port"],
     port_range:          ['RUBY_DEBUG_PORT_RANGE',   "REMOTE: TCP/IP remote debugging: length of port range"],
     host:                ['RUBY_DEBUG_HOST',         "REMOTE: TCP/IP remote debugging: host", :string, "127.0.0.1"],
+    open_proctitle:      ['RUBY_DEBUG_OPEN_PROCTITLE', "REMOTE: Open the port only when $0 matches this value (string for exact match; /pattern/[flags] for regexp)"],
     sock_path:           ['RUBY_DEBUG_SOCK_PATH',    "REMOTE: UNIX Domain Socket remote debugging: socket path"],
     sock_dir:            ['RUBY_DEBUG_SOCK_DIR',     "REMOTE: UNIX Domain Socket remote debugging: socket directory"],
     local_fs_map:        ['RUBY_DEBUG_LOCAL_FS_MAP', "REMOTE: Specify local fs map", :path_map],
@@ -354,6 +355,9 @@ module DEBUGGER__
         end
         o.on('--host=HOST', 'Listening TCP/IP host') do |host|
           config[:host] = host
+        end
+        o.on('--open-proctitle=PROCTITLE', 'Open TCP/IP port only when $0 matches PROCTITLE (string for exact match; /pattern/[flags] for regexp)') do |proctitle|
+          config[:open_proctitle] = proctitle
         end
         o.on('--cookie=COOKIE', 'Set a cookie for connection') do |c|
           config[:cookie] = c
