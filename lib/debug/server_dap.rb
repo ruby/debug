@@ -4,6 +4,7 @@ require 'json'
 require 'irb/completion'
 require 'tmpdir'
 require 'fileutils'
+require_relative 'variable_inspector'
 
 module DEBUGGER__
   module UI_DAP
@@ -765,18 +766,11 @@ module DEBUGGER__
     end
   end
 
-  class NaiveString
-    attr_reader :str
-    def initialize str
-      @str = str
-    end
-  end
-
   class ThreadClient
     MAX_LENGTH = 180
 
     def value_inspect obj, short: true
-      # TODO: max length should be configuarable?
+      # TODO: max length should be configurable?
       str = DEBUGGER__.safe_inspect obj, short: short, max_length: MAX_LENGTH
 
       if str.encoding == Encoding::UTF_8
@@ -855,70 +849,40 @@ module DEBUGGER__
           presentationHint: 'locals',
           # variablesReference: N, # filled by SESSION
           namedVariables: lnum,
-          indexedVariables: 0,
           expensive: false,
         }, {
           name: 'Global variables',
           presentationHint: 'globals',
           variablesReference: 1, # GLOBAL
           namedVariables: safe_global_variables.size,
-          indexedVariables: 0,
           expensive: false,
         }]
       when :scope
         fid = args.shift
         frame = get_frame(fid)
         vars = collect_locals(frame).map do |var, val|
-          variable(var, val)
+          render_variable Variable.new(name: var, value: val)
         end
 
         event! :protocol_result, :scope, req, variables: vars, tid: self.id
       when :variable
         vid = args.shift
-        obj = @var_map[vid]
-        if obj
-          case req.dig('arguments', 'filter')
+
+        if @var_map.key?(vid)
+          obj = @var_map[vid]
+
+          members = case req.dig('arguments', 'filter')
           when 'indexed'
-            start = req.dig('arguments', 'start') || 0
-            count = req.dig('arguments', 'count') || obj.size
-            vars = (start ... (start + count)).map{|i|
-              variable(i.to_s, obj[i])
-            }
+            VariableInspector.new.indexed_members_of(
+              obj,
+              start: req.dig('arguments', 'start') || 0,
+              count: req.dig('arguments', 'count') || obj.size,
+            )
           else
-            vars = []
-
-            case obj
-            when Hash
-              vars = obj.map{|k, v|
-                variable(value_inspect(k), v,)
-              }
-            when Struct
-              vars = obj.members.map{|m|
-                variable(m, obj[m])
-              }
-            when String
-              vars = [
-                variable('#length', obj.length),
-                variable('#encoding', obj.encoding),
-              ]
-              printed_str = value_inspect(obj)
-              vars << variable('#dump', NaiveString.new(obj)) if printed_str.end_with?('...')
-            when Class, Module
-              vars << variable('%ancestors', obj.ancestors[1..])
-            when Range
-              vars = [
-                variable('#begin', obj.begin),
-                variable('#end', obj.end),
-              ]
-            end
-
-            unless NaiveString === obj
-              vars += M_INSTANCE_VARIABLES.bind_call(obj).sort.map{|iv|
-                variable(iv, M_INSTANCE_VARIABLE_GET.bind_call(obj, iv))
-              }
-              vars.unshift variable('#class', M_CLASS.bind_call(obj))
-            end
+            VariableInspector.new.named_members_of(obj)
           end
+
+          vars = members.map { |member| render_variable member }
         end
         event! :protocol_result, :variable, req, variables: (vars || []), tid: self.id
 
@@ -975,7 +939,13 @@ module DEBUGGER__
           result = 'Error: Can not evaluate on this frame'
         end
 
-        event! :protocol_result, :evaluate, req, message: message, tid: self.id, **evaluate_result(result)
+        result_variable = Variable.new(name: nil, value: result)
+
+        event! :protocol_result, :evaluate, req,
+               message: message,
+               tid: self.id,
+               result: result_variable.inspect_value,
+               **render_variable(result_variable)
 
       when :completions
         fid, text = args
@@ -1051,58 +1021,49 @@ module DEBUGGER__
       end
     end
 
-    def variable_ name, obj, indexedVariables: 0, namedVariables: 0
-      if indexedVariables > 0 || namedVariables > 0
-        vid = @var_map.size + 1
-        @var_map[vid] = obj
+    # Renders the given Member into a DAP Variable
+    # https://microsoft.github.io/debug-adapter-protocol/specification#variable
+    def render_variable member
+      indexedVariables, namedVariables = if Array === member.value
+        [member.value.size, 0]
       else
+        [0, VariableInspector.new.named_members_of(member.value).count]
+      end
+
+      #  > If `variablesReference` is > 0, the variable is structured and its children
+      #  > can be retrieved by passing `variablesReference` to the `variables` request
+      #  > as long as execution remains suspended.
+      if indexedVariables > 0 || namedVariables > 0
+        # This object has children that we might need to query, so we need to remember it by its vid
+        vid = @var_map.size + 1
+        @var_map[vid] = member.value
+      else
+        # This object has no children, so we don't need to remember it in the `@var_map`
         vid = 0
       end
 
-      namedVariables += M_INSTANCE_VARIABLES.bind_call(obj).size
-
-      if NaiveString === obj
-        str = obj.str.dump
-        vid = indexedVariables = namedVariables = 0
-      else
-        str = value_inspect(obj)
-      end
-
-      if name
-        { name: name,
-          value: str,
-          type: type_name(obj),
+      variable = if member.name
+        # These two hashes are repeated so the "name" can come always come first, when available,
+        # which improves the readability of protocol responses.
+        {
+          name: member.name,
+          value: member.inspect_value,
+          type: member.value_type_name,
           variablesReference: vid,
           indexedVariables: indexedVariables,
           namedVariables: namedVariables,
         }
       else
-        { result: str,
-          type: type_name(obj),
+        {
+          value: member.inspect_value,
+          type: member.value_type_name,
           variablesReference: vid,
           indexedVariables: indexedVariables,
           namedVariables: namedVariables,
         }
       end
-    end
 
-    def variable name, obj
-      case obj
-      when Array
-        variable_ name, obj, indexedVariables: obj.size
-      when Hash
-        variable_ name, obj, namedVariables: obj.size
-      when String
-        variable_ name, obj, namedVariables: 3 # #length, #encoding, #to_str
-      when Struct
-        variable_ name, obj, namedVariables: obj.size
-      when Class, Module
-        variable_ name, obj, namedVariables: 1 # %ancestors (#ancestors without self)
-      when Range
-        variable_ name, obj, namedVariables: 2 # #begin, #end
-      else
-        variable_ name, obj, namedVariables: 1 # #class
-      end
+      variable
     end
   end
 end
