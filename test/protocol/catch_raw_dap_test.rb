@@ -126,7 +126,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 2
                 },
@@ -135,7 +134,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -163,7 +161,6 @@ module DEBUGGER__
                   value: "main",
                   type: "Object",
                   variablesReference: 3,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -297,7 +294,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 4
                 },
@@ -306,7 +302,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -334,7 +329,6 @@ module DEBUGGER__
                   value: "Foo::Bar",
                   type: "Class",
                   variablesReference: 5,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -342,7 +336,6 @@ module DEBUGGER__
                   value: "#<RuntimeError: foo>",
                   type: "RuntimeError",
                   variablesReference: 6,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -495,7 +488,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 2
                 },
@@ -504,7 +496,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -532,7 +523,6 @@ module DEBUGGER__
                   value: "main",
                   type: "Object",
                   variablesReference: 3,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
@@ -751,7 +741,6 @@ module DEBUGGER__
                   name: "Local variables",
                   presentationHint: "locals",
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false,
                   variablesReference: 4
                 },
@@ -760,7 +749,6 @@ module DEBUGGER__
                   presentationHint: "globals",
                   variablesReference: 1,
                   namedVariables: /\d+/,
-                  indexedVariables: 0,
                   expensive: false
                 }
               ]
@@ -788,7 +776,6 @@ module DEBUGGER__
                   value: "1",
                   type: "Integer",
                   variablesReference: 5,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 },
                 {
@@ -796,7 +783,6 @@ module DEBUGGER__
                   value: "#<ZeroDivisionError: divided by 0>",
                   type: "ZeroDivisionError",
                   variablesReference: 6,
-                  indexedVariables: 0,
                   namedVariables: /\d+/
                 }
               ]
