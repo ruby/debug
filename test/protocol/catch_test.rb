@@ -44,4 +44,53 @@ module DEBUGGER__
       end
     end
   end
+
+  class CatchExceptionOptionsTest < ProtocolTestCase
+    PROGRAM = <<~RUBY
+     1| class MyError < StandardError; end
+     2| class MySubError < MyError; end
+     3|
+     4| def foo
+     5|   raise MySubError, "foo"
+     6| end
+     7|
+     8| foo
+    RUBY
+
+    def test_exception_options_catches_a_specific_exception_class
+      run_protocol_scenario PROGRAM, cdp: false do
+        send_dap_request 'setExceptionBreakpoints', filters: [],
+          exceptionOptions: [{ path: [{ names: ["MyError"] }], breakMode: "always" }]
+        req_continue
+        assert_line_num 5
+        req_terminate_debuggee
+      end
+    end
+
+    def test_exception_options_with_break_mode_never_does_not_register_a_breakpoint
+      run_protocol_scenario PROGRAM, cdp: false do
+        send_dap_request 'setExceptionBreakpoints', filters: [],
+          exceptionOptions: [{ path: [{ names: ["MyError"] }], breakMode: "never" }]
+        req_terminate_debuggee
+      end
+    end
+
+    def test_exception_options_breakpoints_are_replaced_by_the_next_request
+      run_protocol_scenario PROGRAM, cdp: false do
+        send_dap_request 'setExceptionBreakpoints', filters: [],
+          exceptionOptions: [{ path: [{ names: ["MyError"] }], breakMode: "always" }]
+        send_dap_request 'setExceptionBreakpoints', filters: []
+        req_terminate_debuggee
+      end
+    end
+
+    def test_exception_options_reports_unsupported_negated_segments
+      run_protocol_scenario PROGRAM, cdp: false do
+        res = send_dap_request 'setExceptionBreakpoints', filters: [],
+          exceptionOptions: [{ path: [{ negate: true, names: ["MyError"] }], breakMode: "always" }]
+        assert_equal false, res.dig(:body, :breakpoints, 0, :verified)
+        req_terminate_debuggee
+      end
+    end
+  end
 end
