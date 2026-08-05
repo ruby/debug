@@ -162,12 +162,12 @@ module DEBUGGER__
                },
              ],
              supportsExceptionFilterOptions: true,
+             supportsExceptionOptions: true,
              supportsStepBack: true,
              supportsEvaluateForHovers: true,
              supportsCompletionsRequest: true,
 
              ## Will be supported
-             # supportsExceptionOptions: true,
              # supportsHitConditionalBreakpoints:
              # supportsSetVariable: true,
              # supportSuspendDebuggee:
@@ -381,7 +381,13 @@ module DEBUGGER__
             }
           }
 
-          SESSION.clear_catch_breakpoints 'Exception', 'RuntimeError'
+        # Catch breakpoints from exceptionOptions are registered under
+        # arbitrary class names, so previously registered names have to be
+        # remembered to make setExceptionBreakpoints replace (not accumulate)
+        # exception breakpoints, as the DAP spec requires.
+        @exception_option_names ||= []
+        SESSION.clear_catch_breakpoints 'Exception', 'RuntimeError', *@exception_option_names
+        @exception_option_names = []
 
           filters = args.fetch('filters').map {|filter_id|
             process_filter.call(filter_id)
@@ -389,6 +395,30 @@ module DEBUGGER__
 
           filters += args.fetch('filterOptions', {}).map{|bp_info|
           process_filter.call(bp_info['filterId'], bp_info['condition'])
+        }
+
+        # DAP standard `exceptionOptions` (capability: supportsExceptionOptions).
+        # Each ExceptionOptions names specific exception classes via
+        # ExceptionPathSegment; matching uses the same ancestor class-name
+        # match as the console `catch` command, so subclasses are caught too.
+        filters += args.fetch('exceptionOptions', []).map{|opt|
+          names = opt.fetch('path', []).flat_map{|seg| seg['names'] || []}
+
+          if opt.fetch('path', []).any?{|seg| seg['negate']}
+            { verified: false, message: 'negated exception path segments are not supported' }
+          elsif names.empty?
+            { verified: false, message: 'no exception class name given' }
+          elsif opt['breakMode'] == 'never'
+            { verified: true }
+          else
+            # Ruby's catch breakpoints fire when the exception is raised, so
+            # 'always', 'unhandled' and 'userUnhandled' all break at raise.
+            bps = names.map{|name|
+              @exception_option_names << name
+              SESSION.add_catch_breakpoint name
+            }
+            { verified: true, message: bps.map(&:inspect).join(', ') }
+          end
         }
 
         send_response req, breakpoints: filters
