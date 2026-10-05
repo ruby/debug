@@ -56,14 +56,19 @@ iseq_i(void *vstart, void *vend, size_t stride, void *ptr)
 static void
 each_iseq_i(VALUE v, void *ptr)
 {
-    rb_yield(rb_iseqw_new(v));
+    VALUE ary = (VALUE)ptr;
+    rb_ary_push(ary, v);
 }
 
 static VALUE
 each_iseq(VALUE self)
 {
-    struct iseq_i_data data = {each_iseq_i, NULL};
+    VALUE ary = rb_ary_new();
+    struct iseq_i_data data = {each_iseq_i, (void*)ary};
     rb_objspace_each_objects(iseq_i, &data);
+    for (long i = 0; i < RARRAY_LEN(ary); i++) {
+        rb_yield(rb_iseqw_new(RARRAY_AREF(ary, i)));
+    }
     return Qnil;
 }
 
