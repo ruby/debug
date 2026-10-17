@@ -327,7 +327,7 @@ module DEBUGGER__
   class IfBlockControlFlowTest < ConsoleTestCase
     def program
       <<~RUBY
-        1| if foo = nil
+        1| if foo = nil && abort("never called")
         2|   if foo
         3|   end
         4| end
