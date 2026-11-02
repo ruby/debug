@@ -19,6 +19,53 @@ module DEBUGGER__
           type "c"
         end
       end
+
+      def test_evaluated_result_is_set_as_underscore_local
+        debug_code(program) do
+          type "_"
+          assert_line_text(/nil/)
+          type "3 * 3"
+          type "foo = _"
+          type "9 == foo"
+          assert_line_text(/true/)
+          type "c"
+        end
+      end
+
+      def test_display_does_not_update_underscore_local
+        debug_code(program) do
+          type "display 42"
+          type "3 * 3"
+          type "display"
+          type "_"
+          assert_line_text(/9/)
+          type "c"
+        end
+      end
+    end
+
+    class UnderscoreDefinedByProgramTest < ConsoleTestCase
+      def program
+        <<~RUBY
+        1| _ = :mine
+        2| binding.b
+        3| p _
+        4| binding.b
+        5| nil
+        RUBY
+      end
+
+      def test_underscore_defined_by_program_is_not_clobbered
+        debug_code(program) do
+          type "c"
+          type "3 * 3"
+          type "_"
+          assert_line_text(/:mine/)
+          type "c"
+          assert_line_text(/:mine/)
+          type "c"
+        end
+      end
     end
 
     class RaisedTest < ConsoleTestCase
