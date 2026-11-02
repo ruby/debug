@@ -434,18 +434,24 @@ module DEBUGGER__
       [:return_value,     "_return"],
     ]
 
-    def frame_eval src, re_raise: false, binding_location: false
+    def frame_eval src, re_raise: false, binding_location: false, update_last_value: false
       @success_last_eval = false
 
-      b = current_frame&.eval_binding || TOPLEVEL_BINDING
+      frame = current_frame
+      b = frame&.eval_binding || TOPLEVEL_BINDING
 
-      special_local_variables current_frame do |name, var|
+      special_local_variables frame do |name, var|
         b.local_variable_set(name, var) if /\%/ !~ name
       end
 
-      b.local_variable_set(:_, @last_result)
+      # eval_binding is a dup that shares the frame's locals, so setting an
+      # existing `_` would overwrite the debuggee's own variable.
+      if frame && !(frame.binding || TOPLEVEL_BINDING).local_variable_defined?(:_)
+        b.local_variable_set(:_, @last_value)
+      end
+
       result = frame_eval_core(src, b, binding_location: binding_location)
-      @last_result = result
+      @last_value = result if update_last_value
 
       @success_last_eval = true
       result
@@ -1047,19 +1053,19 @@ module DEBUGGER__
 
           case eval_type
           when :p
-            result = frame_eval(eval_src)
+            result = frame_eval(eval_src, update_last_value: true)
             puts "=> " + color_pp(result, 2 ** 30)
             if alloc_path = ObjectSpace.allocation_sourcefile(result)
               puts "allocated at #{alloc_path}:#{ObjectSpace.allocation_sourceline(result)}"
             end
           when :pp
-            result = frame_eval(eval_src)
+            result = frame_eval(eval_src, update_last_value: true)
             puts color_pp(result, SESSION.width)
             if alloc_path = ObjectSpace.allocation_sourcefile(result)
               puts "allocated at #{alloc_path}:#{ObjectSpace.allocation_sourceline(result)}"
             end
           when :call
-            result = frame_eval(eval_src)
+            result = frame_eval(eval_src, update_last_value: true)
           when :display, :try_display
             failed_results = []
             eval_src.each_with_index{|src, i|
