@@ -56,7 +56,7 @@ module DEBUGGER__
         print prompt
         ($stdin.gets || '').strip
       rescue IOError
-        # Answer an unreadable $stdin as EOF does. Raising would make `quit`
+        # raising triggers infinite loop so answer unreadable $stdin like EOF
         ''
       end
     end
