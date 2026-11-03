@@ -32,5 +32,23 @@ module DEBUGGER__
         type 'q!'
       end
     end
+
+    # The prompt hits EOF, which sends `quit`, and its confirmation can't be
+    # read: as when Reline reads an exhausted STDIN while $stdin is closed.
+    def test_quit_on_eof_quits_debugger_process_if_stdin_is_unreadable
+      debug_code(<<~RUBY, remote: false) do
+        1| $stdin = Object.new
+        2| def $stdin.gets
+        3|   (@eof = !@eof) ? nil : raise(IOError, 'closed stream')
+        4| end
+        5| a=1
+      RUBY
+        type 'b 5'
+        type 'c'
+        # never read: the debugger reads the fake $stdin
+        type 'q'
+        type 'y'
+      end
+    end
   end
 end
