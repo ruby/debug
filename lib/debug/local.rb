@@ -57,7 +57,6 @@ module DEBUGGER__
         ($stdin.gets || '').strip
       rescue IOError
         # Answer an unreadable $stdin as EOF does. Raising would make `quit`
-        # (sent by #readline on EOF) retry forever.
         ''
       end
     end
