@@ -55,6 +55,9 @@ module DEBUGGER__
       setup_interrupt do
         print prompt
         ($stdin.gets || '').strip
+      rescue IOError
+        # raising triggers infinite loop so answer unreadable $stdin like EOF
+        ''
       end
     end
 
